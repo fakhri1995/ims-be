@@ -12,34 +12,41 @@
 */
 
 $router->get('/', function () use ($router) {
-    return $router->app->version();
+    // return $router->app->version();
+    return base64_encode(hash("sha1", "GET"."\n"."/admin/v1/get-company"."\n"."02 Jan 06 15:04 MST", $raw_output=TRUE));
 });
 
 //User Routes
-$router->get('/login', 'UserController@login');
-$router->get('/logout', 'UserController@logout');
-$router->get('/detailProfile', 'UserController@detailProfile');
-$router->get('/changePassword', 'UserController@changePassword');
+$router->post('/login', 'UserController@login');
+$router->post('/logout', 'UserController@logout');
+$router->post('/detailProfile', 'UserController@detailProfile');
+$router->post('/changePassword', 'UserController@changePassword');
 
 //Company Routes
-$router->get('/getCompanyDetail', 'CompanyController@getCompanyDetail');
-$router->get('/getCompanyList', 'CompanyController@getCompanyList');
-$router->get('/addCompanyMember', 'CompanyController@addCompanyMember');
-$router->get('/updateCompanyDetail', 'CompanyController@updateCompanyDetail');
-$router->get('/companyActivation', 'CompanyController@companyActivation');
+$router->post('/getCompanyDetail', 'CompanyController@getCompanyDetail');
+$router->post('/getCompanyList', 'CompanyController@getCompanyList');
+$router->post('/addCompanyMember', 'CompanyController@addCompanyMember');
+$router->post('/updateCompanyDetail', 'CompanyController@updateCompanyDetail');
+$router->post('/companyActivation', 'CompanyController@companyActivation');
 
 //Account Routes
-$router->get('/getAccountDetail', 'AccountController@getAccountDetail');
-$router->get('/getAccountList', 'AccountController@getAccountList');
-$router->get('/addAccountMember', 'AccountController@addAccountMember');
-$router->get('/updateAccountDetail', 'AccountController@updateAccountDetail');
-$router->get('/accountActivation', 'AccountController@AccountActivation');
+$router->post('/getAccountDetail', 'AccountController@getAccountDetail');
+$router->post('/getAccountList', 'AccountController@getAccountList');
+$router->post('/addAccountMember', 'AccountController@addAccountMember');
+$router->post('/updateAccountDetail', 'AccountController@updateAccountDetail');
+$router->post('/accountActivation', 'AccountController@AccountActivation');
 
 //Account Routes
-$router->get('/getAccessModule', 'AccessFeatureController@getAccessModule');
-$router->get('/getAccessFeature', 'AccessFeatureController@getAccessFeature');
-$router->get('/addAccessModule', 'AccessFeatureController@addAccessModule');
-$router->get('/addAccessFeature', 'AccessFeatureController@addAccessFeature');
-$router->get('/updateAccessFeature', 'AccessFeatureController@updateAccessFeature');
-$router->get('/updateModuleCompany', 'AccessFeatureController@updateModuleCompany');
-$router->get('/updateFeatureAccount', 'AccessFeatureController@updateFeatureAccount');
+$router->post('/getAccessModule', 'AccessFeatureController@getAccessModule');
+$router->post('/getAccessFeature', 'AccessFeatureController@getAccessFeature');
+$router->post('/addAccessModule', 'AccessFeatureController@addAccessModule');
+$router->post('/addAccessFeature', 'AccessFeatureController@addAccessFeature');
+$router->post('/updateAccessFeature', 'AccessFeatureController@updateAccessFeature');
+$router->post('/updateModuleCompany', 'AccessFeatureController@updateModuleCompany');
+$router->post('/updateFeatureAccount', 'AccessFeatureController@updateFeatureAccount');
+
+//Bank Account Routes
+$router->get('/getBanks', 'BankController@getBanks');
+$router->post('/addBank', 'BankController@addBank');
+$router->put('/updateBank', 'BankController@updateBank');
+$router->delete('/deleteBank', 'BankController@deleteBank');

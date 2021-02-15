@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use GuzzleHttp\Client;
+use GuzzleHttp\Psr7;
+use GuzzleHttp\Exception\ClientException;
 
 class AccessFeatureController extends Controller
 {
@@ -14,8 +16,7 @@ class AccessFeatureController extends Controller
     */
 
     protected $client;
-    protected $token = "eyJjb21wYW55X2lkIjo2NiwiY29tcGFueV9yb2xlIjoxLCJleHAiOjE2MTI5NDY1ODksImlhdCI6MTYxMjkyODU4OSwiaXNzIjoiY2d4LmNvLmlkIiwiand0X2NyZWF0ZV90aW1lIjoiMjAyMS0wMi0xMFQwMzo0MzowOS4wNDY4NTE5NDFaIiwicmVnaXN0ZXJlZF9mZWF0dXJlcyI6IjU2Njc3NjAzMTUyMDc0MDg3ODU4MTc2Iiwicm9sZSI6MSwidXNlcl9pZCI6NjN9.1Rpa5i5r9TjfRdWNjKPH4Fo6fBiEWTYiNgLucRpPUt8";
-
+    
     public function __construct()
     {
         $this->client = new Client(['base_uri' => 'https://go.cgx.co.id/']);
@@ -29,12 +30,16 @@ class AccessFeatureController extends Controller
             'order_by' => $request->get('order_by')
         ];
         $headers = ['Authorization' => $request->get('token')];
-        $response = $this->client->request('GET', '/admin/v1/account-module?page='.$params['page']
+        try{
+            $response = $this->client->request('GET', '/admin/v1/account-module?page='.$params['page']
                 .'&rows='.$params['rows']
                 .'&order_by='.$params['order_by'], [
                     'headers'  => $headers
                 ]);
-        return $response;
+                return $response;
+        }catch(ClientException $err){
+            return response()->json(["success" => false, "detail" => Psr7\Message::toString($err->getResponse())]);
+        }       
     }
 
     public function getAccessFeature(Request $request)
@@ -47,15 +52,18 @@ class AccessFeatureController extends Controller
             'company_id' => $request->get('company_id')
         ];
         $headers = ['Authorization' => $request->get('token')];
-        $response = $this->client->request('GET', '/admin/v1/account-feature?page='.$params['page']
+        try{
+            $response = $this->client->request('GET', '/admin/v1/account-feature?page='.$params['page']
                 .'&rows='.$params['rows']
                 .'&order_by='.$params['order_by']
                 .'&module_id='.$params['module_id']
                 .'&company_id='.$params['company_id'], [
                     'headers'  => $headers
                 ]);
-        
-        return $response;
+            return $response;
+        }catch(ClientException $err){
+            return response()->json(["success" => false, "detail" => Psr7\Message::toString($err->getResponse())]);
+        }
     }
 
     public function addAccessModule(Request $request)
@@ -68,12 +76,16 @@ class AccessFeatureController extends Controller
         $headers = [
             'Authorization' => $request->get('token'),
             'content-type' => 'application/json'
-        ];
-        $response = $this->client->request('POST', '/admin/v1/account-module', [
+        ];    
+        try{
+            $response = $this->client->request('POST', '/admin/v1/account-module', [
                     'headers'  => $headers,
                     'json' => $body
                 ]);
-        return $response;
+            return $response;
+        }catch(ClientException $err){
+            return response()->json(["success" => false, "detail" => Psr7\Message::toString($err->getResponse())]);
+        }
     }
 
     public function addAccessFeature(Request $request)
@@ -89,11 +101,15 @@ class AccessFeatureController extends Controller
             'Authorization' => $request->get('token'),
             'content-type' => 'application/json'
         ];
-        $response = $this->client->request('POST', '/admin/v1/account-feature', [
+        try{
+            $response = $this->client->request('POST', '/admin/v1/account-feature', [
                     'headers'  => $headers,
                     'json' => $body
                 ]);
-        return $response;
+            return $response;
+        }catch(ClientException $err){
+            return response()->json(["success" => false, "detail" => Psr7\Message::toString($err->getResponse())]);
+        }
     }
 
     public function updateAccessFeature(Request $request)
@@ -110,11 +126,15 @@ class AccessFeatureController extends Controller
             'Authorization' => $request->get('token'),
             'content-type' => 'application/json'
         ];
-        $response = $this->client->request('POST', '/admin/v1/account-feature', [
+        try{
+            $response = $this->client->request('POST', '/admin/v1/account-feature', [
                     'headers'  => $headers,
                     'json' => $body
                 ]);
-        return $response;
+            return $response;
+        }catch(ClientException $err){
+            return response()->json(["success" => false, "detail" => Psr7\Message::toString($err->getResponse())]);
+        }
     }
 
     public function updateModuleCompany(Request $request)
@@ -127,11 +147,15 @@ class AccessFeatureController extends Controller
             'Authorization' => $request->get('token'),
             'content-type' => 'application/json'
         ];
-        $response = $this->client->request('POST', '/admin/v1/update-module', [
+        try{
+            $response = $this->client->request('POST', '/admin/v1/update-module', [
                     'headers'  => $headers,
                     'json' => $body
                 ]);
-        return $response;
+            return $response;
+        }catch(ClientException $err){
+            return response()->json(["success" => false, "detail" => Psr7\Message::toString($err->getResponse())]);
+        }
     }
 
     public function updateFeatureAccount(Request $request)
@@ -144,10 +168,14 @@ class AccessFeatureController extends Controller
             'Authorization' => $request->get('token'),
             'content-type' => 'application/json'
         ];
-        $response = $this->client->request('POST', '/admin/v1/update-feature', [
+        try{
+            $response = $this->client->request('POST', '/admin/v1/update-feature', [
                     'headers'  => $headers,
                     'json' => $body
                 ]);
-        return $response;
+            return $response;
+        }catch(ClientException $err){
+            return response()->json(["success" => false, "detail" => Psr7\Message::toString($err->getResponse())]);
+        }
     }
 }

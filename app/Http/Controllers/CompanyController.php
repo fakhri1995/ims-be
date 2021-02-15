@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use GuzzleHttp\Client;
+use GuzzleHttp\Psr7;
+use GuzzleHttp\Exception\ClientException;
 
 class CompanyController extends Controller
 {
@@ -14,8 +16,7 @@ class CompanyController extends Controller
     */
 
     protected $client;
-    // protected $token = "eyJjb21wYW55X2lkIjo2NiwiY29tcGFueV9yb2xlIjoxLCJleHAiOjE2MTI5NDY1ODksImlhdCI6MTYxMjkyODU4OSwiaXNzIjoiY2d4LmNvLmlkIiwiand0X2NyZWF0ZV90aW1lIjoiMjAyMS0wMi0xMFQwMzo0MzowOS4wNDY4NTE5NDFaIiwicmVnaXN0ZXJlZF9mZWF0dXJlcyI6IjU2Njc3NjAzMTUyMDc0MDg3ODU4MTc2Iiwicm9sZSI6MSwidXNlcl9pZCI6NjN9.1Rpa5i5r9TjfRdWNjKPH4Fo6fBiEWTYiNgLucRpPUt8";
-
+    
     public function __construct()
     {
         $this->client = new Client(['base_uri' => 'https://go.cgx.co.id/']);
@@ -23,14 +24,16 @@ class CompanyController extends Controller
 
     public function getCompanyDetail(Request $request)
     {
-        $params = [
-            'id' => 66
-        ];
+        $login_id = $request->get('login_id');
         $headers = ['Authorization' => $request->get('token')];
-        $response = $this->client->request('GET', '/admin/v1/get-company?id='.$params['id'], [
+        try{
+            $response = $this->client->request('GET', '/admin/v1/get-company?id='.$login_id, [
                     'headers'  => $headers
                 ]);
-        return $response;
+            return $response;
+        }catch(ClientException $err){
+            return response()->json(["success" => false, "detail" => Psr7\Message::toString($err->getResponse())]);
+        }
     }
 
     public function getCompanyList(Request $request)
@@ -43,15 +46,18 @@ class CompanyController extends Controller
             'role' => $request->get('role')
         ];
         $headers = ['Authorization' => $request->get('token')];
-        $response = $this->client->request('GET', '/admin/v1/get-list-company?page='.$params['page']
+        try{
+            $response = $this->client->request('GET', '/admin/v1/get-list-company?page='.$params['page']
                 .'&rows='.$params['rows']
                 .'&order_by='.$params['order_by']
                 .'&is_enabled='.$params['is_enabled']
                 .'&role='.$params['role'], [
                     'headers'  => $headers
                 ]);
-        
         return $response;
+        }catch(ClientException $err){
+            return response()->json(["success" => false, "detail" => Psr7\Message::toString($err->getResponse())]);
+        }
     }
 
     public function addCompanyMember(Request $request)
@@ -68,11 +74,15 @@ class CompanyController extends Controller
             'Authorization' => $request->get('token'),
             'content-type' => 'application/json'
         ];
-        $response = $this->client->request('POST', '/admin/v1/add-new-company', [
+        try{
+            $response = $this->client->request('POST', '/admin/v1/add-new-company', [
                     'headers'  => $headers,
                     'json' => $body
                 ]);
-        return $response;
+            return $response;
+        }catch(ClientException $err){
+            return response()->json(["success" => false, "detail" => Psr7\Message::toString($err->getResponse())]);
+        }
     }
 
     public function updateCompanyDetail(Request $request)
@@ -89,11 +99,15 @@ class CompanyController extends Controller
             'Authorization' => $request->get('token'),
             'content-type' => 'application/json'
         ];
-        $response = $this->client->request('POST', '/admin/v1/update-company', [
+        try{
+            $response = $this->client->request('POST', '/admin/v1/update-company', [
                     'headers'  => $headers,
                     'json' => $body
                 ]);
         return $response;
+        }catch(ClientException $err){
+            return response()->json(["success" => false, "detail" => Psr7\Message::toString($err->getResponse())]);
+        }
     }
 
     public function companyActivation(Request $request)
@@ -106,10 +120,14 @@ class CompanyController extends Controller
             'Authorization' => $request->get('token'),
             'content-type' => 'application/json'
         ];
-        $response = $this->client->request('POST', '/admin/v1/change-status-activation-company', [
+        try{
+            $response = $this->client->request('POST', '/admin/v1/change-status-activation-company', [
                     'headers'  => $headers,
                     'json' => $body
                 ]);
-        return $response;
+            return $response;
+        }catch(ClientException $err){
+            return response()->json(["success" => false, "detail" => Psr7\Message::toString($err->getResponse())]);
+        }
     }
 }
