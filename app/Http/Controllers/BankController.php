@@ -26,7 +26,7 @@ class BankController extends Controller
 
     public function getBanks(Request $request)
     {
-        $headers = ['Authorization' => $request->get('token')];
+        $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
                     'headers'  => $headers
@@ -44,7 +44,7 @@ class BankController extends Controller
 
     public function addBank(Request $request)
     {
-        $headers = ['Authorization' => $request->get('token')];
+        $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
                     'headers'  => $headers
@@ -68,7 +68,7 @@ class BankController extends Controller
 
     public function updateBank(Request $request)
     {
-        $headers = ['Authorization' => $request->get('token')];
+        $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
                     'headers'  => $headers
@@ -94,7 +94,7 @@ class BankController extends Controller
 
     public function deleteBank(Request $request)
     {
-        $headers = ['Authorization' => $request->get('token')];
+        $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
                     'headers'  => $headers

@@ -7,6 +7,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Psr7;
 use GuzzleHttp\Exception\ClientException;
 
+
 class UserController extends Controller
 {
     /**
@@ -39,7 +40,7 @@ class UserController extends Controller
     {
         $headers = [
             'content-type' => 'application/json',
-            'Authorization' => $request->get('token')
+            'Authorization' => $request->header("Authorization")
         ];
         $response = $this->client->request('POST', '/auth/v1/logout', [
                     'headers'  => $headers
@@ -50,7 +51,7 @@ class UserController extends Controller
     
     public function changePassword(Request $request)
     {
-        $headers = ['Authorization' => $request->get('token')];
+        $headers = ['Authorization' => $request->header("Authorization")];
         $body = ['new_password' => $request->get('new_password')];
         $response = $this->client->request('POST', '/account/v1/change-password', [
                     'headers'  => $headers,
@@ -61,7 +62,7 @@ class UserController extends Controller
 
     public function detailProfile(Request $request)
     {
-        $headers = ['Authorization' => $request->get('token')];
+        $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
                     'headers'  => $headers

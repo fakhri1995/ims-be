@@ -25,7 +25,7 @@ class AccountController extends Controller
     public function getAccountDetail(Request $request)
     {
         $login_id = $request->get('login_id');
-        $headers = ['Authorization' => $request->get('token')];
+        $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/admin/v1/get-account?id='.$login_id, [
                     'headers'  => $headers
@@ -44,7 +44,7 @@ class AccountController extends Controller
             'order_by' => $request->get('order_by'),
             'company_id' => $request->get('company_id')
         ];
-        $headers = ['Authorization' => $request->get('token')];
+        $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/admin/v1/get-list-account?page='.$params['page']
                 .'&rows='.$params['rows']
@@ -69,7 +69,7 @@ class AccountController extends Controller
             "profile_image" => $request->get('profile_image')
         ];
         $headers = [
-            'Authorization' => $request->get('token'),
+            'Authorization' => $request->header("Authorization"),
             'content-type' => 'application/json'
         ];
         try{
@@ -93,7 +93,7 @@ class AccountController extends Controller
             "profile_image" => $request->get('profile_image')
         ];
         $headers = [
-            'Authorization' => $request->get('token'),
+            'Authorization' => $request->header("Authorization"),
             'content-type' => 'application/json'
         ];
         try{
@@ -114,7 +114,7 @@ class AccountController extends Controller
             'user_id' => $request->get('user_id')
         ];
         $headers = [
-            'Authorization' => $request->get('token'),
+            'Authorization' => $request->header("Authorization"),
             'content-type' => 'application/json'
         ];
         try{

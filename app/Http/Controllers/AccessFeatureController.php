@@ -29,7 +29,7 @@ class AccessFeatureController extends Controller
             'rows' => $request->get('rows'),
             'order_by' => $request->get('order_by')
         ];
-        $headers = ['Authorization' => $request->get('token')];
+        $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/admin/v1/account-module?page='.$params['page']
                 .'&rows='.$params['rows']
@@ -51,7 +51,7 @@ class AccessFeatureController extends Controller
             'module_id' => $request->get('module_id'),
             'company_id' => $request->get('company_id')
         ];
-        $headers = ['Authorization' => $request->get('token')];
+        $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/admin/v1/account-feature?page='.$params['page']
                 .'&rows='.$params['rows']
@@ -74,7 +74,7 @@ class AccessFeatureController extends Controller
             "can_mark_as_default" => $request->get('can_mark_as_default')
         ];
         $headers = [
-            'Authorization' => $request->get('token'),
+            'Authorization' => $request->header("Authorization"),
             'content-type' => 'application/json'
         ];    
         try{
@@ -98,7 +98,7 @@ class AccessFeatureController extends Controller
             "method" => $request->get('method')
         ];
         $headers = [
-            'Authorization' => $request->get('token'),
+            'Authorization' => $request->header("Authorization"),
             'content-type' => 'application/json'
         ];
         try{
@@ -123,7 +123,7 @@ class AccessFeatureController extends Controller
             "method" => $request->get('method')
         ];
         $headers = [
-            'Authorization' => $request->get('token'),
+            'Authorization' => $request->header("Authorization"),
             'content-type' => 'application/json'
         ];
         try{
@@ -144,7 +144,7 @@ class AccessFeatureController extends Controller
             'module_ids' => $request->get('module_ids')
         ];
         $headers = [
-            'Authorization' => $request->get('token'),
+            'Authorization' => $request->header("Authorization"),
             'content-type' => 'application/json'
         ];
         try{
@@ -165,7 +165,7 @@ class AccessFeatureController extends Controller
             'feature_ids' => $request->get('feature_ids')
         ];
         $headers = [
-            'Authorization' => $request->get('token'),
+            'Authorization' => $request->header("Authorization"),
             'content-type' => 'application/json'
         ];
         try{

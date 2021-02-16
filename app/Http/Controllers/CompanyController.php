@@ -25,7 +25,7 @@ class CompanyController extends Controller
     public function getCompanyDetail(Request $request)
     {
         $login_id = $request->get('login_id');
-        $headers = ['Authorization' => $request->get('token')];
+        $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/admin/v1/get-company?id='.$login_id, [
                     'headers'  => $headers
@@ -45,7 +45,7 @@ class CompanyController extends Controller
             'is_enabled' => $request->get('is_enabled', null),
             'role' => $request->get('role')
         ];
-        $headers = ['Authorization' => $request->get('token')];
+        $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/admin/v1/get-list-company?page='.$params['page']
                 .'&rows='.$params['rows']
@@ -71,7 +71,7 @@ class CompanyController extends Controller
             'member_of_company' => $request->get('member_of_company')
         ];
         $headers = [
-            'Authorization' => $request->get('token'),
+            'Authorization' => $request->header("Authorization"),
             'content-type' => 'application/json'
         ];
         try{
@@ -96,7 +96,7 @@ class CompanyController extends Controller
             'image_logo' => $request->get('image_logo')
         ];
         $headers = [
-            'Authorization' => $request->get('token'),
+            'Authorization' => $request->header("Authorization"),
             'content-type' => 'application/json'
         ];
         try{
@@ -117,7 +117,7 @@ class CompanyController extends Controller
             'company_id' => $request->get('company_id')
         ];
         $headers = [
-            'Authorization' => $request->get('token'),
+            'Authorization' => $request->header("Authorization"),
             'content-type' => 'application/json'
         ];
         try{
