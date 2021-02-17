@@ -32,7 +32,14 @@ class CompanyController extends Controller
                 ]);
             return $response;
         }catch(ClientException $err){
-            return response()->json(["success" => false, "detail" => Psr7\Message::toString($err->getResponse())]);
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "error" => (object)[
+                "status" => $error_response->getStatusCode(),
+                "reason" => $error_response->getReasonPhrase(),
+                "server_code" => json_decode($error_response->getBody())->error->code,
+                "status_detail" => json_decode($error_response->getBody())->error->detail
+            ]]);
         }
     }
 
@@ -56,7 +63,14 @@ class CompanyController extends Controller
                 ]);
         return $response;
         }catch(ClientException $err){
-            return response()->json(["success" => false, "detail" => Psr7\Message::toString($err->getResponse())]);
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "error" => (object)[
+                "status" => $error_response->getStatusCode(),
+                "reason" => $error_response->getReasonPhrase(),
+                "server_code" => json_decode($error_response->getBody())->error->code,
+                "status_detail" => json_decode($error_response->getBody())->error->detail
+            ]]);
         }
     }
 
@@ -81,7 +95,14 @@ class CompanyController extends Controller
                 ]);
             return $response;
         }catch(ClientException $err){
-            return response()->json(["success" => false, "detail" => Psr7\Message::toString($err->getResponse())]);
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "error" => (object)[
+                "status" => $error_response->getStatusCode(),
+                "reason" => $error_response->getReasonPhrase(),
+                "server_code" => json_decode($error_response->getBody())->error->code,
+                "status_detail" => json_decode($error_response->getBody())->error->detail
+            ]]);
         }
     }
 
@@ -106,7 +127,14 @@ class CompanyController extends Controller
                 ]);
         return $response;
         }catch(ClientException $err){
-            return response()->json(["success" => false, "detail" => Psr7\Message::toString($err->getResponse())]);
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "error" => (object)[
+                "status" => $error_response->getStatusCode(),
+                "reason" => $error_response->getReasonPhrase(),
+                "server_code" => json_decode($error_response->getBody())->error->code,
+                "status_detail" => json_decode($error_response->getBody())->error->detail
+            ]]);
         }
     }
 
@@ -127,7 +155,14 @@ class CompanyController extends Controller
                 ]);
             return $response;
         }catch(ClientException $err){
-            return response()->json(["success" => false, "detail" => Psr7\Message::toString($err->getResponse())]);
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "error" => (object)[
+                "status" => $error_response->getStatusCode(),
+                "reason" => $error_response->getReasonPhrase(),
+                "server_code" => json_decode($error_response->getBody())->error->code,
+                "status_detail" => json_decode($error_response->getBody())->error->detail
+            ]]);
         }
     }
 }

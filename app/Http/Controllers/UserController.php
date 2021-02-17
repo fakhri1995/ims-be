@@ -29,11 +29,22 @@ class UserController extends Controller
             'email' => $request->get('email'),
             'password' => $request->get('password')
         ];
-        $response = $this->client->request('POST', '/auth/v1/login', [
+        try{
+            $response = $this->client->request('POST', '/auth/v1/login', [
                     'headers'  => ['content-type' => 'application/x-www-form-urlencoded'],
                     'form_params' => $body
                 ]);      
-        return $response;
+            return $response;
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "error" => (object)[
+                "status" => $error_response->getStatusCode(),
+                "reason" => $error_response->getReasonPhrase(),
+                "server_code" => json_decode($error_response->getBody())->error->code,
+                "status_detail" => json_decode($error_response->getBody())->error->detail
+            ]]);
+        }
     }
 
     public function logout(Request $request)
@@ -42,10 +53,21 @@ class UserController extends Controller
             'content-type' => 'application/json',
             'Authorization' => $request->header("Authorization")
         ];
-        $response = $this->client->request('POST', '/auth/v1/logout', [
+        try{
+            $response = $this->client->request('POST', '/auth/v1/logout', [
                     'headers'  => $headers
                 ]);
-        return $response;
+            return $response;
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "error" => (object)[
+                "status" => $error_response->getStatusCode(),
+                "reason" => $error_response->getReasonPhrase(),
+                "server_code" => json_decode($error_response->getBody())->error->code,
+                "status_detail" => json_decode($error_response->getBody())->error->detail
+            ]]);
+        }
     }
 
     
@@ -53,11 +75,22 @@ class UserController extends Controller
     {
         $headers = ['Authorization' => $request->header("Authorization")];
         $body = ['new_password' => $request->get('new_password')];
-        $response = $this->client->request('POST', '/account/v1/change-password', [
+        try{
+            $response = $this->client->request('POST', '/account/v1/change-password', [
                     'headers'  => $headers,
                     'json' => $body
                 ]);
-        return $response;
+            return $response;
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "error" => (object)[
+                "status" => $error_response->getStatusCode(),
+                "reason" => $error_response->getReasonPhrase(),
+                "server_code" => json_decode($error_response->getBody())->error->code,
+                "status_detail" => json_decode($error_response->getBody())->error->detail
+            ]]);
+        }
     }
 
     public function detailProfile(Request $request)
@@ -69,7 +102,14 @@ class UserController extends Controller
                 ]);
             return $response;
         }catch(ClientException $err){
-            return response()->json(["success" => false, "detail" => Psr7\Message::toString($err->getResponse())]);
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "error" => (object)[
+                "status" => $error_response->getStatusCode(),
+                "reason" => $error_response->getReasonPhrase(),
+                "server_code" => json_decode($error_response->getBody())->error->code,
+                "status_detail" => json_decode($error_response->getBody())->error->detail
+            ]]);
         }
     }
 }

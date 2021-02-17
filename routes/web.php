@@ -11,10 +11,10 @@
 |
 */
 
-$router->get('/', function () use ($router) {
-    // return $router->app->version();
-    return base64_encode(hash("sha1", "GET"."\n"."/admin/v1/get-company"."\n"."02 Jan 06 15:04 MST", $raw_output=TRUE));
-});
+// $router->get('/', function () use ($router) {
+//     return $router->app->version();
+//     return base64_encode(hash("sha1", "GET"."\n"."/admin/v1/get-company"."\n"."02 Jan 06 15:04 MST", $raw_output=TRUE));
+// });
 
 //User Routes
 $router->post('/login', 'UserController@login');
