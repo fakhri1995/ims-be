@@ -52,7 +52,7 @@ class GroupUserPivotController extends Controller
                 $pivot->user_id = $user_id;
                 $pivot->save();
             } else {
-                return response()->json(["success" => false, "message" => "Id Tidak Ditemukan"]);
+                return response()->json(["success" => false, "message" => "Id Sudah Terdaftar dalam Group"]);
             }
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
         } catch(Exception $err){
