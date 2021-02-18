@@ -43,8 +43,10 @@ class BankController extends Controller
             ]]);
         }
         try{
-            $bank = Bank::all();
-            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $bank]);
+            $company_id = $request->get('id');
+            $banks = Bank::where('company_id', $company_id)->get();
+            if($banks->isEmpty()) return response()->json(["success" => false, "message" => "Bank Account Belum Terdaftar"]);
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $banks]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err]);
         }
@@ -104,7 +106,7 @@ class BankController extends Controller
         }
         $id = $request->get('id', null);
         $bank = Bank::find($id);
-        if($bank === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
+        if($bank === null) return response()->json(["success" => false, "message" => "Id Tidak Ditemukan"]);
         $bank->company_id = $request->get('company_id');
         $bank->name = $request->get('name');
         $bank->account_number = $request->get('account_number');
