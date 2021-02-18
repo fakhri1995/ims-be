@@ -50,3 +50,14 @@ $router->get('/getBanks', 'BankController@getBanks');
 $router->post('/addBank', 'BankController@addBank');
 $router->put('/updateBank', 'BankController@updateBank');
 $router->delete('/deleteBank', 'BankController@deleteBank');
+
+//Group Routes
+$router->get('/getGroups', 'GroupController@getGroups');
+$router->get('/getGroup', 'GroupController@getGroup');
+$router->post('/addGroup', 'GroupController@addGroup');
+$router->put('/updateGroup', 'GroupController@updateGroup');
+$router->delete('/deleteGroup', 'GroupController@deleteGroup');
+
+//Group Routes
+$router->post('/attachPivotGU', 'GroupUserPivotController@attachPivotGU');
+$router->delete('/detachPivotGU', 'GroupUserPivotController@detachPivotGU');

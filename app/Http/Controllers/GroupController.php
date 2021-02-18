@@ -1,0 +1,167 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
+use App\Group;
+use App\GroupUserPivot;
+use Exception;
+
+class GroupController extends Controller
+{
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+    */
+
+    public function __construct()
+    {
+        $this->client = new Client(['base_uri' => 'https://go.cgx.co.id/']);
+    }
+
+    // Normal Route
+
+    public function getGroups(Request $request)
+    {
+        $headers = ['Authorization' => $request->header("Authorization")];
+        try{
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                    'headers'  => $headers
+                ]);
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "error" => (object)[
+                "status" => $error_response->getStatusCode(),
+                "reason" => $error_response->getReasonPhrase(),
+                "server_code" => json_decode($error_response->getBody())->error->code,
+                "status_detail" => json_decode($error_response->getBody())->error->detail
+            ]]);
+        }
+        try{
+            $group = Group::all();
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $group]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err]);
+        }
+    }
+
+    public function getGroup(Request $request)
+    {
+        $headers = ['Authorization' => $request->header("Authorization")];
+        try{
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                    'headers'  => $headers
+                ]);
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "error" => (object)[
+                "status" => $error_response->getStatusCode(),
+                "reason" => $error_response->getReasonPhrase(),
+                "server_code" => json_decode($error_response->getBody())->error->code,
+                "status_detail" => json_decode($error_response->getBody())->error->detail
+            ]]);
+        }
+        try{
+            $id = $request->get('id', null);
+            $group = Group::find($id);
+            if($group === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
+            $group_user = GroupUserPivot::where('group_id', $id)->pluck('user_id');
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => ["group_detail" => $group, "group_user" => $group_user]]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err]);
+        }
+    }
+
+    public function addGroup(Request $request)
+    {
+        $headers = ['Authorization' => $request->header("Authorization")];
+        try{
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                    'headers'  => $headers
+                ]);
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "error" => (object)[
+                "status" => $error_response->getStatusCode(),
+                "reason" => $error_response->getReasonPhrase(),
+                "server_code" => json_decode($error_response->getBody())->error->code,
+                "status_detail" => json_decode($error_response->getBody())->error->detail
+            ]]);
+        }
+        $group = new Group;
+        $group->name = $request->get('name');
+        $group->description = $request->get('description');
+        try{
+            $group->save();
+            return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err]);
+        }
+    }
+
+    public function updateGroup(Request $request)
+    {
+        $headers = ['Authorization' => $request->header("Authorization")];
+        try{
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                    'headers'  => $headers
+                ]);
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "error" => (object)[
+                "status" => $error_response->getStatusCode(),
+                "reason" => $error_response->getReasonPhrase(),
+                "server_code" => json_decode($error_response->getBody())->error->code,
+                "status_detail" => json_decode($error_response->getBody())->error->detail
+            ]]);
+        }
+        $id = $request->get('id', null);
+        $group = Group::find($id);
+        if($group === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
+        $group->name = $request->get('name');
+        $group->description = $request->get('description');
+        try{
+            $group->save();
+            return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err]);
+        }
+    }
+
+    public function deleteGroup(Request $request)
+    {
+        $headers = ['Authorization' => $request->header("Authorization")];
+        try{
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                    'headers'  => $headers
+                ]);
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "error" => (object)[
+                "status" => $error_response->getStatusCode(),
+                "reason" => $error_response->getReasonPhrase(),
+                "server_code" => json_decode($error_response->getBody())->error->code,
+                "status_detail" => json_decode($error_response->getBody())->error->detail
+            ]]);
+        }
+        $id = $request->get('id', null);
+        $group = Group::find($id);
+        if($group === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
+        try{
+            $group->delete();
+            return response()->json(["success" => true, "message" => "Data Berhasil Dihapus"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err]);
+        }
+    }
+
+    
+}
