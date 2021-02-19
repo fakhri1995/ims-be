@@ -29,7 +29,7 @@ class CompanyController extends Controller
             $response = $this->client->request('GET', '/admin/v1/get-company?id='.$login_id, [
                     'headers'  => $headers
                 ]);
-            return $response;
+            return response(json_decode((string) $response->getBody(), true));
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -62,7 +62,7 @@ class CompanyController extends Controller
                 .'&role='.$params['role'], [
                     'headers'  => $headers
                 ]);
-        return $response;
+        return response(json_decode((string) $response->getBody(), true));
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -96,7 +96,7 @@ class CompanyController extends Controller
                     'headers'  => $headers,
                     'json' => $body
                 ]);
-            return $response;
+            return response(json_decode((string) $response->getBody(), true));
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -130,7 +130,7 @@ class CompanyController extends Controller
                     'headers'  => $headers,
                     'json' => $body
                 ]);
-        return $response;
+        return response(json_decode((string) $response->getBody(), true));
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -160,7 +160,7 @@ class CompanyController extends Controller
                     'headers'  => $headers,
                     'json' => $body
                 ]);
-            return $response;
+            return response(json_decode((string) $response->getBody(), true));
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());

@@ -33,7 +33,7 @@ class UserController extends Controller
                     'headers'  => ['content-type' => 'application/x-www-form-urlencoded'],
                     'form_params' => $body
                 ]);      
-            return $response;
+            return response(json_decode((string) $response->getBody(), true));
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -58,7 +58,7 @@ class UserController extends Controller
             $response = $this->client->request('POST', '/auth/v1/logout', [
                     'headers'  => $headers
                 ]);
-            return $response;
+            return response(json_decode((string) $response->getBody(), true));
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -83,7 +83,7 @@ class UserController extends Controller
                     'headers'  => $headers,
                     'json' => $body
                 ]);
-            return $response;
+            return response(json_decode((string) $response->getBody(), true));
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -105,7 +105,7 @@ class UserController extends Controller
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
                     'headers'  => $headers
                 ]);
-            return $response;
+            return response(json_decode((string) $response->getBody(), true));
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
