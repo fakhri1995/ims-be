@@ -17,6 +17,8 @@ class CreateGroupsTable extends Migration
             $table->id();
             $table->string('name');
             $table->string('description');
+            $table->integer('group_head');
+            $table->boolean('is_agent');
         });
     }
 

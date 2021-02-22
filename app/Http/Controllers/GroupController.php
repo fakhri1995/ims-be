@@ -44,7 +44,8 @@ class GroupController extends Controller
             ]]);
         }
         try{
-            $group = Group::all();
+            $is_agent = $request->get('is_agent', 1);
+            $group = Group::where('is_agent', $is_agent)->get();
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $group]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err]);
@@ -103,6 +104,8 @@ class GroupController extends Controller
         $group = new Group;
         $group->name = $request->get('name');
         $group->description = $request->get('description');
+        $group->is_agent = $request->get('is_agent');
+        $group->group_head = $request->get('group_head');
         try{
             $group->save();
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
@@ -135,6 +138,7 @@ class GroupController extends Controller
         if($group === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
         $group->name = $request->get('name');
         $group->description = $request->get('description');
+        $group->group_head = $request->get('group_head');
         try{
             $group->save();
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
