@@ -22,8 +22,6 @@ class GroupController extends Controller
         $this->client = new Client(['base_uri' => 'https://go.cgx.co.id/']);
     }
 
-    // Normal Route
-
     public function getGroups(Request $request)
     {
         $headers = ['Authorization' => $request->header("Authorization")];
@@ -171,6 +169,10 @@ class GroupController extends Controller
         if($group === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
         try{
             $group->delete();
+            $group_user = GroupUserPivot::where('group_id', $id)->get();
+            foreach($group_user as $user){
+                $user->delete();
+            }
             return response()->json(["success" => true, "message" => "Data Berhasil Dihapus"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err]);
