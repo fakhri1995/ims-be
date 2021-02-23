@@ -60,5 +60,5 @@ $router->put('/updateGroup', 'GroupController@updateGroup');
 $router->delete('/deleteGroup', 'GroupController@deleteGroup');
 
 //Group Routes
-$router->post('/attachPivotGU', 'GroupUserPivotController@attachPivotGU');
-$router->delete('/detachPivotGU', 'GroupUserPivotController@detachPivotGU');
+// $router->post('/attachPivotGU', 'GroupUserPivotController@attachPivotGU');
+// $router->delete('/detachPivotGU', 'GroupUserPivotController@detachPivotGU');

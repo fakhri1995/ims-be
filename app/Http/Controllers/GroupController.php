@@ -104,8 +104,19 @@ class GroupController extends Controller
         $group->description = $request->get('description');
         $group->is_agent = $request->get('is_agent');
         $group->group_head = $request->get('group_head');
+        $user_ids = $request->get('user_ids',[]);
         try{
             $group->save();
+
+            $group_id = $group->id;
+            $user_ids = array_unique($user_ids);
+            foreach($user_ids as $user_id){
+                $pivot = new GroupUserPivot;
+                $pivot->group_id = $group_id;
+                $pivot->user_id = $user_id;
+                $pivot->save();
+            }
+            
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err]);
@@ -131,14 +142,43 @@ class GroupController extends Controller
                 ]
             ]], $error_response->getStatusCode());
         }
+
         $id = $request->get('id', null);
         $group = Group::find($id);
         if($group === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
         $group->name = $request->get('name');
         $group->description = $request->get('description');
         $group->group_head = $request->get('group_head');
+        $user_ids = $request->get('user_ids',[]);
         try{
             $group->save();
+
+            $group_user_ids = GroupUserPivot::where('group_id', $id)->pluck('user_id')->toArray();
+            if(!count($group_user_ids)) {
+                $user_ids = array_unique($user_ids);
+                foreach($user_ids as $user_id){
+                    $pivot = new GroupUserPivot;
+                    $pivot->group_id = $id;
+                    $pivot->user_id = $user_id;
+                    $pivot->save();
+                }
+            } else {
+                $difference_array_new = array_diff($user_ids, $group_user_ids);
+                $difference_array_delete = array_diff($group_user_ids, $user_ids);
+                $difference_array_new = array_unique($difference_array_new);
+                $difference_array_delete = array_unique($difference_array_delete);
+                foreach($difference_array_new as $user_id){
+                    $pivot = new GroupUserPivot;
+                    $pivot->group_id = $id;
+                    $pivot->user_id = $user_id;
+                    $pivot->save();
+                }
+                $group = GroupUserPivot::where('group_id', $id)->get();
+                foreach($difference_array_delete as $user_id){
+                    $user_group = $group->where('user_id', $user_id)->first();
+                    $user_group->delete();
+                }
+            }
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err]);
