@@ -40,7 +40,7 @@ class CompanyController extends Controller
                     "server_code" => json_decode($error_response->getBody())->error->code,
                     "status_detail" => json_decode($error_response->getBody())->error->detail
                 ]
-            ]]);
+            ]], $error_response->getStatusCode());
         }
     }
 
@@ -73,7 +73,7 @@ class CompanyController extends Controller
                     "server_code" => json_decode($error_response->getBody())->error->code,
                     "status_detail" => json_decode($error_response->getBody())->error->detail
                 ]
-            ]]);
+            ]], $error_response->getStatusCode());
         }
     }
 
@@ -107,7 +107,7 @@ class CompanyController extends Controller
                     "server_code" => json_decode($error_response->getBody())->error->code,
                     "status_detail" => json_decode($error_response->getBody())->error->detail
                 ]
-            ]]);
+            ]], $error_response->getStatusCode());
         }
     }
 
@@ -141,7 +141,7 @@ class CompanyController extends Controller
                     "server_code" => json_decode($error_response->getBody())->error->code,
                     "status_detail" => json_decode($error_response->getBody())->error->detail
                 ]
-            ]]);
+            ]], $error_response->getStatusCode());
         }
     }
 
@@ -171,7 +171,7 @@ class CompanyController extends Controller
                     "server_code" => json_decode($error_response->getBody())->error->code,
                     "status_detail" => json_decode($error_response->getBody())->error->detail
                 ]
-            ]]);
+            ]], $error_response->getStatusCode());
         }
     }
 }

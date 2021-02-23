@@ -40,7 +40,7 @@ class BankController extends Controller
                     "server_code" => json_decode($error_response->getBody())->error->code,
                     "status_detail" => json_decode($error_response->getBody())->error->detail
                 ]
-            ]]);
+            ]], $error_response->getStatusCode());
         }
         try{
             $company_id = $request->get('id');
@@ -69,7 +69,7 @@ class BankController extends Controller
                     "server_code" => json_decode($error_response->getBody())->error->code,
                     "status_detail" => json_decode($error_response->getBody())->error->detail
                 ]
-            ]]);
+            ]], $error_response->getStatusCode());
         }
         $bank = new Bank;
         $bank->company_id = $request->get('company_id');
@@ -102,7 +102,7 @@ class BankController extends Controller
                     "server_code" => json_decode($error_response->getBody())->error->code,
                     "status_detail" => json_decode($error_response->getBody())->error->detail
                 ]
-            ]]);
+            ]], $error_response->getStatusCode());
         }
         $id = $request->get('id', null);
         $bank = Bank::find($id);
@@ -137,7 +137,7 @@ class BankController extends Controller
                     "server_code" => json_decode($error_response->getBody())->error->code,
                     "status_detail" => json_decode($error_response->getBody())->error->detail
                 ]
-            ]]);
+            ]], $error_response->getStatusCode());
         }
         $id = $request->get('id', null);
         $bank = Bank::find($id);

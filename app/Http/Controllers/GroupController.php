@@ -39,7 +39,7 @@ class GroupController extends Controller
                     "server_code" => json_decode($error_response->getBody())->error->code,
                     "status_detail" => json_decode($error_response->getBody())->error->detail
                 ]
-            ]]);
+            ]], $error_response->getStatusCode());
         }
         try{
             $is_agent = $request->get('is_agent', 1);
@@ -67,7 +67,7 @@ class GroupController extends Controller
                     "server_code" => json_decode($error_response->getBody())->error->code,
                     "status_detail" => json_decode($error_response->getBody())->error->detail
                 ]
-            ]]);
+            ]], $error_response->getStatusCode());
         }
         try{
             $id = $request->get('id', null);
@@ -97,7 +97,7 @@ class GroupController extends Controller
                     "server_code" => json_decode($error_response->getBody())->error->code,
                     "status_detail" => json_decode($error_response->getBody())->error->detail
                 ]
-            ]]);
+            ]], $error_response->getStatusCode());
         }
         $group = new Group;
         $group->name = $request->get('name');
@@ -129,7 +129,7 @@ class GroupController extends Controller
                     "server_code" => json_decode($error_response->getBody())->error->code,
                     "status_detail" => json_decode($error_response->getBody())->error->detail
                 ]
-            ]]);
+            ]], $error_response->getStatusCode());
         }
         $id = $request->get('id', null);
         $group = Group::find($id);
@@ -162,7 +162,7 @@ class GroupController extends Controller
                     "server_code" => json_decode($error_response->getBody())->error->code,
                     "status_detail" => json_decode($error_response->getBody())->error->detail
                 ]
-            ]]);
+            ]], $error_response->getStatusCode());
         }
         $id = $request->get('id', null);
         $group = Group::find($id);
