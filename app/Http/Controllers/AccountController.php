@@ -143,6 +143,36 @@ class AccountController extends Controller
         }
     }
 
+    public function changeAccountPassword(Request $request)
+    {
+        $body = [
+            "user_id" => $request->get('user_id'),
+            "new_password" => $request->get('new_password')
+        ];
+        $headers = [
+            'Authorization' => $request->header("Authorization"),
+            'content-type' => 'application/json'
+        ];
+        try{
+            $response = $this->client->request('POST', '/admin/v1/change-password', [
+                    'headers'  => $headers,
+                    'json' => $body
+                ]);
+            return response(json_decode((string) $response->getBody(), true));
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]]);
+        }
+    }
+
     public function accountActivation(Request $request)
     {
         $body = [

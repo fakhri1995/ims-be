@@ -34,9 +34,10 @@ $router->post('/getAccountDetail', 'AccountController@getAccountDetail');
 $router->post('/getAccountList', 'AccountController@getAccountList');
 $router->post('/addAccountMember', 'AccountController@addAccountMember');
 $router->post('/updateAccountDetail', 'AccountController@updateAccountDetail');
+$router->post('/changeAccountPassword', 'AccountController@changeAccountPassword');
 $router->post('/accountActivation', 'AccountController@AccountActivation');
 
-//Account Routes
+//Access Feature Routes
 $router->post('/getAccessModule', 'AccessFeatureController@getAccessModule');
 $router->post('/getAccessFeature', 'AccessFeatureController@getAccessFeature');
 $router->post('/addAccessModule', 'AccessFeatureController@addAccessModule');
