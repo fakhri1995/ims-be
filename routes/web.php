@@ -62,3 +62,10 @@ $router->delete('/deleteGroup', 'GroupController@deleteGroup');
 //Group Routes
 // $router->post('/attachPivotGU', 'GroupUserPivotController@attachPivotGU');
 // $router->delete('/detachPivotGU', 'GroupUserPivotController@detachPivotGU');
+
+// //Asset Routes
+$router->get('/getAssets', 'AssetInventoryController@getAssets');
+// $router->get('/getAsset', 'AssetInventoryController@getAsset');
+$router->post('/addAsset', 'AssetInventoryController@addAsset');
+// $router->put('/updateAsset', 'AssetInventoryController@updateAsset');
+// $router->delete('/deleteAsset', 'AssetInventoryController@deleteAsset');

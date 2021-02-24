@@ -15,9 +15,12 @@ class CreateInventoryColumnsTable extends Migration
     {
         Schema::create('inventory_columns', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('asset_id');
             $table->string('name');
             $table->string('data_type');
+            $table->string('default');
             $table->boolean('required');
+            $table->boolean('unique');
         });
     }
 
