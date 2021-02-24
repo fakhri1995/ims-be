@@ -20,6 +20,7 @@ class CreateBanksTable extends Migration
             $table->string('account_number');
             $table->string('owner');
             $table->string('currency');
+            $table->softDeletes();
         });
     }
 

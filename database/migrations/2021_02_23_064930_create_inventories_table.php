@@ -39,6 +39,7 @@ class CreateInventoriesTable extends Migration
             $table->string('used_by')->nullable();
             $table->string('managed_by')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

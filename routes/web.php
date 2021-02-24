@@ -67,5 +67,5 @@ $router->delete('/deleteGroup', 'GroupController@deleteGroup');
 $router->get('/getAssets', 'AssetInventoryController@getAssets');
 // $router->get('/getAsset', 'AssetInventoryController@getAsset');
 $router->post('/addAsset', 'AssetInventoryController@addAsset');
-// $router->put('/updateAsset', 'AssetInventoryController@updateAsset');
-// $router->delete('/deleteAsset', 'AssetInventoryController@deleteAsset');
+$router->put('/updateAsset', 'AssetInventoryController@updateAsset');
+$router->delete('/deleteAsset', 'AssetInventoryController@deleteAsset');

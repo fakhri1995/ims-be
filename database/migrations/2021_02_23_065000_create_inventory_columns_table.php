@@ -21,6 +21,7 @@ class CreateInventoryColumnsTable extends Migration
             $table->string('default');
             $table->boolean('required');
             $table->boolean('unique');
+            $table->softDeletes();
         });
     }
 

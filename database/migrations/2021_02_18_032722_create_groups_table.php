@@ -19,6 +19,7 @@ class CreateGroupsTable extends Migration
             $table->string('description');
             $table->integer('group_head');
             $table->boolean('is_agent');
+            $table->softDeletes();
         });
     }
 

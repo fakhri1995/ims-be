@@ -47,10 +47,10 @@ class AssetInventoryController extends Controller
         }
         try{
             $assets = Asset::all();
-            if($assets->isEmpty()) return response()->json(["success" => false, "message" => "Asset Account Belum Terdaftar"]);
+            if($assets->isEmpty()) return response()->json(["success" => false, "message" => "Asset Account Belum Terdaftar"], 400);
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $assets]);
         } catch(Exception $err){
-            return response()->json(["success" => false, "message" => $err]);
+            return response()->json(["success" => false, "message" => $err], 400);
         }
     }
 
@@ -111,8 +111,78 @@ class AssetInventoryController extends Controller
             $asset->save();
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
         } catch(Exception $err){
-            return response()->json(["success" => false, "message" => $err]);
+            return response()->json(["success" => false, "message" => $err], 400);
         }
     }
+
+    public function updateAsset(Request $request)
+    {
+        $headers = ['Authorization' => $request->header("Authorization")];
+        try{
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                    'headers'  => $headers
+                ]);
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
+        $id = $request->get('id', null);
+        $name = $request->get('name');
+        $code = $request->get('code');
+        try{
+            $asset = Asset::find($id);
+            if($asset === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
+            $check_asset = Asset::where('code', $code)->first();
+            if($check_asset && $code !== $asset->code) return response()->json(["success" => false, "message" => "Code Sudah Terpakai"], 400);
+            $check_format_code = explode(".", $code);
+            foreach($check_format_code as $checker){
+                $checker = preg_replace( '/[^0-9]/', '', $checker);
+                if(strlen($checker) !== 3) return response()->json(["success" => false, "message" => "Code Tidak Sesuai dengan Format"], 400);
+            }
+            $asset->name = $name;
+            $asset->code = $code;
+            $asset->save();
+            return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }    
     
+    public function deleteAsset(Request $request)
+    {
+        $headers = ['Authorization' => $request->header("Authorization")];
+        try{
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                    'headers'  => $headers
+                ]);
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
+        $id = $request->get('id', null);
+        $asset = Asset::find($id);
+        if($asset === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
+        try{
+            $asset->delete();
+            return response()->json(["success" => true, "message" => "Data Berhasil Dihapus"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
 }
