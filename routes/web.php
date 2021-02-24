@@ -63,9 +63,16 @@ $router->delete('/deleteGroup', 'GroupController@deleteGroup');
 // $router->post('/attachPivotGU', 'GroupUserPivotController@attachPivotGU');
 // $router->delete('/detachPivotGU', 'GroupUserPivotController@detachPivotGU');
 
-// //Asset Routes
+//Asset Routes
 $router->get('/getAssets', 'AssetInventoryController@getAssets');
-// $router->get('/getAsset', 'AssetInventoryController@getAsset');
+$router->get('/getDeletedAssets', 'AssetInventoryController@getDeletedAssets');
 $router->post('/addAsset', 'AssetInventoryController@addAsset');
 $router->put('/updateAsset', 'AssetInventoryController@updateAsset');
 $router->delete('/deleteAsset', 'AssetInventoryController@deleteAsset');
+
+//InventoryColumn Routes
+$router->get('/getInventoryColumns', 'AssetInventoryController@getInventoryColumns');
+$router->get('/getDeletedInventoryColumns', 'AssetInventoryController@getDeletedInventoryColumns');
+$router->post('/addInventoryColumn', 'AssetInventoryController@addInventoryColumn');
+$router->put('/updateInventoryColumn', 'AssetInventoryController@updateInventoryColumn');
+$router->delete('/deleteInventoryColumn', 'AssetInventoryController@deleteInventoryColumn');

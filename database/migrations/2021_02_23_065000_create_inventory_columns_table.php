@@ -18,7 +18,7 @@ class CreateInventoryColumnsTable extends Migration
             $table->unsignedBigInteger('asset_id');
             $table->string('name');
             $table->string('data_type');
-            $table->string('default');
+            $table->string('default')->nullable();
             $table->boolean('required');
             $table->boolean('unique');
             $table->softDeletes();
