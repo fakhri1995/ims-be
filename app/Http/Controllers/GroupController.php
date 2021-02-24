@@ -46,7 +46,7 @@ class GroupController extends Controller
             $group = Group::where('is_agent', $is_agent)->get();
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $group]);
         } catch(Exception $err){
-            return response()->json(["success" => false, "message" => $err]);
+            return response()->json(["success" => false, "message" => $err], 400);
         }
     }
 
@@ -76,7 +76,7 @@ class GroupController extends Controller
             $group_user = GroupUserPivot::where('group_id', $id)->pluck('user_id');
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => ["group_detail" => $group, "group_user" => $group_user]]);
         } catch(Exception $err){
-            return response()->json(["success" => false, "message" => $err]);
+            return response()->json(["success" => false, "message" => $err], 400);
         }
     }
 
@@ -119,7 +119,7 @@ class GroupController extends Controller
             
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
         } catch(Exception $err){
-            return response()->json(["success" => false, "message" => $err]);
+            return response()->json(["success" => false, "message" => $err], 400);
         }
     }
 
@@ -181,7 +181,7 @@ class GroupController extends Controller
             }
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
         } catch(Exception $err){
-            return response()->json(["success" => false, "message" => $err]);
+            return response()->json(["success" => false, "message" => $err], 400);
         }
     }
 
@@ -215,7 +215,7 @@ class GroupController extends Controller
             }
             return response()->json(["success" => true, "message" => "Data Berhasil Dihapus"]);
         } catch(Exception $err){
-            return response()->json(["success" => false, "message" => $err]);
+            return response()->json(["success" => false, "message" => $err], 400);
         }
     }
 

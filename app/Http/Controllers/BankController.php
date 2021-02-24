@@ -48,7 +48,7 @@ class BankController extends Controller
             if($banks->isEmpty()) return response()->json(["success" => false, "message" => "Bank Account Belum Terdaftar"]);
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $banks]);
         } catch(Exception $err){
-            return response()->json(["success" => false, "message" => $err]);
+            return response()->json(["success" => false, "message" => $err], 400);
         }
     }
 
@@ -81,7 +81,7 @@ class BankController extends Controller
             $bank->save();
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
         } catch(Exception $err){
-            return response()->json(["success" => false, "message" => $err]);
+            return response()->json(["success" => false, "message" => $err], 400);
         }
     }
 
@@ -116,7 +116,7 @@ class BankController extends Controller
             $bank->save();
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
         } catch(Exception $err){
-            return response()->json(["success" => false, "message" => $err]);
+            return response()->json(["success" => false, "message" => $err], 400);
         }
     }
 
@@ -146,7 +146,7 @@ class BankController extends Controller
             $bank->delete();
             return response()->json(["success" => true, "message" => "Data Berhasil Dihapus"]);
         } catch(Exception $err){
-            return response()->json(["success" => false, "message" => $err]);
+            return response()->json(["success" => false, "message" => $err], 400);
         }
     }
 
