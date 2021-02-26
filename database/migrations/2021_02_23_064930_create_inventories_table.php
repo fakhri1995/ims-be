@@ -16,6 +16,7 @@ class CreateInventoriesTable extends Migration
         Schema::create('inventories', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('asset_id');
+            $table->unsignedBigInteger('vendor_id');
             $table->string('asset_code');
             $table->string('asset_name');
             $table->string('mig_number')->nullable();

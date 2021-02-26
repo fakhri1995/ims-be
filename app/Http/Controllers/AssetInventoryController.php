@@ -570,16 +570,21 @@ class AssetInventoryController extends Controller
         try{
             $inventory = Inventory::find($id);
             if($inventory === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
-            $additional_attributes = DB::table('inventory_values')
-            ->where('inventory_values.deleted_at', null)->where('inventory_values.inventory_id', '=', $id)
-            ->join('inventory_columns', 'inventory_values.inventory_column_id', '=', 'inventory_columns.id')
+            // $additional_attributes = DB::table('inventory_values')
+            // ->where('inventory_values.deleted_at', null)->where('inventory_values.inventory_id', '=', $id)
+            // ->join('inventory_columns', 'inventory_values.inventory_column_id', '=', 'inventory_columns.id')
             // ->select('inventory_values.id', 'inventory_columns.name', 'inventory_values.value')
-            ->select('inventory_values.value', 'inventory_columns.name')
-            ->get();
+            // ->get();
             // $inventory['additional_attributes'] = $additional_attributes;
-            foreach($additional_attributes as $attribute){
-                $inventory[$attribute->name] = $attribute->value;
+            $inventory_values = InventoryValue::all();
+            $inventory_columns = InventoryColumn::select('id','name')->get();
+            $needed_inventory_values = $inventory_values->where('inventory_id',$id);
+            foreach($needed_inventory_values as $needed_inventory_value){
+                $inventory_column = $inventory_columns->where('id', $needed_inventory_value->inventory_column_id)->first();
+                $needed_inventory_value->name = $inventory_column->name;
             }
+
+            $inventory->additional_attributes = $needed_inventory_values;
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventory]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
