@@ -90,3 +90,9 @@ $router->get('/getInventory', 'AssetInventoryController@getInventory');
 $router->post('/addInventory', 'AssetInventoryController@addInventory');
 $router->put('/updateInventory', 'AssetInventoryController@updateInventory');
 $router->delete('/deleteInventory', 'AssetInventoryController@deleteInventory');
+
+//Vendor Routes
+$router->get('/getVendors', 'VendorController@getVendors');
+$router->post('/addVendor', 'VendorController@addVendor');
+$router->put('/updateVendor', 'VendorController@updateVendor');
+$router->delete('/deleteVendor', 'VendorController@deleteVendor');

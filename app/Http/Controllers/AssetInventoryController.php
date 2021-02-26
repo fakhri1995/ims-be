@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use App\Asset;
@@ -612,6 +611,7 @@ class AssetInventoryController extends Controller
         }
         $validator = Validator::make($request->all(), [
             "asset_id" => "required",
+            "vendor_id" => "required",
             "asset_code" => "required",
             "asset_name" => "required",
             "status" => "required",
@@ -625,6 +625,7 @@ class AssetInventoryController extends Controller
         }
         $inventory = new Inventory;
         $inventory->asset_id = $request->get('asset_id');
+        $inventory->vendor_id = $request->get('vendor_id');
         $inventory->asset_code = $request->get('asset_code');
         $inventory->asset_name = $request->get('asset_name');
         $inventory->mig_number = $request->get('mig_number');
@@ -677,6 +678,7 @@ class AssetInventoryController extends Controller
         }
         $validator = Validator::make($request->all(), [
             "id" => "required",
+            "vendor_id" => "required",
             "asset_code" => "required",
             "asset_name" => "required",
             "status" => "required",
@@ -693,6 +695,7 @@ class AssetInventoryController extends Controller
         try{
             $inventory = Inventory::find($id);
             if($inventory === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
+            $inventory->vendor_id = $request->get('vendor_id');
             $inventory->asset_code = $request->get('asset_code');
             $inventory->asset_name = $request->get('asset_name');
             $inventory->mig_number = $request->get('mig_number');
