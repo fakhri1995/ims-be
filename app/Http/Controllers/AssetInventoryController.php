@@ -25,6 +25,29 @@ class AssetInventoryController extends Controller
         $this->client = new Client(['base_uri' => 'https://go.cgx.co.id/']);
     }
 
+
+    public function getData($parent){
+        $assets = Asset::where('code', 'like', $parent.".%")->where('code', 'not like', $parent.".___.%")->orderBy('code', 'asc')->get();
+        $new_assets = [];
+        foreach($assets as $asset){
+            $data = $this->getData($asset->code);
+            if($data !== []){
+                $temp = (object)[
+                    'title' => $asset->name,
+                    'key' => $asset->code,
+                    'children' => [$data]
+                ];
+            } else {
+                $temp = (object)[
+                    'title' => $asset->name,
+                    'key' => $asset->code
+                ];
+            }
+            $new_assets[] = $temp;
+        }
+        return $new_assets;
+    }
+
     // Asset 
     public function getAssets(Request $request)
     {
@@ -46,9 +69,19 @@ class AssetInventoryController extends Controller
             ]], $error_response->getStatusCode());
         }
         try{
-            $assets = Asset::orderBy('code')->get();;
+            // $assets = Asset::orderBy('code')->get();
+            $assets = Asset::where('code', 'not like', "%.%")->orderBy('code')->get();
+            $new_assets = [];
+            foreach($assets as $asset){
+                $temp = (object)[
+                        'title' => $asset->name,
+                        'key' => $asset->code,
+                        'children' => [$this->getData($asset->code)]
+                ];
+                $new_assets[] = $temp;
+            }
             if($assets->isEmpty()) return response()->json(["success" => true, "message" => "Asset Belum Terisi"]);
-            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $assets]);
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $new_assets]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
