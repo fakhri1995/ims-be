@@ -35,7 +35,7 @@ class AssetInventoryController extends Controller
                 $temp = (object)[
                     'title' => $asset->name,
                     'key' => $asset->code,
-                    'children' => [$data]
+                    'children' => $data
                 ];
             } else {
                 $temp = (object)[
@@ -76,7 +76,7 @@ class AssetInventoryController extends Controller
                 $temp = (object)[
                         'title' => $asset->name,
                         'key' => $asset->code,
-                        'children' => [$this->getData($asset->code)]
+                        'children' => $this->getData($asset->code)
                 ];
                 $new_assets[] = $temp;
             }
