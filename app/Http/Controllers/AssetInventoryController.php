@@ -33,14 +33,18 @@ class AssetInventoryController extends Controller
             $data = $this->getData($asset->code);
             if($data !== []){
                 $temp = (object)[
+                    'id' => $asset->id,
                     'title' => $asset->name,
                     'key' => $asset->code,
+                    'value' => $asset->code,
                     'children' => $data
                 ];
             } else {
                 $temp = (object)[
+                    'id' => $asset->id,
                     'title' => $asset->name,
-                    'key' => $asset->code
+                    'key' => $asset->code,
+                    'value' => $asset->code
                 ];
             }
             $new_assets[] = $temp;
@@ -74,9 +78,11 @@ class AssetInventoryController extends Controller
             $new_assets = [];
             foreach($assets as $asset){
                 $temp = (object)[
-                        'title' => $asset->name,
-                        'key' => $asset->code,
-                        'children' => $this->getData($asset->code)
+                    'id' => $asset->id,
+                    'title' => $asset->name,
+                    'key' => $asset->code,
+                    'value' => $asset->code,
+                    'children' => $this->getData($asset->code)
                 ];
                 $new_assets[] = $temp;
             }
