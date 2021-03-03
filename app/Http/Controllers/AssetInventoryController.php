@@ -273,8 +273,11 @@ class AssetInventoryController extends Controller
                 ]
             ]], $error_response->getStatusCode());
         }
+
         try{
-            $inventory_columns = InventoryColumn::all();
+            $id = $request->get('id', null);
+            $inventory_columns = InventoryColumn::where('asset_id', $id)->get();
+            if($inventory_columns === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
             if($inventory_columns->isEmpty()) return response()->json(["success" => true, "message" => "Data Inventory Column Belum Terisi"]);
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventory_columns]);
         } catch(Exception $err){
