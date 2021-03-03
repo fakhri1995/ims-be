@@ -10,6 +10,8 @@ use App\Asset;
 use App\Inventory;
 use App\InventoryValue;
 use App\InventoryColumn;
+use App\Vendor;
+use App\ActionLog;
 use Exception;
 
 class AssetInventoryController extends Controller
@@ -100,6 +102,8 @@ class AssetInventoryController extends Controller
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
                     'headers'  => $headers
                 ]);
+            $response = json_decode((string) $response->getBody(), true);
+            $log_user_id = $response['data']['user_id'];
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -115,6 +119,7 @@ class AssetInventoryController extends Controller
         $asset = new Asset;
         $asset->name = $request->get('name');
         $parent = $request->get('parent', null);
+        $inventory_columns = $request->get('inventory_columns',[]);
         try{
             if($parent !== null){
                 $assets = Asset::where('code', 'like', $parent.".%")->where('code', 'not like', $parent.".___.%")->orderBy('code', 'desc')->get();
@@ -148,6 +153,23 @@ class AssetInventoryController extends Controller
                 }
             }
             $asset->save();
+
+            foreach($inventory_columns as $inventory_column){
+                $model = new InventoryColumn;
+                $model->asset_id = $asset->id;
+                $model->name = $inventory_column['name'];
+                $model->data_type = $inventory_column['data_type'];
+                $model->default = $inventory_column['default'];
+                $model->required = $inventory_column['required'];
+                $model->unique = $inventory_column['unique'];
+                $model->save();
+            }
+
+            // $action_log = new ActionLog;
+            // $action_log->user_id = $log_user_id;
+            // $action_log->aksi = 'Create Asset';
+            // $action_log->entity_id = $asset->id;
+            // $action_log->save();
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
@@ -161,6 +183,8 @@ class AssetInventoryController extends Controller
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
                     'headers'  => $headers
                 ]);
+            $response = json_decode((string) $response->getBody(), true);
+            $log_user_id = $response['data']['user_id'];
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -176,6 +200,7 @@ class AssetInventoryController extends Controller
         $id = $request->get('id', null);
         $name = $request->get('name');
         $code = $request->get('code');
+        $inventory_columns = $request->get('inventory_columns', []);
         try{
             $asset = Asset::find($id);
             if($asset === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
@@ -189,6 +214,22 @@ class AssetInventoryController extends Controller
             $asset->name = $name;
             $asset->code = $code;
             $asset->save();
+
+            foreach($inventory_columns as $inventory_column){
+                $model = InventoryColumn::find($inventory_column['id']);
+                $model->name = $inventory_column['name'];
+                $model->data_type = $inventory_column['data_type'];
+                $model->default = $inventory_column['default'];
+                $model->required = $inventory_column['required'];
+                $model->unique = $inventory_column['unique'];
+                $model->save();
+            }
+
+            // $action_log = new ActionLog;
+            // $action_log->user_id = $log_user_id;
+            // $action_log->aksi = 'Update Asset';
+            // $action_log->entity_id = $asset->id;
+            // $action_log->save();
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
@@ -202,6 +243,8 @@ class AssetInventoryController extends Controller
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
                     'headers'  => $headers
                 ]);
+            $response = json_decode((string) $response->getBody(), true);
+            $log_user_id = $response['data']['user_id'];
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -219,6 +262,17 @@ class AssetInventoryController extends Controller
         if($asset === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
         try{
             $asset->delete();
+
+            $inventory_columns = InventoryColumn::where('asset_id', $id)->get();
+            foreach($inventory_columns as $inventory_column){
+                $inventory_column->delete();
+            }
+
+            // $action_log = new ActionLog;
+            // $action_log->user_id = $log_user_id;
+            // $action_log->aksi = 'Delete Asset';
+            // $action_log->entity_id = $asset->id;
+            // $action_log->save();
             return response()->json(["success" => true, "message" => "Data Berhasil Dihapus"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
@@ -279,7 +333,9 @@ class AssetInventoryController extends Controller
             $inventory_columns = InventoryColumn::where('asset_id', $id)->get();
             if($inventory_columns === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
             if($inventory_columns->isEmpty()) return response()->json(["success" => true, "message" => "Data Inventory Column Belum Terisi"]);
-            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventory_columns]);
+            $vendors = Vendor::select('id','name')->get();
+            $assets = Asset::select('id','name')->get();
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => (object)["inventory_columns" => $inventory_columns, "vendors" => $vendors, "assets" => $assets]]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
@@ -639,6 +695,8 @@ class AssetInventoryController extends Controller
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
                     'headers'  => $headers
                 ]);
+            $response = json_decode((string) $response->getBody(), true);
+            $log_user_id = $response['data']['user_id'];
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -690,8 +748,22 @@ class AssetInventoryController extends Controller
         $inventory->gudang = $request->get('gudang');
         $inventory->used_by = $request->get('used_by');
         $inventory->managed_by = $request->get('managed_by');
+        $inventory_values = $request->get('inventory_values',[]);
         try{
             $inventory->save();
+            foreach($inventory_values as $inventory_value){
+                $model = new InventoryValue;
+                $model->inventory_id = $inventory->id;
+                $model->inventory_column_id = $inventory_value['inventory_column_id'];
+                $model->value = $inventory_value['value'];
+                $model->save();
+            }
+            
+            // $action_log = new ActionLog;
+            // $action_log->user_id = $log_user_id;
+            // $action_log->aksi = 'Create Inventory';
+            // $action_log->entity_id = $inventory->id;
+            // $action_log->save();
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
@@ -706,6 +778,8 @@ class AssetInventoryController extends Controller
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
                     'headers'  => $headers
                 ]);
+            $response = json_decode((string) $response->getBody(), true);
+            $log_user_id = $response['data']['user_id'];
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -760,7 +834,20 @@ class AssetInventoryController extends Controller
             $inventory->gudang = $request->get('gudang');
             $inventory->used_by = $request->get('used_by');
             $inventory->managed_by = $request->get('managed_by');
+            $inventory_values = $request->get('inventory_values',[]);
             $inventory->save();
+
+            foreach($inventory_values as $inventory_value){
+                $model = InventoryValue::find($inventory_value['id']);
+                $model->value = $inventory_value['value'];
+                $model->save();
+            }
+
+            // $action_log = new ActionLog;
+            // $action_log->user_id = $log_user_id;
+            // $action_log->aksi = 'Update Inventory';
+            // $action_log->entity_id = $inventory->id;
+            // $action_log->save();
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
@@ -774,6 +861,8 @@ class AssetInventoryController extends Controller
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
                     'headers'  => $headers
                 ]);
+            $response = json_decode((string) $response->getBody(), true);
+            $log_user_id = $response['data']['user_id'];
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -795,6 +884,12 @@ class AssetInventoryController extends Controller
             foreach($inventory_values as $inventory_value){
                 $inventory_value->delete();
             }
+
+            $action_log = new ActionLog;
+            $action_log->user_id = $log_user_id;
+            $action_log->aksi = 'Delete Inventory';
+            $action_log->entity_id = $inventory->id;
+            $action_log->save();
             return response()->json(["success" => true, "message" => "Data Berhasil Dihapus"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
