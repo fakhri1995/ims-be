@@ -14,6 +14,7 @@
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/lumen-framework": "^7.0",
+        "spatie/laravel-activitylog": "^3.17",
         "symfony/psr-http-message-bridge": "^2.0"
     },
     "require-dev": {

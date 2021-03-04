@@ -1,5 +1,19 @@
 <?php
 
+if ( ! function_exists('config_path'))
+{
+    /**
+     * Get the configuration path.
+     *
+     * @param  string $path
+     * @return string
+     */
+    function config_path($path = '')
+    {
+        return app()->basePath() . '/config' . ($path ? '/' . $path : $path);
+    }
+}
+
 require_once __DIR__.'/../vendor/autoload.php';
 
 (new Laravel\Lumen\Bootstrap\LoadEnvironmentVariables(
@@ -61,6 +75,7 @@ $app->singleton(
 
 $app->configure('app');
 $app->configure('cors');
+$app->configure('activitylog');
 
 /*
 |--------------------------------------------------------------------------
@@ -93,10 +108,11 @@ $app->middleware([
 */
 
 // $app->register(App\Providers\AppServiceProvider::class);
-// $app->register(App\Providers\AuthServiceProvider::class);
+$app->register(App\Providers\AuthServiceProvider::class);
 // $app->register(App\Providers\EventServiceProvider::class);
 $app->register(Fruitcake\Cors\CorsServiceProvider::class);
 $app->register(Flipbox\LumenGenerator\LumenGeneratorServiceProvider::class);
+$app->register(Spatie\Activitylog\ActivitylogServiceProvider::class);
 
 /*
 |--------------------------------------------------------------------------
