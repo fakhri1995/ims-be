@@ -631,19 +631,22 @@ class AssetInventoryController extends Controller
             // ->get();
             // $inventory['additional_attributes'] = $additional_attributes;
             $inventory_values = InventoryValue::all();
-            $inventory_columns = InventoryColumn::select('id','name')->get();
-            $needed_inventory_values = $inventory_values->where('inventory_id',$id);
-            foreach($needed_inventory_values as $needed_inventory_value){
-                $inventory_column = $inventory_columns->where('id', $needed_inventory_value->inventory_column_id)->first();
+            $inventory_columns = InventoryColumn::select('id','name','data_type')->get();
+            $temp_values = $inventory_values->where('inventory_id',$id);
+            $needed_inventory_values = [];
+            foreach($temp_values as $temp_value){
+                $inventory_column = $inventory_columns->where('id', $temp_value->inventory_column_id)->first();
                 if($inventory_column === null){
                     $inventory->additional_attributes = "Inventory Column Name of an Inventory Value not Found";
                     return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventory]);
                 } 
-                $needed_inventory_value->name = $inventory_column->name;
+                $temp_value->name = $inventory_column->name;
+                $temp_value->data_type = $inventory_column->data_type;
+                array_push($needed_inventory_values, $temp_value);
             }
-
             $inventory->additional_attributes = $needed_inventory_values;
-            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventory]);
+            $vendors = Vendor::select('id','name')->get();
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => (object)['inventory' => $inventory, 'vendors' => $vendors] ]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
