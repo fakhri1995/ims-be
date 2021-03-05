@@ -635,6 +635,10 @@ class AssetInventoryController extends Controller
             $needed_inventory_values = $inventory_values->where('inventory_id',$id);
             foreach($needed_inventory_values as $needed_inventory_value){
                 $inventory_column = $inventory_columns->where('id', $needed_inventory_value->inventory_column_id)->first();
+                if($inventory_column === null){
+                    $inventory->additional_attributes = "Inventory Column Name of an Inventory Value not Found";
+                    return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventory]);
+                } 
                 $needed_inventory_value->name = $inventory_column->name;
             }
 
