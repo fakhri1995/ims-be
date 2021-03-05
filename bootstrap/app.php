@@ -1,19 +1,5 @@
 <?php
 
-if ( ! function_exists('config_path'))
-{
-    /**
-     * Get the configuration path.
-     *
-     * @param  string $path
-     * @return string
-     */
-    function config_path($path = '')
-    {
-        return app()->basePath() . '/config' . ($path ? '/' . $path : $path);
-    }
-}
-
 require_once __DIR__.'/../vendor/autoload.php';
 
 (new Laravel\Lumen\Bootstrap\LoadEnvironmentVariables(
@@ -37,6 +23,7 @@ $app = new Laravel\Lumen\Application(
     dirname(__DIR__)
 );
 
+$app->configure('filesystems');
 $app->withFacades();
 
 $app->withEloquent();
@@ -113,6 +100,7 @@ $app->register(App\Providers\AuthServiceProvider::class);
 $app->register(Fruitcake\Cors\CorsServiceProvider::class);
 $app->register(Flipbox\LumenGenerator\LumenGeneratorServiceProvider::class);
 $app->register(Spatie\Activitylog\ActivitylogServiceProvider::class);
+$app->register(Illuminate\Filesystem\FilesystemServiceProvider::class);
 
 /*
 |--------------------------------------------------------------------------

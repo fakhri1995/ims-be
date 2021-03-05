@@ -13,7 +13,6 @@ use Spatie\Activitylog\Models\Activity;
 */
 
 $router->get('/', function () use ($router) {
-    // activity()->log('Look mum, I logged something');
     return Activity::all()->last();
     return $router->app->version();
     return base64_encode(hash("sha1", "GET"."\n"."/admin/v1/get-company"."\n"."02 Jan 06 15:04 MST", $raw_output=TRUE));
@@ -99,3 +98,9 @@ $router->get('/getVendors', 'VendorController@getVendors');
 $router->post('/addVendor', 'VendorController@addVendor');
 $router->put('/updateVendor', 'VendorController@updateVendor');
 $router->delete('/deleteVendor', 'VendorController@deleteVendor');
+
+//Incident Routes
+$router->get('/getIncidents', 'IncidentController@getIncidents');
+$router->post('/addIncident', 'IncidentController@addIncident');
+$router->post('/updateIncident', 'IncidentController@updateIncident');
+$router->delete('/deleteIncident', 'IncidentController@deleteIncident');
