@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use Spatie\Activitylog\Models\Activity;
+use App\InventoryColumn;
 use Exception;
 
 class ActivityLogController extends Controller
@@ -65,12 +66,14 @@ class ActivityLogController extends Controller
             }   
 
             $inventory_value_logs = Activity::where('log_name', 'Inventory Value')->where('properties->attributes->inventory_id', $id)->get();
+            $inventory_columns = InventoryColumn::select('id','name')->get();
             foreach($inventory_value_logs as $inventory_value_log){
                 if($inventory_value_log->description === 'updated'){
                     $temp = (object) [
                         'date' => $inventory_value_log->created_at,
                         'description' => $inventory_value_log->description.' inventory value',
-                        'properties' => $inventory_value_log->properties
+                        'properties' => $inventory_value_log->properties,
+                        'column_name' => $inventory_columns->where('id', $inventory_value_log->properties['attributes']['inventory_column_id'])->first()->name
                     ];
                     array_push($logs, $temp);
                 }
