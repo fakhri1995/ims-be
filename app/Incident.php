@@ -13,9 +13,4 @@ class Incident extends Model
     protected static $logAttributes = ["*"];
     protected static $logName = "Incident";
     protected static $logOnlyDirty = true;
-
-    public function getDescriptionForEvent(string $eventName): string
-    {
-        return "Incident data has been {$eventName}.";
-    }
 }

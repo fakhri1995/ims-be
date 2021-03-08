@@ -14,10 +14,5 @@ class Asset extends Model
     protected static $logName = "Asset";
     protected static $logOnlyDirty = true;
 
-    public function getDescriptionForEvent(string $eventName): string
-    {
-        return "Asset data has been {$eventName}.";
-    }
-
     public $timestamps = false;
 }

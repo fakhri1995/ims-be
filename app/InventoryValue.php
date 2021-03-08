@@ -12,12 +12,6 @@ class InventoryValue extends Model
 
     protected static $logAttributes = ["*"];
     protected static $logName = "Inventory Value";
-    protected static $logOnlyDirty = true;
-
-    public function getDescriptionForEvent(string $eventName): string
-    {
-        return "Inventory Value data has been {$eventName}.";
-    }
 
     public $timestamps = false;
 }

@@ -13,9 +13,4 @@ class Vendor extends Model
     protected static $logAttributes = ["*"];
     protected static $logName = "Vendor";
     protected static $logOnlyDirty = true;
-
-    public function getDescriptionForEvent(string $eventName): string
-    {
-        return "Vendor data has been {$eventName}.";
-    }
 }

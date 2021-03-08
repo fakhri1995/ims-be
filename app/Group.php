@@ -14,10 +14,5 @@ class Group extends Model
     protected static $logName = "Group";
     protected static $logOnlyDirty = true;
 
-    public function getDescriptionForEvent(string $eventName): string
-    {
-        return "Group data has been {$eventName}.";
-    }
-
     public $timestamps = false;
 }

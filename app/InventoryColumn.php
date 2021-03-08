@@ -14,10 +14,5 @@ class InventoryColumn extends Model
     protected static $logName = "Inventory Column";
     protected static $logOnlyDirty = true;
 
-    public function getDescriptionForEvent(string $eventName): string
-    {
-        return "Inventory Column data has been {$eventName}.";
-    }
-
     public $timestamps = false;
 }

@@ -24,6 +24,9 @@ $router->post('/logout', 'UserController@logout');
 $router->post('/detailProfile', 'UserController@detailProfile');
 $router->post('/changePassword', 'UserController@changePassword');
 
+//Log Routes
+$router->get('/getActivityInventoryLogs', 'ActivityLogController@getActivityInventoryLogs');
+
 //Company Routes
 $router->post('/getCompanyDetail', 'CompanyController@getCompanyDetail');
 $router->post('/getCompanyList', 'CompanyController@getCompanyList');
@@ -104,3 +107,4 @@ $router->get('/getIncidents', 'IncidentController@getIncidents');
 $router->post('/addIncident', 'IncidentController@addIncident');
 $router->post('/updateIncident', 'IncidentController@updateIncident');
 $router->delete('/deleteIncident', 'IncidentController@deleteIncident');
+

@@ -14,10 +14,5 @@ class Bank extends Model
     protected static $logName = "Bank";
     protected static $logOnlyDirty = true;
 
-    public function getDescriptionForEvent(string $eventName): string
-    {
-        return "Bank data has been {$eventName}.";
-    }
-
     public $timestamps = false;
 }

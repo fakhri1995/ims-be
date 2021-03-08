@@ -13,9 +13,4 @@ class Inventory extends Model
     protected static $logAttributes = ["*"];
     protected static $logName = "Inventory";
     protected static $logOnlyDirty = true;
-
-    public function getDescriptionForEvent(string $eventName): string
-    {
-        return "Inventory data has been {$eventName}.";
-    }
 }
