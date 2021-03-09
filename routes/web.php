@@ -108,3 +108,8 @@ $router->post('/addIncident', 'IncidentController@addIncident');
 $router->post('/updateIncident', 'IncidentController@updateIncident');
 $router->delete('/deleteIncident', 'IncidentController@deleteIncident');
 
+//Ticket Routes
+$router->get('/getTickets', 'TicketController@getTickets');
+$router->post('/addTicket', 'TicketController@addTicket');
+$router->put('/updateTicket', 'TicketController@updateTicket');
+$router->delete('/deleteTicket', 'TicketController@deleteTicket');

@@ -7,11 +7,10 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
-use App\Incident;
 use App\Ticket;
 use Exception;
 
-class IncidentController extends Controller
+class TicketController extends Controller
 {
     /**
      * Create a new controller instance.
@@ -26,7 +25,7 @@ class IncidentController extends Controller
 
     // Normal Route
 
-    public function getIncidents(Request $request)
+    public function getTickets(Request $request)
     {
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
@@ -46,14 +45,14 @@ class IncidentController extends Controller
             ]], $error_response->getStatusCode());
         }
         try{
-            $incidents = Incident::all();
-            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $incidents]);
+            $tickets = Ticket::all();
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $tickets]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
     }
 
-    public function addIncident(Request $request)
+    public function addTicket(Request $request)
     {
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
@@ -73,50 +72,19 @@ class IncidentController extends Controller
             ]], $error_response->getStatusCode());
         }
 
-        $validator = Validator::make($request->all(), [
-            "requester" => "required",
-            "associate_asset" => "required",
-            "subject" => "required",
-            "description" => "required",
-            "file" => "file"
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(["success" => false, "message" => (object)[
-                "errorInfo" => $validator->errors()
-            ]], 400);
-        }
-
         try{
-            if($request->file('file')){
-                $file = $request->file('file')->getClientOriginalName();
-                $filename = pathinfo($file, PATHINFO_FILENAME);
-                $extension = pathinfo($file, PATHINFO_EXTENSION);
-                $name = $filename.'_'.time().'.'.$extension;
-                // $request->file('file')->move('uploads/incidents', $name);
-                Storage::disk('local')->putFileAs('incidents', $request->file('file'), $name);
-            } else {
-                $name = 'no_file.jpg';
-            }
-
-            $incident = new Incident;
-            $incident->requester = $request->get('requester');
-            $incident->associate_asset = $request->get('associate_asset');
-            $incident->subject = $request->get('subject');
-            $incident->description = $request->get('description');
-            $incident->file = $name;
-            $incident->save();
-
-            $ticket = new Ticket;
-            $ticket->subject_type_id = $incident->id;
-            $ticket->type = "Ticket";
-            $ticket->status = null;
-            $ticket->priority = null;
-            $ticket->source = null;
-            $ticket->urgency = null;
-            $ticket->impact = null;
-            $ticket->due_to = null;
-            $ticket->asign_to = null;
+            $id = $request->get('id', null);
+            $ticket = Ticket::find($id);
+            if($ticket === null) return response()->json(["success" => false, "message" => "Id Tidak Ditemukan"]);
+            $ticket->subject_type_id = $request->get('subject_type_id');
+            $ticket->type = $request->get('type');
+            $ticket->status = $request->get('status');
+            $ticket->priority = $request->get('priority');
+            $ticket->source = $request->get('source');
+            $ticket->urgency = $request->get('urgency');
+            $ticket->impact = $request->get('impact');
+            $ticket->due_to = $request->get('due_to');
+            $ticket->asign_to = $request->get('asign_to');
             $ticket->save();
 
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
@@ -125,7 +93,7 @@ class IncidentController extends Controller
         }
     }
 
-    public function updateIncident(Request $request)
+    public function updateTicket(Request $request)
     {
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
@@ -144,42 +112,19 @@ class IncidentController extends Controller
                 ]
             ]], $error_response->getStatusCode());
         }
-
-        $validator = Validator::make($request->all(), [
-            "requester" => "required",
-            "associate_asset" => "required",
-            "subject" => "required",
-            "description" => "required",
-            "file" => "file"
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(["success" => false, "message" => (object)[
-                "errorInfo" => $validator->errors()
-            ]], 400);
-        }
-        
-        $id = $request->get('id', null);
-        $incident = Incident::find($id);
-        if($incident === null) return response()->json(["success" => false, "message" => "Id Tidak Ditemukan"]);
         
         try{
-            if($request->file('file')){
-                if($incident->file !== 'no_file.jpg'){
-                    Storage::disk('local')->delete('incidents/' . $incident->file);
-                }
-                $file = $request->file('file')->getClientOriginalName();
-                $filename = pathinfo($file, PATHINFO_FILENAME);
-                $extension = pathinfo($file, PATHINFO_EXTENSION);
-                $name = $filename.'_'.time().'.'.$extension;
-                Storage::disk('local')->putFileAs('incidents', $request->file('file'), $name);
-                $incident->file = $name;
-            }
-            $incident->requester = $request->get('requester');
-            $incident->associate_asset = $request->get('associate_asset');
-            $incident->subject = $request->get('subject');
-            $incident->description = $request->get('description');
-            $incident->save();
+            $id = $request->get('id', null);
+            $ticket = Ticket::find($id);
+            if($ticket === null) return response()->json(["success" => false, "message" => "Id Tidak Ditemukan"]);
+            $ticket->status = $request->get('status');
+            $ticket->priority = $request->get('priority');
+            $ticket->source = $request->get('source');
+            $ticket->urgency = $request->get('urgency');
+            $ticket->impact = $request->get('impact');
+            $ticket->due_to = $request->get('due_to');
+            $ticket->asign_to = $request->get('asign_to');
+            $ticket->save();
 
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
         } catch(Exception $err){
@@ -187,7 +132,7 @@ class IncidentController extends Controller
         }
     }
 
-    public function deleteIncident(Request $request)
+    public function deleteTicket(Request $request)
     {
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
@@ -207,11 +152,10 @@ class IncidentController extends Controller
             ]], $error_response->getStatusCode());
         }
         $id = $request->get('id', null);
-        $incident = Incident::find($id);
-        if($incident === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
+        $ticket = Ticket::find($id);
+        if($ticket === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
         try{
-            if($incident->file !== 'no_file.jpg') Storage::disk('local')->delete('incidents/' . $incident->file);
-            $incident->delete();
+            $ticket->delete();
             return response()->json(["success" => true, "message" => "Data Berhasil Dihapus"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
