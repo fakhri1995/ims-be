@@ -7,6 +7,8 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use Spatie\Activitylog\Models\Activity;
 use App\InventoryColumn;
+use App\Vendor;
+use App\Asset;
 use Exception;
 
 class ActivityLogController extends Controller
@@ -50,10 +52,28 @@ class ActivityLogController extends Controller
             if($id === null) return response()->json(["success" => false, "message" => "Silahkan Tambahkan Parameter Id"], 400);
             $inventory_logs = Activity::where('log_name', 'Inventory')->where('subject_id', $id)->get();
             foreach($inventory_logs as $inventory_log){
+                $inventory_decode = json_decode($inventory_log->properties,true);
+                if($inventory_log->description === 'created'){
+                    $vendor = Vendor::where('id', $inventory_decode['attributes']['vendor_id'])->first();
+                    if($vendor === null) $vendor_name = "Id Vendor Tidak Ditemukan";
+                    else $vendor_name = $vendor->name;
+                    $inventory_decode['attributes']['vendor_name'] = $vendor_name;
+                    $asset = Asset::where('id', $inventory_decode['attributes']['asset_id'])->first();
+                    if($asset === null) $asset_name = "Id Asset Tidak Ditemukan";
+                    else $asset_name = $asset->name;
+                    $inventory_decode['attributes']['asset_id_name'] = $asset_name;
+                } else {
+                    if (array_key_exists('vendor_id', $inventory_decode['attributes'])){
+                        $vendor = Vendor::where('id', $inventory_decode['attributes']['vendor_id'])->first();
+                        if($vendor === null) $vendor_name = "Id Vendor Tidak Ditemukan";
+                        else $vendor_name = $vendor->name;
+                        $inventory_decode['attributes']['vendor_name'] = $vendor_name;
+                    }
+                }
                 $temp = (object) [
                     'date' => $inventory_log->created_at,
                     'description' => $inventory_log->description.' inventory',
-                    'properties' => $inventory_log->properties
+                    'properties' => $inventory_decode
                 ];
                 array_push($logs, $temp);
             }   
@@ -62,11 +82,12 @@ class ActivityLogController extends Controller
             $inventory_columns = InventoryColumn::select('id','name')->get();
             foreach($inventory_value_logs as $inventory_value_log){
                 if($inventory_value_log->description === 'updated'){
+                    $inventory_decode = json_decode($inventory_value_log->properties,true);
+                    $inventory_decode['attributes']['name'] = $inventory_columns->where('id', $inventory_decode['attributes']['inventory_column_id'])->first()->name;
                     $temp = (object) [
                         'date' => $inventory_value_log->created_at,
                         'description' => $inventory_value_log->description.' inventory value',
-                        'properties' => $inventory_value_log->properties,
-                        'column_name' => $inventory_columns->where('id', $inventory_value_log->properties['attributes']['inventory_column_id'])->first()->name
+                        'properties' => $inventory_decode
                     ];
                     array_push($logs, $temp);
                 }
