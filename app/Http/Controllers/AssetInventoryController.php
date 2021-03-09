@@ -300,6 +300,67 @@ class AssetInventoryController extends Controller
         }
     }
 
+    public function cudInventoryColumn(Request $request)
+    {
+        $headers = ['Authorization' => $request->header("Authorization")];
+        try{
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                    'headers'  => $headers
+                ]);
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
+
+        try{
+            $asset_id = $request->get('asset_id', null);
+            if($asset_id === null) return response()->json(["success" => false, "message" => "Parameter Asset ID Kosong"], 400);
+            $add_inventory_columns = $request->get('add_inventory_columns', []);
+            $update_inventory_columns = $request->get('update_inventory_columns', []);
+            $delete_inventory_columns = $request->get('delete_inventory_columns', []);
+
+            foreach($add_inventory_columns as $add_inventory_column){
+                $inventory_column = new InventoryColumn;
+                $inventory_column->asset_id = $asset_id;
+                $inventory_column->name = $add_inventory_column['name'];
+                $inventory_column->data_type = $add_inventory_column['data_type'];
+                $inventory_column->default = $add_inventory_column['default'];
+                $inventory_column->required = $add_inventory_column['required'];
+                $inventory_column->unique = $add_inventory_column['unique'];
+                $inventory_column->save();
+            }
+
+            foreach($update_inventory_columns as $update_inventory_column){
+                $inventory_column = InventoryColumn::find($update_inventory_column['id']);
+                if($update_inventory_column === null) return response()->json(["success" => false, "message" => "Salah Satu Data Update Tidak Ditemukan"], 400);
+                $inventory_column->name = $update_inventory_column['name'];
+                $inventory_column->data_type = $update_inventory_column['data_type'];
+                $inventory_column->default = $update_inventory_column['default'];
+                $inventory_column->required = $update_inventory_column['required'];
+                $inventory_column->unique = $update_inventory_column['unique'];
+                $inventory_column->save();
+            }
+
+            foreach($delete_inventory_columns as $delete_inventory_column){
+                $inventory_column = InventoryColumn::find($delete_inventory_column['id']);
+                if($inventory_column === null) return response()->json(["success" => false, "message" => "Salah Satu Data Delete Tidak Ditemukan"], 400);
+                $inventory_column->delete();
+            }
+
+            return response()->json(["success" => true, "message" => "Data Berhasil Diproses"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
+
     public function addInventoryColumn(Request $request)
     {
         $headers = ['Authorization' => $request->header("Authorization")];
