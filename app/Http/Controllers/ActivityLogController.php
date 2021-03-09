@@ -73,7 +73,7 @@ class ActivityLogController extends Controller
             } 
 
             usort($logs, function($a, $b) {
-                return strtotime($a->date) - strtotime($b->date);
+                return strtotime($b->date) - strtotime($a->date);
             });
             
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $logs]);
