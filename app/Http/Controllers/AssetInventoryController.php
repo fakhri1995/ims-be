@@ -11,6 +11,7 @@ use App\Inventory;
 use App\InventoryValue;
 use App\InventoryColumn;
 use App\Vendor;
+use DB;
 use Exception;
 
 class AssetInventoryController extends Controller
@@ -291,7 +292,6 @@ class AssetInventoryController extends Controller
             $id = $request->get('id', null);
             $inventory_columns = InventoryColumn::where('asset_id', $id)->get();
             if($inventory_columns === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
-            if($inventory_columns->isEmpty()) return response()->json(["success" => true, "message" => "Data Inventory Column Belum Terisi"]);
             $vendors = Vendor::select('id','name')->get();
             $assets = Asset::select('id','name')->get();
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => (object)["inventory_columns" => $inventory_columns, "vendors" => $vendors, "assets" => $assets]]);
@@ -894,6 +894,9 @@ class AssetInventoryController extends Controller
         if($inventory === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
         try{
             $inventory->delete();
+            // if($inventory->delete()) {
+            //     DB::table('inventories')->where('id', $inventory->id)->first()->update(array('vendor_id' => $log_user_id));
+            // }
             $inventory_values = InventoryValue::where('inventory_id', $id)->get();
             foreach($inventory_values as $inventory_value){
                 $inventory_value->delete();
