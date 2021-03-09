@@ -50,18 +50,11 @@ class ActivityLogController extends Controller
             if($id === null) return response()->json(["success" => false, "message" => "Silahkan Tambahkan Parameter Id"], 400);
             $inventory_logs = Activity::where('log_name', 'Inventory')->where('subject_id', $id)->get();
             foreach($inventory_logs as $inventory_log){
-                if($inventory_log->description === 'updated'){
-                    $temp = (object) [
-                        'date' => $inventory_log->created_at,
-                        'description' => $inventory_log->description.' inventory',
-                        'properties' => $inventory_log->properties
-                    ];
-                } else {
-                    $temp = (object) [
-                        'date' => $inventory_log->created_at,
-                        'description' => $inventory_log->description.' inventory'
-                    ];
-                }
+                $temp = (object) [
+                    'date' => $inventory_log->created_at,
+                    'description' => $inventory_log->description.' inventory',
+                    'properties' => $inventory_log->properties
+                ];
                 array_push($logs, $temp);
             }   
 
