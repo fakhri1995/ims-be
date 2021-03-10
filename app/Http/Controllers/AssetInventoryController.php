@@ -893,10 +893,8 @@ class AssetInventoryController extends Controller
         $inventory = Inventory::find($id);
         if($inventory === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
         try{
+            // DB::table('inventories')->where('id', $inventory->id)->update(array('vendor_id' => $log_user_id));
             $inventory->delete();
-            // if($inventory->delete()) {
-            //     DB::table('inventories')->where('id', $inventory->id)->first()->update(array('vendor_id' => $log_user_id));
-            // }
             $inventory_values = InventoryValue::where('inventory_id', $id)->get();
             foreach($inventory_values as $inventory_value){
                 $inventory_value->delete();

@@ -85,7 +85,7 @@ class CompanyController extends Controller
             'address' => $request->get('address'),
             'phone_number' => $request->get('phone_number'),
             'image_logo' => $request->get('image_logo'),
-            'member_of_company' => $request->get('member_of_company')
+            'parent_id' => $request->get('parent_id')
         ];
         $headers = [
             'Authorization' => $request->header("Authorization"),
