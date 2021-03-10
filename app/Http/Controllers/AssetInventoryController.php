@@ -692,7 +692,7 @@ class AssetInventoryController extends Controller
             // ->get();
             // $inventory['additional_attributes'] = $additional_attributes;
             $inventory_values = InventoryValue::all();
-            $inventory_columns = InventoryColumn::select('id','name','data_type')->get();
+            $inventory_columns = InventoryColumn::get();
             $temp_values = $inventory_values->where('inventory_id',$id);
             $needed_inventory_values = [];
             foreach($temp_values as $temp_value){
@@ -703,6 +703,8 @@ class AssetInventoryController extends Controller
                 } 
                 $temp_value->name = $inventory_column->name;
                 $temp_value->data_type = $inventory_column->data_type;
+                $temp_value->required = $inventory_column->required;
+                $temp_value->unique = $inventory_column->unique;
                 array_push($needed_inventory_values, $temp_value);
             }
             $inventory->additional_attributes = $needed_inventory_values;
