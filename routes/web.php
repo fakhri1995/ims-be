@@ -33,6 +33,7 @@ $router->post('/getCompanyList', 'CompanyController@getCompanyList');
 $router->post('/addCompanyMember', 'CompanyController@addCompanyMember');
 $router->post('/updateCompanyDetail', 'CompanyController@updateCompanyDetail');
 $router->post('/companyActivation', 'CompanyController@companyActivation');
+$router->post('/getLocations', 'CompanyController@getLocations');
 
 //Account Routes
 $router->post('/getAccountDetail', 'AccountController@getAccountDetail');

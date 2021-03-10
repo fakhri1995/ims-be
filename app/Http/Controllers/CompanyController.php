@@ -174,4 +174,69 @@ class CompanyController extends Controller
             ]], $error_response->getStatusCode());
         }
     }
+
+    public function getChildren($datas){
+        $new_data = [];
+        foreach($datas as $data){
+            if (array_key_exists('members', $data)){
+                $temp = (object)[
+                    'id' => $data['company_id'],
+                    'title' => $data['company_name'],
+                    'key' => $data['company_id'],
+                    'value' => $data['company_id'],
+                    'children' => $this->getChildren($data['members'])
+                ];
+            } else {
+                $temp = (object)[
+                    'id' => $data['company_id'],
+                    'title' => $data['company_name'],
+                    'key' => $data['company_id'],
+                    'value' => $data['company_id']
+                ];
+            }
+            $new_data[] = $temp;
+        }
+        return $new_data;
+    }
+
+    public function getLocations(Request $request)
+    {
+        $headers = ['Authorization' => $request->header("Authorization")];
+        try{
+            $response = $this->client->request('GET', '/account/v1/company-hierarchy', [
+                    'headers'  => $headers
+                ]);
+            $data = json_decode((string) $response->getBody(), true)['data'];
+            if (array_key_exists('members', $data)){
+                $temp = (object)[
+                    'id' => $data['company_id'],
+                    'title' => $data['company_name'],
+                    'key' => $data['company_id'],
+                    'value' => $data['company_id'],
+                    'children' => $this->getChildren($data['members'])
+                ];
+            } else {
+                $temp = (object)[
+                    'id' => $data['company_id'],
+                    'title' => $data['company_name'],
+                    'key' => $data['company_id'],
+                    'value' => $data['company_id']
+                ];
+            }
+            
+            $front_end_data = [$temp];
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $front_end_data]);
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
+    }
 }
