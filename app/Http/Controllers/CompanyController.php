@@ -29,7 +29,18 @@ class CompanyController extends Controller
             $response = $this->client->request('GET', '/admin/v1/get-company?id='.$login_id, [
                     'headers'  => $headers
                 ]);
-            return response(json_decode((string) $response->getBody(), true));
+            $response = json_decode((string) $response->getBody(), true);
+            if(array_key_exists('error', $response)) {
+                return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 400,
+                        "reason" => $response['error']['detail'],
+                        "server_code" => $response['error']['code'],
+                        "status_detail" => $response['error']['detail']
+                    ]
+                ]], 400);
+            }
+            else return response()->json(["success" => true, "message" => $response]);
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -62,7 +73,18 @@ class CompanyController extends Controller
                 .'&role='.$params['role'], [
                     'headers'  => $headers
                 ]);
-        return response(json_decode((string) $response->getBody(), true));
+            $response = json_decode((string) $response->getBody(), true);
+            if(array_key_exists('error', $response)) {
+                return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 400,
+                        "reason" => $response['error']['detail'],
+                        "server_code" => $response['error']['code'],
+                        "status_detail" => $response['error']['detail']
+                    ]
+                ]], 400);
+            }
+            else return response()->json(["success" => true, "message" => $response]);
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -96,7 +118,18 @@ class CompanyController extends Controller
                     'headers'  => $headers,
                     'json' => $body
                 ]);
-            return response(json_decode((string) $response->getBody(), true));
+            $response = json_decode((string) $response->getBody(), true);
+            if(array_key_exists('error', $response)) {
+                return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 400,
+                        "reason" => $response['error']['detail'],
+                        "server_code" => $response['error']['code'],
+                        "status_detail" => $response['error']['detail']
+                    ]
+                ]], 400);
+            }
+            else return response()->json(["success" => true, "message" => $response]);
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -130,7 +163,18 @@ class CompanyController extends Controller
                     'headers'  => $headers,
                     'json' => $body
                 ]);
-        return response(json_decode((string) $response->getBody(), true));
+            $response = json_decode((string) $response->getBody(), true);
+            if(array_key_exists('error', $response)) {
+                return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 400,
+                        "reason" => $response['error']['detail'],
+                        "server_code" => $response['error']['code'],
+                        "status_detail" => $response['error']['detail']
+                    ]
+                ]], 400);
+            }
+            else return response()->json(["success" => true, "message" => $response]);
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -160,7 +204,18 @@ class CompanyController extends Controller
                     'headers'  => $headers,
                     'json' => $body
                 ]);
-            return response(json_decode((string) $response->getBody(), true));
+            $response = json_decode((string) $response->getBody(), true);
+            if(array_key_exists('error', $response)) {
+                return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 400,
+                        "reason" => $response['error']['detail'],
+                        "server_code" => $response['error']['code'],
+                        "status_detail" => $response['error']['detail']
+                    ]
+                ]], 400);
+            }
+            else return response()->json(["success" => true, "message" => $response]);
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
