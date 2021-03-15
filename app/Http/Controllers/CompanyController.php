@@ -129,7 +129,7 @@ class CompanyController extends Controller
                     ]
                 ]], 400);
             }
-            else return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $response]);
+            else return response()->json(["success" => true, "message" => $response]);
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -174,7 +174,7 @@ class CompanyController extends Controller
                     ]
                 ]], 400);
             }
-            else return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $response]);
+            else return response()->json(["success" => true, "message" => $response]);
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -215,7 +215,7 @@ class CompanyController extends Controller
                     ]
                 ]], 400);
             }
-            else return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $response]);
+            else return response()->json(["success" => true, "message" => $response]);
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
