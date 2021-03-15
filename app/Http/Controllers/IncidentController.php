@@ -109,7 +109,7 @@ class IncidentController extends Controller
 
             $ticket = new Ticket;
             $ticket->subject_type_id = $incident->id;
-            $ticket->type = "Ticket";
+            $ticket->type = "Incident";
             $ticket->status = null;
             $ticket->priority = null;
             $ticket->source = null;
