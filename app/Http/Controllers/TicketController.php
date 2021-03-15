@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Storage;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use App\Ticket;
+use App\Incident;
+use App\Group;
 use Exception;
 
 class TicketController extends Controller
@@ -27,11 +29,37 @@ class TicketController extends Controller
 
     public function getTickets(Request $request)
     {
+        // $headers = ['Authorization' => $request->header("Authorization")];
+        // try{
+        //     $response = $this->client->request('GET', '/auth/v1/get-profile', [
+        //             'headers'  => $headers
+        //         ]);
+        // }catch(ClientException $err){
+        //     $error_response = $err->getResponse();
+        //     $detail = json_decode($error_response->getBody());
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => $error_response->getStatusCode(),
+        //             "reason" => $error_response->getReasonPhrase(),
+        //             "server_code" => json_decode($error_response->getBody())->error->code,
+        //             "status_detail" => json_decode($error_response->getBody())->error->detail
+        //         ]
+        //     ]], $error_response->getStatusCode());
+        // }
+
+        // $params = [
+        //     'page' => $request->get('page'),
+        //     'rows' => $request->get('rows'),
+        //     'order_by' => $request->get('order_by'),
+        //     'company_id' => $request->get('company_id')
+        // ];
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
-            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+            $response = $this->client->request('GET', '/admin/v1/get-list-account?page=1&rows=50&company_id=66', [
                     'headers'  => $headers
                 ]);
+            $list_account = json_decode((string) $response->getBody(), true)['data']['accounts'];
+
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -44,9 +72,23 @@ class TicketController extends Controller
                 ]
             ]], $error_response->getStatusCode());
         }
+
         try{
+            $incidents = Incident::all();
             $tickets = Ticket::all();
-            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $tickets]);
+            foreach($tickets as $ticket){
+                if($ticket->type = "Incident") {
+                    $ticket->subject = $incidents->where('id', $ticket->subject_type_id)->first()->subject;
+                } else {
+                    $ticket->subject = "None";
+                }
+            }
+            $groups = Group::where('is_agent', true)->get();
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => (object)[
+                "tickets" => $tickets,
+                "list_account" => $list_account,
+                "groups" => $groups
+            ] ]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
