@@ -2,17 +2,12 @@
 
 namespace App;
 
-use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Group extends Model
 {
-    use SoftDeletes, LogsActivity;
-
-    protected static $logAttributes = ["*"];
-    protected static $logName = "Group";
-    protected static $logOnlyDirty = true;
+    use SoftDeletes;
 
     public $timestamps = false;
 }

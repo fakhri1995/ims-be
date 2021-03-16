@@ -8,9 +8,5 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Incident extends Model
 {
-    use SoftDeletes, LogsActivity;
-
-    protected static $logAttributes = ["*"];
-    protected static $logName = "Incident";
-    protected static $logOnlyDirty = true;
+    use SoftDeletes;
 }
