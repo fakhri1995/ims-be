@@ -78,7 +78,7 @@ class IncidentController extends Controller
             "associate_asset" => "required",
             "subject" => "required",
             "description" => "required",
-            "file" => "file"
+            // "file" => "file"
         ]);
 
         if ($validator->fails()) {
@@ -88,13 +88,17 @@ class IncidentController extends Controller
         }
 
         try{
-            if($request->file('file')){
-                $file = $request->file('file')->getClientOriginalName();
-                $filename = pathinfo($file, PATHINFO_FILENAME);
-                $extension = pathinfo($file, PATHINFO_EXTENSION);
-                $name = $filename.'_'.time().'.'.$extension;
-                // $request->file('file')->move('uploads/incidents', $name);
-                Storage::disk('local')->putFileAs('incidents', $request->file('file'), $name);
+            $files = $request->file('file');
+            if(!empty($files)){
+                $names = [];
+                foreach($files as $file){
+                    $file_name = $file->getClientOriginalName();
+                    $filename = pathinfo($file_name, PATHINFO_FILENAME);
+                    $extension = pathinfo($file_name, PATHINFO_EXTENSION);
+                    $name = $filename.'_'.time().'.'.$extension;
+                    Storage::disk('local')->putFileAs('incidents', $file, $name);
+                    array_push($names, $name);
+                }
             } else {
                 $name = 'no_file.jpg';
             }
@@ -104,7 +108,7 @@ class IncidentController extends Controller
             $incident->associate_asset = $request->get('associate_asset');
             $incident->subject = $request->get('subject');
             $incident->description = $request->get('description');
-            $incident->file = $name;
+            $incident->file = json_encode($names);
             $incident->save();
 
             $ticket = new Ticket;
