@@ -268,7 +268,7 @@ class AssetInventoryController extends Controller
         }
     }
 
-    // Child type column responses
+    // // Child type column responses
     // public function getDataInventoryColumnTurunan($parent_id){
     //     $assets = Asset::select('id','name')->get();
     //     $inventory_columns = InventoryColumn::get();
@@ -278,12 +278,17 @@ class AssetInventoryController extends Controller
     //     foreach($related_asset_pivots_inti as $asset_pivot){
     //         $asset_id = $asset_pivot->asset_id;
     //         $asset_pivot_turunan = $related_asset_pivots->where('parent_asset_id', $asset_id);
+    //         $inventory_columns_in_loop = $inventory_columns->where('asset_id', $asset_id);
+    //         $temp_inventory_columns = [];
+    //         foreach($inventory_columns_in_loop as $inventory_column){
+    //             $temp_inventory_columns[] = $inventory_column;
+    //         }
     //         if($asset_pivot_turunan->count()){
     //             $temp = (object)[
     //                 "asset_type" => $assets->where('id', $asset_id)->first()->name,
     //                 "asset_id" => $asset_id,
     //                 "quantity_needed" => $asset_pivot->quantity,
-    //                 "inventory_columns" => $inventory_columns->where('asset_id', $asset_id),
+    //                 "inventory_columns" => $temp_inventory_columns,
     //                 "child" => $this->getDataInventoryColumnTurunan($asset_id)
     //             ];
     //         } else {
@@ -291,7 +296,7 @@ class AssetInventoryController extends Controller
     //                 "asset_type" => $assets->where('id', $asset_id)->first()->name,
     //                 "asset_id" => $asset_id,
     //                 "quantity_needed" => $asset_pivot->quantity,
-    //                 "inventory_columns" => $inventory_columns->where('asset_id', $asset_id)
+    //                 "inventory_columns" => $temp_inventory_columns
     //             ];
     //         }
     //         $inventory_columns_related[] = $temp;
@@ -325,6 +330,11 @@ class AssetInventoryController extends Controller
     //         if(Asset::find($id) === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
     //         $inventory_columns = InventoryColumn::get();
     //         $inventory_columns_turunan = $inventory_columns->where('asset_id', $id);
+    //         $temp_inventory_columns = [];
+    //         foreach($inventory_columns_turunan as $inventory_column){
+    //             $temp_inventory_columns[] = $inventory_column;
+    //         }
+    //         $inventory_columns_turunan = $temp_inventory_columns;
     //         $related_asset_pivots = AssetRelatedPivot::get();
     //         $vendors = Vendor::select('id','name')->get();
     //         $assets = Asset::select('id','name')->get();
@@ -333,12 +343,17 @@ class AssetInventoryController extends Controller
     //         foreach($related_asset_pivots_inti as $asset_pivot){
     //             $asset_id = $asset_pivot->asset_id;
     //             $asset_pivot_turunan = $related_asset_pivots->where('parent_asset_id', $asset_id);
+    //             $inventory_columns_in_loop = $inventory_columns->where('asset_id', $asset_id);
+    //             $temp_inventory_columns = [];
+    //             foreach($inventory_columns_in_loop as $inventory_column){
+    //                 $temp_inventory_columns[] = $inventory_column;
+    //             }
     //             if($asset_pivot_turunan->count()){
     //                 $temp = (object)[
     //                     "asset_type" => $assets->where('id', $asset_id)->first()->name,
     //                     "asset_id" => $asset_id,
     //                     "quantity_needed" => $asset_pivot->quantity,
-    //                     "inventory_columns" => $inventory_columns->where('asset_id', $asset_id),
+    //                     "inventory_columns" => $temp_inventory_columns,
     //                     "child" => $this->getDataInventoryColumnTurunan($asset_id)
     //                 ];
     //             } else {
@@ -346,7 +361,7 @@ class AssetInventoryController extends Controller
     //                     "asset_type" => $assets->where('id', $asset_id)->first()->name,
     //                     "asset_id" => $asset_id,
     //                     "quantity_needed" => $asset_pivot->quantity,
-    //                     "inventory_columns" => $inventory_columns->where('asset_id', $asset_id)
+    //                     "inventory_columns" => $temp_inventory_columns
     //                 ];
     //             }
     //             $inventory_columns_related[] = $temp;
@@ -367,6 +382,11 @@ class AssetInventoryController extends Controller
         foreach($related_asset_pivots_inti as $asset_pivot){
             $asset_id = $asset_pivot->asset_id;
             $asset_pivot_turunan = $related_asset_pivots->where('parent_asset_id', $asset_id);
+            $inventory_columns_in_loop = $inventory_columns->where('asset_id', $asset_id);
+            $temp_inventory_columns = [];
+            foreach($inventory_columns_in_loop as $inventory_column){
+                $temp_inventory_columns[] = $inventory_column;
+            }
             if($asset_pivot_turunan->count()){
                 $inventory_columns_related = $this->getDataInventoryColumnTurunan($asset_id, $inventory_columns_related);
             } 
@@ -374,7 +394,7 @@ class AssetInventoryController extends Controller
                 "asset_type" => $assets->where('id', $asset_id)->first()->name,
                 "asset_id" => $asset_id,
                 "quantity_needed" => $asset_pivot->quantity,
-                "inventory_columns" => $inventory_columns->where('asset_id', $asset_id)
+                "inventory_columns" => $temp_inventory_columns
             ];
             $inventory_columns_related[] = $temp;
         }
@@ -407,6 +427,11 @@ class AssetInventoryController extends Controller
             if(Asset::find($id) === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
             $inventory_columns = InventoryColumn::get();
             $inventory_columns_turunan = $inventory_columns->where('asset_id', $id);
+            $temp_inventory_columns = [];
+            foreach($inventory_columns_turunan as $inventory_column){
+                $temp_inventory_columns[] = $inventory_column;
+            }
+            $inventory_columns_turunan = $temp_inventory_columns;
             $related_asset_pivots = AssetRelatedPivot::get();
             $vendors = Vendor::select('id','name')->get();
             $assets = Asset::select('id','name')->get();
@@ -415,6 +440,11 @@ class AssetInventoryController extends Controller
             foreach($related_asset_pivots_inti as $asset_pivot){
                 $asset_id = $asset_pivot->asset_id;
                 $asset_pivot_turunan = $related_asset_pivots->where('parent_asset_id', $asset_id);
+                $inventory_columns_in_loop = $inventory_columns->where('asset_id', $asset_id);
+                $temp_inventory_columns = [];
+                foreach($inventory_columns_in_loop as $inventory_column){
+                    $temp_inventory_columns[] = $inventory_column;
+                }
                 if($asset_pivot_turunan->count()){
                     $inventory_columns_related = $this->getDataInventoryColumnTurunan($asset_id, $inventory_columns_related);
                 } 
@@ -422,7 +452,7 @@ class AssetInventoryController extends Controller
                     "asset_type" => $assets->where('id', $asset_id)->first()->name,
                     "asset_id" => $asset_id,
                     "quantity_needed" => $asset_pivot->quantity,
-                    "inventory_columns" => $inventory_columns->where('asset_id', $asset_id)
+                    "inventory_columns" => $temp_inventory_columns
                 ];
                 $inventory_columns_related[] = $temp;
             }
