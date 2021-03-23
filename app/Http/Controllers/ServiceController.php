@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
+use App\DimTipeKontrak;
 use App\ServiceCategory;
 use App\ServiceItem;
 use App\PivotServiceItem;
+use App\DimTermsOfPayment;
 use Exception;
 
 class ServiceController extends Controller
@@ -391,4 +393,115 @@ class ServiceController extends Controller
             return response()->json(["success" => false, "message" => $err], 400);
         }
     }
+
+    public function addDefaultPayments(Request $request)
+    {
+        $headers = ['Authorization' => $request->header("Authorization")];
+        try{
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                    'headers'  => $headers
+                ]);
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
+        $datas = [
+            [
+                "nama" => "Per Bulan",
+                "keterangan" => "Pembayaran dilakukan setiap bulan"
+            ],
+            [
+                "nama" => "Per 3 Bulan",
+                "keterangan" => "Pembayaran dilakukan setiap 3 bulan"
+            ],
+            [
+                "nama" => "Langsung",
+                "keterangan" => "Pembayaran dilakukan tunai"
+            ]
+        ];
+        try{
+            // return $datas;
+            foreach($datas as $data){
+                // return $data['nama_kategori'];
+                $payments = new DimTermsOfPayment;
+                $payments->nama = $data['nama'];
+                $payments->keterangan = $data['keterangan'];
+                $payments->save();
+            }
+            
+            return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
+
+    // For Input Contract Needed Data
+
+    public function getContractInputData(Request $request)
+    {
+        $params = [
+            'page' => $request->get('page'),
+            'rows' => $request->get('rows'),
+            'order_by' => $request->get('order_by'),
+            'is_enabled' => $request->get('is_enabled', null),
+            'role' => $request->get('role')
+        ];
+        $headers = ['Authorization' => $request->header("Authorization")];
+        try{
+            $response = $this->client->request('GET', '/admin/v1/get-list-company?page=1'
+                .'&rows=50', [
+                    'headers'  => $headers
+                ]);
+            $response = json_decode((string) $response->getBody(), true);
+            if(array_key_exists('error', $response)) {
+                return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 400,
+                        "reason" => $response['error']['detail'],
+                        "server_code" => $response['error']['code'],
+                        "status_detail" => $response['error']['detail']
+                    ]
+                ]], 400);
+            }
+            else {
+                $companies = [];
+                foreach($response['data']['companies'] as $data){
+                    $temp = (object)[
+                        "id" => $data['company_id'],
+                        "company_name" => $data['company_name']
+                    ];
+                    $companies[] = $temp;
+                }
+            } 
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
+        try{
+            $service_items = ServiceItem::select('id','nama_service_item')->get();
+            $term_of_payments = DimTermsOfPayment::select('id','nama')->get();
+            $contract_types = DimTipeKontrak::select('id', 'nama')->get();
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => (object)["companies" => $companies, "service_items" => $service_items, "term_of_payments" => $term_of_payments, "contract_types" => $contract_types]]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
+
+    // --------------
 }

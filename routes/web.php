@@ -136,7 +136,19 @@ $router->put('/updateContractType', 'ContractController@updateContractType');
 $router->delete('/deleteContractType', 'ContractController@deleteContractType');
 
 //Contract Routes
+$router->get('/getContractInputData', 'ServiceController@getContractInputData');
 $router->get('/getContracts', 'ContractController@getContracts');
 $router->post('/addContract', 'ContractController@addContract');
 $router->put('/updateContract', 'ContractController@updateContract');
 $router->delete('/deleteContract', 'ContractController@deleteContract');
+
+
+
+
+
+
+
+
+
+//Terms of Payment
+$router->post('/addDefaultPayments', 'ServiceController@addDefaultPayments');

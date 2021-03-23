@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
+use App\ServiceItemKontrak;
 use App\DimTipeKontrak;
 use App\Kontrak;
 use Exception;
@@ -213,6 +214,16 @@ class ContractController extends Controller
         $contract->is_active = false;
         try{
             $contract->save();
+            $service_items = $request->get('service_items');
+            foreach($service_items as $service_item){
+                $model = new ServiceItemKontrak;
+                $model->id_kontrak = $contract->id;
+                $model->id_service_item = $service_item['id_service_item'];
+                $model->id_terms_of_payment = $service_item['id_terms_of_payment'];
+                $model->harga = $service_item['price'];
+                $model->is_active = false;
+                $model->save();
+            }
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
