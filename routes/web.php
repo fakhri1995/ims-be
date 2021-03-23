@@ -124,6 +124,7 @@ $router->delete('/deleteServiceCategory', 'ServiceController@deleteServiceCatego
 
 //Service Category Routes
 $router->get('/getServiceItems', 'ServiceController@getServiceItems');
+$router->get('/getServiceItem', 'ServiceController@getServiceItem');
 $router->post('/addServiceItem', 'ServiceController@addServiceItem');
 $router->put('/updateServiceItem', 'ServiceController@updateServiceItem');
 $router->delete('/deleteServiceItem', 'ServiceController@deleteServiceItem');
