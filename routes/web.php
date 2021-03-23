@@ -133,3 +133,9 @@ $router->get('/getContractTypes', 'ContractController@getContractTypes');
 $router->post('/addContractType', 'ContractController@addContractType');
 $router->put('/updateContractType', 'ContractController@updateContractType');
 $router->delete('/deleteContractType', 'ContractController@deleteContractType');
+
+//Contract Routes
+$router->get('/getContracts', 'ContractController@getContracts');
+$router->post('/addContract', 'ContractController@addContract');
+$router->put('/updateContract', 'ContractController@updateContract');
+$router->delete('/deleteContract', 'ContractController@deleteContract');
