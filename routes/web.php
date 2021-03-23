@@ -121,3 +121,15 @@ $router->get('/getServiceCategories', 'ServiceController@getServiceCategories');
 $router->post('/addServiceCategory', 'ServiceController@addServiceCategory');
 $router->put('/updateServiceCategory', 'ServiceController@updateServiceCategory');
 $router->delete('/deleteServiceCategory', 'ServiceController@deleteServiceCategory');
+
+//Service Category Routes
+$router->get('/getServiceItems', 'ServiceController@getServiceItems');
+$router->post('/addServiceItem', 'ServiceController@addServiceItem');
+$router->put('/updateServiceItem', 'ServiceController@updateServiceItem');
+$router->delete('/deleteServiceItem', 'ServiceController@deleteServiceItem');
+
+//Contract Type Routes
+$router->get('/getContractTypes', 'ContractController@getContractTypes');
+$router->post('/addContractType', 'ContractController@addContractType');
+$router->put('/updateContractType', 'ContractController@updateContractType');
+$router->delete('/deleteContractType', 'ContractController@deleteContractType');
