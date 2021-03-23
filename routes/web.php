@@ -115,3 +115,9 @@ $router->get('/getTickets', 'TicketController@getTickets');
 $router->post('/addTicket', 'TicketController@addTicket');
 $router->put('/updateTicket', 'TicketController@updateTicket');
 $router->delete('/deleteTicket', 'TicketController@deleteTicket');
+
+//Service Category Routes
+$router->get('/getServiceCategories', 'ServiceController@getServiceCategories');
+$router->post('/addServiceCategory', 'ServiceController@addServiceCategory');
+$router->put('/updateServiceCategory', 'ServiceController@updateServiceCategory');
+$router->delete('/deleteServiceCategory', 'ServiceController@deleteServiceCategory');
