@@ -189,11 +189,40 @@ class ContractController extends Controller
 
     public function getContract(Request $request)
     {
+        $params = [
+            'page' => $request->get('page'),
+            'rows' => $request->get('rows'),
+            'order_by' => $request->get('order_by'),
+            'is_enabled' => $request->get('is_enabled', null),
+            'role' => $request->get('role')
+        ];
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
-            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+            $response = $this->client->request('GET', '/admin/v1/get-list-company?page=1'
+                .'&rows=50', [
                     'headers'  => $headers
                 ]);
+            $response = json_decode((string) $response->getBody(), true);
+            if(array_key_exists('error', $response)) {
+                return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 400,
+                        "reason" => $response['error']['detail'],
+                        "server_code" => $response['error']['code'],
+                        "status_detail" => $response['error']['detail']
+                    ]
+                ]], 400);
+            }
+            else {
+                $companies = [];
+                foreach($response['data']['companies'] as $data){
+                    $temp = [
+                        "id" => $data['company_id'],
+                        "company_name" => $data['company_name']
+                    ];
+                    $companies[] = $temp;
+                }
+            } 
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -209,6 +238,8 @@ class ContractController extends Controller
         try{
             $id = $request->get('id', null);
             $contract = Kontrak::find($id);
+            $object_search = array_search($contract->id_client_company, array_column($companies, 'id'));
+            $contract->company_name = $companies[$object_search]['company_name'];
             $service_item_kontraks = ServiceItemKontrak::where('id_kontrak', $id)->get();
             $service_items = ServiceItem::select('id','nama_service_item')->get();
             $term_of_payments = DimTermsOfPayment::select('id','nama')->get();
