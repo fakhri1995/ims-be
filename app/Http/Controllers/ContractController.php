@@ -416,6 +416,10 @@ class ContractController extends Controller
             ]], 400);
         try{
             $contract->delete();
+            $service_item_kontraks = ServiceItemKontrak::where('id_kontrak', $id)->get();
+            foreach($service_item_kontraks as $service_item_kontrak){
+                $service_item_kontrak->delete();
+            }
             return response()->json(["success" => true, "message" => "Data Berhasil Dihapus"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
