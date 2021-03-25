@@ -393,6 +393,82 @@ class ServiceController extends Controller
         }
     }
 
+    public function publishingServiceItem(Request $request)
+    {
+        $headers = ['Authorization' => $request->header("Authorization")];
+        try{
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                    'headers'  => $headers
+                ]);
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
+        try{
+            $id = $request->get('id', null);
+            $service = ServiceItem::find($id);
+            if($service === null) return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 400,
+                        "reason" => "Id Tidak Ditemukan",
+                        "server_code" => 400,
+                        "status_detail" => "Id Tidak Ditemukan"
+                    ]
+                ]], 400);
+            $service->is_publish = true;
+            $service->save();
+            return response()->json(["success" => true, "message" => "Service Item Telah Dipublikasikan"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
+
+    public function depublishingServiceItem(Request $request)
+    {
+        $headers = ['Authorization' => $request->header("Authorization")];
+        try{
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                    'headers'  => $headers
+                ]);
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
+        try{
+            $id = $request->get('id', null);
+            $service = ServiceItem::find($id);
+            if($service === null) return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 400,
+                        "reason" => "Id Tidak Ditemukan",
+                        "server_code" => 400,
+                        "status_detail" => "Id Tidak Ditemukan"
+                    ]
+                ]], 400);
+            $service->is_publish = false;
+            $service->save();
+            return response()->json(["success" => true, "message" => "Service Item Telah Dinonpublikasikan"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
+
     public function addDefaultPayments(Request $request)
     {
         $headers = ['Authorization' => $request->header("Authorization")];

@@ -426,6 +426,158 @@ class ContractController extends Controller
         }
     }
 
+    public function activatingContract(Request $request)
+    {
+        $headers = ['Authorization' => $request->header("Authorization")];
+        try{
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                    'headers'  => $headers
+                ]);
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
+        try{
+            $id = $request->get('id', null);
+            $contract = Kontrak::find($id);
+            if($contract === null) return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 400,
+                        "reason" => "Id Tidak Ditemukan",
+                        "server_code" => 400,
+                        "status_detail" => "Id Tidak Ditemukan"
+                    ]
+                ]], 400);
+            $contract->is_active = true;
+            $contract->save();
+            return response()->json(["success" => true, "message" => "Kontrak Telah Diaktifkan"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
+
+    public function deactivatingContract(Request $request)
+    {
+        $headers = ['Authorization' => $request->header("Authorization")];
+        try{
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                    'headers'  => $headers
+                ]);
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
+        try{
+            $id = $request->get('id', null);
+            $contract = Kontrak::find($id);
+            if($contract === null) return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 400,
+                        "reason" => "Id Tidak Ditemukan",
+                        "server_code" => 400,
+                        "status_detail" => "Id Tidak Ditemukan"
+                    ]
+                ]], 400);
+            $contract->is_active = false;
+            $contract->save();
+            return response()->json(["success" => true, "message" => "Kontrak Telah Dinonaktifkan"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
+
+    public function activatingServiceItemContract(Request $request)
+    {
+        $headers = ['Authorization' => $request->header("Authorization")];
+        try{
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                    'headers'  => $headers
+                ]);
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
+        try{
+            $id = $request->get('id', null);
+            $service_item_kontrak = ServiceItemKontrak::find($id);
+            if($service_item_kontrak === null) return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 400,
+                        "reason" => "Id Tidak Ditemukan",
+                        "server_code" => 400,
+                        "status_detail" => "Id Tidak Ditemukan"
+                    ]
+                ]], 400);
+            $service_item_kontrak->is_active = true;
+            $service_item_kontrak->save();
+            return response()->json(["success" => true, "message" => "Service Item Kontrak Telah Diaktifkan"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
+
+    public function deactivatingServiceItemContract(Request $request)
+    {
+        $headers = ['Authorization' => $request->header("Authorization")];
+        try{
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                    'headers'  => $headers
+                ]);
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
+        try{
+            $id = $request->get('id', null);
+            $service_item_kontrak = ServiceItemKontrak::find($id);
+            if($service_item_kontrak === null) return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 400,
+                        "reason" => "Id Tidak Ditemukan",
+                        "server_code" => 400,
+                        "status_detail" => "Id Tidak Ditemukan"
+                    ]
+                ]], 400);
+            $service_item_kontrak->is_active = false;
+            $service_item_kontrak->save();
+            return response()->json(["success" => true, "message" => "Service Item Kontrak Telah Dinonaktifkan"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
+
     public function getContractInputData(Request $request)
     {
         $params = [
@@ -475,9 +627,9 @@ class ContractController extends Controller
             ]], $error_response->getStatusCode());
         }
         try{
-            $service_items = ServiceItem::select('id','nama_service_item')->get();
+            $service_items = ServiceItem::select('id','nama_service_item','deskripsi_singkat')->get();
             $term_of_payments = DimTermsOfPayment::select('id','nama')->get();
-            $contract_types = DimTipeKontrak::select('id', 'nama')->get();
+            $contract_types = DimTipeKontrak::select('id', 'nama', 'keterangan')->get();
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => (object)["companies" => $companies, "service_items" => $service_items, "term_of_payments" => $term_of_payments, "contract_types" => $contract_types]]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
