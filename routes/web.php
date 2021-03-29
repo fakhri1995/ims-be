@@ -151,7 +151,11 @@ $router->put('/activatingContract', 'ContractController@activatingContract');
 $router->put('/deactivatingContract', 'ContractController@deactivatingContract');
 $router->delete('/deleteContract', 'ContractController@deleteContract');
 
-
+//Depreciation Routes
+$router->get('/getDepreciations', 'DepreciationController@getDepreciations');
+$router->post('/addDepreciation', 'DepreciationController@addDepreciation');
+$router->put('/updateDepreciation', 'DepreciationController@updateDepreciation');
+$router->delete('/deleteDepreciation', 'DepreciationController@deleteDepreciation');
 
 
 
