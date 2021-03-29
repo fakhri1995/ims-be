@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use App\Bank;
+use App\AccessFeature;
 use Exception;
 
 class BankController extends Controller
@@ -25,6 +26,45 @@ class BankController extends Controller
 
     public function getBanks(Request $request)
     {
+        // $protocol = "FITUR TEST Last Local";
+        // $access_feature = AccessFeature::where('name',$protocol)->first();
+        // if($access_feature === null) {
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => 400,
+        //             "reason" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin",
+        //             "server_code" => 400,
+        //             "status_detail" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin"
+        //         ]
+        //     ]], 400);
+        // }
+        // $body = [
+        //     'path_url' => $access_feature->key
+        // ];
+        // $headers = [
+        //     'Authorization' => $request->header("Authorization"),
+        //     'content-type' => 'application/json'
+        // ];
+        // try{
+        //     $response = $this->client->request('POST', '/auth/v1/validate-feature', [
+        //             'headers'  => $headers,
+        //             'json' => $body
+        //         ]);
+        //     $response = json_decode((string) $response->getBody(), true);
+        //     return $response;
+        //     return $response['data']['is_success'];
+        // }catch(ClientException $err){
+        //     $error_response = $err->getResponse();
+        //     $detail = json_decode($error_response->getBody());
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => $error_response->getStatusCode(),
+        //             "reason" => $error_response->getReasonPhrase(),
+        //             "server_code" => json_decode($error_response->getBody())->error->code,
+        //             "status_detail" => json_decode($error_response->getBody())->error->detail
+        //         ]
+        //     ]], $error_response->getStatusCode());
+        // }
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [

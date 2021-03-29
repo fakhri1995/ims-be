@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
+use App\AccessFeature;
 
 class AccessFeatureController extends Controller
 {
@@ -116,11 +117,11 @@ class AccessFeatureController extends Controller
 
     public function addAccessFeature(Request $request)
     {
+        $name = $request->get('name');
+        $description = $request->get('description');
         $body = [
-            "name" => $request->get('name'),
-            "description" => $request->get('description'),
-            "account_module_id" => $request->get('account_module_id'),
-            "path_url" => $request->get('path_url'),
+            "name" => $name,
+            "description" => $description,
             "method" => $request->get('method')
         ];
         $headers = [
@@ -132,7 +133,7 @@ class AccessFeatureController extends Controller
                     'headers'  => $headers,
                     'json' => $body
                 ]);
-            return response(json_decode((string) $response->getBody(), true));
+            $key = json_decode((string) $response->getBody(), true)['data']['feature_detail']['feature_key'];
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -145,6 +146,21 @@ class AccessFeatureController extends Controller
                 ]
             ]], $error_response->getStatusCode());
         }
+        try{
+            $access_feature = AccessFeature::where('name',$name)->first();
+            if($access_feature === null){
+                $access_feature = new AccessFeature;
+            }
+            $access_feature = new AccessFeature;
+            $access_feature->name = $name;
+            $access_feature->description = $description;
+            $access_feature->key = $key;
+            $access_feature->save();
+            return response()->json(["success" => true, "message" => "Berhasil Menambahkan Akses Fitur"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+        
     }
 
     public function updateAccessFeature(Request $request)
