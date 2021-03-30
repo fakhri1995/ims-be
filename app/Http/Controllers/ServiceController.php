@@ -46,7 +46,7 @@ class ServiceController extends Controller
             ]], $error_response->getStatusCode());
         }
         try{
-            $services = ServiceCategory::get();
+            $services = ServiceCategory::orderBy('nama_kategori','asc')->get();
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $services]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
@@ -179,8 +179,8 @@ class ServiceController extends Controller
             ]], $error_response->getStatusCode());
         }
         try{
-            $services = ServiceItem::get();
-            $category_services = ServiceCategory::select('id','nama_kategori')->get();
+            $services = ServiceItem::orderBy('nama_service_item','asc')->get();
+            $category_services = ServiceCategory::select('id','nama_kategori')->orderBy('nama_kategori','asc')->get();
             foreach($services as $service){
                 $category_service = $category_services->where('id', $service->id_service_kategori)->first();
                 if($category_service === null) {

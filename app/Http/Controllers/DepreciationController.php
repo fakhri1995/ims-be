@@ -43,7 +43,7 @@ class DepreciationController extends Controller
             ]], $error_response->getStatusCode());
         }
         try{
-            $depreciations = Depreciation::get();
+            $depreciations = Depreciation::orderBy('nama','asc')->get();
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $depreciations]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
