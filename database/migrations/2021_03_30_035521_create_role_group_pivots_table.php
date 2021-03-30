@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateAccessFeaturesTable extends Migration
+class CreateRoleGroupPivotsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,10 @@ class CreateAccessFeaturesTable extends Migration
      */
     public function up()
     {
-        Schema::create('access_features', function (Blueprint $table) {
+        Schema::create('role_group_pivots', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('feature_id');
-            $table->string('feature_key');
-            $table->string('name');
-            $table->string('description');
+            $table->unsignedBigInteger('role_id');
+            $table->unsignedBigInteger('group_id');
             $table->softDeletes();
         });
     }
@@ -30,6 +28,6 @@ class CreateAccessFeaturesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('access_features');
+        Schema::dropIfExists('role_group_pivots');
     }
 }

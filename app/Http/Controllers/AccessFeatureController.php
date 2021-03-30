@@ -133,7 +133,8 @@ class AccessFeatureController extends Controller
                     'headers'  => $headers,
                     'json' => $body
                 ]);
-            $key = json_decode((string) $response->getBody(), true)['data']['feature_detail']['feature_key'];
+            $feature_key = json_decode((string) $response->getBody(), true)['data']['feature_detail']['feature_key'];
+            $feature_id = json_decode((string) $response->getBody(), true)['data']['feature_detail']['feature_id'];
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -152,9 +153,10 @@ class AccessFeatureController extends Controller
                 $access_feature = new AccessFeature;
             }
             $access_feature = new AccessFeature;
+            $access_feature->feature_key = $feature_key;
+            $access_feature->feature_id = $feature_id;
             $access_feature->name = $name;
             $access_feature->description = $description;
-            $access_feature->key = $key;
             $access_feature->save();
             return response()->json(["success" => true, "message" => "Berhasil Menambahkan Akses Fitur"]);
         } catch(Exception $err){
@@ -229,31 +231,47 @@ class AccessFeatureController extends Controller
 
     public function updateFeatureAccount(Request $request)
     {
-        $body = [
-            'account_id' => $request->get('account_id'),
-            'feature_ids' => $request->get('feature_ids')
+        // $group_ids = $request->get('group_ids');
+        $group_ids = [
+            [1,2,3,4],[2,3,7,9],[11,12,13,14]
         ];
-        $headers = [
-            'Authorization' => $request->header("Authorization"),
-            'content-type' => 'application/json'
-        ];
-        try{
-            $response = $this->client->request('POST', '/admin/v1/update-feature', [
-                    'headers'  => $headers,
-                    'json' => $body
-                ]);
-            return response(json_decode((string) $response->getBody(), true));
-        }catch(ClientException $err){
-            $error_response = $err->getResponse();
-            $detail = json_decode($error_response->getBody());
-            return response()->json(["success" => false, "message" => (object)[
-                "errorInfo" => [
-                    "status" => $error_response->getStatusCode(),
-                    "reason" => $error_response->getReasonPhrase(),
-                    "server_code" => json_decode($error_response->getBody())->error->code,
-                    "status_detail" => json_decode($error_response->getBody())->error->detail
-                ]
-            ]], $error_response->getStatusCode());
+        $feature_ids = [];
+        foreach($group_ids as $group_id){
+            foreach($group_id as $feature_id){
+                $feature_ids[] = $feature_id; 
+            }
         }
+        $unique = array_unique($feature_ids);
+        $uniques = [];
+        foreach($unique as $u){
+            $uniques[] = $u;
+        }
+        return response()->json([$feature_ids, $uniques]);
+        // $body = [
+        //     'account_id' => $request->get('account_id'),
+        //     'feature_ids' => $request->get('feature_ids')
+        // ];
+        // $headers = [
+        //     'Authorization' => $request->header("Authorization"),
+        //     'content-type' => 'application/json'
+        // ];
+        // try{
+        //     $response = $this->client->request('POST', '/admin/v1/update-feature', [
+        //             'headers'  => $headers,
+        //             'json' => $body
+        //         ]);
+        //     return response(json_decode((string) $response->getBody(), true));
+        // }catch(ClientException $err){
+        //     $error_response = $err->getResponse();
+        //     $detail = json_decode($error_response->getBody());
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => $error_response->getStatusCode(),
+        //             "reason" => $error_response->getReasonPhrase(),
+        //             "server_code" => json_decode($error_response->getBody())->error->code,
+        //             "status_detail" => json_decode($error_response->getBody())->error->detail
+        //         ]
+        //     ]], $error_response->getStatusCode());
+        // }
     }
 }

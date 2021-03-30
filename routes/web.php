@@ -157,7 +157,11 @@ $router->post('/addDepreciation', 'DepreciationController@addDepreciation');
 $router->put('/updateDepreciation', 'DepreciationController@updateDepreciation');
 $router->delete('/deleteDepreciation', 'DepreciationController@deleteDepreciation');
 
-
+//Service Category Routes
+$router->get('/getRoles', 'RoleController@getRoles');
+$router->post('/addRole', 'RoleController@addRole');
+$router->put('/updateRole', 'RoleController@updateRole');
+$router->delete('/deleteRole', 'RoleController@deleteRole');
 
 
 

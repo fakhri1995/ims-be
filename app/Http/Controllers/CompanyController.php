@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
+use App\Company;
 
 class CompanyController extends Controller
 {
@@ -106,7 +107,7 @@ class CompanyController extends Controller
             'role' => $request->get('role'),
             'address' => $request->get('address'),
             'phone_number' => $request->get('phone_number'),
-            'image_logo' => $request->get('image_logo'),
+            'image_logo' => $request->get('image_logo', null),
             'parent_id' => $request->get('parent_id')
         ];
         $headers = [
@@ -146,13 +147,14 @@ class CompanyController extends Controller
 
     public function updateCompanyDetail(Request $request)
     {
+        $id = $request->get('id');
         $body = [
-            'id' => $request->get('id'),
+            'id' => $id,
             'company_name' => $request->get('company_name'),
             'role' => $request->get('role'),
             'address' => $request->get('address'),
             'phone_number' => $request->get('phone_number'),
-            'image_logo' => $request->get('image_logo')
+            'image_logo' => $request->get('image_logo', null)
         ];
         $headers = [
             'Authorization' => $request->header("Authorization"),
@@ -174,7 +176,7 @@ class CompanyController extends Controller
                     ]
                 ]], 400);
             }
-            else return response()->json(["success" => true, "message" => $response['data']['message']]);
+            // else return response()->json(["success" => true, "message" => $response['data']['message']]);
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -186,6 +188,25 @@ class CompanyController extends Controller
                     "status_detail" => json_decode($error_response->getBody())->error->detail
                 ]
             ]], $error_response->getStatusCode());
+        }
+
+        try{
+            $company = Company::find($id);
+            if($company === null){
+                $company = new Company;
+                $company->id = $id;
+            }
+            $company->singkatan = $request->get('singkatan');
+            $company->tanggal_pkp = $request->get('tanggal_pkp');
+            $company->penanggung_jawab = $request->get('penanggung_jawab');
+            $company->npwp = $request->get('npwp');
+            $company->fax = $request->get('fax');
+            $company->email = $request->get('email');
+            $company->website = $request->get('website');
+            $company->save();
+            return response()->json(["success" => true, "message" => "Company Data Berhasil Diproses"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
         }
     }
 
