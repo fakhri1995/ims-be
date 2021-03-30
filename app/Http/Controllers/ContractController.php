@@ -246,8 +246,8 @@ class ContractController extends Controller
             foreach($service_item_kontraks as $service_item_kontrak){
                 $service_item = $service_items->where('id', $service_item_kontrak->id_service_item)->first();
                 $metode_pembayaran = $term_of_payments->where('id', $service_item_kontrak->id_terms_of_payment)->first();
-                if($service_item !== null) $service_item_kontrak->nama_service_item = $service_item->nama_service_item;
-                else $service_item_kontrak->nama_service_item = "Service Item Tidak Ditemukan";
+                if($service_item !== null) $service_item_kontrak->nama = $service_item->nama_service_item;
+                else $service_item_kontrak->nama = "Service Item Tidak Ditemukan";
                 if($metode_pembayaran !== null) $service_item_kontrak->nama_metode_pembayaran = $metode_pembayaran->nama;
                 else $service_item_kontrak->nama_metode_pembayaran = "Metode Pembayaran Tidak Ditemukan";
             }
@@ -292,7 +292,7 @@ class ContractController extends Controller
                 $model->id_kontrak = $contract->id;
                 $model->id_service_item = $service_item['id_service_item'];
                 $model->id_terms_of_payment = $service_item['id_terms_of_payment'];
-                $model->harga = $service_item['price'];
+                $model->harga = $service_item['harga'];
                 $model->is_active = false;
                 $model->save();
             }
@@ -358,7 +358,7 @@ class ContractController extends Controller
                 // return $new_service_item;
                 $item_service = $all_service_items->where('id_service_item', $pivot_asset_id)->first();
                 $item_service->id_service_item = $new_service_item['id_service_item'];
-                $item_service->harga = $new_service_item['price'];
+                $item_service->harga = $new_service_item['harga'];
                 $item_service->id_terms_of_payment = $new_service_item['id_terms_of_payment'];
                 $item_service->save();
             }
@@ -374,7 +374,7 @@ class ContractController extends Controller
                 $item_service = new ServiceItemKontrak;
                 $item_service->id_kontrak = $id;
                 $item_service->id_service_item = $new_service_item['id_service_item'];
-                $item_service->harga = $new_service_item['price'];
+                $item_service->harga = $new_service_item['harga'];
                 $item_service->id_terms_of_payment = $new_service_item['id_terms_of_payment'];
                 $item_service->is_active = false;
                 $item_service->save();
