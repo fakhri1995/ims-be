@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use App\Role;
-use App\RoleGroupPivot;
+use App\RoleFeaturePivot;
 use Exception;
 
 class RoleController extends Controller
@@ -72,8 +72,8 @@ class RoleController extends Controller
             $id = $request->get('id', null);
             $role = Role::find($id);
             if($role === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
-            $role_group = RoleGroupPivot::where('role_id', $id)->pluck('group_id');
-            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => ["role_detail" => $role, "role_group" => $role_group]]);
+            $role_feature = RoleFeaturePivot::where('role_id', $id)->pluck('feature_id');
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => ["role_detail" => $role, "role_feature" => $role_feature]]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
@@ -100,16 +100,16 @@ class RoleController extends Controller
         }
         $role = new Role;
         $role->name = $request->get('name');
-        $group_ids = $request->get('group_ids',[]);
+        $feature_ids = $request->get('feature_ids',[]);
         try{
             $role->save();
 
             $role_id = $role->id;
-            $group_ids = array_unique($group_ids);
-            foreach($group_ids as $group_id){
-                $pivot = new RoleGroupPivot;
+            $feature_ids = array_unique($feature_ids);
+            foreach($feature_ids as $feature_id){
+                $pivot = new RoleFeaturePivot;
                 $pivot->role_id = $role_id;
-                $pivot->group_id = $group_id;
+                $pivot->feature_id = $feature_id;
                 $pivot->save();
             }
             
@@ -143,34 +143,34 @@ class RoleController extends Controller
         $role = Role::find($id);
         if($role === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
         $role->name = $request->get('name');
-        $group_ids = $request->get('group_ids',[]);
+        $feature_ids = $request->get('feature_ids',[]);
         try{
             $role->save();
 
-            $role_group_ids = RoleGroupPivot::where('role_id', $id)->pluck('group_id')->toArray();
-            if(!count($role_group_ids)) {
-                $group_ids = array_unique($group_ids);
-                foreach($group_ids as $group_id){
-                    $pivot = new RoleGroupPivot;
+            $role_feature_ids = RoleFeaturePivot::where('role_id', $id)->pluck('feature_id')->toArray();
+            if(!count($role_feature_ids)) {
+                $feature_ids = array_unique($feature_ids);
+                foreach($feature_ids as $feature_id){
+                    $pivot = new RoleFeaturePivot;
                     $pivot->role_id = $id;
-                    $pivot->group_id = $group_id;
+                    $pivot->feature_id = $feature_id;
                     $pivot->save();
                 }
             } else {
-                $difference_array_new = array_diff($group_ids, $role_group_ids);
-                $difference_array_delete = array_diff($role_group_ids, $group_ids);
+                $difference_array_new = array_diff($feature_ids, $role_feature_ids);
+                $difference_array_delete = array_diff($role_feature_ids, $feature_ids);
                 $difference_array_new = array_unique($difference_array_new);
                 $difference_array_delete = array_unique($difference_array_delete);
-                foreach($difference_array_new as $group_id){
-                    $pivot = new RoleGroupPivot;
+                foreach($difference_array_new as $feature_id){
+                    $pivot = new RoleFeaturePivot;
                     $pivot->role_id = $id;
-                    $pivot->group_id = $group_id;
+                    $pivot->feature_id = $feature_id;
                     $pivot->save();
                 }
-                $role = RoleGroupPivot::where('role_id', $id)->get();
-                foreach($difference_array_delete as $group_id){
-                    $group_role = $role->where('group_id', $group_id)->first();
-                    $group_role->delete();
+                $role = RoleFeaturePivot::where('role_id', $id)->get();
+                foreach($difference_array_delete as $feature_id){
+                    $feature_role = $role->where('feature_id', $feature_id)->first();
+                    $feature_role->delete();
                 }
             }
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
@@ -203,9 +203,9 @@ class RoleController extends Controller
         if($role === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
         try{
             $role->delete();
-            $role_group = RoleGroupPivot::where('role_id', $id)->get();
-            foreach($role_group as $group){
-                $group->delete();
+            $role_feature = RoleFeaturePivot::where('role_id', $id)->get();
+            foreach($role_feature as $feature){
+                $feature->delete();
             }
             return response()->json(["success" => true, "message" => "Data Berhasil Dihapus"]);
         } catch(Exception $err){

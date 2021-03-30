@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateRoleGroupPivotsTable extends Migration
+class CreateRoleFeaturePivotsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,10 +13,10 @@ class CreateRoleGroupPivotsTable extends Migration
      */
     public function up()
     {
-        Schema::create('role_group_pivots', function (Blueprint $table) {
+        Schema::create('role_feature_pivots', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('role_id');
-            $table->unsignedBigInteger('group_id');
+            $table->unsignedBigInteger('feature_id');
             $table->softDeletes();
         });
     }
@@ -28,6 +28,6 @@ class CreateRoleGroupPivotsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('role_group_pivots');
+        Schema::dropIfExists('role_feature_pivots');
     }
 }
