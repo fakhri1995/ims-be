@@ -24,10 +24,10 @@ class CompanyController extends Controller
 
     public function getCompanyDetail(Request $request)
     {
-        $login_id = $request->get('login_id');
+        $company_id = $request->get('company_id');
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
-            $response = $this->client->request('GET', '/admin/v1/get-company?id='.$login_id, [
+            $response = $this->client->request('GET', '/admin/v1/get-company?id='.$company_id, [
                     'headers'  => $headers
                 ]);
             $response = json_decode((string) $response->getBody(), true);
@@ -40,8 +40,31 @@ class CompanyController extends Controller
                         "status_detail" => $response['error']['detail']
                     ]
                 ]], 400);
+            } else {
+                try{
+                    $company = Company::find($response['data']['company_id']);
+                    if($company === null){
+                        $response['data']['singkatan'] = '-';
+                        $response['data']['tanggal_pkp'] = null;
+                        $response['data']['penanggung_jawab'] = '-';
+                        $response['data']['npwp'] = '-';
+                        $response['data']['fax'] = '-';
+                        $response['data']['email'] = '-';
+                        $response['data']['website'] = '-';
+                    } else {
+                        $response['data']['singkatan'] = $company->singkatan;
+                        $response['data']['tanggal_pkp'] = $company->tanggal_pkp;
+                        $response['data']['penanggung_jawab'] = $company->penanggung_jawab;
+                        $response['data']['npwp'] = $company->npwp;
+                        $response['data']['fax'] = $company->fax;
+                        $response['data']['email'] = $company->email;
+                        $response['data']['website'] = $company->website;
+                    }
+                } catch(Exception $err){
+                    return response()->json(["success" => false, "message" => $err], 400);
+                } 
+                return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $response]);
             }
-            else return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $response]);
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());

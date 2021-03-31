@@ -23,10 +23,10 @@ class AccountController extends Controller
 
     public function getAccountDetail(Request $request)
     {
-        $login_id = $request->get('login_id');
+        $account_id = $request->get('account_id');
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
-            $response = $this->client->request('GET', '/admin/v1/get-account?id='.$login_id, [
+            $response = $this->client->request('GET', '/admin/v1/get-account?id='.$account_id, [
                     'headers'  => $headers
                 ]);
             $response = json_decode((string) $response->getBody(), true);
