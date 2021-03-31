@@ -100,6 +100,7 @@ class RoleController extends Controller
         }
         $role = new Role;
         $role->name = $request->get('name');
+        $role->description = $request->get('description');
         $feature_ids = $request->get('feature_ids',[]);
         try{
             $role->save();
@@ -143,6 +144,7 @@ class RoleController extends Controller
         $role = Role::find($id);
         if($role === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
         $role->name = $request->get('name');
+        $role->description = $request->get('description');
         $feature_ids = $request->get('feature_ids',[]);
         try{
             $role->save();
