@@ -123,6 +123,44 @@ class CompanyController extends Controller
         }
     }
 
+    public function getCompanyClientList(Request $request)
+    {
+        $headers = ['Authorization' => $request->header("Authorization")];
+        try{
+            $response = $this->client->request('GET', '/account/v1/company-hierarchy', [
+                    'headers'  => $headers
+                ]);
+            $datas = json_decode((string) $response->getBody(), true)['data']['members'];
+            $new_datas = [];
+            foreach($datas as $data){
+                if($data['role'] === 2){
+                    $temp = (object)[
+                        'company_id' => $data['company_id'],
+                        'company_name' => $data['company_name'],
+                        'adress' => $data['adress'],
+                        'phone_number' => $data['company_id'],
+                        'image_logo' => $data['company_id'],
+                        'role' => $data['role'],
+                    ];
+                    $new_datas[] = $temp;
+                }
+            }
+        
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $new_datas]);
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
+    }
+
     public function addCompanyMember(Request $request)
     {
         $body = [

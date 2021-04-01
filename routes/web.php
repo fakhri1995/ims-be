@@ -30,6 +30,7 @@ $router->get('/getActivityInventoryLogs', 'ActivityLogController@getActivityInve
 //Company Routes
 $router->post('/getCompanyDetail', 'CompanyController@getCompanyDetail');
 $router->post('/getCompanyList', 'CompanyController@getCompanyList');
+$router->post('/getCompanyClientList', 'CompanyController@getCompanyClientList');
 $router->post('/addCompanyMember', 'CompanyController@addCompanyMember');
 $router->post('/updateCompanyDetail', 'CompanyController@updateCompanyDetail');
 $router->post('/companyActivation', 'CompanyController@companyActivation');
@@ -51,6 +52,12 @@ $router->post('/addAccessFeature', 'AccessFeatureController@addAccessFeature');
 $router->post('/updateAccessFeature', 'AccessFeatureController@updateAccessFeature');
 $router->post('/updateModuleCompany', 'AccessFeatureController@updateModuleCompany');
 $router->post('/updateFeatureAccount', 'AccessFeatureController@updateFeatureAccount');
+
+//Module Routes
+// $router->post('/addModule', 'AccessFeatureController@addModule');
+// $router->post('/getAccessFeature', 'AccessFeatureController@getAccessFeature');
+// $router->post('/addAccessModule', 'AccessFeatureController@addAccessModule');
+// $router->post('/addAccessFeature', 'AccessFeatureController@addAccessFeature');
 
 //Bank Account Routes
 $router->get('/getBanks', 'BankController@getBanks');
