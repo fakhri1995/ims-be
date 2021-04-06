@@ -7,6 +7,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use App\ServiceItemKontrak;
 use App\ServiceItem;
+use App\ServiceCategory;
 use App\DimTermsOfPayment;
 use App\DimTipeKontrak;
 use App\Kontrak;
@@ -627,10 +628,11 @@ class ContractController extends Controller
             ]], $error_response->getStatusCode());
         }
         try{
-            $service_items = ServiceItem::select('id','nama_service_item','deskripsi_singkat')->get();
+            $service_categories = ServiceCategory::get();
+            $service_items = ServiceItem::select('id','id_service_kategori','nama_service_item','deskripsi_singkat')->get();
             $term_of_payments = DimTermsOfPayment::select('id','nama')->get();
             $contract_types = DimTipeKontrak::select('id', 'nama', 'keterangan')->get();
-            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => (object)["companies" => $companies, "service_items" => $service_items, "term_of_payments" => $term_of_payments, "contract_types" => $contract_types]]);
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => (object)["companies" => $companies, "service_categories" => $service_categories, "service_items" => $service_items, "term_of_payments" => $term_of_payments, "contract_types" => $contract_types]]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
