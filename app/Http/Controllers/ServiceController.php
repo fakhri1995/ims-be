@@ -28,6 +28,7 @@ class ServiceController extends Controller
 
     public function getServiceCategories(Request $request)
     {
+        // $protocol = "GET_SERVICE_CATEGORIES";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -55,6 +56,7 @@ class ServiceController extends Controller
 
     public function addServiceCategory(Request $request)
     {
+        // $protocol = "ADD_SERVICE_CATEGORY";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -85,6 +87,7 @@ class ServiceController extends Controller
 
     public function updateServiceCategory(Request $request)
     {
+        // $protocol = "UPDATE_SERVICE_CATEGORY";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -124,6 +127,7 @@ class ServiceController extends Controller
 
     public function deleteServiceCategory(Request $request)
     {
+        // $protocol = "DELETE_SERVICE_CATEGORY";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -161,6 +165,7 @@ class ServiceController extends Controller
 
     public function getServiceItems(Request $request)
     {
+        // $protocol = "GET_SERVICE_ITEMS";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -197,6 +202,7 @@ class ServiceController extends Controller
 
     public function getServiceItem(Request $request)
     {
+        // $protocol = "GET_SERVICE_ITEMS";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -254,6 +260,7 @@ class ServiceController extends Controller
 
     public function addServiceItem(Request $request)
     {
+        // $protocol = "ADD_SERVICE_ITEM";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -295,6 +302,7 @@ class ServiceController extends Controller
 
     public function updateServiceItem(Request $request)
     {
+        // $protocol = "UPDATE_SERVICE_ITEM";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -354,6 +362,7 @@ class ServiceController extends Controller
 
     public function deleteServiceItem(Request $request)
     {
+        // $protocol = "DELETE_SERVICE_ITEM";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -395,6 +404,7 @@ class ServiceController extends Controller
 
     public function publishingServiceItem(Request $request)
     {
+        // $protocol = "PUBLISH_SERVICE_ITEM";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -433,6 +443,7 @@ class ServiceController extends Controller
 
     public function depublishingServiceItem(Request $request)
     {
+        // $protocol = "PUBLISH_SERVICE_ITEM";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [

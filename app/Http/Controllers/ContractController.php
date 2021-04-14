@@ -30,6 +30,7 @@ class ContractController extends Controller
 
     public function getContractTypes(Request $request)
     {
+        // $protocol = "GET_CONTRACT_TYPES";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -57,6 +58,7 @@ class ContractController extends Controller
 
     public function addContractType(Request $request)
     {
+        // $protocol = "ADD_CONTRACT_TYPE";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -87,6 +89,7 @@ class ContractController extends Controller
 
     public function updateContractType(Request $request)
     {
+        // $protocol = "UPDATE_CONTRACT_TYPE";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -126,6 +129,7 @@ class ContractController extends Controller
 
     public function deleteContractType(Request $request)
     {
+        // $protocol = "DELETE_CONTRACT_TYPE";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -163,6 +167,7 @@ class ContractController extends Controller
 
     public function getContracts(Request $request)
     {
+        // $protocol = "GET_CONTRACTS";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -190,6 +195,7 @@ class ContractController extends Controller
 
     public function getContract(Request $request)
     {
+        // $protocol = "GET_CONTRACT";
         $params = [
             'page' => $request->get('page'),
             'rows' => $request->get('rows'),
@@ -260,6 +266,7 @@ class ContractController extends Controller
 
     public function addContract(Request $request)
     {
+        // $protocol = "ADD_CONTRACT";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -305,6 +312,7 @@ class ContractController extends Controller
 
     public function updateContract(Request $request)
     {
+        // $protocol = "UPDATE_CONTRACT";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -388,6 +396,7 @@ class ContractController extends Controller
 
     public function deleteContract(Request $request)
     {
+        // $protocol = "DELETE_CONTRACT";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -429,6 +438,7 @@ class ContractController extends Controller
 
     public function activatingContract(Request $request)
     {
+        // $protocol = "STATUS_CONTRACT";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -467,6 +477,7 @@ class ContractController extends Controller
 
     public function deactivatingContract(Request $request)
     {
+        // $protocol = "STATUS_CONTRACT";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -505,6 +516,7 @@ class ContractController extends Controller
 
     public function activatingServiceItemContract(Request $request)
     {
+        // $protocol = "STATUS_SERVICE_ITEM_CONTRACT";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -543,6 +555,7 @@ class ContractController extends Controller
 
     public function deactivatingServiceItemContract(Request $request)
     {
+        // $protocol = "STATUS_SERVICE_ITEM_CONTRACT";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [

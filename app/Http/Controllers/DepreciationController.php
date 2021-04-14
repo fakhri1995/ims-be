@@ -25,6 +25,7 @@ class DepreciationController extends Controller
 
     public function getDepreciations(Request $request)
     {
+        // $protocol = "GET_DEPRECATIONS";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -52,6 +53,7 @@ class DepreciationController extends Controller
 
     public function addDepreciation(Request $request)
     {
+        // $protocol = "ADD_DEPRECATION";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -84,6 +86,7 @@ class DepreciationController extends Controller
 
     public function updateDepreciation(Request $request)
     {
+        // $protocol = "UPDATE_DEPRECATION";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -118,6 +121,7 @@ class DepreciationController extends Controller
 
     public function deleteDepreciation(Request $request)
     {
+        // $protocol = "DELETE_DEPRECATION";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [

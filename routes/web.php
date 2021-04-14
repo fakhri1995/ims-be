@@ -36,13 +36,47 @@ $router->post('/updateCompanyDetail', 'CompanyController@updateCompanyDetail');
 $router->post('/companyActivation', 'CompanyController@companyActivation');
 $router->post('/getLocations', 'CompanyController@getLocations');
 
+//MIG Company Routes
+$router->post('/getMainCompanyDetail', 'CompanyController@getMainCompanyDetail');
+$router->post('/updateMainCompany', 'CompanyController@updateMainCompany');
+
+//MIG Branch Company Routes
+$router->post('/getBranchCompanyList', 'CompanyController@getBranchCompanyList');
+$router->post('/getCompanyBranchDetail', 'CompanyController@getCompanyBranchDetail');
+$router->post('/addCompanyBranch', 'CompanyController@addCompanyBranch');
+$router->post('/updateCompanyBranch', 'CompanyController@updateCompanyBranch');
+$router->post('/companyBranchActivation', 'CompanyController@companyBranchActivation');
+
+//MIG Client Company Routes
+$router->post('/getClientCompanyList', 'CompanyController@getClientCompanyList');
+$router->post('/getCompanyClientDetail', 'CompanyController@getCompanyClientDetail');
+$router->post('/addCompanyClient', 'CompanyController@addCompanyClient');
+$router->post('/updateCompanyClient', 'CompanyController@updateCompanyClient');
+$router->post('/companyClientActivation', 'CompanyController@companyClientActivation');
+
 //Account Routes
 $router->post('/getAccountDetail', 'AccountController@getAccountDetail');
 $router->post('/getAccountList', 'AccountController@getAccountList');
 $router->post('/addAccountMember', 'AccountController@addAccountMember');
 $router->post('/updateAccountDetail', 'AccountController@updateAccountDetail');
 $router->post('/changeAccountPassword', 'AccountController@changeAccountPassword');
-$router->post('/accountActivation', 'AccountController@AccountActivation');
+$router->post('/accountActivation', 'accountController@accountActivation');
+
+//Agent Routes
+$router->post('/getAgentDetail', 'AccountController@getAgentDetail');
+$router->post('/getAgentList', 'AccountController@getAgentList');
+$router->post('/addAgentMember', 'AccountController@addAgentMember');
+$router->post('/updateAgentDetail', 'AccountController@updateAgentDetail');
+$router->post('/changeAgentPassword', 'AccountController@changeAgentPassword');
+$router->post('/agentActivation', 'AccountController@agentActivation');
+
+//Requester Routes
+$router->post('/getRequesterDetail', 'AccountController@getRequesterDetail');
+$router->post('/getRequesterList', 'AccountController@getRequesterList');
+$router->post('/addRequesterMember', 'AccountController@addRequesterMember');
+$router->post('/updateRequesterDetail', 'AccountController@updateRequesterDetail');
+$router->post('/changeRequesterPassword', 'AccountController@changeRequesterPassword');
+$router->post('/requesterActivation', 'AccountController@requesterActivation');
 
 //Access Feature Routes
 $router->post('/getAccessModule', 'AccessFeatureController@getAccessModule');
@@ -54,10 +88,14 @@ $router->post('/updateModuleCompany', 'AccessFeatureController@updateModuleCompa
 $router->post('/updateFeatureAccount', 'AccessFeatureController@updateFeatureAccount');
 
 //Module Routes
-// $router->post('/addModule', 'AccessFeatureController@addModule');
+$router->post('/addModule', 'AccessFeatureController@addModule');
+$router->post('/getModules', 'AccessFeatureController@getModules');
+$router->post('/deleteModule', 'AccessFeatureController@deleteModule');
+$router->post('/updateModuleFeature', 'AccessFeatureController@updateModuleFeature');
 // $router->post('/getAccessFeature', 'AccessFeatureController@getAccessFeature');
 // $router->post('/addAccessModule', 'AccessFeatureController@addAccessModule');
 // $router->post('/addAccessFeature', 'AccessFeatureController@addAccessFeature');
+
 
 //Bank Account Routes
 $router->get('/getBanks', 'BankController@getBanks');
@@ -65,12 +103,38 @@ $router->post('/addBank', 'BankController@addBank');
 $router->put('/updateBank', 'BankController@updateBank');
 $router->delete('/deleteBank', 'BankController@deleteBank');
 
+//Main Bank Account Routes
+$router->get('/getMainBanks', 'BankController@getMainBanks');
+$router->post('/addMainBank', 'BankController@addMainBank');
+$router->put('/updateMainBank', 'BankController@updateMainBank');
+$router->delete('/deleteMainBank', 'BankController@deleteMainBank');
+
+//Client Bank Account Routes
+$router->get('/getClientBanks', 'BankController@getClientBanks');
+$router->post('/addClientBank', 'BankController@addClientBank');
+$router->put('/updateClientBank', 'BankController@updateClientBank');
+$router->delete('/deleteClientBank', 'BankController@deleteClientBank');
+
 //Group Routes
 $router->get('/getGroups', 'GroupController@getGroups');
 $router->get('/getGroup', 'GroupController@getGroup');
 $router->post('/addGroup', 'GroupController@addGroup');
 $router->put('/updateGroup', 'GroupController@updateGroup');
 $router->delete('/deleteGroup', 'GroupController@deleteGroup');
+
+//Agent Group Routes
+$router->get('/getAgentGroups', 'GroupController@getAgentGroups');
+$router->get('/getAgentGroup', 'GroupController@getAgentGroup');
+$router->post('/addAgentGroup', 'GroupController@addAgentGroup');
+$router->put('/updateAgentGroup', 'GroupController@updateAgentGroup');
+$router->delete('/deleteAgentGroup', 'GroupController@deleteAgentGroup');
+
+//Requester Group Routes
+$router->get('/getRequesterGroups', 'GroupController@getRequesterGroups');
+$router->get('/getRequesterGroup', 'GroupController@getRequesterGroup');
+$router->post('/addRequesterGroup', 'GroupController@addRequesterGroup');
+$router->put('/updateRequesterGroup', 'GroupController@updateRequesterGroup');
+$router->delete('/deleteRequesterGroup', 'GroupController@deleteRequesterGroup');
 
 //Group Routes
 // $router->post('/attachPivotGU', 'GroupUserPivotController@attachPivotGU');

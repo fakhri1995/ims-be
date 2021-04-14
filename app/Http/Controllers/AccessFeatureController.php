@@ -51,69 +51,69 @@ class AccessFeatureController extends Controller
         }     
     }
 
-    public function getAccessFeature(Request $request)
-    {
-        $params = [
-            'page' => $request->get('page'),
-            'rows' => $request->get('rows'),
-            'order_by' => $request->get('order_by'),
-            'module_id' => $request->get('module_id'),
-            'company_id' => $request->get('company_id')
-        ];
-        $headers = ['Authorization' => $request->header("Authorization")];
-        try{
-            $response = $this->client->request('GET', '/admin/v1/account-feature?page='.$params['page']
-                .'&rows='.$params['rows']
-                .'&order_by='.$params['order_by']
-                .'&module_id='.$params['module_id']
-                .'&company_id='.$params['company_id'], [
-                    'headers'  => $headers
-                ]);
-            return response(json_decode((string) $response->getBody(), true));
-        }catch(ClientException $err){
-            $error_response = $err->getResponse();
-            $detail = json_decode($error_response->getBody());
-            return response()->json(["success" => false, "message" => (object)[
-                "errorInfo" => [
-                    "status" => $error_response->getStatusCode(),
-                    "reason" => $error_response->getReasonPhrase(),
-                    "server_code" => json_decode($error_response->getBody())->error->code,
-                    "status_detail" => json_decode($error_response->getBody())->error->detail
-                ]
-            ]], $error_response->getStatusCode());
-        }
-    }
+    // public function getAccessFeature(Request $request)
+    // {
+    //     $params = [
+    //         'page' => $request->get('page'),
+    //         'rows' => $request->get('rows'),
+    //         'order_by' => $request->get('order_by'),
+    //         'module_id' => $request->get('module_id'),
+    //         'company_id' => $request->get('company_id')
+    //     ];
+    //     $headers = ['Authorization' => $request->header("Authorization")];
+    //     try{
+    //         $response = $this->client->request('GET', '/admin/v1/account-feature?page='.$params['page']
+    //             .'&rows='.$params['rows']
+    //             .'&order_by='.$params['order_by']
+    //             .'&module_id='.$params['module_id']
+    //             .'&company_id='.$params['company_id'], [
+    //                 'headers'  => $headers
+    //             ]);
+    //         return response(json_decode((string) $response->getBody(), true));
+    //     }catch(ClientException $err){
+    //         $error_response = $err->getResponse();
+    //         $detail = json_decode($error_response->getBody());
+    //         return response()->json(["success" => false, "message" => (object)[
+    //             "errorInfo" => [
+    //                 "status" => $error_response->getStatusCode(),
+    //                 "reason" => $error_response->getReasonPhrase(),
+    //                 "server_code" => json_decode($error_response->getBody())->error->code,
+    //                 "status_detail" => json_decode($error_response->getBody())->error->detail
+    //             ]
+    //         ]], $error_response->getStatusCode());
+    //     }
+    // }
 
-    public function addAccessModule(Request $request)
-    {
-        $body = [
-            "name" => $request->get('name'),
-            "description" => $request->get('description'),
-            "can_mark_as_default" => $request->get('can_mark_as_default')
-        ];
-        $headers = [
-            'Authorization' => $request->header("Authorization"),
-            'content-type' => 'application/json'
-        ];    
-        try{
-            $response = $this->client->request('POST', '/admin/v1/account-module', [
-                    'headers'  => $headers,
-                    'json' => $body
-                ]);
-            return response(json_decode((string) $response->getBody(), true));
-        }catch(ClientException $err){
-            $error_response = $err->getResponse();
-            $detail = json_decode($error_response->getBody());
-            return response()->json(["success" => false, "message" => (object)[
-                "errorInfo" => [
-                    "status" => $error_response->getStatusCode(),
-                    "reason" => $error_response->getReasonPhrase(),
-                    "server_code" => json_decode($error_response->getBody())->error->code,
-                    "status_detail" => json_decode($error_response->getBody())->error->detail
-                ]
-            ]], $error_response->getStatusCode());
-        }
-    }
+    // public function addAccessModule(Request $request)
+    // {
+    //     $body = [
+    //         "name" => $request->get('name'),
+    //         "description" => $request->get('description'),
+    //         "can_mark_as_default" => $request->get('can_mark_as_default')
+    //     ];
+    //     $headers = [
+    //         'Authorization' => $request->header("Authorization"),
+    //         'content-type' => 'application/json'
+    //     ];    
+    //     try{
+    //         $response = $this->client->request('POST', '/admin/v1/account-module', [
+    //                 'headers'  => $headers,
+    //                 'json' => $body
+    //             ]);
+    //         return response(json_decode((string) $response->getBody(), true));
+    //     }catch(ClientException $err){
+    //         $error_response = $err->getResponse();
+    //         $detail = json_decode($error_response->getBody());
+    //         return response()->json(["success" => false, "message" => (object)[
+    //             "errorInfo" => [
+    //                 "status" => $error_response->getStatusCode(),
+    //                 "reason" => $error_response->getReasonPhrase(),
+    //                 "server_code" => json_decode($error_response->getBody())->error->code,
+    //                 "status_detail" => json_decode($error_response->getBody())->error->detail
+    //             ]
+    //         ]], $error_response->getStatusCode());
+    //     }
+    // }
 
     public function addAccessFeature(Request $request)
     {
@@ -152,7 +152,6 @@ class AccessFeatureController extends Controller
             if($access_feature === null){
                 $access_feature = new AccessFeature;
             }
-            $access_feature = new AccessFeature;
             $access_feature->feature_key = $feature_key;
             $access_feature->feature_id = $feature_id;
             $access_feature->name = $name;
@@ -274,4 +273,188 @@ class AccessFeatureController extends Controller
         //     ]], $error_response->getStatusCode());
         // }
     }
+
+    //Module (Group in CGX)
+    public function getModules(Request $request)
+    {
+        $headers = [
+            'Authorization' => $request->header("Authorization"),
+            'content-type' => 'application/json'
+        ];
+        try{
+            $response = $this->client->request('GET', '/admin/v1/group-feature?page=1&rows=50', [
+                    'headers'  => $headers
+                ]);
+            $data = json_decode((string) $response->getBody(), true)['data']['group_features'];
+            return response(["success" => true, "message" => "Data Berhasil Diambil", "data" => $data]);
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
+    }
+
+    public function addModule(Request $request)
+    {
+        $body_group = [
+            'name' => $request->get('name'),
+            'description' => $request->get('description')
+        ];
+        $headers = [
+            'Authorization' => $request->header("Authorization"),
+            'content-type' => 'application/json'
+        ];
+        try{
+            $response = $this->client->request('PUT', '/admin/v1/group-feature', [
+                'headers'  => $headers,
+                'json' => $body_group
+            ]);
+            $key = json_decode((string) $response->getBody(), true)['data']['key'];
+            $body_feature = [
+                'group_feature_key' => $key,
+                'feature_ids' => $request->get('feature_ids')
+            ];
+            $response_feature = $this->client->request('POST', '/admin/v1/group-feature', [
+                'headers'  => $headers,
+                'json' => $body_feature
+            ]);
+            return response(json_decode((string) $response_feature->getBody(), true));
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
+    }
+
+    public function updateModule(Request $request)
+    {
+        $body_group = [
+            'name' => $request->get('name'),
+            'description' => $request->get('description')
+        ];
+        $headers = [
+            'Authorization' => $request->header("Authorization"),
+            'content-type' => 'application/json'
+        ];
+        try{
+            $response = $this->client->request('PUT', '/admin/v1/group-feature', [
+                'headers'  => $headers,
+                'json' => $body_group
+            ]);
+            $key = json_decode((string) $response->getBody(), true)['data']['key'];
+            $body_feature = [
+                'group_feature_key' => $key,
+                'feature_ids' => $request->get('feature_ids')
+            ];
+            $response_feature = $this->client->request('POST', '/admin/v1/group-feature', [
+                'headers'  => $headers,
+                'json' => $body_feature
+            ]);
+            return response(json_decode((string) $response_feature->getBody(), true));
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
+    }
+
+    public function deleteModule(Request $request)
+    {
+        $id = $request->get('id');
+        $headers = [
+            'Authorization' => $request->header("Authorization"),
+            'content-type' => 'application/json'
+        ];
+        try{
+            $response = $this->client->request('GET', '/admin/v1/group-feature?page=1&rows=50', [
+                    'headers'  => $headers
+                ]);
+            $data = json_decode((string) $response->getBody(), true)['data']['group_features'];
+            $search = array_search($id, array_column($data, 'id'));
+            $selected_data = $data[$search];
+            if($selected_data['id'] === $id){
+                $body_group = [
+                    'key' => $selected_data['key']
+                ];
+                $response_delete = $this->client->request('DELETE', '/admin/v1/group-feature', [
+                    'headers'  => $headers,
+                    'json' => $body_group
+                ]);
+                $response_delete = json_decode((string) $response_delete->getBody(), true)['data']['message'];
+                return response()->json(["success" => true, "message" => $response_delete]);
+            } else {
+                return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 400,
+                        "reason" => "Module Tidak Ditemukan",
+                        "server_code" => 400,
+                        "status_detail" => "Module Tidak Ditemukan"
+                    ]
+                ]], 400);
+            }
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
+    }
+
+    public function updateModuleFeature(Request $request)
+    {
+        $body_group = [
+            'group_feature_key' => $request->get('group_feature_key'),
+            'feature_ids' => $request->get('feature_ids')
+        ];
+        $headers = [
+            'Authorization' => $request->header("Authorization"),
+            'content-type' => 'application/json'
+        ];
+        try{
+            $response = $this->client->request('POST', '/admin/v1/group-feature', [
+                'headers'  => $headers,
+                'json' => $body_group
+            ]);
+            return response(json_decode((string) $response->getBody(), true));
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
+    }
+
 }
