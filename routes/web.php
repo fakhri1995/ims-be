@@ -233,6 +233,7 @@ $router->delete('/deleteDepreciation', 'DepreciationController@deleteDepreciatio
 
 //Service Category Routes
 $router->get('/getRoles', 'RoleController@getRoles');
+$router->get('/getRole', 'RoleController@getRole');
 $router->post('/addRole', 'RoleController@addRole');
 $router->put('/updateRole', 'RoleController@updateRole');
 $router->delete('/deleteRole', 'RoleController@deleteRole');

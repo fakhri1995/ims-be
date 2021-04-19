@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
+use App\AccessFeature;
 use App\Role;
 use App\RoleFeaturePivot;
 use Exception;
@@ -72,8 +73,21 @@ class RoleController extends Controller
             $id = $request->get('id', null);
             $role = Role::find($id);
             if($role === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
-            $role_feature = RoleFeaturePivot::where('role_id', $id)->pluck('feature_id');
-            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => ["role_detail" => $role, "role_feature" => $role_feature]]);
+            $role_feature_ids = RoleFeaturePivot::where('role_id', $id)->pluck('feature_id');
+            $features = AccessFeature::get();
+            $role_features = [];
+            foreach($role_feature_ids as $role_feature_id){
+                $role_feature = $features->where('feature_id', $role_feature_id)->first();
+                if($role_feature === null) {
+                    $role_feature['id'] = "Data Tidak Ditemukan";
+                    $role_feature['feature_id'] = $role_feature_id;
+                    $role_feature['name'] = "Data Tidak Ditemukan";
+                    $role_feature['description'] = "Data Tidak Ditemukan";
+                    $role_feature['feature_key'] = "Data Tidak Ditemukan";
+                } 
+                $role_features[] = $role_feature;
+            }
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => ["role_detail" => $role, "role_features" => $role_features]]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
