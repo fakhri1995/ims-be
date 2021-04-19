@@ -234,8 +234,10 @@ class AccessFeatureController extends Controller
                 ]);
             $list_data = json_decode((string) $response_module_member->getBody(), true)['data']['features'];
             $list_feature_ids = [];
-            foreach($list_data as $data){
-                $list_feature_ids[] = (int)$data["id"];
+            if($list_data !== null){
+                foreach($list_data as $data){
+                    $list_feature_ids[] = (int)$data["id"];
+                }
             }
             $list_feature_ids[] = $feature_id;
             $body_update_list_feature = [
