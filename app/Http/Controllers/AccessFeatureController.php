@@ -381,7 +381,19 @@ class AccessFeatureController extends Controller
                 'headers'  => $headers,
                 'json' => $body_feature
             ]);
-            return response(json_decode((string) $response_feature->getBody(), true));
+            // return response(json_decode((string) $response_feature->getBody(), true));
+            $response_feature = json_decode((string) $response_feature->getBody(), true);
+            if(array_key_exists('error', $response_feature)) {
+                return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 400,
+                        "reason" => $response_feature['error']['detail'],
+                        "server_code" => $response_feature['error']['code'],
+                        "status_detail" => $response_feature['error']['detail']
+                    ]
+                ]], 400);
+            }
+            else return response()->json(["success" => true, "message" => $response_feature['data']['message']]);
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -459,7 +471,18 @@ class AccessFeatureController extends Controller
                 'headers'  => $headers,
                 'json' => $body_group
             ]);
-            return response(json_decode((string) $response->getBody(), true));
+            $response = json_decode((string) $response->getBody(), true);
+            if(array_key_exists('error', $response)) {
+                return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 400,
+                        "reason" => $response['error']['detail'],
+                        "server_code" => $response['error']['code'],
+                        "status_detail" => $response['error']['detail']
+                    ]
+                ]], 400);
+            }
+            else return response()->json(["success" => true, "message" => $response['data']['message']]);
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
