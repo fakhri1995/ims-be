@@ -82,7 +82,9 @@ $router->post('/requesterActivation', 'AccountController@requesterActivation');
 $router->post('/getAccessModule', 'AccessFeatureController@getAccessModule');
 $router->post('/getAccessFeature', 'AccessFeatureController@getAccessFeature');
 $router->post('/addAccessModule', 'AccessFeatureController@addAccessModule');
-$router->post('/addAccessFeature', 'AccessFeatureController@addAccessFeature');
+$router->post('/getFeatures', 'AccessFeatureController@getFeatures');
+$router->post('/addFeature', 'AccessFeatureController@addFeature');
+$router->post('/deleteFeature', 'AccessFeatureController@deleteFeature');
 $router->post('/updateAccessFeature', 'AccessFeatureController@updateAccessFeature');
 $router->post('/updateModuleCompany', 'AccessFeatureController@updateModuleCompany');
 $router->post('/updateFeatureAccount', 'AccessFeatureController@updateFeatureAccount');
@@ -90,8 +92,9 @@ $router->post('/updateFeatureAccount', 'AccessFeatureController@updateFeatureAcc
 //Module Routes
 $router->post('/addModule', 'AccessFeatureController@addModule');
 $router->post('/getModules', 'AccessFeatureController@getModules');
-$router->post('/deleteModule', 'AccessFeatureController@deleteModule');
+$router->post('/getModule', 'AccessFeatureController@getModule');
 $router->post('/updateModuleFeature', 'AccessFeatureController@updateModuleFeature');
+$router->post('/deleteModule', 'AccessFeatureController@deleteModule');
 // $router->post('/getAccessFeature', 'AccessFeatureController@getAccessFeature');
 // $router->post('/addAccessModule', 'AccessFeatureController@addAccessModule');
 // $router->post('/addAccessFeature', 'AccessFeatureController@addAccessFeature');

@@ -845,7 +845,7 @@ class CompanyController extends Controller
     
     public function getCompanyClientDetail(Request $request)
     {
-        // GET_CLIENT_BRANCH
+        // GET_COMPANY_CLIENT
         $company_id = $request->get('company_id');
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
@@ -912,7 +912,7 @@ class CompanyController extends Controller
 
     public function getClientCompanyList(Request $request)
     {
-        // GET_CLIENT_BRANCHS
+        // GET_COMPANY_CLIENTS
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/admin/v1/get-list-company?get_all_data=true', [
@@ -951,7 +951,7 @@ class CompanyController extends Controller
     
     public function addCompanyClient(Request $request)
     {
-        // ADD_CLIENT_BRANCH
+        // ADD_COMPANY_CLIENT
         $body = [
             'name' => $request->get('name'),
             'role' => 2,
@@ -997,7 +997,7 @@ class CompanyController extends Controller
 
     public function updateCompanyClient(Request $request)
     {
-        // UPDATE_CLIENT_BRANCH
+        // UPDATE_COMPANY_CLIENT
         $company_id = $request->get('id');
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
@@ -1102,7 +1102,7 @@ class CompanyController extends Controller
 
     public function companyClientActivation(Request $request)
     {
-        // STATUS_CLIENT_BRANCH
+        // STATUS_COMPANY_CLIENT
         $company_id = $request->get('company_id');
         $headers = ['Authorization' => $request->header("Authorization")];
         try{

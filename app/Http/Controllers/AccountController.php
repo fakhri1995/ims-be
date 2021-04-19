@@ -69,7 +69,7 @@ class AccountController extends Controller
         // GET_AGENTS
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
-            $response = $this->client->request('GET', '/admin/v1/get-list-account?page=1&rows=50', [
+            $response = $this->client->request('GET', '/admin/v1/get-list-account?get_all_data=true&order_by=asc', [
                     'headers'  => $headers
                 ]);
             $response = json_decode((string) $response->getBody(), true);
@@ -114,7 +114,8 @@ class AccountController extends Controller
             "company_id" => $request->get('company_id'),
             "email" => $request->get('email'),
             "role" => 1,
-            "phone_number" => $request->get('phone_number')
+            "phone_number" => $request->get('phone_number'),
+            "profile_image" => $request->get('profile_image', null)
         ];
         $headers = [
             'Authorization' => $request->header("Authorization"),
@@ -449,7 +450,7 @@ class AccountController extends Controller
         // GET_REQUESTERS
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
-            $response = $this->client->request('GET', '/admin/v1/get-list-account?page=1&rows=50', [
+            $response = $this->client->request('GET', '/admin/v1/get-list-account?get_all_data=true&order_by=asc', [
                     'headers'  => $headers
                 ]);
             $response = json_decode((string) $response->getBody(), true);
@@ -494,7 +495,8 @@ class AccountController extends Controller
             "company_id" => $request->get('company_id'),
             "email" => $request->get('email'),
             "role" => 2,
-            "phone_number" => $request->get('phone_number')
+            "phone_number" => $request->get('phone_number'),
+            "profile_image" => $request->get('profile_image', null)
         ];
         $headers = [
             'Authorization' => $request->header("Authorization"),
