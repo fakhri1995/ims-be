@@ -458,31 +458,50 @@ class AccessFeatureController extends Controller
 
     public function updateModuleFeature(Request $request)
     {
-        $body_group = [
-            'group_feature_key' => $request->get('group_feature_key'),
-            'feature_ids' => $request->get('feature_ids')
-        ];
+        $id = $request->get('id');
         $headers = [
             'Authorization' => $request->header("Authorization"),
             'content-type' => 'application/json'
         ];
         try{
-            $response = $this->client->request('POST', '/admin/v1/group-feature', [
-                'headers'  => $headers,
-                'json' => $body_group
-            ]);
-            $response = json_decode((string) $response->getBody(), true);
-            if(array_key_exists('error', $response)) {
+            $response = $this->client->request('GET', '/admin/v1/group-feature?page=1&rows=50', [
+                    'headers'  => $headers
+                ]);
+            $data = json_decode((string) $response->getBody(), true)['data']['group_features'];
+            $search = array_search($id, array_column($data, 'id'));
+            $selected_data = $data[$search];
+            if($selected_data['id'] === $id){
+                $body_group = [
+                    'group_feature_key' => $selected_data['key'],
+                    'feature_ids' => $request->get('feature_ids')
+                ];
+                $response = $this->client->request('POST', '/admin/v1/group-feature', [
+                    'headers'  => $headers,
+                    'json' => $body_group
+                ]);
+                $response = json_decode((string) $response->getBody(), true);
+                if(array_key_exists('error', $response)) {
+                    return response()->json(["success" => false, "message" => (object)[
+                        "errorInfo" => [
+                            "status" => 400,
+                            "reason" => $response['error']['detail'],
+                            "server_code" => $response['error']['code'],
+                            "status_detail" => $response['error']['detail']
+                        ]
+                    ]], 400);
+                }
+                else return response()->json(["success" => true, "message" => "Berhasil Memperbarui Data"]);
+            } else {
                 return response()->json(["success" => false, "message" => (object)[
                     "errorInfo" => [
                         "status" => 400,
-                        "reason" => $response['error']['detail'],
-                        "server_code" => $response['error']['code'],
-                        "status_detail" => $response['error']['detail']
+                        "reason" => "Module Tidak Ditemukan",
+                        "server_code" => 400,
+                        "status_detail" => "Module Tidak Ditemukan"
                     ]
                 ]], 400);
             }
-            else return response()->json(["success" => true, "message" => $response['data']['message']]);
+            
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
