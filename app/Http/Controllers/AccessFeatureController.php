@@ -54,6 +54,9 @@ class AccessFeatureController extends Controller
         }     
     }
 
+    public function getAccessFeature(Request $request){
+        return response()->json(AccessFeature::get());
+    }
     // public function getAccessFeature(Request $request)
     // {
     //     $params = [
