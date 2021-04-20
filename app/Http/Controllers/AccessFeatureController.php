@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use App\AccessFeature;
+use App\Role;
+use App\RoleFeaturePivot;
 
 class AccessFeatureController extends Controller
 {
@@ -519,29 +521,25 @@ class AccessFeatureController extends Controller
     // Account Feature
     public function updateFeatureAccount(Request $request)
     {
-        // $group_ids = $request->get('group_ids');
         // feature ids for accessing cgx's company and account feature
         $default_feature = [54, 55, 56, 57, 58, 59, 60, 61 ,62];
-        $group_ids = [
-            [96]
-        ];
+
+        $role_ids = $request->get('role_ids', []);
         $feature_ids = [];
-        foreach($group_ids as $group_id){
-            foreach($group_id as $feature_id){
-                $feature_ids[] = $feature_id; 
+        foreach($role_ids as $role_id){
+            $role = Role::find($role_id);
+            if($role !== null){
+                $role_feature_ids = RoleFeaturePivot::where('role_id', $role->id)->pluck('feature_id');
+                foreach($role_feature_ids as $feature_id){
+                    $feature_ids[] = $feature_id; 
+                }
             }
         }
-        $unique = array_unique($feature_ids);
-        $uniques = [];
-        foreach($unique as $u){
-            $uniques[] = $u;
-        }
-        // return response()->json([$feature_ids, $uniques, array_merge($default_feature, $uniques)]);
+        $unique_ids = array_unique($feature_ids);
+        $account_feature_ids = array_merge($default_feature, $unique_ids);
         $body = [
-            // 'account_id' => $request->get('account_id'),
-            // 'feature_ids' => $request->get('feature_ids')
-            'account_id' => 66,
-            'feature_ids' => array_merge($default_feature, $uniques)
+            'account_id' => $request->get('account_id'),
+            'feature_ids' => $account_feature_ids
         ];
         $headers = [
             'Authorization' => $request->header("Authorization"),
@@ -552,7 +550,19 @@ class AccessFeatureController extends Controller
                     'headers'  => $headers,
                     'json' => $body
                 ]);
-            return response(json_decode((string) $response->getBody(), true));
+            $response = json_decode((string) $response->getBody(), true);
+            if(array_key_exists('error', $response)) {
+                return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 400,
+                        "reason" => $response['error']['detail'],
+                        "server_code" => $response['error']['code'],
+                        "status_detail" => $response['error']['detail']
+                    ]
+                ]], 400);
+            } else {
+                return response()->json(["success" => true, "message" => "Berhasil Merubah Fitur Akun"]);
+            }    
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
