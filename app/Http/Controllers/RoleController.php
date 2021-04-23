@@ -47,7 +47,7 @@ class RoleController extends Controller
                 foreach($role_user_ids as $user_id){
                     foreach($response['data']['accounts'] as $user){
                         if($user['user_id'] === $user_id){
-                            $list_user[] = $user;
+                            $list_user[] = $user['fullname'];
                         }
                     }
                 }
