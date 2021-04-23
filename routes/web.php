@@ -69,6 +69,7 @@ $router->post('/addAgentMember', 'AccountController@addAgentMember');
 $router->post('/updateAgentDetail', 'AccountController@updateAgentDetail');
 $router->post('/changeAgentPassword', 'AccountController@changeAgentPassword');
 $router->post('/agentActivation', 'AccountController@agentActivation');
+$router->post('/updateFeatureAgent', 'AccountController@updateFeatureAgent');
 
 //Requester Routes
 $router->post('/getRequesterDetail', 'AccountController@getRequesterDetail');
@@ -77,6 +78,7 @@ $router->post('/addRequesterMember', 'AccountController@addRequesterMember');
 $router->post('/updateRequesterDetail', 'AccountController@updateRequesterDetail');
 $router->post('/changeRequesterPassword', 'AccountController@changeRequesterPassword');
 $router->post('/requesterActivation', 'AccountController@requesterActivation');
+$router->post('/updateFeatureRequester', 'AccountController@updateFeatureRequester');
 
 //Access Feature Routes
 $router->post('/getAccessModule', 'AccessFeatureController@getAccessModule');
@@ -232,6 +234,7 @@ $router->put('/updateDepreciation', 'DepreciationController@updateDepreciation')
 $router->delete('/deleteDepreciation', 'DepreciationController@deleteDepreciation');
 
 //Service Category Routes
+$router->get('/getRoleUsers', 'RoleController@getRoleUsers');
 $router->get('/getRoles', 'RoleController@getRoles');
 $router->get('/getRole', 'RoleController@getRole');
 $router->post('/addRole', 'RoleController@addRole');

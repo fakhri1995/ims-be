@@ -8,6 +8,7 @@ use GuzzleHttp\Exception\ClientException;
 use App\AccessFeature;
 use App\Role;
 use App\RoleFeaturePivot;
+use App\UserRolePivot;
 use Exception;
 
 class RoleController extends Controller
@@ -21,6 +22,50 @@ class RoleController extends Controller
     public function __construct()
     {
         $this->client = new Client(['base_uri' => 'https://go.cgx.co.id/']);
+    }
+
+    public function getRoleUsers(Request $request){
+        $role_id = $request->get('role_id');
+        $headers = ['Authorization' => $request->header("Authorization")];
+        try{
+            $response = $this->client->request('GET', '/admin/v1/get-list-account?get_all_data=true&order_by=asc', [
+                    'headers'  => $headers
+                ]);
+            $response = json_decode((string) $response->getBody(), true);
+            if(array_key_exists('error', $response)) {
+                return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 400,
+                        "reason" => $response['error']['detail'],
+                        "server_code" => $response['error']['code'],
+                        "status_detail" => $response['error']['detail']
+                    ]
+                ]], 400);
+            } else {
+                $role_user_ids = UserRolePivot::where('role_id', $role_id)->pluck('user_id')->toArray();
+                $list_user = [];
+                foreach($role_user_ids as $user_id){
+                    foreach($response['data']['accounts'] as $user){
+                        if($user['user_id'] === $user_id){
+                            $list_user[] = $user;
+                        }
+                    }
+                }
+              return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $list_user]);  
+            } 
+
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
     }
 
     public function getRoles(Request $request)

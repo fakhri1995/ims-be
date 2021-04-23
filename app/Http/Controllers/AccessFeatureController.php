@@ -8,6 +8,7 @@ use GuzzleHttp\Exception\ClientException;
 use App\AccessFeature;
 use App\Role;
 use App\RoleFeaturePivot;
+use App\UserRolePivot;
 
 class AccessFeatureController extends Controller
 {
@@ -528,6 +529,7 @@ class AccessFeatureController extends Controller
         $default_feature = [54, 55, 56, 57, 58, 59, 60, 61 ,62];
 
         $role_ids = $request->get('role_ids', []);
+        $account_id = $request->get('account_id');
         $feature_ids = [];
         foreach($role_ids as $role_id){
             $role = Role::find($role_id);
@@ -541,7 +543,7 @@ class AccessFeatureController extends Controller
         $unique_ids = array_unique($feature_ids);
         $account_feature_ids = array_merge($default_feature, $unique_ids);
         $body = [
-            'account_id' => $request->get('account_id'),
+            'account_id' => $account_id,
             'feature_ids' => $account_feature_ids
         ];
         $headers = [
@@ -564,7 +566,36 @@ class AccessFeatureController extends Controller
                     ]
                 ]], 400);
             } else {
-                return response()->json(["success" => true, "message" => "Berhasil Merubah Fitur Akun"]);
+                try{
+                    $user_role_ids = UserRolePivot::where('user_id', $account_id)->pluck('role_id')->toArray();
+                    if(!count($user_role_ids)) {
+                        foreach($role_ids as $role_id){
+                            $pivot = new UserRolePivot;
+                            $pivot->user_id = $account_id;
+                            $pivot->role_id = $role_id;
+                            $pivot->save();
+                        }
+                    } else {
+                        $difference_array_new = array_diff($role_ids, $user_role_ids);
+                        $difference_array_delete = array_diff($user_role_ids, $role_ids);
+                        $difference_array_new = array_unique($difference_array_new);
+                        $difference_array_delete = array_unique($difference_array_delete);
+                        foreach($difference_array_new as $role_id){
+                            $pivot = new UserRolePivot;
+                            $pivot->user_id = $account_id;
+                            $pivot->role_id = $role_id;
+                            $pivot->save();
+                        }
+                        $user = UserRolePivot::where('user_id', $account_id)->get();
+                        foreach($difference_array_delete as $role_id){
+                            $role_user = $user->where('role_id', $role_id)->first();
+                            $role_user->delete();
+                        }
+                    }
+                    return response()->json(["success" => true, "message" => "Berhasil Merubah Fitur Akun"]);
+                } catch(Exception $err){
+                    return response()->json(["success" => false, "message" => $err], 400);
+                }
             }    
         }catch(ClientException $err){
             $error_response = $err->getResponse();
