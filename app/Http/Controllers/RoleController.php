@@ -25,7 +25,7 @@ class RoleController extends Controller
     }
 
     public function getRoleUsers(Request $request){
-        $role_id = $request->get('role_id');
+        $role_id = $request->get('id');
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/admin/v1/get-list-account?get_all_data=true&order_by=asc', [
