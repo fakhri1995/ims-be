@@ -234,6 +234,64 @@ class RoleController extends Controller
                     $feature_role->delete();
                 }
             }
+            //Get list account that have updated role
+            $account_ids = UserRolePivot::where('role_id', $id)->pluck('user_id')->toArray();
+            // return $account_ids;
+            
+            //Reupdating accounts feature according to new feature's role
+            //Feature ids for accessing cgx's company and account feature
+            $default_feature = [54, 55, 56, 57, 58, 59, 60, 61 ,62];
+            foreach($account_ids as $account_id){
+                $role_ids = UserRolePivot::where('user_id', $account_id)->pluck('role_id')->toArray();
+                $feature_ids = [];
+                foreach($role_ids as $role_id){
+                    $role = Role::find($role_id);
+                    if($role !== null){
+                        $role_feature_ids = RoleFeaturePivot::where('role_id', $role->id)->pluck('feature_id');
+                        foreach($role_feature_ids as $feature_id){
+                            $feature_ids[] = $feature_id; 
+                        }
+                    }
+                }
+                $unique_ids = array_unique($feature_ids);
+                $account_feature_ids = array_merge($default_feature, $unique_ids);
+                $body = [
+                    'account_id' => $account_id,
+                    'feature_ids' => $account_feature_ids
+                ];
+                $headers = [
+                    'Authorization' => $request->header("Authorization"),
+                    'content-type' => 'application/json'
+                ];
+                try{
+                    $response = $this->client->request('POST', '/admin/v1/update-feature', [
+                            'headers'  => $headers,
+                            'json' => $body
+                        ]);
+                    $response = json_decode((string) $response->getBody(), true);
+                    if(array_key_exists('error', $response)) {
+                        return response()->json(["success" => false, "message" => (object)[
+                            "errorInfo" => [
+                                "status" => 400,
+                                "reason" => $response['error']['detail'],
+                                "server_code" => $response['error']['code'],
+                                "status_detail" => $response['error']['detail']
+                            ]
+                        ]], 400);
+                    }   
+                }catch(ClientException $err){
+                    $error_response = $err->getResponse();
+                    $detail = json_decode($error_response->getBody());
+                    return response()->json(["success" => false, "message" => (object)[
+                        "errorInfo" => [
+                            "status" => $error_response->getStatusCode(),
+                            "reason" => $error_response->getReasonPhrase(),
+                            "server_code" => json_decode($error_response->getBody())->error->code,
+                            "status_detail" => json_decode($error_response->getBody())->error->detail
+                        ]
+                    ]], $error_response->getStatusCode());
+                }
+            }
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
