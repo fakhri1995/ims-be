@@ -88,8 +88,11 @@ class RoleController extends Controller
             ]], $error_response->getStatusCode());
         }
         try{
-            $role = Role::all();
-            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $role]);
+            $roles = Role::all();
+            foreach($roles as $role){
+                $role->member = UserRolePivot::where('role_id', $role->id)->count();
+            }
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $roles]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
@@ -240,7 +243,7 @@ class RoleController extends Controller
             
             //Reupdating accounts feature according to new feature's role
             //Feature ids for accessing cgx's company and account feature
-            $default_feature = [54, 55, 56, 57, 58, 59, 60, 61 ,62];
+            $default_feature = [54, 55, 56, 57, 58, 59, 60, 61 ,62, 74, 75];
             foreach($account_ids as $account_id){
                 $role_ids = UserRolePivot::where('user_id', $account_id)->pluck('role_id')->toArray();
                 $feature_ids = [];

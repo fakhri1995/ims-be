@@ -526,7 +526,7 @@ class AccessFeatureController extends Controller
     public function updateFeatureAccount(Request $request)
     {
         // feature ids for accessing cgx's company and account feature
-        $default_feature = [54, 55, 56, 57, 58, 59, 60, 61 ,62];
+        $default_feature = [54, 55, 56, 57, 58, 59, 60, 61 ,62, 74, 75];
 
         $role_ids = $request->get('role_ids', []);
         $account_id = $request->get('account_id');

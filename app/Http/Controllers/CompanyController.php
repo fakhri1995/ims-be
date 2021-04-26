@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use App\Company;
+use App\AccessFeature;
 
 class CompanyController extends Controller
 {
@@ -381,7 +382,81 @@ class CompanyController extends Controller
 
     public function getMainCompanyDetail(Request $request)
     {
-        // GET_MAIN_COMPANY
+        // $protocol = "MAIN_COMPANY_GET";
+        // $access_feature = AccessFeature::where('name',$protocol)->first();
+        // if($access_feature === null) {
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => 400,
+        //             "reason" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin",
+        //             "server_code" => 400,
+        //             "status_detail" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin"
+        //         ]
+        //     ]], 400);
+        // }
+        // $body = [
+        //     'path_url' => $access_feature->feature_key
+        // ];
+        // $headers = [
+        //     'Authorization' => $request->header("Authorization"),
+        //     'content-type' => 'application/json'
+        // ];
+        // try{
+        //     $response = $this->client->request('POST', '/auth/v1/validate-feature', [
+        //             'headers'  => $headers,
+        //             'json' => $body
+        //     ]);
+        //     $response = $this->client->request('GET', '/admin/v1/get-company?id=66', [
+        //             'headers'  => $headers
+        //         ]);
+        //     $response = json_decode((string) $response->getBody(), true);
+        //     if(array_key_exists('error', $response)) {
+        //         return response()->json(["success" => false, "message" => (object)[
+        //             "errorInfo" => [
+        //                 "status" => 400,
+        //                 "reason" => $response['error']['detail'],
+        //                 "server_code" => $response['error']['code'],
+        //                 "status_detail" => $response['error']['detail']
+        //             ]
+        //         ]], 400);
+        //     } else {
+        //         try{
+        //             $company = Company::find($response['data']['company_id']);
+        //             if($company === null){
+        //                 $response['data']['singkatan'] = '-';
+        //                 $response['data']['tanggal_pkp'] = null;
+        //                 $response['data']['penanggung_jawab'] = '-';
+        //                 $response['data']['npwp'] = '-';
+        //                 $response['data']['fax'] = '-';
+        //                 $response['data']['email'] = '-';
+        //                 $response['data']['website'] = '-';
+        //             } else {
+        //                 $response['data']['singkatan'] = $company->singkatan;
+        //                 $response['data']['tanggal_pkp'] = $company->tanggal_pkp;
+        //                 $response['data']['penanggung_jawab'] = $company->penanggung_jawab;
+        //                 $response['data']['npwp'] = $company->npwp;
+        //                 $response['data']['fax'] = $company->fax;
+        //                 $response['data']['email'] = $company->email;
+        //                 $response['data']['website'] = $company->website;
+        //             }
+        //         } catch(Exception $err){
+        //             return response()->json(["success" => false, "message" => $err], 400);
+        //         } 
+        //         return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $response['data']]);
+        //     }
+        // }catch(ClientException $err){
+        //     $error_response = $err->getResponse();
+        //     $detail = json_decode($error_response->getBody());
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => $error_response->getStatusCode(),
+        //             "reason" => $error_response->getReasonPhrase(),
+        //             "server_code" => json_decode($error_response->getBody())->error->code,
+        //             "status_detail" => json_decode($error_response->getBody())->error->detail
+        //         ]
+        //     ]], $error_response->getStatusCode());
+        // }
+        // MAIN_COMPANY_GET
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/admin/v1/get-company?id=66', [
@@ -420,7 +495,7 @@ class CompanyController extends Controller
                 } catch(Exception $err){
                     return response()->json(["success" => false, "message" => $err], 400);
                 } 
-                return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $response]);
+                return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $response['data']]);
             }
         }catch(ClientException $err){
             $error_response = $err->getResponse();
@@ -438,7 +513,88 @@ class CompanyController extends Controller
 
     public function updateMainCompany(Request $request)
     {
-        // UPDATE_MAIN_COMPANY
+        // $protocol = "MAIN_COMPANY_UPDATE";
+        // $access_feature = AccessFeature::where('name',$protocol)->first();
+        // if($access_feature === null) {
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => 400,
+        //             "reason" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin",
+        //             "server_code" => 400,
+        //             "status_detail" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin"
+        //         ]
+        //     ]], 400);
+        // }
+        // $body = [
+        //     'path_url' => $access_feature->feature_key
+        // ];
+        // $headers = [
+        //     'Authorization' => $request->header("Authorization"),
+        //     'content-type' => 'application/json'
+        // ];
+        // try{
+        //     $response = $this->client->request('POST', '/auth/v1/validate-feature', [
+        //             'headers'  => $headers,
+        //             'json' => $body
+        //     ]);
+        //     $body = [
+        //         'id' => 66,
+        //         'company_name' => $request->get('company_name'),
+        //         'role' => 1,
+        //         'address' => $request->get('address'),
+        //         'phone_number' => $request->get('phone_number'),
+        //         'image_logo' => $request->get('image_logo', null)
+        //     ];
+        //     $headers = [
+        //         'Authorization' => $request->header("Authorization"),
+        //         'content-type' => 'application/json'
+        //     ];
+        //     $response = $this->client->request('POST', '/admin/v1/update-company', [
+        //             'headers'  => $headers,
+        //             'json' => $body
+        //         ]);
+        //     $response = json_decode((string) $response->getBody(), true);
+        //     if(array_key_exists('error', $response)) {
+        //         return response()->json(["success" => false, "message" => (object)[
+        //             "errorInfo" => [
+        //                 "status" => 400,
+        //                 "reason" => $response['error']['detail'],
+        //                 "server_code" => $response['error']['code'],
+        //                 "status_detail" => $response['error']['detail']
+        //             ]
+        //         ]], 400);
+        //     }
+        //     try{
+        //         $company = Company::find(66);
+        //         if($company === null){
+        //             $company = new Company;
+        //             $company->id = 66;
+        //         }
+        //         $company->singkatan = $request->get('singkatan');
+        //         $company->tanggal_pkp = $request->get('tanggal_pkp');
+        //         $company->penanggung_jawab = $request->get('penanggung_jawab');
+        //         $company->npwp = $request->get('npwp');
+        //         $company->fax = $request->get('fax');
+        //         $company->email = $request->get('email');
+        //         $company->website = $request->get('website');
+        //         $company->save();
+        //         return response()->json(["success" => true, "message" => "Company Profile Berhasil Diupdate"]);
+        //     } catch(Exception $err){
+        //         return response()->json(["success" => false, "message" => $err], 400);
+        //     }
+        // }catch(ClientException $err){
+        //     $error_response = $err->getResponse();
+        //     $detail = json_decode($error_response->getBody());
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => $error_response->getStatusCode(),
+        //             "reason" => $error_response->getReasonPhrase(),
+        //             "server_code" => json_decode($error_response->getBody())->error->code,
+        //             "status_detail" => json_decode($error_response->getBody())->error->detail
+        //         ]
+        //     ]], $error_response->getStatusCode());
+        // }
+        // MAIN_COMPANY_UPDATE
         $body = [
             'id' => 66,
             'company_name' => $request->get('company_name'),
@@ -505,7 +661,91 @@ class CompanyController extends Controller
     
     public function getCompanyBranchDetail(Request $request)
     {
-        // GET_COMPANY_BRANCH
+        // $protocol = "COMPANY_BRANCH_GET";
+        // $access_feature = AccessFeature::where('name',$protocol)->first();
+        // if($access_feature === null) {
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => 400,
+        //             "reason" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin",
+        //             "server_code" => 400,
+        //             "status_detail" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin"
+        //         ]
+        //     ]], 400);
+        // }
+        // $body = [
+        //     'path_url' => $access_feature->feature_key
+        // ];
+        // $headers = [
+        //     'Authorization' => $request->header("Authorization"),
+        //     'content-type' => 'application/json'
+        // ];
+        // try{
+        //     $response = $this->client->request('POST', '/auth/v1/validate-feature', [
+        //             'headers'  => $headers,
+        //             'json' => $body
+        //     ]);
+        //     $company_id = $request->get('company_id');
+        //     $response = $this->client->request('GET', '/admin/v1/get-company?id='.$company_id, [
+        //             'headers'  => $headers
+        //         ]);
+        //     $response = json_decode((string) $response->getBody(), true);
+        //     if(array_key_exists('error', $response)) {
+        //         return response()->json(["success" => false, "message" => (object)[
+        //             "errorInfo" => [
+        //                 "status" => 400,
+        //                 "reason" => $response['error']['detail'],
+        //                 "server_code" => $response['error']['code'],
+        //                 "status_detail" => $response['error']['detail']
+        //             ]
+        //         ]], 400);
+        //     } else if($response['data']['role'] !== 3) {
+        //         return response()->json(["success" => false, "message" => (object)[
+        //             "errorInfo" => [
+        //                 "status" => 401,
+        //                 "reason" => "Anda Tidak Memiliki Akses Perusahaan Ini",
+        //                 "server_code" => 401,
+        //                 "status_detail" => "Anda Tidak Memiliki Akses Perusahaan Ini"
+        //             ]
+        //         ]], 400);
+        //     } else {
+        //         try{
+        //             $company = Company::find($response['data']['company_id']);
+        //             if($company === null){
+        //                 $response['data']['singkatan'] = '-';
+        //                 $response['data']['tanggal_pkp'] = null;
+        //                 $response['data']['penanggung_jawab'] = '-';
+        //                 $response['data']['npwp'] = '-';
+        //                 $response['data']['fax'] = '-';
+        //                 $response['data']['email'] = '-';
+        //                 $response['data']['website'] = '-';
+        //             } else {
+        //                 $response['data']['singkatan'] = $company->singkatan;
+        //                 $response['data']['tanggal_pkp'] = $company->tanggal_pkp;
+        //                 $response['data']['penanggung_jawab'] = $company->penanggung_jawab;
+        //                 $response['data']['npwp'] = $company->npwp;
+        //                 $response['data']['fax'] = $company->fax;
+        //                 $response['data']['email'] = $company->email;
+        //                 $response['data']['website'] = $company->website;
+        //             }
+        //         } catch(Exception $err){
+        //             return response()->json(["success" => false, "message" => $err], 400);
+        //         } 
+        //         return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $response['data']]);
+        //     }
+        // }catch(ClientException $err){
+        //     $error_response = $err->getResponse();
+        //     $detail = json_decode($error_response->getBody());
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => $error_response->getStatusCode(),
+        //             "reason" => $error_response->getReasonPhrase(),
+        //             "server_code" => json_decode($error_response->getBody())->error->code,
+        //             "status_detail" => json_decode($error_response->getBody())->error->detail
+        //         ]
+        //     ]], $error_response->getStatusCode());
+        // }
+        // COMPANY_BRANCH_GET
         $company_id = $request->get('company_id');
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
@@ -554,7 +794,7 @@ class CompanyController extends Controller
                 } catch(Exception $err){
                     return response()->json(["success" => false, "message" => $err], 400);
                 } 
-                return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $response]);
+                return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $response['data']]);
             }
         }catch(ClientException $err){
             $error_response = $err->getResponse();
@@ -572,7 +812,63 @@ class CompanyController extends Controller
 
     public function getBranchCompanyList(Request $request)
     {
-        // GET_COMPANY_BRANCHS
+        // $protocol = "COMPANY_BRANCHS_GET";
+        // $access_feature = AccessFeature::where('name',$protocol)->first();
+        // if($access_feature === null) {
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => 400,
+        //             "reason" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin",
+        //             "server_code" => 400,
+        //             "status_detail" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin"
+        //         ]
+        //     ]], 400);
+        // }
+        // $body = [
+        //     'path_url' => $access_feature->feature_key
+        // ];
+        // $headers = [
+        //     'Authorization' => $request->header("Authorization"),
+        //     'content-type' => 'application/json'
+        // ];
+        // try{
+        //     $response = $this->client->request('POST', '/auth/v1/validate-feature', [
+        //             'headers'  => $headers,
+        //             'json' => $body
+        //     ]);
+        //     $response = $this->client->request('GET', '/admin/v1/get-list-company?get_all_data=true', [
+        //             'headers'  => $headers
+        //         ]);
+        //     $response = json_decode((string) $response->getBody(), true);
+        //     if(array_key_exists('error', $response)) {
+        //         return response()->json(["success" => false, "message" => (object)[
+        //             "errorInfo" => [
+        //                 "status" => 400,
+        //                 "reason" => $response['error']['detail'],
+        //                 "server_code" => $response['error']['code'],
+        //                 "status_detail" => $response['error']['detail']
+        //             ]
+        //         ]], 400);
+        //     } else {
+        //         $branch_company_list = [];
+        //         foreach($response['data']['companies'] as $company){
+        //             if($company['role'] === 3) $branch_company_list[] = $company;
+        //         }
+        //         return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $branch_company_list]);
+        //     }
+        // }catch(ClientException $err){
+        //     $error_response = $err->getResponse();
+        //     $detail = json_decode($error_response->getBody());
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => $error_response->getStatusCode(),
+        //             "reason" => $error_response->getReasonPhrase(),
+        //             "server_code" => json_decode($error_response->getBody())->error->code,
+        //             "status_detail" => json_decode($error_response->getBody())->error->detail
+        //         ]
+        //     ]], $error_response->getStatusCode());
+        // }
+        // COMPANY_BRANCHS_GET
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/admin/v1/get-list-company?get_all_data=true', [
@@ -611,7 +907,71 @@ class CompanyController extends Controller
     
     public function addCompanyBranch(Request $request)
     {
-        // ADD_COMPANY_BRANCH
+        // $protocol = "COMPANY_BRANCH_ADD";
+        // $access_feature = AccessFeature::where('name',$protocol)->first();
+        // if($access_feature === null) {
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => 400,
+        //             "reason" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin",
+        //             "server_code" => 400,
+        //             "status_detail" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin"
+        //         ]
+        //     ]], 400);
+        // }
+        // $body = [
+        //     'path_url' => $access_feature->feature_key
+        // ];
+        // $headers = [
+        //     'Authorization' => $request->header("Authorization"),
+        //     'content-type' => 'application/json'
+        // ];
+        // try{
+        //     $response = $this->client->request('POST', '/auth/v1/validate-feature', [
+        //             'headers'  => $headers,
+        //             'json' => $body
+        //     ]);
+        //     $body = [
+        //         'name' => $request->get('name'),
+        //         'role' => 3,
+        //         'address' => $request->get('address'),
+        //         'phone_number' => $request->get('phone_number'),
+        //         'image_logo' => $request->get('image_logo', null),
+        //         'parent_id' => $request->get('parent_id')
+        //     ];
+        //     $headers = [
+        //         'Authorization' => $request->header("Authorization"),
+        //         'content-type' => 'application/json'
+        //     ];  
+        //     $response = $this->client->request('POST', '/admin/v1/add-new-company', [
+        //             'headers'  => $headers,
+        //             'json' => $body
+        //         ]);
+        //     $response = json_decode((string) $response->getBody(), true);
+        //     if(array_key_exists('error', $response)) {
+        //         return response()->json(["success" => false, "message" => (object)[
+        //             "errorInfo" => [
+        //                 "status" => 400,
+        //                 "reason" => $response['error']['detail'],
+        //                 "server_code" => $response['error']['code'],
+        //                 "status_detail" => $response['error']['detail']
+        //             ]
+        //         ]], 400);
+        //     }
+        //     else return response()->json(["success" => true, "message" => $response['data']['message']]);
+        // }catch(ClientException $err){
+        //     $error_response = $err->getResponse();
+        //     $detail = json_decode($error_response->getBody());
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => $error_response->getStatusCode(),
+        //             "reason" => $error_response->getReasonPhrase(),
+        //             "server_code" => json_decode($error_response->getBody())->error->code,
+        //             "status_detail" => json_decode($error_response->getBody())->error->detail
+        //         ]
+        //     ]], $error_response->getStatusCode());
+        // }
+        // COMPANY_BRANCH_ADD
         $body = [
             'name' => $request->get('name'),
             'role' => 3,
@@ -657,7 +1017,112 @@ class CompanyController extends Controller
 
     public function updateCompanyBranch(Request $request)
     {
-        // UPDATE_COMPANY_BRANCH
+        // $protocol = "COMPANY_BRANCH_UPDATE";
+        // $access_feature = AccessFeature::where('name',$protocol)->first();
+        // if($access_feature === null) {
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => 400,
+        //             "reason" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin",
+        //             "server_code" => 400,
+        //             "status_detail" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin"
+        //         ]
+        //     ]], 400);
+        // }
+        // $body = [
+        //     'path_url' => $access_feature->feature_key
+        // ];
+        // $headers = [
+        //     'Authorization' => $request->header("Authorization"),
+        //     'content-type' => 'application/json'
+        // ];
+        // try{
+        //     $response = $this->client->request('POST', '/auth/v1/validate-feature', [
+        //             'headers'  => $headers,
+        //             'json' => $body
+        //     ]);
+        //     $company_id = $request->get('id');
+        //     $response = $this->client->request('GET', '/admin/v1/get-company?id='.$company_id, [
+        //             'headers'  => $headers
+        //         ]);
+        //     $response = json_decode((string) $response->getBody(), true);
+        //     if(array_key_exists('error', $response)) {
+        //         return response()->json(["success" => false, "message" => (object)[
+        //             "errorInfo" => [
+        //                 "status" => 400,
+        //                 "reason" => $response['error']['detail'],
+        //                 "server_code" => $response['error']['code'],
+        //                 "status_detail" => $response['error']['detail']
+        //             ]
+        //         ]], 400);
+        //     } else if($response['data']['role'] !== 3) {
+        //         return response()->json(["success" => false, "message" => (object)[
+        //             "errorInfo" => [
+        //                 "status" => 401,
+        //                 "reason" => "Anda Tidak Memiliki Akses Perusahaan Ini",
+        //                 "server_code" => 401,
+        //                 "status_detail" => "Anda Tidak Memiliki Akses Perusahaan Ini"
+        //             ]
+        //         ]], 400);
+        //     } else {
+        //         $id = $company_id;
+        //         $body = [
+        //             'id' => $id,
+        //             'company_name' => $request->get('company_name'),
+        //             'role' => 3,
+        //             'address' => $request->get('address'),
+        //             'phone_number' => $request->get('phone_number'),
+        //             'image_logo' => $request->get('image_logo', null)
+        //         ];
+                
+        //         $response = $this->client->request('POST', '/admin/v1/update-company', [
+        //                 'headers'  => $headers,
+        //                 'json' => $body
+        //             ]);
+        //         $response = json_decode((string) $response->getBody(), true);
+        //         if(array_key_exists('error', $response)) {
+        //             return response()->json(["success" => false, "message" => (object)[
+        //                 "errorInfo" => [
+        //                     "status" => 400,
+        //                     "reason" => $response['error']['detail'],
+        //                     "server_code" => $response['error']['code'],
+        //                     "status_detail" => $response['error']['detail']
+        //                 ]
+        //             ]], 400);
+        //         }
+                
+        //         try{
+        //             $company = Company::find($id);
+        //             if($company === null){
+        //                 $company = new Company;
+        //                 $company->id = $id;
+        //             }
+        //             $company->singkatan = $request->get('singkatan');
+        //             $company->tanggal_pkp = $request->get('tanggal_pkp');
+        //             $company->penanggung_jawab = $request->get('penanggung_jawab');
+        //             $company->npwp = $request->get('npwp');
+        //             $company->fax = $request->get('fax');
+        //             $company->email = $request->get('email');
+        //             $company->website = $request->get('website');
+        //             $company->save();
+        //             return response()->json(["success" => true, "message" => "Company Profile Berhasil Diproses"]);
+        //         } catch(Exception $err){
+        //             return response()->json(["success" => false, "message" => $err], 400);
+        //         }
+        //     }
+        // }catch(ClientException $err){
+        //     $error_response = $err->getResponse();
+        //     $detail = json_decode($error_response->getBody());
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => $error_response->getStatusCode(),
+        //             "reason" => $error_response->getReasonPhrase(),
+        //             "server_code" => json_decode($error_response->getBody())->error->code,
+        //             "status_detail" => json_decode($error_response->getBody())->error->detail
+        //         ]
+        //     ]], $error_response->getStatusCode());
+        // }
+        // COMPANY_BRANCH_UPDATE
         $company_id = $request->get('id');
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
@@ -762,7 +1227,88 @@ class CompanyController extends Controller
 
     public function companyBranchActivation(Request $request)
     {
-        // STATUS_COMPANY_BRANCH
+        // $protocol = "COMPANY_BRANCH_STATUS";
+        // $access_feature = AccessFeature::where('name',$protocol)->first();
+        // if($access_feature === null) {
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => 400,
+        //             "reason" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin",
+        //             "server_code" => 400,
+        //             "status_detail" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin"
+        //         ]
+        //     ]], 400);
+        // }
+        // $body = [
+        //     'path_url' => $access_feature->feature_key
+        // ];
+        // $headers = [
+        //     'Authorization' => $request->header("Authorization"),
+        //     'content-type' => 'application/json'
+        // ];
+        // try{
+        //     $response = $this->client->request('POST', '/auth/v1/validate-feature', [
+        //             'headers'  => $headers,
+        //             'json' => $body
+        //     ]);
+        //     $company_id = $request->get('company_id');
+        //     $response = $this->client->request('GET', '/admin/v1/get-company?id='.$company_id, [
+        //             'headers'  => $headers
+        //         ]);
+        //     $response = json_decode((string) $response->getBody(), true);
+        //     if(array_key_exists('error', $response)) {
+        //         return response()->json(["success" => false, "message" => (object)[
+        //             "errorInfo" => [
+        //                 "status" => 400,
+        //                 "reason" => $response['error']['detail'],
+        //                 "server_code" => $response['error']['code'],
+        //                 "status_detail" => $response['error']['detail']
+        //             ]
+        //         ]], 400);
+        //     } else if($response['data']['role'] !== 3) {
+        //         return response()->json(["success" => false, "message" => (object)[
+        //             "errorInfo" => [
+        //                 "status" => 401,
+        //                 "reason" => "Anda Tidak Memiliki Akses Perusahaan Ini",
+        //                 "server_code" => 401,
+        //                 "status_detail" => "Anda Tidak Memiliki Akses Perusahaan Ini"
+        //             ]
+        //         ]], 400);
+        //     } else {
+        //         $body = [
+        //             'is_enabled' => $request->get('is_enabled'),
+        //             'company_id' => $company_id
+        //         ];
+        //         $response = $this->client->request('POST', '/admin/v1/change-status-activation-company', [
+        //                 'headers'  => $headers,
+        //                 'json' => $body
+        //             ]);
+        //         $response = json_decode((string) $response->getBody(), true);
+        //         if(array_key_exists('error', $response)) {
+        //             return response()->json(["success" => false, "message" => (object)[
+        //                 "errorInfo" => [
+        //                     "status" => 400,
+        //                     "reason" => $response['error']['detail'],
+        //                     "server_code" => $response['error']['code'],
+        //                     "status_detail" => $response['error']['detail']
+        //                 ]
+        //             ]], 400);
+        //         }
+        //         else return response()->json(["success" => true, "message" => $response['data']['message']]);
+        //     }
+        // }catch(ClientException $err){
+        //     $error_response = $err->getResponse();
+        //     $detail = json_decode($error_response->getBody());
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => $error_response->getStatusCode(),
+        //             "reason" => $error_response->getReasonPhrase(),
+        //             "server_code" => json_decode($error_response->getBody())->error->code,
+        //             "status_detail" => json_decode($error_response->getBody())->error->detail
+        //         ]
+        //     ]], $error_response->getStatusCode());
+        // }
+        // COMPANY_BRANCH_STATUS
         $company_id = $request->get('company_id');
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
@@ -845,7 +1391,91 @@ class CompanyController extends Controller
     
     public function getCompanyClientDetail(Request $request)
     {
-        // GET_COMPANY_CLIENT
+        // $protocol = "COMPANY_CLIENTS_GET";
+        // $access_feature = AccessFeature::where('name',$protocol)->first();
+        // if($access_feature === null) {
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => 400,
+        //             "reason" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin",
+        //             "server_code" => 400,
+        //             "status_detail" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin"
+        //         ]
+        //     ]], 400);
+        // }
+        // $body = [
+        //     'path_url' => $access_feature->feature_key
+        // ];
+        // $headers = [
+        //     'Authorization' => $request->header("Authorization"),
+        //     'content-type' => 'application/json'
+        // ];
+        // try{
+        //     $response = $this->client->request('POST', '/auth/v1/validate-feature', [
+        //             'headers'  => $headers,
+        //             'json' => $body
+        //     ]);
+        //     $company_id = $request->get('company_id');
+        //     $response = $this->client->request('GET', '/admin/v1/get-company?id='.$company_id, [
+        //             'headers'  => $headers
+        //         ]);
+        //     $response = json_decode((string) $response->getBody(), true);
+        //     if(array_key_exists('error', $response)) {
+        //         return response()->json(["success" => false, "message" => (object)[
+        //             "errorInfo" => [
+        //                 "status" => 400,
+        //                 "reason" => $response['error']['detail'],
+        //                 "server_code" => $response['error']['code'],
+        //                 "status_detail" => $response['error']['detail']
+        //             ]
+        //         ]], 400);
+        //     } else if($response['data']['role'] !== 2) {
+        //         return response()->json(["success" => false, "message" => (object)[
+        //             "errorInfo" => [
+        //                 "status" => 401,
+        //                 "reason" => "Anda Tidak Memiliki Akses Perusahaan Ini",
+        //                 "server_code" => 401,
+        //                 "status_detail" => "Anda Tidak Memiliki Akses Perusahaan Ini"
+        //             ]
+        //         ]], 400);
+        //     } else {
+        //         try{
+        //             $company = Company::find($response['data']['company_id']);
+        //             if($company === null){
+        //                 $response['data']['singkatan'] = '-';
+        //                 $response['data']['tanggal_pkp'] = null;
+        //                 $response['data']['penanggung_jawab'] = '-';
+        //                 $response['data']['npwp'] = '-';
+        //                 $response['data']['fax'] = '-';
+        //                 $response['data']['email'] = '-';
+        //                 $response['data']['website'] = '-';
+        //             } else {
+        //                 $response['data']['singkatan'] = $company->singkatan;
+        //                 $response['data']['tanggal_pkp'] = $company->tanggal_pkp;
+        //                 $response['data']['penanggung_jawab'] = $company->penanggung_jawab;
+        //                 $response['data']['npwp'] = $company->npwp;
+        //                 $response['data']['fax'] = $company->fax;
+        //                 $response['data']['email'] = $company->email;
+        //                 $response['data']['website'] = $company->website;
+        //             }
+        //         } catch(Exception $err){
+        //             return response()->json(["success" => false, "message" => $err], 400);
+        //         } 
+        //         return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $response['data']]);
+        //     }
+        // }catch(ClientException $err){
+        //     $error_response = $err->getResponse();
+        //     $detail = json_decode($error_response->getBody());
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => $error_response->getStatusCode(),
+        //             "reason" => $error_response->getReasonPhrase(),
+        //             "server_code" => json_decode($error_response->getBody())->error->code,
+        //             "status_detail" => json_decode($error_response->getBody())->error->detail
+        //         ]
+        //     ]], $error_response->getStatusCode());
+        // }
+        // COMPANY_CLIENTS_GET
         $company_id = $request->get('company_id');
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
@@ -894,7 +1524,7 @@ class CompanyController extends Controller
                 } catch(Exception $err){
                     return response()->json(["success" => false, "message" => $err], 400);
                 } 
-                return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $response]);
+                return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $response['data']]);
             }
         }catch(ClientException $err){
             $error_response = $err->getResponse();
@@ -912,7 +1542,63 @@ class CompanyController extends Controller
 
     public function getClientCompanyList(Request $request)
     {
-        // GET_COMPANY_CLIENTS
+        // $protocol = "COMPANY_CLIENTS_GET";
+        // $access_feature = AccessFeature::where('name',$protocol)->first();
+        // if($access_feature === null) {
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => 400,
+        //             "reason" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin",
+        //             "server_code" => 400,
+        //             "status_detail" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin"
+        //         ]
+        //     ]], 400);
+        // }
+        // $body = [
+        //     'path_url' => $access_feature->feature_key
+        // ];
+        // $headers = [
+        //     'Authorization' => $request->header("Authorization"),
+        //     'content-type' => 'application/json'
+        // ];
+        // try{
+        //     $response = $this->client->request('POST', '/auth/v1/validate-feature', [
+        //             'headers'  => $headers,
+        //             'json' => $body
+        //     ]);
+        //     $response = $this->client->request('GET', '/admin/v1/get-list-company?get_all_data=true', [
+        //             'headers'  => $headers
+        //     ]);
+        //     $response = json_decode((string) $response->getBody(), true);
+        //     if(array_key_exists('error', $response)) {
+        //         return response()->json(["success" => false, "message" => (object)[
+        //             "errorInfo" => [
+        //                 "status" => 400,
+        //                 "reason" => $response['error']['detail'],
+        //                 "server_code" => $response['error']['code'],
+        //                 "status_detail" => $response['error']['detail']
+        //             ]
+        //         ]], 400);
+        //     } else {
+        //         $client_company_list = [];
+        //         foreach($response['data']['companies'] as $company){
+        //             if($company['role'] === 2) $client_company_list[] = $company;
+        //         }
+        //         return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $client_company_list]);
+        //     } 
+        // }catch(ClientException $err){
+        //     $error_response = $err->getResponse();
+        //     $detail = json_decode($error_response->getBody());
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => $error_response->getStatusCode(),
+        //             "reason" => $error_response->getReasonPhrase(),
+        //             "server_code" => json_decode($error_response->getBody())->error->code,
+        //             "status_detail" => json_decode($error_response->getBody())->error->detail
+        //         ]
+        //     ]], $error_response->getStatusCode());
+        // }
+        // COMPANY_CLIENTS_GET
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/admin/v1/get-list-company?get_all_data=true', [
@@ -951,7 +1637,67 @@ class CompanyController extends Controller
     
     public function addCompanyClient(Request $request)
     {
-        // ADD_COMPANY_CLIENT
+        // $protocol = "COMPANY_CLIENT_ADD";
+        // $access_feature = AccessFeature::where('name',$protocol)->first();
+        // if($access_feature === null) {
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => 400,
+        //             "reason" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin",
+        //             "server_code" => 400,
+        //             "status_detail" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin"
+        //         ]
+        //     ]], 400);
+        // }
+        // $body = [
+        //     'path_url' => $access_feature->feature_key
+        // ];
+        // $headers = [
+        //     'Authorization' => $request->header("Authorization"),
+        //     'content-type' => 'application/json'
+        // ];
+        // try{
+        //     $response = $this->client->request('POST', '/auth/v1/validate-feature', [
+        //             'headers'  => $headers,
+        //             'json' => $body
+        //     ]);
+        //     $body = [
+        //         'name' => $request->get('name'),
+        //         'role' => 2,
+        //         'address' => $request->get('address'),
+        //         'phone_number' => $request->get('phone_number'),
+        //         'image_logo' => $request->get('image_logo', null),
+        //         'parent_id' => $request->get('parent_id')
+        //     ];
+        //     $response = $this->client->request('POST', '/admin/v1/add-new-company', [
+        //             'headers'  => $headers,
+        //             'json' => $body
+        //         ]);
+        //     $response = json_decode((string) $response->getBody(), true);
+        //     if(array_key_exists('error', $response)) {
+        //         return response()->json(["success" => false, "message" => (object)[
+        //             "errorInfo" => [
+        //                 "status" => 400,
+        //                 "reason" => $response['error']['detail'],
+        //                 "server_code" => $response['error']['code'],
+        //                 "status_detail" => $response['error']['detail']
+        //             ]
+        //         ]], 400);
+        //     }
+        //     else return response()->json(["success" => true, "message" => $response['data']['message']]);
+        // }catch(ClientException $err){
+        //     $error_response = $err->getResponse();
+        //     $detail = json_decode($error_response->getBody());
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => $error_response->getStatusCode(),
+        //             "reason" => $error_response->getReasonPhrase(),
+        //             "server_code" => json_decode($error_response->getBody())->error->code,
+        //             "status_detail" => json_decode($error_response->getBody())->error->detail
+        //         ]
+        //     ]], $error_response->getStatusCode());
+        // }
+        // COMPANY_CLIENT_ADD
         $body = [
             'name' => $request->get('name'),
             'role' => 2,
@@ -997,7 +1743,111 @@ class CompanyController extends Controller
 
     public function updateCompanyClient(Request $request)
     {
-        // UPDATE_COMPANY_CLIENT
+        // $protocol = "COMPANY_CLIENT_UPDATE";
+        // $access_feature = AccessFeature::where('name',$protocol)->first();
+        // if($access_feature === null) {
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => 400,
+        //             "reason" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin",
+        //             "server_code" => 400,
+        //             "status_detail" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin"
+        //         ]
+        //     ]], 400);
+        // }
+        // $body = [
+        //     'path_url' => $access_feature->feature_key
+        // ];
+        // $headers = [
+        //     'Authorization' => $request->header("Authorization"),
+        //     'content-type' => 'application/json'
+        // ];
+        // try{
+        //     $response = $this->client->request('POST', '/auth/v1/validate-feature', [
+        //             'headers'  => $headers,
+        //             'json' => $body
+        //     ]);
+        //     $company_id = $request->get('id');
+        //     $response = $this->client->request('GET', '/admin/v1/get-company?id='.$company_id, [
+        //             'headers'  => $headers
+        //         ]);
+        //     $response = json_decode((string) $response->getBody(), true);
+        //     if(array_key_exists('error', $response)) {
+        //         return response()->json(["success" => false, "message" => (object)[
+        //             "errorInfo" => [
+        //                 "status" => 400,
+        //                 "reason" => $response['error']['detail'],
+        //                 "server_code" => $response['error']['code'],
+        //                 "status_detail" => $response['error']['detail']
+        //             ]
+        //         ]], 400);
+        //     } else if($response['data']['role'] !== 2) {
+        //         return response()->json(["success" => false, "message" => (object)[
+        //             "errorInfo" => [
+        //                 "status" => 401,
+        //                 "reason" => "Anda Tidak Memiliki Akses Perusahaan Ini",
+        //                 "server_code" => 401,
+        //                 "status_detail" => "Anda Tidak Memiliki Akses Perusahaan Ini"
+        //             ]
+        //         ]], 400);
+        //     } else {
+        //         $id = $company_id;
+        //         $body = [
+        //             'id' => $id,
+        //             'company_name' => $request->get('company_name'),
+        //             'role' => 2,
+        //             'address' => $request->get('address'),
+        //             'phone_number' => $request->get('phone_number'),
+        //             'image_logo' => $request->get('image_logo', null)
+        //         ];
+        //         $response = $this->client->request('POST', '/admin/v1/update-company', [
+        //                 'headers'  => $headers,
+        //                 'json' => $body
+        //             ]);
+        //         $response = json_decode((string) $response->getBody(), true);
+        //         if(array_key_exists('error', $response)) {
+        //             return response()->json(["success" => false, "message" => (object)[
+        //                 "errorInfo" => [
+        //                     "status" => 400,
+        //                     "reason" => $response['error']['detail'],
+        //                     "server_code" => $response['error']['code'],
+        //                     "status_detail" => $response['error']['detail']
+        //                 ]
+        //             ]], 400);
+        //         }
+                
+        //         try{
+        //             $company = Company::find($id);
+        //             if($company === null){
+        //                 $company = new Company;
+        //                 $company->id = $id;
+        //             }
+        //             $company->singkatan = $request->get('singkatan');
+        //             $company->tanggal_pkp = $request->get('tanggal_pkp');
+        //             $company->penanggung_jawab = $request->get('penanggung_jawab');
+        //             $company->npwp = $request->get('npwp');
+        //             $company->fax = $request->get('fax');
+        //             $company->email = $request->get('email');
+        //             $company->website = $request->get('website');
+        //             $company->save();
+        //             return response()->json(["success" => true, "message" => "Company Profile Berhasil Diperbarui"]);
+        //         } catch(Exception $err){
+        //             return response()->json(["success" => false, "message" => $err], 400);
+        //         }
+        //     }
+        // }catch(ClientException $err){
+        //     $error_response = $err->getResponse();
+        //     $detail = json_decode($error_response->getBody());
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => $error_response->getStatusCode(),
+        //             "reason" => $error_response->getReasonPhrase(),
+        //             "server_code" => json_decode($error_response->getBody())->error->code,
+        //             "status_detail" => json_decode($error_response->getBody())->error->detail
+        //         ]
+        //     ]], $error_response->getStatusCode());
+        // }
+        // COMPANY_CLIENT_UPDATE
         $company_id = $request->get('id');
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
@@ -1102,7 +1952,88 @@ class CompanyController extends Controller
 
     public function companyClientActivation(Request $request)
     {
-        // STATUS_COMPANY_CLIENT
+        // $protocol = "COMPANY_CLIENT_STATUS";
+        // $access_feature = AccessFeature::where('name',$protocol)->first();
+        // if($access_feature === null) {
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => 400,
+        //             "reason" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin",
+        //             "server_code" => 400,
+        //             "status_detail" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin"
+        //         ]
+        //     ]], 400);
+        // }
+        // $body = [
+        //     'path_url' => $access_feature->feature_key
+        // ];
+        // $headers = [
+        //     'Authorization' => $request->header("Authorization"),
+        //     'content-type' => 'application/json'
+        // ];
+        // try{
+        //     $response = $this->client->request('POST', '/auth/v1/validate-feature', [
+        //             'headers'  => $headers,
+        //             'json' => $body
+        //     ]);
+        //     $company_id = $request->get('company_id');
+        //     $response = $this->client->request('GET', '/admin/v1/get-company?id='.$company_id, [
+        //             'headers'  => $headers
+        //     ]);
+        //     $response = json_decode((string) $response->getBody(), true);
+        //     if(array_key_exists('error', $response)) {
+        //         return response()->json(["success" => false, "message" => (object)[
+        //             "errorInfo" => [
+        //                 "status" => 400,
+        //                 "reason" => $response['error']['detail'],
+        //                 "server_code" => $response['error']['code'],
+        //                 "status_detail" => $response['error']['detail']
+        //             ]
+        //         ]], 400);
+        //     } else if($response['data']['role'] !== 2) {
+        //         return response()->json(["success" => false, "message" => (object)[
+        //             "errorInfo" => [
+        //                 "status" => 401,
+        //                 "reason" => "Anda Tidak Memiliki Akses Perusahaan Ini",
+        //                 "server_code" => 401,
+        //                 "status_detail" => "Anda Tidak Memiliki Akses Perusahaan Ini"
+        //             ]
+        //         ]], 400);
+        //     } else {
+        //         $body = [
+        //             'is_enabled' => $request->get('is_enabled'),
+        //             'company_id' => $company_id
+        //         ];
+        //         $response = $this->client->request('POST', '/admin/v1/change-status-activation-company', [
+        //                 'headers'  => $headers,
+        //                 'json' => $body
+        //             ]);
+        //         $response = json_decode((string) $response->getBody(), true);
+        //         if(array_key_exists('error', $response)) {
+        //             return response()->json(["success" => false, "message" => (object)[
+        //                 "errorInfo" => [
+        //                     "status" => 400,
+        //                     "reason" => $response['error']['detail'],
+        //                     "server_code" => $response['error']['code'],
+        //                     "status_detail" => $response['error']['detail']
+        //                 ]
+        //             ]], 400);
+        //         }
+        //         else return response()->json(["success" => true, "message" => $response['data']['message']]);
+        //     }
+        // }catch(ClientException $err){
+        //     $error_response = $err->getResponse();
+        //     $detail = json_decode($error_response->getBody());
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => $error_response->getStatusCode(),
+        //             "reason" => $error_response->getReasonPhrase(),
+        //             "server_code" => json_decode($error_response->getBody())->error->code,
+        //             "status_detail" => json_decode($error_response->getBody())->error->detail
+        //         ]
+        //     ]], $error_response->getStatusCode());
+        // }
+        // COMPANY_CLIENT_STATUS
         $company_id = $request->get('company_id');
         $headers = ['Authorization' => $request->header("Authorization")];
         try{

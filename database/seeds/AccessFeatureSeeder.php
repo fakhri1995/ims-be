@@ -14,6 +14,16 @@ class AccessFeatureSeeder extends Seeder
     {
         $account_features = [
             [
+                "feature_id" => 75,
+                "name" => "ACCOUNT_STATUS_ACTIVATION",
+                "description" => "Member yang terdaftar pada perusahaan dapat secara paksa di matikan accountnya. Menyebabkan tidak dapat login kembali"
+            ],
+            [
+                "feature_id" => 74,
+                "name" => "ACCOUNT_UPDATE_FEATURE",
+                "description" => "Update/Change/Enable/Disable/Register Feature to spesific account"
+            ],
+            [
                 "feature_id" => 62,
                 "name" => "ACCOUNT_CHANGE_PASSWORD",
                 "description" => "Mengubah paksa password suatu account yang terdaftar pada member perusahaan yang sama"
