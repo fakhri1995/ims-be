@@ -26,6 +26,47 @@ class AccessFeatureController extends Controller
         $this->client = new Client(['base_uri' => 'https://go.cgx.co.id/']);
     }
 
+    public function checkRoute($name, $auth)
+    {
+        $protocol = $name;
+        $access_feature = AccessFeature::where('name',$protocol)->first();
+        if($access_feature === null) {
+            return ["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => 400,
+                    "reason" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin",
+                    "server_code" => 400,
+                    "status_detail" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin"
+                ]
+            ]];
+        }
+        $body = [
+            'path_url' => $access_feature->feature_key
+        ];
+        $headers = [
+            'Authorization' => $auth,
+            'content-type' => 'application/json'
+        ];
+        try{
+            $response = $this->client->request('POST', '/auth/v1/validate-feature', [
+                    'headers'  => $headers,
+                    'json' => $body
+            ]);
+            return ["success" => true];
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return ["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]];
+        }
+    }
+
     public function getAccessModule(Request $request)
     {
         $params = [
@@ -189,16 +230,22 @@ class AccessFeatureController extends Controller
     // Feature
     public function getFeatures(Request $request)
     {
-        $headers = [
-            'Authorization' => $request->header("Authorization"),
-            'content-type' => 'application/json'
-        ];
+        // GET Feature From DATABASE
+        // $check = $this->checkRoute("FEATURES_GET", $request->header("Authorization"));
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        // try{
+        //     $features = AccessFeature::where('feature_id', '>', 80)->get();
+        //     return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $features]);
+        // } catch(Exception $err){
+        //     return response()->json(["success" => false, "message" => $err], 400);
+        // }
+
+        // FEATURES_GET
+        $headers = ['Authorization' => $request->header("Authorization")];
         try{
-            $response = $this->client->request('GET', '/admin/v1/module-member?module_id='.$this->cgx_module_id , [
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
                     'headers'  => $headers
                 ]);
-            $data = json_decode((string) $response->getBody(), true)['data']['features'];
-            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $data]);
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -211,11 +258,47 @@ class AccessFeatureController extends Controller
                 ]
             ]], $error_response->getStatusCode());
         }
+
+        try{
+            $features = AccessFeature::where('feature_id', '>', 80)->get();
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $features]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+
+        // GET Feature From CGX
+        // $headers = [
+        //     'Authorization' => $request->header("Authorization"),
+        //     'content-type' => 'application/json'
+        // ];
+        // try{
+        //     $response = $this->client->request('GET', '/admin/v1/module-member?module_id='.$this->cgx_module_id , [
+        //             'headers'  => $headers
+        //         ]);
+        //     $data = json_decode((string) $response->getBody(), true)['data']['features'];
+        //     return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $data]);
+        // }catch(ClientException $err){
+        //     $error_response = $err->getResponse();
+        //     $detail = json_decode($error_response->getBody());
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => $error_response->getStatusCode(),
+        //             "reason" => $error_response->getReasonPhrase(),
+        //             "server_code" => json_decode($error_response->getBody())->error->code,
+        //             "status_detail" => json_decode($error_response->getBody())->error->detail
+        //         ]
+        //     ]], $error_response->getStatusCode());
+        // }
         
     }
 
     public function addFeature(Request $request)
     {
+        $header = $request->header("Authorization");
+        // $check = $this->checkRoute("FEATURE_ADD", $header);
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+
+        // FEATURE_ADD
         $name = $request->get('name');
         $description = $request->get('description');
         $body = [
@@ -224,7 +307,7 @@ class AccessFeatureController extends Controller
             "method" => "CONNECT"
         ];
         $headers = [
-            'Authorization' => $request->header("Authorization"),
+            'Authorization' => $header,
             'content-type' => 'application/json'
         ];
         try{
@@ -281,9 +364,14 @@ class AccessFeatureController extends Controller
 
     public function deleteFeature(Request $request)
     {
+        $header = $request->header("Authorization");
+        // $check = $this->checkRoute("FEATURE_DELETE", $header);
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+
+        // FEATURE_DELETE
         $id = $request->get('id');
         $headers = [
-            'Authorization' => $request->header("Authorization"),
+            'Authorization' => $header,
             'content-type' => 'application/json'
         ];
         $access_feature = AccessFeature::where('feature_id',$id)->first();
@@ -331,8 +419,13 @@ class AccessFeatureController extends Controller
     //Module (Group in CGX)
     public function getModules(Request $request)
     {
+        $header = $request->header("Authorization");
+        // $check = $this->checkRoute("MODULES_GET", $header);
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        
+        // MODULES_GET
         $headers = [
-            'Authorization' => $request->header("Authorization"),
+            'Authorization' => $header,
             'content-type' => 'application/json'
         ];
         try{
@@ -365,12 +458,17 @@ class AccessFeatureController extends Controller
 
     public function addModule(Request $request)
     {
+        $header = $request->header("Authorization");
+        // $check = $this->checkRoute("MODULE_ADD", $header);
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+
+        // MODULE_ADD
         $body_group = [
             'name' => $request->get('name'),
             'description' => $request->get('description')
         ];
         $headers = [
-            'Authorization' => $request->header("Authorization"),
+            'Authorization' => $header,
             'content-type' => 'application/json'
         ];
         try{
@@ -416,9 +514,14 @@ class AccessFeatureController extends Controller
 
     public function deleteModule(Request $request)
     {
+        $header = $request->header("Authorization");
+        // $check = $this->checkRoute("MODULE_DELETE", $header);
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+
+        // MODULE_DELETE
         $id = $request->get('id');
         $headers = [
-            'Authorization' => $request->header("Authorization"),
+            'Authorization' => $header,
             'content-type' => 'application/json'
         ];
         try{
@@ -464,9 +567,14 @@ class AccessFeatureController extends Controller
 
     public function updateModuleFeature(Request $request)
     {
+        $header = $request->header("Authorization");
+        // $check = $this->checkRoute("MODULE_UPDATE", $header);
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+
+        // MODULE_UPDATE
         $id = $request->get('id');
         $headers = [
-            'Authorization' => $request->header("Authorization"),
+            'Authorization' => $header,
             'content-type' => 'application/json'
         ];
         try{

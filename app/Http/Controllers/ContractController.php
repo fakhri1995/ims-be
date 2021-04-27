@@ -944,10 +944,10 @@ class ContractController extends Controller
 
     public function getContractInputData(Request $request)
     {
-        $headers = ['Authorization' => $request->header("Authorization")];
-        // $check = $this->checkRoute("CONTRACT_ADD", $headers);
+        $header = $request->header("Authorization");
+        // $check = $this->checkRoute("CONTRACT_ADD", $header);
         // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
-        
+        $headers = ['Authorization' => $header];
         try{
             $response = $this->client->request('GET', '/admin/v1/get-list-company?get_all_data=true', [
                     'headers'  => $headers
