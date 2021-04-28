@@ -374,7 +374,7 @@ class AccessFeatureController extends Controller
             'Authorization' => $header,
             'content-type' => 'application/json'
         ];
-        $access_feature = AccessFeature::where('feature_id',$id)->first();
+        $access_feature = AccessFeature::find($id);
         if($access_feature === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
         try{
             $response_module_member = $this->client->request('GET', '/admin/v1/module-member?module_id='.$this->cgx_module_id, [
@@ -384,7 +384,7 @@ class AccessFeatureController extends Controller
             $list_feature_ids = [];
             foreach($list_data as $data){
                 $value = (int)$data["id"];
-                if($value !== $id){
+                if($value !== $access_feature->feature_id){
                     $list_feature_ids[] = (int)$data["id"];
                 }
             }

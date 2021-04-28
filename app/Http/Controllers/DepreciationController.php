@@ -65,7 +65,7 @@ class DepreciationController extends Controller
 
     public function getDepreciations(Request $request)
     {
-        // $check = $this->checkRoute("DEPRECATIONS_GET", $request->header("Authorization"));
+        // $check = $this->checkRoute("DEPRECIATIONS_GET", $request->header("Authorization"));
         // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         // try{
         //     $depreciations = Depreciation::orderBy('nama','asc')->get();
@@ -74,7 +74,7 @@ class DepreciationController extends Controller
         //     return response()->json(["success" => false, "message" => $err], 400);
         // }
 
-        // $protocol = "DEPRECATIONS_GET";
+        // $protocol = "DEPRECIATIONS_GET";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -102,7 +102,7 @@ class DepreciationController extends Controller
 
     public function addDepreciation(Request $request)
     {
-        // $check = $this->checkRoute("DEPRECATION_ADD", $request->header("Authorization"));
+        // $check = $this->checkRoute("DEPRECIATION_ADD", $request->header("Authorization"));
         // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         // $depreciation = new Depreciation;
         // $depreciation->nama = $request->get('nama');
@@ -116,7 +116,7 @@ class DepreciationController extends Controller
         //     return response()->json(["success" => false, "message" => $err], 400);
         // }
 
-        // $protocol = "DEPRECATION_ADD";
+        // $protocol = "DEPRECIATION_ADD";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -149,7 +149,7 @@ class DepreciationController extends Controller
 
     public function updateDepreciation(Request $request)
     {
-        // $check = $this->checkRoute("DEPRECATION_UPDATE", $request->header("Authorization"));
+        // $check = $this->checkRoute("DEPRECIATION_UPDATE", $request->header("Authorization"));
         // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         // $id = $request->get('id', null);
         // $depreciation = Depreciation::find($id);
@@ -165,7 +165,7 @@ class DepreciationController extends Controller
         //     return response()->json(["success" => false, "message" => $err], 400);
         // }
 
-        // $protocol = "DEPRECATION_UPDATE";
+        // $protocol = "DEPRECIATION_UPDATE";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -200,7 +200,7 @@ class DepreciationController extends Controller
 
     public function deleteDepreciation(Request $request)
     {
-        // $check = $this->checkRoute("DEPRECATION_DELETE", $request->header("Authorization"));
+        // $check = $this->checkRoute("DEPRECIATION_DELETE", $request->header("Authorization"));
         // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         // $id = $request->get('id', null);
         // $depreciation = Depreciation::find($id);
@@ -212,7 +212,7 @@ class DepreciationController extends Controller
         //     return response()->json(["success" => false, "message" => $err], 400);
         // }
 
-        // $protocol = "DEPRECATION_DELETE";
+        // $protocol = "DEPRECIATION_DELETE";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
