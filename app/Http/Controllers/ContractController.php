@@ -828,7 +828,7 @@ class ContractController extends Controller
 
     public function activatingServiceItemContract(Request $request)
     {
-        // $check = $this->checkRoute("SERVICE_ITEM_CONTRACT_ACTIVE", $request->header("Authorization"));
+        // $check = $this->checkRoute("CONTRACT_SERVICE_ITEM_ACTIVE", $request->header("Authorization"));
         // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         // try{
         //     $id = $request->get('id', null);
@@ -847,7 +847,7 @@ class ContractController extends Controller
         // } catch(Exception $err){
         //     return response()->json(["success" => false, "message" => $err], 400);
         // }
-        // $protocol = "SERVICE_ITEM_CONTRACT_ACTIVE";
+        // $protocol = "CONTRACT_SERVICE_ITEM_ACTIVE";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
@@ -886,7 +886,7 @@ class ContractController extends Controller
 
     public function deactivatingServiceItemContract(Request $request)
     {
-        // $check = $this->checkRoute("SERVICE_ITEM_CONTRACT_DEACTIVE", $request->header("Authorization"));
+        // $check = $this->checkRoute("CONTRACT_SERVICE_ITEM_DEACTIVE", $request->header("Authorization"));
         // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         // try{
         //     $id = $request->get('id', null);
@@ -905,7 +905,7 @@ class ContractController extends Controller
         // } catch(Exception $err){
         //     return response()->json(["success" => false, "message" => $err], 400);
         // }
-        // $protocol = "SERVICE_ITEM_CONTRACT_DEACTIVE";
+        // $protocol = "CONTRACT_SERVICE_ITEM_DEACTIVE";
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
