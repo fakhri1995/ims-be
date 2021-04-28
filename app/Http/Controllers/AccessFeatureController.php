@@ -97,7 +97,7 @@ class AccessFeatureController extends Controller
     }
 
     public function getAccessFeature(Request $request){
-        return response()->json(AccessFeature::where('feature_id', '>', 62)->get());
+        return response()->json(AccessFeature::where('feature_id', '>', 80)->get());
     }
     // public function getAccessFeature(Request $request)
     // {
