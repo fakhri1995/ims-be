@@ -204,7 +204,8 @@ class RoleController extends Controller
             $id = $request->get('id', null);
             $role = Role::find($id);
             if($role === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
-            $role->member = UserRolePivot::where('role_id', $role->id)->count();
+            $role->member_ids = UserRolePivot::where('role_id', $role->id)->pluck('user_id');
+            $role->member = $role->member_ids->count();
             try{
                 $response = $this->client->request('GET', '/admin/v1/get-list-account?get_all_data=true&order_by=asc', [
                         'headers'  => $headers
