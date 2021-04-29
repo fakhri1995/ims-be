@@ -65,75 +65,45 @@ class DepreciationController extends Controller
 
     public function getDepreciations(Request $request)
     {
-        // $check = $this->checkRoute("DEPRECIATIONS_GET", $request->header("Authorization"));
-        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
-        // try{
-        //     $depreciations = Depreciation::orderBy('nama','asc')->get();
-        //     return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $depreciations]);
-        // } catch(Exception $err){
-        //     return response()->json(["success" => false, "message" => $err], 400);
-        // }
-
-        // $protocol = "DEPRECIATIONS_GET";
-        $headers = ['Authorization' => $request->header("Authorization")];
-        try{
-            $response = $this->client->request('GET', '/auth/v1/get-profile', [
-                    'headers'  => $headers
-                ]);
-        }catch(ClientException $err){
-            $error_response = $err->getResponse();
-            $detail = json_decode($error_response->getBody());
-            return response()->json(["success" => false, "message" => (object)[
-                "errorInfo" => [
-                    "status" => $error_response->getStatusCode(),
-                    "reason" => $error_response->getReasonPhrase(),
-                    "server_code" => json_decode($error_response->getBody())->error->code,
-                    "status_detail" => json_decode($error_response->getBody())->error->detail
-                ]
-            ]], $error_response->getStatusCode());
-        }
+        $check = $this->checkRoute("DEPRECIATIONS_GET", $request->header("Authorization"));
+        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         try{
             $depreciations = Depreciation::orderBy('nama','asc')->get();
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $depreciations]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
+
+        // $protocol = "DEPRECIATIONS_GET";
+        // $headers = ['Authorization' => $request->header("Authorization")];
+        // try{
+        //     $response = $this->client->request('GET', '/auth/v1/get-profile', [
+        //             'headers'  => $headers
+        //         ]);
+        // }catch(ClientException $err){
+        //     $error_response = $err->getResponse();
+        //     $detail = json_decode($error_response->getBody());
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => $error_response->getStatusCode(),
+        //             "reason" => $error_response->getReasonPhrase(),
+        //             "server_code" => json_decode($error_response->getBody())->error->code,
+        //             "status_detail" => json_decode($error_response->getBody())->error->detail
+        //         ]
+        //     ]], $error_response->getStatusCode());
+        // }
+        // try{
+        //     $depreciations = Depreciation::orderBy('nama','asc')->get();
+        //     return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $depreciations]);
+        // } catch(Exception $err){
+        //     return response()->json(["success" => false, "message" => $err], 400);
+        // }
     }
 
     public function addDepreciation(Request $request)
     {
-        // $check = $this->checkRoute("DEPRECIATION_ADD", $request->header("Authorization"));
-        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
-        // $depreciation = new Depreciation;
-        // $depreciation->nama = $request->get('nama');
-        // $depreciation->jenis = $request->get('jenis');
-        // $depreciation->tahun_penggunaan = $request->get('tahun_penggunaan');
-        // $depreciation->deskripsi = $request->get('deskripsi');
-        // try{
-        //     $depreciation->save();
-        //     return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
-        // } catch(Exception $err){
-        //     return response()->json(["success" => false, "message" => $err], 400);
-        // }
-
-        // $protocol = "DEPRECIATION_ADD";
-        $headers = ['Authorization' => $request->header("Authorization")];
-        try{
-            $response = $this->client->request('GET', '/auth/v1/get-profile', [
-                    'headers'  => $headers
-                ]);
-        }catch(ClientException $err){
-            $error_response = $err->getResponse();
-            $detail = json_decode($error_response->getBody());
-            return response()->json(["success" => false, "message" => (object)[
-                "errorInfo" => [
-                    "status" => $error_response->getStatusCode(),
-                    "reason" => $error_response->getReasonPhrase(),
-                    "server_code" => json_decode($error_response->getBody())->error->code,
-                    "status_detail" => json_decode($error_response->getBody())->error->detail
-                ]
-            ]], $error_response->getStatusCode());
-        }
+        $check = $this->checkRoute("DEPRECIATION_ADD", $request->header("Authorization"));
+        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         $depreciation = new Depreciation;
         $depreciation->nama = $request->get('nama');
         $depreciation->jenis = $request->get('jenis');
@@ -145,15 +115,26 @@ class DepreciationController extends Controller
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
-    }
 
-    public function updateDepreciation(Request $request)
-    {
-        // $check = $this->checkRoute("DEPRECIATION_UPDATE", $request->header("Authorization"));
-        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
-        // $id = $request->get('id', null);
-        // $depreciation = Depreciation::find($id);
-        // if($depreciation === null) return response()->json(["success" => false, "message" => "Id Tidak Ditemukan"]);
+        // $protocol = "DEPRECIATION_ADD";
+        // $headers = ['Authorization' => $request->header("Authorization")];
+        // try{
+        //     $response = $this->client->request('GET', '/auth/v1/get-profile', [
+        //             'headers'  => $headers
+        //         ]);
+        // }catch(ClientException $err){
+        //     $error_response = $err->getResponse();
+        //     $detail = json_decode($error_response->getBody());
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => $error_response->getStatusCode(),
+        //             "reason" => $error_response->getReasonPhrase(),
+        //             "server_code" => json_decode($error_response->getBody())->error->code,
+        //             "status_detail" => json_decode($error_response->getBody())->error->detail
+        //         ]
+        //     ]], $error_response->getStatusCode());
+        // }
+        // $depreciation = new Depreciation;
         // $depreciation->nama = $request->get('nama');
         // $depreciation->jenis = $request->get('jenis');
         // $depreciation->tahun_penggunaan = $request->get('tahun_penggunaan');
@@ -164,25 +145,12 @@ class DepreciationController extends Controller
         // } catch(Exception $err){
         //     return response()->json(["success" => false, "message" => $err], 400);
         // }
+    }
 
-        // $protocol = "DEPRECIATION_UPDATE";
-        $headers = ['Authorization' => $request->header("Authorization")];
-        try{
-            $response = $this->client->request('GET', '/auth/v1/get-profile', [
-                    'headers'  => $headers
-                ]);
-        }catch(ClientException $err){
-            $error_response = $err->getResponse();
-            $detail = json_decode($error_response->getBody());
-            return response()->json(["success" => false, "message" => (object)[
-                "errorInfo" => [
-                    "status" => $error_response->getStatusCode(),
-                    "reason" => $error_response->getReasonPhrase(),
-                    "server_code" => json_decode($error_response->getBody())->error->code,
-                    "status_detail" => json_decode($error_response->getBody())->error->detail
-                ]
-            ]], $error_response->getStatusCode());
-        }
+    public function updateDepreciation(Request $request)
+    {
+        $check = $this->checkRoute("DEPRECIATION_UPDATE", $request->header("Authorization"));
+        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         $id = $request->get('id', null);
         $depreciation = Depreciation::find($id);
         if($depreciation === null) return response()->json(["success" => false, "message" => "Id Tidak Ditemukan"]);
@@ -196,40 +164,44 @@ class DepreciationController extends Controller
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
+
+        // $protocol = "DEPRECIATION_UPDATE";
+        // $headers = ['Authorization' => $request->header("Authorization")];
+        // try{
+        //     $response = $this->client->request('GET', '/auth/v1/get-profile', [
+        //             'headers'  => $headers
+        //         ]);
+        // }catch(ClientException $err){
+        //     $error_response = $err->getResponse();
+        //     $detail = json_decode($error_response->getBody());
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => $error_response->getStatusCode(),
+        //             "reason" => $error_response->getReasonPhrase(),
+        //             "server_code" => json_decode($error_response->getBody())->error->code,
+        //             "status_detail" => json_decode($error_response->getBody())->error->detail
+        //         ]
+        //     ]], $error_response->getStatusCode());
+        // }
+        // $id = $request->get('id', null);
+        // $depreciation = Depreciation::find($id);
+        // if($depreciation === null) return response()->json(["success" => false, "message" => "Id Tidak Ditemukan"]);
+        // $depreciation->nama = $request->get('nama');
+        // $depreciation->jenis = $request->get('jenis');
+        // $depreciation->tahun_penggunaan = $request->get('tahun_penggunaan');
+        // $depreciation->deskripsi = $request->get('deskripsi');
+        // try{
+        //     $depreciation->save();
+        //     return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
+        // } catch(Exception $err){
+        //     return response()->json(["success" => false, "message" => $err], 400);
+        // }
     }
 
     public function deleteDepreciation(Request $request)
     {
-        // $check = $this->checkRoute("DEPRECIATION_DELETE", $request->header("Authorization"));
-        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
-        // $id = $request->get('id', null);
-        // $depreciation = Depreciation::find($id);
-        // if($depreciation === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
-        // try{
-        //     $depreciation->delete();
-        //     return response()->json(["success" => true, "message" => "Data Berhasil Dihapus"]);
-        // } catch(Exception $err){
-        //     return response()->json(["success" => false, "message" => $err], 400);
-        // }
-
-        // $protocol = "DEPRECIATION_DELETE";
-        $headers = ['Authorization' => $request->header("Authorization")];
-        try{
-            $response = $this->client->request('GET', '/auth/v1/get-profile', [
-                    'headers'  => $headers
-                ]);
-        }catch(ClientException $err){
-            $error_response = $err->getResponse();
-            $detail = json_decode($error_response->getBody());
-            return response()->json(["success" => false, "message" => (object)[
-                "errorInfo" => [
-                    "status" => $error_response->getStatusCode(),
-                    "reason" => $error_response->getReasonPhrase(),
-                    "server_code" => json_decode($error_response->getBody())->error->code,
-                    "status_detail" => json_decode($error_response->getBody())->error->detail
-                ]
-            ]], $error_response->getStatusCode());
-        }
+        $check = $this->checkRoute("DEPRECIATION_DELETE", $request->header("Authorization"));
+        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         $id = $request->get('id', null);
         $depreciation = Depreciation::find($id);
         if($depreciation === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
@@ -239,6 +211,34 @@ class DepreciationController extends Controller
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
+
+        // $protocol = "DEPRECIATION_DELETE";
+        // $headers = ['Authorization' => $request->header("Authorization")];
+        // try{
+        //     $response = $this->client->request('GET', '/auth/v1/get-profile', [
+        //             'headers'  => $headers
+        //         ]);
+        // }catch(ClientException $err){
+        //     $error_response = $err->getResponse();
+        //     $detail = json_decode($error_response->getBody());
+        //     return response()->json(["success" => false, "message" => (object)[
+        //         "errorInfo" => [
+        //             "status" => $error_response->getStatusCode(),
+        //             "reason" => $error_response->getReasonPhrase(),
+        //             "server_code" => json_decode($error_response->getBody())->error->code,
+        //             "status_detail" => json_decode($error_response->getBody())->error->detail
+        //         ]
+        //     ]], $error_response->getStatusCode());
+        // }
+        // $id = $request->get('id', null);
+        // $depreciation = Depreciation::find($id);
+        // if($depreciation === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
+        // try{
+        //     $depreciation->delete();
+        //     return response()->json(["success" => true, "message" => "Data Berhasil Dihapus"]);
+        // } catch(Exception $err){
+        //     return response()->json(["success" => false, "message" => $err], 400);
+        // }
     }
 
     
