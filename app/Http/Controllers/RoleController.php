@@ -204,6 +204,48 @@ class RoleController extends Controller
             $id = $request->get('id', null);
             $role = Role::find($id);
             if($role === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
+            $role->member = UserRolePivot::where('role_id', $role->id)->count();
+            try{
+                $response = $this->client->request('GET', '/admin/v1/get-list-account?get_all_data=true&order_by=asc', [
+                        'headers'  => $headers
+                    ]);
+                $response = json_decode((string) $response->getBody(), true);
+                if(array_key_exists('error', $response)) {
+                    return response()->json(["success" => false, "message" => (object)[
+                        "errorInfo" => [
+                            "status" => 400,
+                            "reason" => $response['error']['detail'],
+                            "server_code" => $response['error']['code'],
+                            "status_detail" => $response['error']['detail']
+                        ]
+                    ]], 400);
+                } else {
+                    $role_user_ids = UserRolePivot::where('role_id', $role->id)->pluck('user_id')->toArray();
+                    $role_member = [];
+                    foreach($role_user_ids as $user_id){
+                        foreach($response['data']['accounts'] as $user){
+                            if($user['user_id'] === $user_id){
+                                $role_member[] = (object)[
+                                    "id" => $user['user_id'],
+                                    "name" => $user['fullname']
+                                ];
+                            }
+                        }
+                    }
+                } 
+
+            }catch(ClientException $err){
+                $error_response = $err->getResponse();
+                $detail = json_decode($error_response->getBody());
+                return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => $error_response->getStatusCode(),
+                        "reason" => $error_response->getReasonPhrase(),
+                        "server_code" => json_decode($error_response->getBody())->error->code,
+                        "status_detail" => json_decode($error_response->getBody())->error->detail
+                    ]
+                ]], $error_response->getStatusCode());
+            }
             $role_feature_ids = RoleFeaturePivot::where('role_id', $id)->pluck('feature_id');
             $features = AccessFeature::get();
             $role_features = [];
@@ -218,7 +260,7 @@ class RoleController extends Controller
                 } 
                 $role_features[] = $role_feature;
             }
-            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => ["role_detail" => $role, "role_features" => $role_features]]);
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => ["role_detail" => $role, "role_features" => $role_features, "role_member" => $role_member]]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
