@@ -74,7 +74,10 @@ class AccountController extends Controller
                         "status_detail" => "Anda Tidak Memiliki Akses Untuk Akun Ini",
                     ]
                 ]], 401);
-            } else return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $response['data']]);
+            } else {
+                $response['data']['feature_roles'] = UserRolePivot::where('user_id', $response['data']['user_id'])->pluck('role_id')->toArray();
+                return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $response['data']]);
+            } 
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -1128,7 +1131,10 @@ class AccountController extends Controller
                         "status_detail" => "Anda Tidak Memiliki Akses Untuk Akun Ini",
                     ]
                 ]], 401);
-            } else return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $response['data']]);
+            } else {
+                $response['data']['feature_roles'] = UserRolePivot::where('user_id', $response['data']['user_id'])->pluck('role_id')->toArray();
+                return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $response['data']]);
+            } 
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
