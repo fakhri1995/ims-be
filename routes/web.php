@@ -18,6 +18,22 @@
 //     return base64_encode(hash("sha1", "GET"."\n"."/admin/v1/get-company"."\n"."02 Jan 06 15:04 MST", $raw_output=TRUE));
 // });
 
+// ------------ Company Profile ------------ //
+
+//Message Routes
+$router->get('/getMessages', 'CompanyProfileController@getMessages');
+$router->post('/addMessage', 'CompanyProfileController@addMessage');
+
+//Career Routes
+$router->get('/getCareers', 'CompanyProfileController@getCareers');
+$router->post('/addCareer', 'CompanyProfileController@addCareer');
+$router->put('/updateCareer', 'CompanyProfileController@updateCareer');
+$router->delete('/deleteCareer', 'CompanyProfileController@deleteCareer');
+
+// ----------------------------------------- //
+
+
+
 //User Routes
 $router->post('/login', 'UserController@login');
 $router->post('/logout', 'UserController@logout');

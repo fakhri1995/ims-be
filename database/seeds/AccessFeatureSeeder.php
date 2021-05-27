@@ -10,6 +10,22 @@ class AccessFeatureSeeder extends Seeder
      *
      * @return void
      */
+
+    public function addAccountFeatures($account_features)
+    {
+        foreach($account_features as $feature){
+            $access_feature = AccessFeature::where('feature_id', $feature['feature_id'])->first();
+            if($access_feature === null){
+                $access_feature = new AccessFeature;
+            }
+            $access_feature->feature_key = $feature['feature_key'];
+            $access_feature->feature_id = $feature['feature_id'];
+            $access_feature->name = $feature['name'];
+            $access_feature->description = $feature['description'];
+            $access_feature->save();
+        }
+    }
+
     public function run()
     {
         $account_features = [
@@ -73,6 +89,33 @@ class AccessFeatureSeeder extends Seeder
             ]
         ];
 
+        $company_profile_features = [
+            [
+                "feature_id" => 209,
+                "name" => "CAREER_ADD",
+                "description" => "Fitur untuk membuat career baru pada company profile",
+                "feature_key" => "8066c7cb-df25-4577-b84f-e087c77777b7"
+            ],
+            [
+                "feature_id" => 210,
+                "name" => "CAREER_UPDATE",
+                "description" => "Fitur untuk memperbarui career pada company profile",
+                "feature_key" => "e529eb4d-dcc0-4a30-b4c1-525807737df7"
+            ],
+            [
+                "feature_id" => 211,
+                "name" => "CAREER_DELETE",
+                "description" => "Fitur untuk menghapus career pada company profile",
+                "feature_key" => "0fbd618f-5727-445e-83b2-9093e681383e"
+            ],
+            [
+                "feature_id" => 212,
+                "name" => "MESSAGES_GET",
+                "description" => "Fitur untuk mengambil list message dari company profile",
+                "feature_key" => "7a4e14a1-735c-4281-9a6a-0e56e5ca93c0"
+            ]
+        ];
+
         foreach($account_features as $feature){
             $access_feature = AccessFeature::where('feature_id', $feature['feature_id'])->first();
             if($access_feature === null){
@@ -96,5 +139,7 @@ class AccessFeatureSeeder extends Seeder
             $access_feature->description = $feature['description'];
             $access_feature->save();
         }
+
+        $this->addAccountFeatures($company_profile_features);
     }
 }
