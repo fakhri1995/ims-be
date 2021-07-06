@@ -757,19 +757,24 @@ class CompanyController extends Controller
     public function getClientCompanyList(Request $request)
     {
         $header = $request->header("Authorization");
-        $headers = ['Authorization' => $header];
-        $check = $this->checkRoute("COMPANY_CLIENTS_GET", $header);
-        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        // $headers = ['Authorization' => $header];
+        // $check = $this->checkRoute("COMPANY_CLIENTS_GET", $header);
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
     
         $headers = [
             'Authorization' => $header,
             'content-type' => 'application/json'
         ];
         try{
-            $response = $this->client->request('GET', '/admin/v1/get-list-company?get_all_data=true', [
+            $response = $this->client->request('GET', '/account/v1/company-hierarchy', [
                     'headers'  => $headers
-            ]);
+                ]);
             $response = json_decode((string) $response->getBody(), true);
+            // return response($data);
+            // $response = $this->client->request('GET', '/admin/v1/get-list-company?get_all_data=true', [
+            //         'headers'  => $headers
+            // ]);
+            // $response = json_decode((string) $response->getBody(), true);
             if(array_key_exists('error', $response)) {
                 return response()->json(["success" => false, "message" => (object)[
                     "errorInfo" => [
@@ -781,7 +786,8 @@ class CompanyController extends Controller
                 ]], 400);
             } else {
                 $client_company_list = [];
-                foreach($response['data']['companies'] as $company){
+                // foreach($response['data']['companies'] as $company){
+                foreach($response['data']['members'] as $company){
                     if($company['role'] === 2) $client_company_list[] = $company;
                 }
                 return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $client_company_list]);
