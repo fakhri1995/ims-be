@@ -64,7 +64,7 @@ class CompanyController extends Controller
         }
     }
 
-    public function getChildren($datas, $admin){
+    public function getChildren($datas, $admin, $id_parent){
         $new_data = [];
         foreach($datas as $data){
             if($admin === false){
@@ -74,14 +74,16 @@ class CompanyController extends Controller
                         'title' => $data['company_name'],
                         'key' => $data['company_id'],
                         'value' => $data['company_id'],
-                        'children' => $this->getChildren($data['members'], false)
+                        'id_parent' => $id_parent,
+                        'children' => $this->getChildren($data['members'], false, $data['company_id'])
                     ];
                 } else {
                     $temp = (object)[
                         'id' => $data['company_id'],
                         'title' => $data['company_name'],
                         'key' => $data['company_id'],
-                        'value' => $data['company_id']
+                        'value' => $data['company_id'],
+                        'id_parent' => $id_parent
                     ];
                 }
                 $new_data[] = $temp;
@@ -93,14 +95,16 @@ class CompanyController extends Controller
                             'title' => $data['company_name'],
                             'key' => $data['company_id'],
                             'value' => $data['company_id'],
-                            'children' => $this->getChildren($data['members'], true)
+                            'id_parent' => $id_parent,
+                            'children' => $this->getChildren($data['members'], true, $data['company_id'])
                         ];
                     } else {
                         $temp = (object)[
                             'id' => $data['company_id'],
                             'title' => $data['company_name'],
                             'key' => $data['company_id'],
-                            'value' => $data['company_id']
+                            'value' => $data['company_id'],
+                            'id_parent' => $id_parent
                         ];
                     }
                     $new_data[] = $temp;
@@ -124,14 +128,16 @@ class CompanyController extends Controller
                     'title' => $data['company_name'],
                     'key' => $data['company_id'],
                     'value' => $data['company_id'],
-                    'children' => $this->getChildren($data['members'], false)
+                    'id_parent' => $data['company_id'],
+                    'children' => $this->getChildren($data['members'], false, $data['company_id'])
                 ];
             } else {
                 $temp = (object)[
                     'id' => $data['company_id'],
                     'title' => $data['company_name'],
                     'key' => $data['company_id'],
-                    'value' => $data['company_id']
+                    'value' => $data['company_id'],
+                    'id_parent' => $data['company_id']
                 ];
             }
             
@@ -431,14 +437,16 @@ class CompanyController extends Controller
                     'title' => $data['company_name'],
                     'key' => $data['company_id'],
                     'value' => $data['company_id'],
-                    'children' => $this->getChildren($data['members'], true)
+                    'id_parent' => $data['company_id'],
+                    'children' => $this->getChildren($data['members'], true, $data['company_id'])
                 ];
             } else {
                 $temp = (object)[
                     'id' => $data['company_id'],
                     'title' => $data['company_name'],
                     'key' => $data['company_id'],
-                    'value' => $data['company_id']
+                    'value' => $data['company_id'],
+                    'id_parent' => $data['company_id']
                 ];
             }
             
