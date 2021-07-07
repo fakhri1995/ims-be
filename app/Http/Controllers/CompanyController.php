@@ -170,8 +170,15 @@ class CompanyController extends Controller
             'Authorization' => $header,
             'content-type' => 'application/json'
         ];
+        
         try{
-            $response = $this->client->request('GET', '/admin/v1/get-company?id=66', [
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                    'headers'  => $headers
+                ]);
+            $data = json_decode((string) $response->getBody(), true);
+            $session_company_id = $data['data']['company']['company_id'];
+            
+            $response = $this->client->request('GET', '/admin/v1/get-company?id='.$session_company_id, [
                     'headers'  => $headers
                 ]);
             $response = json_decode((string) $response->getBody(), true);
@@ -235,8 +242,14 @@ class CompanyController extends Controller
             'content-type' => 'application/json'
         ];
         try{
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                    'headers'  => $headers
+                ]);
+            $data = json_decode((string) $response->getBody(), true);
+            $session_company_id = $data['data']['company']['company_id'];
+            
             $body = [
-                'id' => 66,
+                'id' => $session_company_id,
                 'company_name' => $request->get('company_name'),
                 'role' => 1,
                 'address' => $request->get('address'),
@@ -263,10 +276,10 @@ class CompanyController extends Controller
                 ]], 400);
             }
             try{
-                $company = Company::find(66);
+                $company = Company::find($session_company_id);
                 if($company === null){
                     $company = new Company;
-                    $company->id = 66;
+                    $company->id = $session_company_id;
                 }
                 $company->singkatan = $request->get('singkatan');
                 $company->tanggal_pkp = $request->get('tanggal_pkp');
@@ -276,7 +289,7 @@ class CompanyController extends Controller
                 $company->email = $request->get('email');
                 $company->website = $request->get('website');
                 $company->save();
-                return response()->json(["success" => true, "message" => "Company Profile Berhasil Diupdate"]);
+                return response()->json(["success" => true, "message" => "Company berhasil diubah"]);
             } catch(Exception $err){
                 return response()->json(["success" => false, "message" => $err], 400);
             }
@@ -505,7 +518,7 @@ class CompanyController extends Controller
                     ]
                 ]], 400);
             }
-            else return response()->json(["success" => true, "message" => $response['data']['message']]);
+            else return response()->json(["success" => true, "message" => "Locations berhasil ditambah"]);
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -596,7 +609,7 @@ class CompanyController extends Controller
                     $company->email = $request->get('email');
                     $company->website = $request->get('website');
                     $company->save();
-                    return response()->json(["success" => true, "message" => "Company Profile Berhasil Diproses"]);
+                    return response()->json(["success" => true, "message" => "Locations berhasil diubah"]);
                 } catch(Exception $err){
                     return response()->json(["success" => false, "message" => $err], 400);
                 }
@@ -939,7 +952,7 @@ class CompanyController extends Controller
                     $company->email = $request->get('email');
                     $company->website = $request->get('website');
                     $company->save();
-                    return response()->json(["success" => true, "message" => "Company Profile Berhasil Diperbarui"]);
+                    return response()->json(["success" => true, "message" => "Company berhasil diubah"]);
                 } catch(Exception $err){
                     return response()->json(["success" => false, "message" => $err], 400);
                 }

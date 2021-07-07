@@ -196,46 +196,34 @@ class BankController extends Controller
     {
         $check = $this->checkRoute("MAIN_BANKS_GET", $request->header("Authorization"));
         if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        $headers = ['Authorization' => $request->header("Authorization")];
+        $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                'headers'  => $headers
+            ]);
+        $data = json_decode((string) $response->getBody(), true);
+        $session_company_id = $data['data']['company']['company_id'];
         try{
-            $banks = Bank::where('company_id', 66)->get();
-            if($banks->isEmpty()) return response()->json(["success" => false, "message" => "Bank Account Belum Terdaftar"]);
+            $banks = Bank::where('company_id', $session_company_id)->get();
+            if($banks->isEmpty()) return response()->json(["success" => false, "message" => "Bank Account Belum Terdaftar", "data" => $banks]);
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $banks]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
-        //MAIN_BANKS_GET
-        // $headers = ['Authorization' => $request->header("Authorization")];
-        // try{
-        //     $response = $this->client->request('GET', '/auth/v1/get-profile', [
-        //             'headers'  => $headers
-        //         ]);
-        // }catch(ClientException $err){
-        //     $error_response = $err->getResponse();
-        //     $detail = json_decode($error_response->getBody());
-        //     return response()->json(["success" => false, "message" => (object)[
-        //         "errorInfo" => [
-        //             "status" => $error_response->getStatusCode(),
-        //             "reason" => $error_response->getReasonPhrase(),
-        //             "server_code" => json_decode($error_response->getBody())->error->code,
-        //             "status_detail" => json_decode($error_response->getBody())->error->detail
-        //         ]
-        //     ]], $error_response->getStatusCode());
-        // }
-        // try{
-        //     $banks = Bank::where('company_id', 66)->get();
-        //     if($banks->isEmpty()) return response()->json(["success" => false, "message" => "Bank Account Belum Terdaftar"]);
-        //     return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $banks]);
-        // } catch(Exception $err){
-        //     return response()->json(["success" => false, "message" => $err], 400);
-        // }
     }
 
     public function addMainBank(Request $request)
     {
-        $check = $this->checkRoute("MAIN_BANK_ADD", $request->header("Authorization"));
+        $header = $request->header("Authorization");
+        $check = $this->checkRoute("MAIN_BANK_ADD", $header);
         if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        $headers = ['Authorization' => $header];
+        $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                'headers'  => $headers
+            ]);
+        $data = json_decode((string) $response->getBody(), true);
+        $session_company_id = $data['data']['company']['company_id'];
         $bank = new Bank;
-        $bank->company_id = 66;
+        $bank->company_id = $session_company_id;
         $bank->name = $request->get('name');
         $bank->account_number = $request->get('account_number');
         $bank->owner = $request->get('owner');
@@ -246,47 +234,23 @@ class BankController extends Controller
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
-
-        // MAIN_BANK_ADD
-        // $headers = ['Authorization' => $request->header("Authorization")];
-        // try{
-        //     $response = $this->client->request('GET', '/auth/v1/get-profile', [
-        //             'headers'  => $headers
-        //         ]);
-        // }catch(ClientException $err){
-        //     $error_response = $err->getResponse();
-        //     $detail = json_decode($error_response->getBody());
-        //     return response()->json(["success" => false, "message" => (object)[
-        //         "errorInfo" => [
-        //             "status" => $error_response->getStatusCode(),
-        //             "reason" => $error_response->getReasonPhrase(),
-        //             "server_code" => json_decode($error_response->getBody())->error->code,
-        //             "status_detail" => json_decode($error_response->getBody())->error->detail
-        //         ]
-        //     ]], $error_response->getStatusCode());
-        // }
-        // $bank = new Bank;
-        // $bank->company_id = 66;
-        // $bank->name = $request->get('name');
-        // $bank->account_number = $request->get('account_number');
-        // $bank->owner = $request->get('owner');
-        // $bank->currency = $request->get('currency');
-        // try{
-        //     $bank->save();
-        //     return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
-        // } catch(Exception $err){
-        //     return response()->json(["success" => false, "message" => $err], 400);
-        // }
     }
 
     public function updateMainBank(Request $request)
     {
-        $check = $this->checkRoute("MAIN_BANK_UPDATE", $request->header("Authorization"));
+        $header = $request->header("Authorization");
+        $check = $this->checkRoute("MAIN_BANK_UPDATE", $header);
         if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        $headers = ['Authorization' => $header];
+        $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                'headers'  => $headers
+            ]);
+        $data = json_decode((string) $response->getBody(), true);
+        $session_company_id = $data['data']['company']['company_id'];
         $id = $request->get('id', null);
         $bank = Bank::find($id);
         if($bank === null) return response()->json(["success" => false, "message" => "Id Tidak Ditemukan"]);
-        if($bank->company_id !== 66){
+        if($bank->company_id !== $session_company_id){
             return response()->json(["success" => false, "message" => (object)[
                 "errorInfo" => [
                     "status" => 401,
@@ -306,57 +270,23 @@ class BankController extends Controller
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
-        // MAIN_BANK_UPDATE
-        // $headers = ['Authorization' => $request->header("Authorization")];
-        // try{
-        //     $response = $this->client->request('GET', '/auth/v1/get-profile', [
-        //             'headers'  => $headers
-        //         ]);
-        // }catch(ClientException $err){
-        //     $error_response = $err->getResponse();
-        //     $detail = json_decode($error_response->getBody());
-        //     return response()->json(["success" => false, "message" => (object)[
-        //         "errorInfo" => [
-        //             "status" => $error_response->getStatusCode(),
-        //             "reason" => $error_response->getReasonPhrase(),
-        //             "server_code" => json_decode($error_response->getBody())->error->code,
-        //             "status_detail" => json_decode($error_response->getBody())->error->detail
-        //         ]
-        //     ]], $error_response->getStatusCode());
-        // }
-        // $id = $request->get('id', null);
-        // $bank = Bank::find($id);
-        // if($bank === null) return response()->json(["success" => false, "message" => "Id Tidak Ditemukan"]);
-        // if($bank->company_id !== 66){
-        //     return response()->json(["success" => false, "message" => (object)[
-        //         "errorInfo" => [
-        //             "status" => 401,
-        //             "reason" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini",
-        //             "server_code" => 401,
-        //             "status_detail" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini",
-        //         ]
-        //     ]], 401);
-        // }
-        // $bank->name = $request->get('name');
-        // $bank->account_number = $request->get('account_number');
-        // $bank->owner = $request->get('owner');
-        // $bank->currency = $request->get('currency');
-        // try{
-        //     $bank->save();
-        //     return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
-        // } catch(Exception $err){
-        //     return response()->json(["success" => false, "message" => $err], 400);
-        // }
     }
 
     public function deleteMainBank(Request $request)
     {
-        $check = $this->checkRoute("MAIN_BANK_DELETE", $request->header("Authorization"));
+        $header = $request->header("Authorization");
+        $check = $this->checkRoute("MAIN_BANK_DELETE", $header);
         if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        $headers = ['Authorization' => $header];
+        $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                'headers'  => $headers
+            ]);
+        $data = json_decode((string) $response->getBody(), true);
+        $session_company_id = $data['data']['company']['company_id'];
         $id = $request->get('id', null);
         $bank = Bank::find($id);
         if($bank === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
-        if($bank->company_id !== 66){
+        if($bank->company_id !== $session_company_id){
             return response()->json(["success" => false, "message" => (object)[
                 "errorInfo" => [
                     "status" => 401,
@@ -368,47 +298,10 @@ class BankController extends Controller
         }
         try{
             $bank->delete();
-            return response()->json(["success" => true, "message" => "Data Berhasil Dihapus"]);
+            return response()->json(["success" => true, "message" => "Bank Account berhasil dihapus"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
-        // MAIN_BANK_DELETE
-        // $headers = ['Authorization' => $request->header("Authorization")];
-        // try{
-        //     $response = $this->client->request('GET', '/auth/v1/get-profile', [
-        //             'headers'  => $headers
-        //         ]);
-        // }catch(ClientException $err){
-        //     $error_response = $err->getResponse();
-        //     $detail = json_decode($error_response->getBody());
-        //     return response()->json(["success" => false, "message" => (object)[
-        //         "errorInfo" => [
-        //             "status" => $error_response->getStatusCode(),
-        //             "reason" => $error_response->getReasonPhrase(),
-        //             "server_code" => json_decode($error_response->getBody())->error->code,
-        //             "status_detail" => json_decode($error_response->getBody())->error->detail
-        //         ]
-        //     ]], $error_response->getStatusCode());
-        // }
-        // $id = $request->get('id', null);
-        // $bank = Bank::find($id);
-        // if($bank === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
-        // if($bank->company_id !== 66){
-        //     return response()->json(["success" => false, "message" => (object)[
-        //         "errorInfo" => [
-        //             "status" => 401,
-        //             "reason" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini",
-        //             "server_code" => 401,
-        //             "status_detail" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini",
-        //         ]
-        //     ]], 401);
-        // }
-        // try{
-        //     $bank->delete();
-        //     return response()->json(["success" => true, "message" => "Data Berhasil Dihapus"]);
-        // } catch(Exception $err){
-        //     return response()->json(["success" => false, "message" => $err], 400);
-        // }
     }
 
     // Client Banks
@@ -434,42 +327,6 @@ class BankController extends Controller
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
-        // // CLIENT_BANKS_GET
-        // $headers = ['Authorization' => $request->header("Authorization")];
-        // try{
-        //     $response = $this->client->request('GET', '/auth/v1/get-profile', [
-        //             'headers'  => $headers
-        //         ]);
-        // }catch(ClientException $err){
-        //     $error_response = $err->getResponse();
-        //     $detail = json_decode($error_response->getBody());
-        //     return response()->json(["success" => false, "message" => (object)[
-        //         "errorInfo" => [
-        //             "status" => $error_response->getStatusCode(),
-        //             "reason" => $error_response->getReasonPhrase(),
-        //             "server_code" => json_decode($error_response->getBody())->error->code,
-        //             "status_detail" => json_decode($error_response->getBody())->error->detail
-        //         ]
-        //     ]], $error_response->getStatusCode());
-        // }
-        // try{
-        //     $company_id = $request->get('id');
-        //     if($company_id === 66){
-        //         return response()->json(["success" => false, "message" => (object)[
-        //             "errorInfo" => [
-        //                 "status" => 401,
-        //                 "reason" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini",
-        //                 "server_code" => 401,
-        //                 "status_detail" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini",
-        //             ]
-        //         ]], 401);
-        //     }
-        //     $banks = Bank::where('company_id', $company_id)->get();
-        //     if($banks->isEmpty()) return response()->json(["success" => false, "message" => "Bank Account Belum Terdaftar"]);
-        //     return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $banks]);
-        // } catch(Exception $err){
-        //     return response()->json(["success" => false, "message" => $err], 400);
-        // }
     }
 
     public function addClientBank(Request $request)
@@ -499,47 +356,6 @@ class BankController extends Controller
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
-        // CLIENT_BANK_ADD
-        // $headers = ['Authorization' => $request->header("Authorization")];
-        // try{
-        //     $response = $this->client->request('GET', '/auth/v1/get-profile', [
-        //             'headers'  => $headers
-        //         ]);
-        // }catch(ClientException $err){
-        //     $error_response = $err->getResponse();
-        //     $detail = json_decode($error_response->getBody());
-        //     return response()->json(["success" => false, "message" => (object)[
-        //         "errorInfo" => [
-        //             "status" => $error_response->getStatusCode(),
-        //             "reason" => $error_response->getReasonPhrase(),
-        //             "server_code" => json_decode($error_response->getBody())->error->code,
-        //             "status_detail" => json_decode($error_response->getBody())->error->detail
-        //         ]
-        //     ]], $error_response->getStatusCode());
-        // }
-        // $company_id = $request->get('company_id');
-        // if($company_id === 66){
-        //     return response()->json(["success" => false, "message" => (object)[
-        //         "errorInfo" => [
-        //             "status" => 401,
-        //             "reason" => "Anda Tidak Memiliki Akses Untuk Mengakses Bank Perusahaan Ini",
-        //             "server_code" => 401,
-        //             "status_detail" => "Anda Tidak Memiliki Akses Untuk Mengakses Bank Perusahaan Ini",
-        //         ]
-        //     ]], 401);
-        // }
-        // $bank = new Bank;
-        // $bank->company_id = $company_id;
-        // $bank->name = $request->get('name');
-        // $bank->account_number = $request->get('account_number');
-        // $bank->owner = $request->get('owner');
-        // $bank->currency = $request->get('currency');
-        // try{
-        //     $bank->save();
-        //     return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
-        // } catch(Exception $err){
-        //     return response()->json(["success" => false, "message" => $err], 400);
-        // }
     }
 
     public function updateClientBank(Request $request)
@@ -569,47 +385,6 @@ class BankController extends Controller
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
-        // CLIENT_BANK_UPDATE
-        // $headers = ['Authorization' => $request->header("Authorization")];
-        // try{
-        //     $response = $this->client->request('GET', '/auth/v1/get-profile', [
-        //             'headers'  => $headers
-        //         ]);
-        // }catch(ClientException $err){
-        //     $error_response = $err->getResponse();
-        //     $detail = json_decode($error_response->getBody());
-        //     return response()->json(["success" => false, "message" => (object)[
-        //         "errorInfo" => [
-        //             "status" => $error_response->getStatusCode(),
-        //             "reason" => $error_response->getReasonPhrase(),
-        //             "server_code" => json_decode($error_response->getBody())->error->code,
-        //             "status_detail" => json_decode($error_response->getBody())->error->detail
-        //         ]
-        //     ]], $error_response->getStatusCode());
-        // }
-        // $id = $request->get('id', null);
-        // $bank = Bank::find($id);
-        // if($bank === null) return response()->json(["success" => false, "message" => "Id Tidak Ditemukan"]);
-        // if($bank->company_id === 66){
-        //     return response()->json(["success" => false, "message" => (object)[
-        //         "errorInfo" => [
-        //             "status" => 401,
-        //             "reason" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini",
-        //             "server_code" => 401,
-        //             "status_detail" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini",
-        //         ]
-        //     ]], 401);
-        // }
-        // $bank->name = $request->get('name');
-        // $bank->account_number = $request->get('account_number');
-        // $bank->owner = $request->get('owner');
-        // $bank->currency = $request->get('currency');
-        // try{
-        //     $bank->save();
-        //     return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
-        // } catch(Exception $err){
-        //     return response()->json(["success" => false, "message" => $err], 400);
-        // }
     }
 
     public function deleteClientBank(Request $request)
@@ -635,42 +410,5 @@ class BankController extends Controller
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
-        // CLIENT_BANK_DELETE
-        // $headers = ['Authorization' => $request->header("Authorization")];
-        // try{
-        //     $response = $this->client->request('GET', '/auth/v1/get-profile', [
-        //             'headers'  => $headers
-        //         ]);
-        // }catch(ClientException $err){
-        //     $error_response = $err->getResponse();
-        //     $detail = json_decode($error_response->getBody());
-        //     return response()->json(["success" => false, "message" => (object)[
-        //         "errorInfo" => [
-        //             "status" => $error_response->getStatusCode(),
-        //             "reason" => $error_response->getReasonPhrase(),
-        //             "server_code" => json_decode($error_response->getBody())->error->code,
-        //             "status_detail" => json_decode($error_response->getBody())->error->detail
-        //         ]
-        //     ]], $error_response->getStatusCode());
-        // }
-        // $id = $request->get('id', null);
-        // $bank = Bank::find($id);
-        // if($bank === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
-        // if($bank->company_id === 66){
-        //     return response()->json(["success" => false, "message" => (object)[
-        //         "errorInfo" => [
-        //             "status" => 401,
-        //             "reason" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini",
-        //             "server_code" => 401,
-        //             "status_detail" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini",
-        //         ]
-        //     ]], 401);
-        // }
-        // try{
-        //     $bank->delete();
-        //     return response()->json(["success" => true, "message" => "Data Berhasil Dihapus"]);
-        // } catch(Exception $err){
-        //     return response()->json(["success" => false, "message" => $err], 400);
-        // }
     }
 }
