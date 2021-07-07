@@ -491,9 +491,15 @@ class CompanyController extends Controller
             'content-type' => 'application/json'
         ];
         try{
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                    'headers'  => $headers
+                ]);
+            $data = json_decode((string) $response->getBody(), true);
+            $role = $data['data']['company']['role'];
+            if($role === 1) $role = 3; 
             $body = [
                 'name' => $request->get('name'),
-                'role' => 3,
+                'role' => $role,
                 'address' => $request->get('address'),
                 'phone_number' => $request->get('phone_number'),
                 'image_logo' => $request->get('image_logo', null),
@@ -559,21 +565,24 @@ class CompanyController extends Controller
                         "status_detail" => $response['error']['detail']
                     ]
                 ]], 400);
-            } else if($response['data']['role'] !== 3) {
-                return response()->json(["success" => false, "message" => (object)[
-                    "errorInfo" => [
-                        "status" => 401,
-                        "reason" => "Anda Tidak Memiliki Akses Perusahaan Ini",
-                        "server_code" => 401,
-                        "status_detail" => "Anda Tidak Memiliki Akses Perusahaan Ini"
-                    ]
-                ]], 400);
-            } else {
+            } 
+            // else if($response['data']['role'] !== 3) {
+            //     return response()->json(["success" => false, "message" => (object)[
+            //         "errorInfo" => [
+            //             "status" => 401,
+            //             "reason" => "Anda Tidak Memiliki Akses Perusahaan Ini",
+            //             "server_code" => 401,
+            //             "status_detail" => "Anda Tidak Memiliki Akses Perusahaan Ini"
+            //         ]
+            //     ]], 400);
+            // } 
+            else {
+                $role = $response['data']['role'];
                 $id = $company_id;
                 $body = [
                     'id' => $id,
                     'company_name' => $request->get('company_name'),
-                    'role' => 3,
+                    'role' => $role,
                     'address' => $request->get('address'),
                     'phone_number' => $request->get('phone_number'),
                     'image_logo' => $request->get('image_logo', null)
@@ -609,7 +618,8 @@ class CompanyController extends Controller
                     $company->email = $request->get('email');
                     $company->website = $request->get('website');
                     $company->save();
-                    return response()->json(["success" => true, "message" => "Locations berhasil diubah"]);
+                    if($role === 2) return response()->json(["success" => true, "message" => "Company berhasil diubah"]);
+                    else return response()->json(["success" => true, "message" => "Locations berhasil diubah"]);
                 } catch(Exception $err){
                     return response()->json(["success" => false, "message" => $err], 400);
                 }
@@ -654,16 +664,18 @@ class CompanyController extends Controller
                         "status_detail" => $response['error']['detail']
                     ]
                 ]], 400);
-            } else if($response['data']['role'] !== 3) {
-                return response()->json(["success" => false, "message" => (object)[
-                    "errorInfo" => [
-                        "status" => 401,
-                        "reason" => "Anda Tidak Memiliki Akses Perusahaan Ini",
-                        "server_code" => 401,
-                        "status_detail" => "Anda Tidak Memiliki Akses Perusahaan Ini"
-                    ]
-                ]], 400);
-            } else {
+            } 
+            // else if($response['data']['role'] !== 3) {
+            //     return response()->json(["success" => false, "message" => (object)[
+            //         "errorInfo" => [
+            //             "status" => 401,
+            //             "reason" => "Anda Tidak Memiliki Akses Perusahaan Ini",
+            //             "server_code" => 401,
+            //             "status_detail" => "Anda Tidak Memiliki Akses Perusahaan Ini"
+            //         ]
+            //     ]], 400);
+            // } 
+            else {
                 $body = [
                     'is_enabled' => $request->get('is_enabled'),
                     'company_id' => $company_id
@@ -705,7 +717,7 @@ class CompanyController extends Controller
     {
         $header = $request->header("Authorization");
         $headers = ['Authorization' => $header];
-        $check = $this->checkRoute("COMPANY_CLIENTS_GET", $header);
+        $check = $this->checkRoute("COMPANY_CLIENT_GET", $header);
         if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
     
         $headers = [
@@ -778,9 +790,9 @@ class CompanyController extends Controller
     public function getClientCompanyList(Request $request)
     {
         $header = $request->header("Authorization");
-        // $headers = ['Authorization' => $header];
-        // $check = $this->checkRoute("COMPANY_CLIENTS_GET", $header);
-        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        $headers = ['Authorization' => $header];
+        $check = $this->checkRoute("COMPANY_CLIENTS_GET", $header);
+        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
     
         $headers = [
             'Authorization' => $header,
@@ -791,11 +803,6 @@ class CompanyController extends Controller
                     'headers'  => $headers
                 ]);
             $response = json_decode((string) $response->getBody(), true);
-            // return response($data);
-            // $response = $this->client->request('GET', '/admin/v1/get-list-company?get_all_data=true', [
-            //         'headers'  => $headers
-            // ]);
-            // $response = json_decode((string) $response->getBody(), true);
             if(array_key_exists('error', $response)) {
                 return response()->json(["success" => false, "message" => (object)[
                     "errorInfo" => [
@@ -807,11 +814,12 @@ class CompanyController extends Controller
                 ]], 400);
             } else {
                 $client_company_list = [];
-                // foreach($response['data']['companies'] as $company){
+                $data = $response['data'];
                 foreach($response['data']['members'] as $company){
                     if($company['role'] === 2) $client_company_list[] = $company;
                 }
-                return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $client_company_list]);
+                $data['members'] = $client_company_list;
+                return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $data]);
             } 
         }catch(ClientException $err){
             $error_response = $err->getResponse();
