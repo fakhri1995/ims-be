@@ -230,7 +230,7 @@ class BankController extends Controller
         $bank->currency = $request->get('currency');
         try{
             $bank->save();
-            return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
+            return response()->json(["success" => true, "message" => "Bank Account berhasil ditambahkan"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
@@ -266,7 +266,7 @@ class BankController extends Controller
         $bank->currency = $request->get('currency');
         try{
             $bank->save();
-            return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
+            return response()->json(["success" => true, "message" => "Bank Account berhasil diubah"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
@@ -352,7 +352,7 @@ class BankController extends Controller
         $bank->currency = $request->get('currency');
         try{
             $bank->save();
-            return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
+            return response()->json(["success" => true, "message" => "Bank Account berhasil dibuat"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
@@ -381,7 +381,7 @@ class BankController extends Controller
         $bank->currency = $request->get('currency');
         try{
             $bank->save();
-            return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
+            return response()->json(["success" => true, "message" => "Bank Account berhasil diubah"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
@@ -406,7 +406,7 @@ class BankController extends Controller
         }
         try{
             $bank->delete();
-            return response()->json(["success" => true, "message" => "Data Berhasil Dihapus"]);
+            return response()->json(["success" => true, "message" => "Bank Account berhasil dihapus"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }

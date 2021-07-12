@@ -118,7 +118,8 @@ class CompanyController extends Controller
     {
         $headers = ['Authorization' => $request->header("Authorization")];
         try{
-            $response = $this->client->request('GET', '/account/v1/company-hierarchy', [
+            $company_id = $request->get('company_id');
+            $response = $this->client->request('GET', '/account/v1/company-hierarchy?company_id='.$company_id, [
                     'headers'  => $headers
                 ]);
             $data = json_decode((string) $response->getBody(), true)['data'];
@@ -870,7 +871,7 @@ class CompanyController extends Controller
                     ]
                 ]], 400);
             }
-            else return response()->json(["success" => true, "message" => $response['data']['message']]);
+            else return response()->json(["success" => true, "message" => "Client berhasil ditambahkan"]);
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -960,7 +961,7 @@ class CompanyController extends Controller
                     $company->email = $request->get('email');
                     $company->website = $request->get('website');
                     $company->save();
-                    return response()->json(["success" => true, "message" => "Company berhasil diubah"]);
+                    return response()->json(["success" => true, "message" => "Profil Client berhasil diubah"]);
                 } catch(Exception $err){
                     return response()->json(["success" => false, "message" => $err], 400);
                 }
@@ -1034,7 +1035,7 @@ class CompanyController extends Controller
                         ]
                     ]], 400);
                 }
-                else return response()->json(["success" => true, "message" => $response['data']['message']]);
+                else return response()->json(["success" => true, "message" => "Status Client berhasil diubah"]);
             }
         }catch(ClientException $err){
             $error_response = $err->getResponse();
