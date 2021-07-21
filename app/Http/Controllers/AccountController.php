@@ -132,6 +132,10 @@ class AccountController extends Controller
             'content-type' => 'application/json'
         ];
         try{
+            $companies_response = $this->client->request('GET', '/admin/v1/get-list-company?get_all_data=true', [
+                    'headers'  => $headers
+                ]);
+            $companies_response = json_decode((string) $companies_response->getBody(), true)['data']['companies'];
             $response = $this->client->request('GET', '/admin/v1/get-list-account?get_all_data=true&order_by=asc', [
                     'headers'  => $headers
                 ]);
@@ -147,12 +151,19 @@ class AccountController extends Controller
                 ]], 400);
             } else {
                 $list_agent = [];
+                $companies_amount = count($companies_response);
                 foreach($response['data']['accounts'] as $user){
                     if($user['role'] === 1){
+                        for($i = 0; $i < $companies_amount; $i++){
+                            if($companies_response[$i]['company_id'] === $user['company_id']){
+                                $user['company_name'] = $companies_response[$i]['company_name'];
+                                break;
+                            } 
+                        }
                         $list_agent[] = $user;
                     }
                 }
-              return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $list_agent]);  
+                return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $list_agent]);  
             } 
         }catch(ClientException $err){
             $error_response = $err->getResponse();
@@ -204,7 +215,7 @@ class AccountController extends Controller
                     ]
                 ]], 400);
             }
-            else return response()->json(["success" => true, "message" => $response['data']['message']]);
+            else return response()->json(["success" => true, "message" => "Akun Agent berhasil ditambah"]);
         
         }catch(ClientException $err){
             $error_response = $err->getResponse();
@@ -280,7 +291,7 @@ class AccountController extends Controller
                         ]
                     ]], 400);
                 }
-                else return response()->json(["success" => true, "message" => $response['data']['message']]);
+                else return response()->json(["success" => true, "message" => "Profil Agent berhasil diubah"]);
             }
         }catch(ClientException $err){
             $error_response = $err->getResponse();
@@ -353,7 +364,7 @@ class AccountController extends Controller
                         ]
                     ]], 400);
                 }
-                else return response()->json(["success" => true, "message" => $response['data']['message']]);
+                else return response()->json(["success" => true, "message" => "Password berhasil diubah"]);
             }
         }catch(ClientException $err){
             $error_response = $err->getResponse();
@@ -426,7 +437,7 @@ class AccountController extends Controller
                         ]
                     ]], 400);
                 }
-                else return response()->json(["success" => true, "message" => $response['data']['message']]);
+                else return response()->json(["success" => true, "message" => "Status Agent berhasil diubah"]);
             }
         }catch(ClientException $err){
             $error_response = $err->getResponse();
@@ -628,6 +639,10 @@ class AccountController extends Controller
         ];
 
         try{
+            $companies_response = $this->client->request('GET', '/admin/v1/get-list-company?get_all_data=true', [
+                    'headers'  => $headers
+                ]);
+            $companies_response = json_decode((string) $companies_response->getBody(), true)['data']['companies'];
             $response = $this->client->request('GET', '/admin/v1/get-list-account?get_all_data=true&order_by=asc', [
                     'headers'  => $headers
                 ]);
@@ -643,8 +658,15 @@ class AccountController extends Controller
                 ]], 400);
             } else {
                 $list_requester = [];
+                $companies_amount = count($companies_response);
                 foreach($response['data']['accounts'] as $user){
                     if($user['role'] === 2){
+                        for($i = 0; $i < $companies_amount; $i++){
+                            if($companies_response[$i]['company_id'] === $user['company_id']){
+                                $user['company_name'] = $companies_response[$i]['company_name'];
+                                break;
+                            } 
+                        }
                         $list_requester[] = $user;
                     }
                 }
@@ -699,7 +721,7 @@ class AccountController extends Controller
                     ]
                 ]], 400);
             }
-            else return response()->json(["success" => true, "message" => $response['data']['message']]);
+            else return response()->json(["success" => true, "message" => "Akun Requester berhasil ditambah"]);
         
         }catch(ClientException $err){
             $error_response = $err->getResponse();
@@ -774,7 +796,7 @@ class AccountController extends Controller
                         ]
                     ]], 400);
                 }
-                else return response()->json(["success" => true, "message" => $response['data']['message']]);
+                else return response()->json(["success" => true, "message" => "Profil Requester berhasil diubah"]);
             }
         }catch(ClientException $err){
             $error_response = $err->getResponse();
@@ -846,7 +868,7 @@ class AccountController extends Controller
                         ]
                     ]], 400);
                 }
-                else return response()->json(["success" => true, "message" => $response['data']['message']]);
+                else return response()->json(["success" => true, "message" => "Password berhasil diubah"]);
             }
         }catch(ClientException $err){
             $error_response = $err->getResponse();
@@ -918,7 +940,7 @@ class AccountController extends Controller
                         ]
                     ]], 400);
                 }
-                else return response()->json(["success" => true, "message" => $response['data']['message']]);
+                else return response()->json(["success" => true, "message" => "Status Requester berhasil diubah"]);
             }
         }catch(ClientException $err){
             $error_response = $err->getResponse();
