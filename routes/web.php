@@ -254,7 +254,7 @@ $router->put('/updateDepreciation', 'DepreciationController@updateDepreciation')
 $router->delete('/deleteDepreciation', 'DepreciationController@deleteDepreciation');
 
 //Service Category Routes
-$router->get('/getRoleUsers', 'RoleController@getRoleUsers');
+$router->get('/getRoleUserFeatures', 'RoleController@getRoleUserFeatures');
 $router->get('/getRoles', 'RoleController@getRoles');
 $router->get('/getRole', 'RoleController@getRole');
 $router->post('/addRole', 'RoleController@addRole');
