@@ -115,7 +115,9 @@ $router->post('/updateFeatureAccount', 'AccessFeatureController@updateFeatureAcc
 $router->post('/addModule', 'AccessFeatureController@addModule');
 $router->post('/getModules', 'AccessFeatureController@getModules');
 $router->post('/getModule', 'AccessFeatureController@getModule');
+$router->post('/addModuleFeature', 'AccessFeatureController@addModuleFeature');
 $router->post('/updateModuleFeature', 'AccessFeatureController@updateModuleFeature');
+$router->post('/deleteModuleFeature', 'AccessFeatureController@deleteModuleFeature');
 $router->post('/deleteModule', 'AccessFeatureController@deleteModule');
 // $router->post('/getAccessFeature', 'AccessFeatureController@getAccessFeature');
 // $router->post('/addAccessModule', 'AccessFeatureController@addAccessModule');

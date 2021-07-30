@@ -630,6 +630,170 @@ class AccessFeatureController extends Controller
         }
     }
 
+    public function addModuleFeature(Request $request)
+    {
+        $header = $request->header("Authorization");
+        $check = $this->checkRoute("MODULE_ADD", $header);
+        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+
+        // MODULE_ADD
+        $id = $request->get('id');
+        $headers = [
+            'Authorization' => $header,
+            'content-type' => 'application/json'
+        ];
+        try{
+            $response = $this->client->request('GET', '/admin/v1/group-feature?page=1&rows=50', [
+                    'headers'  => $headers
+                ]);
+            $data = json_decode((string) $response->getBody(), true)['data']['group_features'];
+            $search = array_search($id, array_column($data, 'id'));
+            $selected_data = $data[$search];
+            if($selected_data['id'] === $id){
+                $detail_group_response = $this->client->request('GET', '/admin/v1/group-feature?key='.$selected_data["key"], [
+                        'headers'  => $headers
+                    ]);
+                $detail_group_response = json_decode((string) $detail_group_response->getBody(), true)['data']['group_features'][0]['feature'];
+                
+                $list_feature_id = [];
+                foreach($detail_group_response as $feature){
+                    $list_feature_id[] = $feature['id'];
+                }
+                $merged_array = array_merge($request->get('feature_ids'), $list_feature_id);
+                $list_unique_feature_id = array_unique($merged_array);
+                $new_features = [];
+                foreach($list_unique_feature_id as $feature){
+                    $new_features[] = $feature;
+                } 
+
+                $body_group = [
+                    'group_feature_key' => $selected_data['key'],
+                    'feature_ids' => $new_features
+                ];
+
+                $response = $this->client->request('POST', '/admin/v1/group-feature', [
+                    'headers'  => $headers,
+                    'json' => $body_group
+                ]);
+                $response = json_decode((string) $response->getBody(), true);
+                if(array_key_exists('error', $response)) {
+                    return response()->json(["success" => false, "message" => (object)[
+                        "errorInfo" => [
+                            "status" => 400,
+                            "reason" => $response['error']['detail'],
+                            "server_code" => $response['error']['code'],
+                            "status_detail" => $response['error']['detail']
+                        ]
+                    ]], 400);
+                }
+                else return response()->json(["success" => true, "message" => "Berhasil Memperbarui Data"]);
+            } else {
+                return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 400,
+                        "reason" => "Module Tidak Ditemukan",
+                        "server_code" => 400,
+                        "status_detail" => "Module Tidak Ditemukan"
+                    ]
+                ]], 400);
+            }
+            
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
+    }
+
+    public function deleteModuleFeature(Request $request)
+    {
+        $header = $request->header("Authorization");
+        $check = $this->checkRoute("MODULE_DELETE", $header);
+        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+
+        // MODULE_DELETE
+        $id = $request->get('id');
+        $headers = [
+            'Authorization' => $header,
+            'content-type' => 'application/json'
+        ];
+        try{
+            $response = $this->client->request('GET', '/admin/v1/group-feature?page=1&rows=50', [
+                    'headers'  => $headers
+                ]);
+            $data = json_decode((string) $response->getBody(), true)['data']['group_features'];
+            $search = array_search($id, array_column($data, 'id'));
+            $selected_data = $data[$search];
+            if($selected_data['id'] === $id){
+                $detail_group_response = $this->client->request('GET', '/admin/v1/group-feature?key='.$selected_data["key"], [
+                        'headers'  => $headers
+                    ]);
+                $detail_group_response = json_decode((string) $detail_group_response->getBody(), true)['data']['group_features'][0]['feature'];
+                
+                $list_feature_id = [];
+                foreach($detail_group_response as $feature){
+                    $list_feature_id[] = $feature['id'];
+                }
+                
+                $different_features = array_diff($list_feature_id, $request->get('feature_ids'));
+                $new_features = [];
+                foreach($different_features as $feature){
+                    $new_features[] = $feature;
+                } 
+
+                $body_group = [
+                    'group_feature_key' => $selected_data['key'],
+                    'feature_ids' => $new_features
+                ];
+
+                $response = $this->client->request('POST', '/admin/v1/group-feature', [
+                    'headers'  => $headers,
+                    'json' => $body_group
+                ]);
+                $response = json_decode((string) $response->getBody(), true);
+                if(array_key_exists('error', $response)) {
+                    return response()->json(["success" => false, "message" => (object)[
+                        "errorInfo" => [
+                            "status" => 400,
+                            "reason" => $response['error']['detail'],
+                            "server_code" => $response['error']['code'],
+                            "status_detail" => $response['error']['detail']
+                        ]
+                    ]], 400);
+                }
+                else return response()->json(["success" => true, "message" => "Berhasil Memperbarui Data"]);
+            } else {
+                return response()->json(["success" => false, "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 400,
+                        "reason" => "Module Tidak Ditemukan",
+                        "server_code" => 400,
+                        "status_detail" => "Module Tidak Ditemukan"
+                    ]
+                ]], 400);
+            }
+            
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]], $error_response->getStatusCode());
+        }
+    }
+
     // Account Feature
     public function updateFeatureAccount(Request $request)
     {
