@@ -479,7 +479,7 @@ class AccessFeatureController extends Controller
             $key = json_decode((string) $response->getBody(), true)['data']['key'];
             $body_feature = [
                 'group_feature_key' => $key,
-                'feature_ids' => $request->get('feature_ids', [])
+                'feature_ids' => []
             ];
             $response_feature = $this->client->request('POST', '/admin/v1/group-feature', [
                 'headers'  => $headers,

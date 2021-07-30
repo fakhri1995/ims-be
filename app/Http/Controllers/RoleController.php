@@ -111,7 +111,7 @@ class RoleController extends Controller
                             $list_module = [];
                             foreach($data_module as $module){
                                 $search = array_search($feature_id, array_column($module['feature'], 'id'));
-                                if($search) $list_module[] = $module['name'];
+                                if($search !== false) $list_module[] = $module['name'];
                             }
                             $feature['list_module'] = $list_module;
                             $list_feature[] = $feature;
@@ -208,8 +208,7 @@ class RoleController extends Controller
                 $pivot->feature_id = $feature_id;
                 $pivot->save();
             }
-            
-            return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
+            return response()->json(["success" => true, "message" => "Data Berhasil Disimpan", "id" => $role->id]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
