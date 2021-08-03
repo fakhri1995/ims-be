@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateAssetsTable extends Migration
+class CreateAssetInventoryValuesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,11 @@ class CreateAssetsTable extends Migration
      */
     public function up()
     {
-        Schema::create('assets', function (Blueprint $table) {
+        Schema::create('asset_inventory_values', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('code');
-            $table->string('description');
+            $table->unsignedBigInteger('inventory_id');
+            $table->unsignedBigInteger('asset_column_id');
+            $table->string('value');
             $table->softDeletes();
         });
     }
@@ -29,6 +29,6 @@ class CreateAssetsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('assets');
+        Schema::dropIfExists('asset_inventory_values');
     }
 }

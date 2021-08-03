@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Validator;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use App\Asset;
+use App\AssetColumn;
 use App\AssetRelatedPivot;
 use App\Inventory;
 use App\InventoryValue;
@@ -96,6 +97,38 @@ class AssetInventoryController extends Controller
         }
     }
 
+    public function getAsset(Request $request)
+    {
+        $headers = ['Authorization' => $request->header("Authorization")];
+        try{
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                'headers'  => $headers
+            ]);
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                    ]
+                    ]], $error_response->getStatusCode());
+        }
+        try{
+            $id = $request->get('id', null);
+            $asset = Asset::find($id);
+            if($asset === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
+            $asset_column = [];
+            $asset_columns = AssetColumn::where('asset_id', $id)->get();
+            $asset->asset_columns = $asset_columns;
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $asset]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
+
     public function addAsset(Request $request)
     {
         $headers = ['Authorization' => $request->header("Authorization")];
@@ -119,6 +152,7 @@ class AssetInventoryController extends Controller
         }
         $asset = new Asset;
         $asset->name = $request->get('name');
+        $asset->description = $request->get('description');
         $parent = $request->get('parent', null);
         try{
             if($parent !== null){
@@ -153,6 +187,18 @@ class AssetInventoryController extends Controller
                 }
             }
             $asset->save();
+            $asset_columns = $request->get('asset_columns', []);
+            if(count($asset_columns)) {
+                foreach($asset_columns as $asset_column){
+                    $new_asset_column = new AssetColumn;
+                    $new_asset_column->asset_id = $asset->id;
+                    $new_asset_column->name = $asset_column['name'];
+                    $new_asset_column->data_type = $asset_column['data_type'];
+                    $new_asset_column->default = $asset_column['default'];
+                    $new_asset_column->required = $asset_column['required'];
+                    $new_asset_column->save();
+                }
+            }
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
@@ -183,6 +229,7 @@ class AssetInventoryController extends Controller
         $id = $request->get('id', null);
         $name = $request->get('name');
         $code = $request->get('code');
+        $description = $request->get('description');
         try{
             $asset = Asset::find($id);
             if($asset === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
@@ -195,6 +242,30 @@ class AssetInventoryController extends Controller
             }
             $asset->name = $name;
             $asset->code = $code;
+            $asset->description = $description;
+
+            $delete_column_ids = $request->get('delete_column_ids', []);
+            $asset_columns = AssetColumn::where('asset_id', $id)->get();
+            if(count($delete_column_ids)){
+                foreach($delete_column_ids as $delete_column_id){
+                    $deleted_asset_column = $asset_columns->where('id', $delete_column_id)->first();
+                    $deleted_asset_column->delete();
+                }
+            }
+            
+            $add_columns = $request->get('add_columns', []);
+            if(count($add_columns)) {
+                foreach($add_columns as $asset_column){
+                    $new_asset_column = new AssetColumn;
+                    $new_asset_column->asset_id = $asset->id;
+                    $new_asset_column->name = $asset_column['name'];
+                    $new_asset_column->data_type = $asset_column['data_type'];
+                    $new_asset_column->default = $asset_column['default'];
+                    $new_asset_column->required = $asset_column['required'];
+                    $new_asset_column->save();
+                }
+            }
+
             $asset->save();
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
         } catch(Exception $err){
@@ -224,14 +295,55 @@ class AssetInventoryController extends Controller
             ]], $error_response->getStatusCode());
         }
         $id = $request->get('id', null);
-        $asset = Asset::find($id);
-        if($asset === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
+        $new_parent = $request->get('new_parent', null);
+        if($new_parent !== null){
+            $check_format_code = explode(".", $new_parent);
+            foreach($check_format_code as $checker){
+                $checker = preg_replace( '/[^0-9]/', '', $checker);
+                if(strlen($checker) !== 3) return response()->json(["success" => false, "message" => "New Parent Tidak Sesuai dengan Format"], 400);
+            }
+        }
+        $core_asset = Asset::find($id);
+        if($core_asset === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
+        $old_code = $core_asset->code;
         try{
-            $asset->delete();
+            $assets = Asset::where('code', 'like', $core_asset->code.".%")->orderBy('code', 'asc')->get();
+            if(count($assets)){
+                if($new_parent !== null){
+                    $assets_check_number = Asset::where('code', 'like', $new_parent.".%")->where('code', 'not like', $new_parent.".___.%")->orderBy('code', 'desc')->get();
+                    if(count($assets_check_number)) $start_number = (int)substr($assets_check_number->first()->code, -3);
+                    else $start_number = 0;
+                    foreach($assets as $asset){
+                        $split_string = str_split($asset->code,(strlen($old_code) + 4));
+                        $array_length = count($split_string);
+                        $back_string = "";
+                        for($i = 1; $i < $array_length; $i++){
+                            $back_string = $back_string . $split_string[$i];
+                        }
+                        $new_number = $start_number + (int)str_split($asset->code,(strlen($old_code) + 1))[1];
+                        $new_string = (string)$new_number;
+                        if($new_number < 10) {
+                            $parent = $new_parent.".00".$new_string;
+                        } else if($new_number < 100) {
+                            $parent = $new_parent.".0".$new_string;
+                        } else {
+                            $parent = $new_parent.".".$new_string;
+                        }
+                        $new_code = $parent.$back_string;
+                        $asset->code = $new_code;
+                        $asset->save();
+                    }
+                } else {
+                    foreach($assets as $asset){
+                        $asset->delete();
+                    }
+                }
+            }
+            $core_asset->delete();
 
-            $inventory_columns = InventoryColumn::where('asset_id', $id)->get();
-            foreach($inventory_columns as $inventory_column){
-                $inventory_column->delete();
+            $asset_columns = AssetColumn::where('asset_id', $id)->get();
+            foreach($asset_columns as $asset_column){
+                $asset_column->delete();
             }
 
             return response()->json(["success" => true, "message" => "Data Berhasil Dihapus"]);

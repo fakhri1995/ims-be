@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateAssetsTable extends Migration
+class CreateAssetColumnsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,13 @@ class CreateAssetsTable extends Migration
      */
     public function up()
     {
-        Schema::create('assets', function (Blueprint $table) {
+        Schema::create('asset_columns', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('asset_id');
             $table->string('name');
-            $table->string('code');
-            $table->string('description');
+            $table->string('data_type');
+            $table->string('default')->nullable();
+            $table->boolean('required');
             $table->softDeletes();
         });
     }
@@ -29,6 +31,6 @@ class CreateAssetsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('assets');
+        Schema::dropIfExists('asset_columns');
     }
 }

@@ -169,6 +169,7 @@ $router->delete('/deleteRequesterGroup', 'GroupController@deleteRequesterGroup')
 
 //Asset Routes
 $router->get('/getAssets', 'AssetInventoryController@getAssets');
+$router->get('/getAsset', 'AssetInventoryController@getAsset');
 $router->get('/getDeletedAssets', 'AssetInventoryController@getDeletedAssets');
 $router->post('/addAsset', 'AssetInventoryController@addAsset');
 $router->put('/updateAsset', 'AssetInventoryController@updateAsset');
