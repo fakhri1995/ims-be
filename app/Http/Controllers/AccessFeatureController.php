@@ -356,7 +356,7 @@ class AccessFeatureController extends Controller
             $access_feature->name = $name;
             $access_feature->description = $description;
             $access_feature->save();
-            return response()->json(["success" => true, "message" => "Berhasil Menambahkan Fitur"]);
+            return response()->json(["success" => true, "message" => "Berhasil Menambahkan Fitur", "created_data" => ["id" => $access_feature->id, "feature_id" => $feature_id] ]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
@@ -459,8 +459,8 @@ class AccessFeatureController extends Controller
     public function addModule(Request $request)
     {
         $header = $request->header("Authorization");
-        $check = $this->checkRoute("MODULE_ADD", $header);
-        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        // $check = $this->checkRoute("MODULE_ADD", $header);
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
 
         // MODULE_ADD
         $body_group = [
@@ -485,7 +485,6 @@ class AccessFeatureController extends Controller
                 'headers'  => $headers,
                 'json' => $body_feature
             ]);
-            // return response(json_decode((string) $response_feature->getBody(), true));
             $response_feature = json_decode((string) $response_feature->getBody(), true);
             if(array_key_exists('error', $response_feature)) {
                 return response()->json(["success" => false, "message" => (object)[
@@ -496,8 +495,14 @@ class AccessFeatureController extends Controller
                         "status_detail" => $response_feature['error']['detail']
                     ]
                 ]], 400);
+            } else {
+                $module_code = str_split($response_feature['data']['message'], 44)[1];
+                $detail_group_response = $this->client->request('GET', '/admin/v1/group-feature?key='.$module_code, [
+                    'headers'  => $headers
+                ]);
+                $detail = json_decode((string) $detail_group_response->getBody(), true)['data']['group_features'][0];
+                return response()->json(["success" => true, "message" => "Module Berhasil Ditambah", "created_data" => ["id" => $detail['id'], "key" => $detail["key"]]]);
             }
-            else return response()->json(["success" => true, "message" => $response_feature['data']['message']]);
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());

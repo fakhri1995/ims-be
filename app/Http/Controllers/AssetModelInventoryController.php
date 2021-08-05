@@ -6,9 +6,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
+use App\AccessFeature;
 use App\Asset;
 use App\AssetColumn;
 use App\AssetRelatedPivot;
+use App\ModelInventory;
+use App\ModelInventoryColumn;
+use App\ModelInventoryValue;
+use App\ModelModelPivot;
 use App\Inventory;
 use App\InventoryValue;
 use App\InventoryColumn;
@@ -16,7 +21,7 @@ use App\Vendor;
 use DB;
 use Exception;
 
-class AssetInventoryController extends Controller
+class AssetModelInventoryController extends Controller
 {
     /**
      * Create a new controller instance.
@@ -27,6 +32,47 @@ class AssetInventoryController extends Controller
     public function __construct()
     {
         $this->client = new Client(['base_uri' => 'https://go.cgx.co.id/']);
+    }
+
+    public function checkRoute($name, $auth)
+    {
+        $protocol = $name;
+        $access_feature = AccessFeature::where('name',$protocol)->first();
+        if($access_feature === null) {
+            return ["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => 400,
+                    "reason" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin",
+                    "server_code" => 400,
+                    "status_detail" => "Fitur Masih Belum Terdaftar, Silahkan Hubungi Admin"
+                ]
+            ]];
+        }
+        $body = [
+            'path_url' => $access_feature->feature_key
+        ];
+        $headers = [
+            'Authorization' => $auth,
+            'content-type' => 'application/json'
+        ];
+        try{
+            $response = $this->client->request('POST', '/auth/v1/validate-feature', [
+                    'headers'  => $headers,
+                    'json' => $body
+            ]);
+            return ["success" => true];
+        }catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return ["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]];
+        }
     }
 
 
@@ -296,6 +342,7 @@ class AssetInventoryController extends Controller
         }
         $id = $request->get('id', null);
         $new_parent = $request->get('new_parent', null);
+        $new_model_asset_id = $request->get('new_model_asset_id', null);
         if($new_parent !== null){
             $check_format_code = explode(".", $new_parent);
             foreach($check_format_code as $checker){
@@ -339,6 +386,17 @@ class AssetInventoryController extends Controller
                     }
                 }
             }
+            $models = ModelInventory::where('asset_id', $id)->get();
+            if($new_model_asset_id === null){
+                foreach($models as $model){
+                    $model->delete();
+                }
+            } else {
+                foreach($models as $model){
+                    $model->asset_id = $new_model_asset_id;
+                    $model->save();
+                }
+            }
             $core_asset->delete();
 
             $asset_columns = AssetColumn::where('asset_id', $id)->get();
@@ -379,6 +437,198 @@ class AssetInventoryController extends Controller
             return response()->json(["success" => false, "message" => $err], 400);
         }
     }
+
+
+    // Model
+    public function getChildModel($model_part, $models, $pivots, $model_columns){
+        $search = array_search($model_part['child_id'], array_column($models, 'id'));
+        $model = $models[$search];
+        $model_part['name'] = $model['name'];
+        $model_child = [];
+        foreach($pivots as $pivot){
+            if($pivot['parent_id'] === $model_part['child_id']){
+                $model_child[] = $this->getChildModel($pivot, $models, $pivots, $model_columns);
+            }
+        }
+        $temp_model_columns = [];
+        foreach($model_columns as $model_column){
+            if($model_column['model_id'] === $model_part['child_id']){
+                $temp_model_columns[] = $model_column;
+            }
+        }
+        $model_part['model_column'] = $temp_model_columns;
+        $model_part['model_child'] = $model_child;
+        return $model_part;
+    }
+
+    public function getModels(Request $request)
+    {
+        // $check = $this->checkRoute("MODELS_GET", $request->header("Authorization"));
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        $models = ModelInventory::get();
+        if($models->isEmpty()) return response()->json(["success" => true, "message" => "Model Belum Terisi", "data" => []]);
+        return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $models]);
+    }
+
+    public function getModel(Request $request)
+    {
+        // $check = $this->checkRoute("MODEL_GET", $request->header("Authorization"));
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        try{
+            $id = $request->get('id');
+            $model = ModelInventory::find($id);
+            if($model === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
+            $asset = Asset::find($model->asset_id);
+            if($asset === null) {
+                $model->asset_name = "Asset Tidak Ditemukan";
+            } else {
+                $model->asset_name = $asset->name;
+            }
+            $asset_columns = AssetColumn::where('asset_id', $model->asset_id)->get();
+            $model->asset_columns = $asset_columns;
+            $model_parts = ModelModelPivot::where('parent_id', $id)->get();
+            $models = ModelInventory::get()->toArray();
+            $model_columns = ModelInventoryColumn::get();
+            $model->model_columns = $model_columns->where('model_id', $id);
+            $model_columns = $model_columns->toArray();
+            $pivots = ModelModelPivot::get()->toArray();
+            foreach($model_parts as $model_part){
+                $full_model_parts[] = $this->getChildModel($model_part, $models, $pivots, $model_columns); 
+            }
+            $model->model_parts = $full_model_parts; 
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $model]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+        
+    }
+
+    public function addModel(Request $request)
+    {
+        // $check = $this->checkRoute("MODEL_ADD", $request->header("Authorization"));
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        $model = new ModelInventory;
+        $model->asset_id = $request->get('asset_id');
+        $model->name = $request->get('name');
+        $model->description = $request->get('description');
+        $model->manufacturer = $request->get('manufacturer');
+        try{
+            $model->save();
+            $model_columns = $request->get('model_columns', []);
+            if(count($model_columns)) {
+                foreach($model_columns as $model_column){
+                    $new_model_column = new ModelInventoryColumn;
+                    $new_model_column->model_id = $model->id;
+                    $new_model_column->name = $model_column['name'];
+                    $new_model_column->data_type = $model_column['data_type'];
+                    $new_model_column->default = $model_column['default'];
+                    $new_model_column->required = $model_column['required'];
+                    $new_model_column->save();
+                }
+            }
+            $model_parts = $request->get('model_parts', []);
+            if(count($model_parts)){
+                foreach($model_parts as $model_part){
+                    $new_model_part = new ModelModelPivot;
+                    $new_model_part->parent_id = $model->id;
+                    $new_model_part->child_id = $model_part['id'];
+                    $new_model_part->quantity = $model_part['quantity'];
+                    $new_model_part->save();
+                }
+            }
+            return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
+
+    public function updateModel(Request $request)
+    {
+        // $check = $this->checkRoute("MODEL_UPDATE", $request->header("Authorization"));
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        $id = $request->get('id');
+        $model = ModelInventory::find($id);
+        if($model === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
+        $model->asset_id = $request->get('asset_id');
+        $model->name = $request->get('name');
+        $model->description = $request->get('description');
+        $model->manufacturer = $request->get('manufacturer');
+        try{
+            $delete_column_ids = $request->get('delete_column_ids', []);
+            $model_columns = ModelInventoryColumn::where('model_id', $id)->get();
+            if(count($delete_column_ids)){
+                foreach($delete_column_ids as $delete_column_id){
+                    $deleted_model_column = $model_columns->where('id', $delete_column_id)->first();
+                    if($deleted_model_column !== null)$deleted_model_column->delete();
+                }
+            }
+            $add_columns = $request->get('add_columns', []);
+            if(count($add_columns)) {
+                foreach($add_columns as $model_column){
+                    $new_model_column = new ModelInventoryColumn;
+                    $new_model_column->model_id = $model->id;
+                    $new_model_column->name = $model_column['name'];
+                    $new_model_column->data_type = $model_column['data_type'];
+                    $new_model_column->default = $model_column['default'];
+                    $new_model_column->required = $model_column['required'];
+                    $new_model_column->save();
+                }
+            }
+            
+            $delete_model_ids = $request->get('delete_model_ids', []);
+            $model_pivots = ModelModelPivot::where('parent_id', $id)->get();
+            if(count($delete_model_ids)){
+                foreach($delete_model_ids as $delete_model_id){
+                    $deleted_model = $model_pivots->where('child_id', $delete_model_id)->first();
+                    if($deleted_model !== null) $deleted_model->delete();
+                }
+            }
+            
+            $add_models = $request->get('add_models', []);
+            if(count($add_models)) {
+                foreach($add_models as $model_column){
+                    $new_model = new ModelModelPivot;
+                    $new_model->parent_id = $id;
+                    $new_model->child_id = $model_column['id'];
+                    $new_model->quantity = $model_column['quantity'];
+                    $new_model->save();
+                }
+            }
+            $model->save();
+            return response()->json(["success" => true, "message" => "Data Berhasil Diubah"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
+
+    public function deleteModel(Request $request)
+    {
+        // $check = $this->checkRoute("MODEL_DELETE", $request->header("Authorization"));
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        $id = $request->get('id');
+        $model = ModelInventory::find($id);
+        if($model === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
+        try{
+            $columns = ModelInventoryColumn::where('model_id', $id)->get();
+            foreach($columns as $column){
+                $column->delete();
+            }
+            $pivots = ModelModelPivot::where('parent_id', $id)->get();
+            foreach($pivots as $pivot){
+                $pivot->delete();
+            }
+            $pivots = ModelModelPivot::where('child_id', $id)->get();
+            foreach($pivots as $pivot){
+                $pivot->child_id = 0;
+                $pivot->save();
+            }
+            $model->delete();
+            return response()->json(["success" => true, "message" => "Data Berhasil dihapus"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
+
 
     // // Child type column responses
     // public function getDataInventoryColumnTurunan($parent_id){
