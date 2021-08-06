@@ -487,14 +487,18 @@ class AssetModelInventoryController extends Controller
             $asset_columns = AssetColumn::where('asset_id', $model->asset_id)->get();
             $model->asset_columns = $asset_columns;
             $model_parts = ModelModelPivot::where('parent_id', $id)->get();
-            $models = ModelInventory::get()->toArray();
             $model_columns = ModelInventoryColumn::get();
             $model->model_columns = $model_columns->where('model_id', $id);
-            $model_columns = $model_columns->toArray();
-            $pivots = ModelModelPivot::get()->toArray();
-            foreach($model_parts as $model_part){
-                $full_model_parts[] = $this->getChildModel($model_part, $models, $pivots, $model_columns); 
+            $full_model_parts = [];
+            if(count($model_parts)){
+                $model_columns = $model_columns->toArray();
+                $models = ModelInventory::get()->toArray();
+                $pivots = ModelModelPivot::get()->toArray();
+                foreach($model_parts as $model_part){
+                    $full_model_parts[] = $this->getChildModel($model_part, $models, $pivots, $model_columns); 
+                }
             }
+            
             $model->model_parts = $full_model_parts; 
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $model]);
         } catch(Exception $err){
@@ -507,9 +511,12 @@ class AssetModelInventoryController extends Controller
     {
         // $check = $this->checkRoute("MODEL_ADD", $request->header("Authorization"));
         // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        $name = $request->get('name');
+        $check_name = ModelInventory::where('name', $name)->first();
+        if($check_name !== null) return response()->json(["success" => false, "message" => "Nama Model Telah Terdaftar"]);
         $model = new ModelInventory;
         $model->asset_id = $request->get('asset_id');
-        $model->name = $request->get('name');
+        $model->name = $name;
         $model->description = $request->get('description');
         $model->manufacturer = $request->get('manufacturer');
         try{
