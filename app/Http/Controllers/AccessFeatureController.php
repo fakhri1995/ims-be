@@ -459,8 +459,8 @@ class AccessFeatureController extends Controller
     public function addModule(Request $request)
     {
         $header = $request->header("Authorization");
-        // $check = $this->checkRoute("MODULE_ADD", $header);
-        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        $check = $this->checkRoute("MODULE_ADD", $header);
+        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
 
         // MODULE_ADD
         $body_group = [
@@ -661,8 +661,10 @@ class AccessFeatureController extends Controller
                 $detail_group_response = json_decode((string) $detail_group_response->getBody(), true)['data']['group_features'][0]['feature'];
                 
                 $list_feature_id = [];
-                foreach($detail_group_response as $feature){
-                    $list_feature_id[] = $feature['id'];
+                if($detail_group_response !== null){
+                    foreach($detail_group_response as $feature){
+                        $list_feature_id[] = $feature['id'];
+                    }
                 }
                 $merged_array = array_merge($request->get('feature_ids'), $list_feature_id);
                 $list_unique_feature_id = array_unique($merged_array);
@@ -743,8 +745,10 @@ class AccessFeatureController extends Controller
                 $detail_group_response = json_decode((string) $detail_group_response->getBody(), true)['data']['group_features'][0]['feature'];
                 
                 $list_feature_id = [];
-                foreach($detail_group_response as $feature){
-                    $list_feature_id[] = $feature['id'];
+                if($detail_group_response !== null){
+                    foreach($detail_group_response as $feature){
+                        $list_feature_id[] = $feature['id'];
+                    }
                 }
                 
                 $different_features = array_diff($list_feature_id, $request->get('feature_ids'));
