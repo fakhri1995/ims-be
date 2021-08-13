@@ -420,8 +420,8 @@ class AccessFeatureController extends Controller
     public function getModules(Request $request)
     {
         $header = $request->header("Authorization");
-        $check = $this->checkRoute("MODULES_GET", $header);
-        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        // $check = $this->checkRoute("MODULES_GET", $header);
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         
         // MODULES_GET
         $headers = [
@@ -459,8 +459,8 @@ class AccessFeatureController extends Controller
     public function addModule(Request $request)
     {
         $header = $request->header("Authorization");
-        $check = $this->checkRoute("MODULE_ADD", $header);
-        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        // $check = $this->checkRoute("MODULE_ADD", $header);
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
 
         // MODULE_ADD
         $body_group = [
@@ -520,8 +520,8 @@ class AccessFeatureController extends Controller
     public function deleteModule(Request $request)
     {
         $header = $request->header("Authorization");
-        $check = $this->checkRoute("MODULE_DELETE", $header);
-        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        // $check = $this->checkRoute("MODULE_DELETE", $header);
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
 
         // MODULE_DELETE
         $id = $request->get('id');
@@ -573,8 +573,8 @@ class AccessFeatureController extends Controller
     public function updateModuleFeature(Request $request)
     {
         $header = $request->header("Authorization");
-        $check = $this->checkRoute("MODULE_UPDATE", $header);
-        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        // $check = $this->checkRoute("MODULE_UPDATE", $header);
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
 
         // MODULE_UPDATE
         $id = $request->get('id');
@@ -638,8 +638,8 @@ class AccessFeatureController extends Controller
     public function addModuleFeature(Request $request)
     {
         $header = $request->header("Authorization");
-        $check = $this->checkRoute("MODULE_ADD", $header);
-        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        // $check = $this->checkRoute("MODULE_ADD", $header);
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
 
         // MODULE_ADD
         $id = $request->get('id');
@@ -722,8 +722,8 @@ class AccessFeatureController extends Controller
     public function deleteModuleFeature(Request $request)
     {
         $header = $request->header("Authorization");
-        $check = $this->checkRoute("MODULE_DELETE", $header);
-        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        // $check = $this->checkRoute("MODULE_DELETE", $header);
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
 
         // MODULE_DELETE
         $id = $request->get('id');
