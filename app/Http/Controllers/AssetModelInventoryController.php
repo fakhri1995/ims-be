@@ -17,6 +17,7 @@ use App\ModelModelPivot;
 use App\Inventory;
 use App\InventoryValue;
 use App\InventoryColumn;
+use App\Manufacturer;
 use App\Vendor;
 use DB;
 use Exception;
@@ -442,23 +443,28 @@ class AssetModelInventoryController extends Controller
     // Model
     public function getChildModel($model_part, $models, $pivots, $model_columns){
         $search = array_search($model_part['child_id'], array_column($models, 'id'));
-        $model = $models[$search];
-        $model_part['name'] = $model['name'];
-        $model_child = [];
-        foreach($pivots as $pivot){
-            if($pivot['parent_id'] === $model_part['child_id']){
-                $model_child[] = $this->getChildModel($pivot, $models, $pivots, $model_columns);
+        if($search !== false){
+            $model = $models[$search];
+            $model_part['name'] = $model['name'];
+            $model_child = [];
+            foreach($pivots as $pivot){
+                if($pivot['parent_id'] === $model_part['child_id']){
+                    $model_child[] = $this->getChildModel($pivot, $models, $pivots, $model_columns);
+                }
             }
-        }
-        $temp_model_columns = [];
-        foreach($model_columns as $model_column){
-            if($model_column['model_id'] === $model_part['child_id']){
-                $temp_model_columns[] = $model_column;
+            $temp_model_columns = [];
+            foreach($model_columns as $model_column){
+                if($model_column['model_id'] === $model_part['child_id']){
+                    $temp_model_columns[] = $model_column;
+                }
             }
+            $model_part['model_column'] = $temp_model_columns;
+            $model_part['model_child'] = $model_child;
+            return $model_part;
+        } else {
+            $template = ['id' => 0, "parent_id" => $model_part['parent_id'], "child_id" => $model_part['child_id'], "quantity" => 0, "deleted_at" => null, "name" => "DATA TIDAK DITEMUKAN", "model_column" => [], "model_child" => []];
+            return $template;   
         }
-        $model_part['model_column'] = $temp_model_columns;
-        $model_part['model_child'] = $model_child;
-        return $model_part;
     }
 
     public function getModels(Request $request)
@@ -478,13 +484,20 @@ class AssetModelInventoryController extends Controller
             $id = $request->get('id');
             $model = ModelInventory::find($id);
             if($model === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
-            $asset = Asset::find($model->asset_id);
+            $asset = Asset::withTrashed()->find($model->asset_id);
             if($asset === null) {
-                $model->asset_name = "Asset Tidak Ditemukan";
+                $model->asset = [
+                    "id" => $model->asset_id,
+                    "name" => "Data Tidak Ditemukan",
+                    "code" => "Data Tidak Ditemukan",
+                    "description" => "Data Tidak Ditemukan",
+                    "deleted_at" => null
+                ];
             } else {
-                $model->asset_name = $asset->name;
+                $model->asset = $asset;
             }
             $asset_columns = AssetColumn::where('asset_id', $model->asset_id)->get();
+            $model->manufacturer = Manufacturer::withTrashed()->find($model->manufacturer_id);
             $model->asset_columns = $asset_columns;
             $model_parts = ModelModelPivot::where('parent_id', $id)->get();
             $model_columns = ModelInventoryColumn::get();
@@ -518,7 +531,7 @@ class AssetModelInventoryController extends Controller
         $model->asset_id = $request->get('asset_id');
         $model->name = $name;
         $model->description = $request->get('description');
-        $model->manufacturer = $request->get('manufacturer');
+        $model->manufacturer_id = $request->get('manufacturer_id');
         try{
             $model->save();
             $model_columns = $request->get('model_columns', []);
@@ -559,7 +572,7 @@ class AssetModelInventoryController extends Controller
         $model->asset_id = $request->get('asset_id');
         $model->name = $request->get('name');
         $model->description = $request->get('description');
-        $model->manufacturer = $request->get('manufacturer');
+        $model->manufacturer_id = $request->get('manufacturer_id');
         try{
             $delete_column_ids = $request->get('delete_column_ids', []);
             $model_columns = ModelInventoryColumn::where('model_id', $id)->get();
@@ -1481,6 +1494,68 @@ class AssetModelInventoryController extends Controller
                 $inventory_value->delete();
             }
             return response()->json(["success" => true, "message" => "Data Berhasil Dihapus"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
+
+    // Manufacturer
+
+    public function getManufacturers(Request $request)
+    {
+        // $check = $this->checkRoute("MANUFACTURERS_GET", $request->header("Authorization"));
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        try{
+            $manufacturers = Manufacturer::get();
+            // $manufacturers = Manufacturer::withTrashed()->get();
+            // $manufacturers = Manufacturer::withTrashed()->find(2);
+            if($manufacturers->isEmpty()) return response()->json(["success" => false, "message" => "Manufacturer Belum dibuat"]);
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $manufacturers]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
+
+    public function addManufacturer(Request $request)
+    {
+        // $check = $this->checkRoute("MANUFACTURER_ADD", $request->header("Authorization"));
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        $manufacturer = new Manufacturer;
+        $manufacturer->name = $request->get('name');
+        try{
+            $manufacturer->save();
+            return response()->json(["success" => true, "message" => "Manufacturer berhasil dibuat"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
+
+    public function updateManufacturer(Request $request)
+    {
+        // $check = $this->checkRoute("MANUFACTURER_UPDATE", $request->header("Authorization"));
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        $id = $request->get('id', null);
+        $manufacturer = Manufacturer::find($id);
+        if($manufacturer === null) return response()->json(["success" => false, "message" => "Id Tidak Ditemukan"]);
+        $manufacturer->name = $request->get('name');
+        try{
+            $manufacturer->save();
+            return response()->json(["success" => true, "message" => "Manufacturer berhasil diubah"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
+
+    public function deleteManufacturer(Request $request)
+    {
+        // $check = $this->checkRoute("MANUFACTURER_DELETE", $request->header("Authorization"));
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        $id = $request->get('id', null);
+        $manufacturer = Manufacturer::find($id);
+        if($manufacturer === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
+        try{
+            $manufacturer->delete();
+            return response()->json(["success" => true, "message" => "Manufacturer berhasil dihapus"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }

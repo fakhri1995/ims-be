@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateModelInventoriesTable extends Migration
+class CreateManufacturersTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,9 @@ class CreateModelInventoriesTable extends Migration
      */
     public function up()
     {
-        Schema::create('model_inventories', function (Blueprint $table) {
+        Schema::create('manufacturers', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('asset_id');
             $table->string('name');
-            $table->string('description');
-            $table->integer('manufacturer_id');
             $table->softDeletes();
         });
     }
@@ -30,6 +27,6 @@ class CreateModelInventoriesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('model_inventories');
+        Schema::dropIfExists('manufacturers');
     }
 }

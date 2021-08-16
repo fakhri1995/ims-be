@@ -204,6 +204,12 @@ $router->post('/addInventory', 'AssetModelInventoryController@addInventory');
 $router->put('/updateInventory', 'AssetModelInventoryController@updateInventory');
 $router->delete('/deleteInventory', 'AssetModelInventoryController@deleteInventory');
 
+//Manufacturer Routes
+$router->get('/getManufacturers', 'AssetModelInventoryController@getManufacturers');
+$router->post('/addManufacturer', 'AssetModelInventoryController@addManufacturer');
+$router->put('/updateManufacturer', 'AssetModelInventoryController@updateManufacturer');
+$router->delete('/deleteManufacturer', 'AssetModelInventoryController@deleteManufacturer');
+
 //Vendor Routes
 $router->get('/getVendors', 'VendorController@getVendors');
 $router->post('/addVendor', 'VendorController@addVendor');
