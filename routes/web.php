@@ -178,29 +178,31 @@ $router->delete('/deleteAsset', 'AssetModelInventoryController@deleteAsset');
 //Model Routes
 $router->get('/getModels', 'AssetModelInventoryController@getModels');
 $router->get('/getModel', 'AssetModelInventoryController@getModel');
+$router->get('/getModelRelations', 'AssetModelInventoryController@getModelRelations');
 $router->post('/addModel', 'AssetModelInventoryController@addModel');
 $router->put('/updateModel', 'AssetModelInventoryController@updateModel');
 $router->delete('/deleteModel', 'AssetModelInventoryController@deleteModel');
 
 //Inventory Column Routes
-$router->get('/getInventoryColumns', 'AssetModelInventoryController@getInventoryColumns');
-$router->get('/getDeletedInventoryColumns', 'AssetModelInventoryController@getDeletedInventoryColumns');
-$router->post('/cudInventoryColumn', 'AssetModelInventoryController@cudInventoryColumn');
-$router->post('/addInventoryColumn', 'AssetModelInventoryController@addInventoryColumn');
-$router->put('/updateInventoryColumn', 'AssetModelInventoryController@updateInventoryColumn');
-$router->delete('/deleteInventoryColumn', 'AssetModelInventoryController@deleteInventoryColumn');
+// $router->get('/getInventoryColumns', 'AssetModelInventoryController@getInventoryColumns');
+// $router->get('/getDeletedInventoryColumns', 'AssetModelInventoryController@getDeletedInventoryColumns');
+// $router->post('/cudInventoryColumn', 'AssetModelInventoryController@cudInventoryColumn');
+// $router->post('/addInventoryColumn', 'AssetModelInventoryController@addInventoryColumn');
+// $router->put('/updateInventoryColumn', 'AssetModelInventoryController@updateInventoryColumn');
+// $router->delete('/deleteInventoryColumn', 'AssetModelInventoryController@deleteInventoryColumn');
 
 //Inventory Value Routes
-$router->get('/getInventoryValues', 'AssetModelInventoryController@getInventoryValues');
-$router->post('/addInventoryValue', 'AssetModelInventoryController@addInventoryValue');
-$router->put('/updateInventoryValue', 'AssetModelInventoryController@updateInventoryValue');
-$router->delete('/deleteInventoryValue', 'AssetModelInventoryController@deleteInventoryValue');
+// $router->get('/getInventoryValues', 'AssetModelInventoryController@getInventoryValues');
+// $router->post('/addInventoryValue', 'AssetModelInventoryController@addInventoryValue');
+// $router->put('/updateInventoryValue', 'AssetModelInventoryController@updateInventoryValue');
+// $router->delete('/deleteInventoryValue', 'AssetModelInventoryController@deleteInventoryValue');
 
 //Inventory Routes
-$router->get('/getAllInventories', 'AssetModelInventoryController@getAllInventories');
-$router->get('/getAssetInventories', 'AssetModelInventoryController@getAssetInventories');
+$router->get('/getInventories', 'AssetModelInventoryController@getInventories');
 $router->get('/getInventory', 'AssetModelInventoryController@getInventory');
+$router->get('/getInventoryRelations', 'AssetModelInventoryController@getInventoryRelations');
 $router->post('/addInventory', 'AssetModelInventoryController@addInventory');
+$router->post('/addInventoryStock', 'AssetModelInventoryController@addInventoryStock');
 $router->post('/addInventoryPart', 'AssetModelInventoryController@addInventoryPart');
 $router->put('/updateInventory', 'AssetModelInventoryController@updateInventory');
 $router->put('/updateInventoryParts', 'AssetModelInventoryController@updateInventoryParts');
