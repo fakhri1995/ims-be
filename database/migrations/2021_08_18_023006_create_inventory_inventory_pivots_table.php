@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateInventoryValuesTable extends Migration
+class CreateInventoryInventoryPivotsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,10 @@ class CreateInventoryValuesTable extends Migration
      */
     public function up()
     {
-        Schema::create('inventory_values', function (Blueprint $table) {
+        Schema::create('inventory_inventory_pivots', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('inventory_id');
-            $table->unsignedBigInteger('model_inventory_column_id');
-            $table->string('value');
+            $table->unsignedBigInteger('parent_id');
+            $table->unsignedBigInteger('child_id');
             $table->softDeletes();
         });
     }
@@ -29,6 +28,6 @@ class CreateInventoryValuesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('inventory_values');
+        Schema::dropIfExists('inventory_inventory_pivots');
     }
 }

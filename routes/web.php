@@ -201,7 +201,10 @@ $router->get('/getAllInventories', 'AssetModelInventoryController@getAllInventor
 $router->get('/getAssetInventories', 'AssetModelInventoryController@getAssetInventories');
 $router->get('/getInventory', 'AssetModelInventoryController@getInventory');
 $router->post('/addInventory', 'AssetModelInventoryController@addInventory');
+$router->post('/addInventoryPart', 'AssetModelInventoryController@addInventoryPart');
 $router->put('/updateInventory', 'AssetModelInventoryController@updateInventory');
+$router->put('/updateInventoryParts', 'AssetModelInventoryController@updateInventoryParts');
+$router->delete('/removeInventoryPart', 'AssetModelInventoryController@removeInventoryPart');
 $router->delete('/deleteInventory', 'AssetModelInventoryController@deleteInventory');
 
 //Manufacturer Routes

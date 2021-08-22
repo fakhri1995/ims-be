@@ -19,6 +19,7 @@ class CreateModelInventoriesTable extends Migration
             $table->string('name');
             $table->string('description');
             $table->integer('manufacturer_id');
+            $table->boolean('required_sn');
             $table->softDeletes();
         });
     }
