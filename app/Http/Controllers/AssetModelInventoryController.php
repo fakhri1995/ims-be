@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
+use App\Activity;
 use App\AccessFeature;
 use App\Asset;
 use App\AssetColumn;
@@ -541,7 +542,12 @@ class AssetModelInventoryController extends Controller
             $model->asset_columns = $asset_columns;
             $model_parts = ModelModelPivot::where('parent_id', $id)->get();
             $model_columns = ModelInventoryColumn::get();
-            $model->model_columns = $model_columns->where('model_id', $id);
+            $core_model_columns = [];
+            $temp_model_columns = $model_columns->where('model_id', $id);
+            foreach($temp_model_columns as $temp_model_column){
+                $core_model_columns[] = $temp_model_column;
+            }
+            $model->model_columns = $core_model_columns;
             $full_model_parts = [];
             if(count($model_parts)){
                 $model_columns = $model_columns->toArray();
@@ -1259,7 +1265,7 @@ class AssetModelInventoryController extends Controller
     // }
 
     // Inventory
-    public function saveInventoryChild($inventory, $location, $parent_id){
+    public function saveInventoryChild($inventory, $location, $parent_id, $causer_id){
         $new_inventory = new Inventory;
         $new_inventory->model_id = $inventory['model_id'];
         $new_inventory->vendor_id = 0;
@@ -1276,13 +1282,14 @@ class AssetModelInventoryController extends Controller
         $inventory_parts = $inventory['inventory_parts'];
         try{
             $new_inventory->save();
-            // $last_activity = Activity::all()->last();
-            // $last_activity->causer_id = $log_user_id;
-            // $last_activity->save();
+            $last_activity = Activity::all()->last();
+            $last_activity->causer_id = $causer_id;
+            $last_activity->save();
             $pivot = new InventoryInventoryPivot;
             $pivot->parent_id = $parent_id;
             $pivot->child_id = $new_inventory->id;
             $pivot->save();
+
             if(count($inventory_values)){
                 foreach($inventory_values as $inventory_value){
                     $model = new InventoryValue;
@@ -1290,11 +1297,14 @@ class AssetModelInventoryController extends Controller
                     $model->model_inventory_column_id = $inventory_value['model_inventory_column_id'];
                     $model->value = $inventory_value['value'];
                     $model->save();
+                    $last_activity = Activity::all()->last();
+                    $last_activity->causer_id = $causer_id;
+                    $last_activity->save();
                 }
             } 
             if(count($inventory_parts)){
                 foreach($inventory_parts as $inventory_part){
-                    $this->saveInventoryChild($inventory_part, $location, $new_inventory->id);
+                    $this->saveInventoryChild($inventory_part, $location, $new_inventory->id, $causer_id);
                 }
             }
         } catch(Exception $err){
@@ -1516,25 +1526,11 @@ class AssetModelInventoryController extends Controller
 
     public function addInventory(Request $request)
     {
-        $headers = ['Authorization' => $request->header("Authorization")];
-        try{
-            $response = $this->client->request('GET', '/auth/v1/get-profile', [
-                    'headers'  => $headers
-                ]);
-            $response = json_decode((string) $response->getBody(), true);
-            $log_user_id = $response['data']['user_id'];
-        }catch(ClientException $err){
-            $error_response = $err->getResponse();
-            $detail = json_decode($error_response->getBody());
-            return response()->json(["success" => false, "message" => (object)[
-                "errorInfo" => [
-                    "status" => $error_response->getStatusCode(),
-                    "reason" => $error_response->getReasonPhrase(),
-                    "server_code" => json_decode($error_response->getBody())->error->code,
-                    "status_detail" => json_decode($error_response->getBody())->error->detail
-                ]
-            ]], $error_response->getStatusCode());
-        }
+        $header = $request->header("Authorization");
+        $check = $this->checkRoute("CONTRACTS_GET", $header);
+        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        // return $check['id'];
+        
         $mig_id = $request->get('mig_id');
         $check_inventory = Inventory::where('mig_id', $mig_id)->first();
         if($check_inventory) return response()->json(["success" => false, "message" => "MIG ID Sudah Terdaftar"], 400);
@@ -1554,9 +1550,9 @@ class AssetModelInventoryController extends Controller
         $inventory_parts = $request->get('inventory_parts',[]);
         try{
             $inventory->save();
-            // $last_activity = Activity::all()->last();
-            // $last_activity->causer_id = $log_user_id;
-            // $last_activity->save();
+            $last_activity = Activity::all()->last();
+            $last_activity->causer_id = $check['id'];
+            $last_activity->save();
 
             foreach($inventory_values as $inventory_value){
                 $model = new InventoryValue;
@@ -1564,10 +1560,14 @@ class AssetModelInventoryController extends Controller
                 $model->model_inventory_column_id = $inventory_value['model_inventory_column_id'];
                 $model->value = $inventory_value['value'];
                 $model->save();
+                $last_activity = Activity::all()->last();
+                $last_activity->causer_id = $check['id'];
+                $last_activity->save();
+                
             }
             if(count($inventory_parts)){
                 foreach($inventory_parts as $inventory_part){
-                    $this->saveInventoryChild($inventory_part, $inventory->location, $inventory->id);
+                    $this->saveInventoryChild($inventory_part, $inventory->location, $inventory->id, $check['id']);
                 }
             }
             return response()->json(["success" => true, "message" => "Inventory Berhasil Ditambah"]);
