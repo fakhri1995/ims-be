@@ -10,7 +10,7 @@ class InventoryValue extends Model
 {
     use SoftDeletes, LogsActivity;
 
-    protected static $logAttributes = ['inventory_id', 'inventory_column_id', 'value'];
+    protected static $logAttributes = ['inventory_id', 'model_inventory_column_id', 'value'];
     protected static $logName = "Inventory Value";
 
     public $timestamps = false;

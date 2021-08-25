@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
-use App\Activity;
+use Spatie\Activitylog\Models\Activity;
 use App\AccessFeature;
 use App\Asset;
 use App\AssetColumn;
@@ -572,9 +572,20 @@ class AssetModelInventoryController extends Controller
         if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         // return $check['id'];
         try{
-            $assets = Asset::select('id', 'name')->get();
+            $assets = Asset::where('code', 'not like', "%.%")->orderBy('code')->get();
+            $new_assets = [];
+            foreach($assets as $asset){
+                $temp = (object)[
+                    'id' => $asset->id,
+                    'title' => $asset->name,
+                    'key' => $asset->code,
+                    'value' => $asset->code,
+                    'children' => $this->getData($asset->code)
+                ];
+                $new_assets[] = $temp;
+            }
             $manufacturers = Manufacturer::select('id', 'name')->get();
-            $data = (object)['assets' => $assets, 'manufacturers' => $manufacturers];
+            $data = (object)['assets' => $new_assets, 'manufacturers' => $manufacturers];
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $data]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
@@ -1289,6 +1300,9 @@ class AssetModelInventoryController extends Controller
             $pivot->parent_id = $parent_id;
             $pivot->child_id = $new_inventory->id;
             $pivot->save();
+            $last_activity = Activity::all()->last();
+            $last_activity->causer_id = $causer_id;
+            $last_activity->save();
 
             if(count($inventory_values)){
                 foreach($inventory_values as $inventory_value){
@@ -1356,6 +1370,7 @@ class AssetModelInventoryController extends Controller
                 }
             }
             $data = [
+                'id' => $inventory['id'],
                 'serial_number' => $inventory['serial_number'],
                 'model' => $temp_model['name'],
                 'asset' => $temp_asset['name'],
@@ -1363,6 +1378,7 @@ class AssetModelInventoryController extends Controller
             ];
         } else {
             $data = [
+                'id' => 0,
                 'serial_number' => "Inventory Tidak Ditemukan",
                 'model' => "Inventory Tidak Ditemukan",
                 'asset' => "Inventory Tidak Ditemukan",
@@ -1379,8 +1395,8 @@ class AssetModelInventoryController extends Controller
         // return $check['id'];
         try{
             $models = ModelInventory::select('id','name','asset_id')->get();
-            $assets = Asset::select('id', 'name')->get();
             $manufacturers = Manufacturer::select('id', 'name')->get();
+            $assets = Asset::select('id', 'name')->get();
             $status_condition = [
                 (object)['id' => 1, 'name' => "Green"],
                 (object)['id' => 2, 'name' => "Grey"],
@@ -1474,6 +1490,15 @@ class AssetModelInventoryController extends Controller
         try{
             $inventory = Inventory::find($id);
             if($inventory === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
+            $model = ModelInventory::find($inventory->model_id);
+            if($model === null){
+                $inventory->model_name = "Model Tidak Ditemukan";
+                $inventory->asset_name = "Model Tidak Ditemukan";
+            } else {
+                $asset = Asset::find($model->asset_id);
+                $inventory->asset_name = "Asset Tidak Ditemukan";
+                $inventory->model_name = $model->name;
+            }
             $all_inventory_values = InventoryValue::get();
             $model_inventory_columns = ModelInventoryColumn::get();
             $temp_values = $all_inventory_values->where('inventory_id',$id);
@@ -1493,6 +1518,7 @@ class AssetModelInventoryController extends Controller
             $inventory_values = [];
             foreach($temp_values as $temp_value){
                 $model_inventory_column = $model_inventory_columns->where('id', $temp_value->model_inventory_column_id)->first();
+                // return [$model_inventory_column, $temp_value->model_inventory_column_id];
                 if($model_inventory_column === null){
                     $inventory->additional_attributes = "Inventory Column Name of an Inventory Value not Found";
                     return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventory]);
@@ -1578,25 +1604,10 @@ class AssetModelInventoryController extends Controller
 
     public function addInventoryStock(Request $request)
     {
-        $headers = ['Authorization' => $request->header("Authorization")];
-        try{
-            $response = $this->client->request('GET', '/auth/v1/get-profile', [
-                    'headers'  => $headers
-                ]);
-            $response = json_decode((string) $response->getBody(), true);
-            $log_user_id = $response['data']['user_id'];
-        }catch(ClientException $err){
-            $error_response = $err->getResponse();
-            $detail = json_decode($error_response->getBody());
-            return response()->json(["success" => false, "message" => (object)[
-                "errorInfo" => [
-                    "status" => $error_response->getStatusCode(),
-                    "reason" => $error_response->getReasonPhrase(),
-                    "server_code" => json_decode($error_response->getBody())->error->code,
-                    "status_detail" => json_decode($error_response->getBody())->error->detail
-                ]
-            ]], $error_response->getStatusCode());
-        }
+        $header = $request->header("Authorization");
+        $check = $this->checkRoute("CONTRACTS_GET", $header);
+        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        
         $mig_id = $request->get('mig_id');
         $check_inventory = Inventory::where('mig_id', $mig_id)->first();
         if($check_inventory) return response()->json(["success" => false, "message" => "MIG ID Sudah Terdaftar"], 400);
@@ -1615,15 +1626,18 @@ class AssetModelInventoryController extends Controller
         $inventory_values = $request->get('inventory_values',[]);
         try{
             $inventory->save();
-            // $last_activity = Activity::all()->last();
-            // $last_activity->causer_id = $log_user_id;
-            // $last_activity->save();
+            $last_activity = Activity::all()->last();
+            $last_activity->causer_id = $check['id'];
+            $last_activity->save();
             foreach($inventory_values as $inventory_value){
                 $model = new InventoryValue;
                 $model->inventory_id = $inventory->id;
                 $model->model_inventory_column_id = $inventory_value['model_inventory_column_id'];
                 $model->value = $inventory_value['value'];
                 $model->save();
+                $last_activity = Activity::all()->last();
+                $last_activity->causer_id = $check['id'];
+                $last_activity->save();
             }
             return response()->json(["success" => true, "message" => "Inventory Berhasil Ditambah"]);
         } catch(Exception $err){
@@ -1633,27 +1647,14 @@ class AssetModelInventoryController extends Controller
 
     public function updateInventory(Request $request)
     {
-        $headers = ['Authorization' => $request->header("Authorization")];
-        try{
-            $response = $this->client->request('GET', '/auth/v1/get-profile', [
-                    'headers'  => $headers
-                ]);
-            $response = json_decode((string) $response->getBody(), true);
-            $log_user_id = $response['data']['user_id'];
-        }catch(ClientException $err){
-            $error_response = $err->getResponse();
-            $detail = json_decode($error_response->getBody());
-            return response()->json(["success" => false, "message" => (object)[
-                "errorInfo" => [
-                    "status" => $error_response->getStatusCode(),
-                    "reason" => $error_response->getReasonPhrase(),
-                    "server_code" => json_decode($error_response->getBody())->error->code,
-                    "status_detail" => json_decode($error_response->getBody())->error->detail
-                ]
-            ]], $error_response->getStatusCode());
-        }
+        $header = $request->header("Authorization");
+        $check = $this->checkRoute("CONTRACTS_GET", $header);
+        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         
         $id = $request->get('id', null);
+        $mig_id = $request->get('mig_id');
+        $check_inventory = Inventory::where('mig_id', $mig_id)->first();
+        if($check_inventory && $check_inventory->id !== $id) return response()->json(["success" => false, "message" => "MIG ID Sudah Terdaftar"], 400);
         try{
             $inventory = Inventory::find($id);
             if($inventory === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
@@ -1665,9 +1666,14 @@ class AssetModelInventoryController extends Controller
             $inventory->is_exist = $request->get('is_exist');
             $inventory->deskripsi = $request->get('deskripsi');
             $inventory->manufacturer_id = $request->get('manufacturer_id');
-            $inventory->mig_id = $request->get('mig_id');
+            $inventory->mig_id = $mig_id;
             $inventory->serial_number = $request->get('serial_number');
             $inventory->save();
+            $last_activity = Activity::all()->last();
+            if($last_activity->subject_id === $id){
+                $last_activity->causer_id = $check['id'];
+                $last_activity->save();
+            }
             
             $new_inventory_values = $request->get('inventory_values',[]);
             $inventory_values = InventoryValue::get();
@@ -1681,6 +1687,13 @@ class AssetModelInventoryController extends Controller
                 $new_value = $inventory_values->where('id', $inventory_value['id'])->first();
                 $new_value->value = $inventory_value['value'];
                 $new_value->save();
+                $check_activity = Activity::all()->last();;
+                if (array_key_exists('inventory_id', $check_activity->properties['attributes'])) {
+                    if($check_activity->properties['attributes']['inventory_id'] === $id) {
+                        $check_activity->causer_id = $check['id'];
+                        $check_activity->save();
+                    }
+                }
             }
 
             return response()->json(["success" => true, "message" => "Inventory Berhasil Diubah"]);
@@ -1700,16 +1713,22 @@ class AssetModelInventoryController extends Controller
         return false;
     }
 
-    public function removeChildInventoryPart($pivot){
+    public function removeChildInventoryPart($pivot, $login_id){
         $pivots = InventoryInventoryPivot::get();
         $inventory = Inventory::find($pivot['child_id']);
         $inventory->status_usage = 2;
         $inventory->save();
+        $last_activity = Activity::all()->last();
+        $last_activity->causer_id = $login_id;
+        $last_activity->save();
         $pivot_children = $pivots->where('parent_id', $pivot['child_id']);
         if(count($pivot_children)){
             foreach($pivot_children as $pivot_child){
-                $this->removeChildInventoryPart($pivot_child);
-                $pivot_child->delete();
+                $this->removeChildInventoryPart($pivot_child, $login_id);
+                // $pivot_child->delete();
+                // $last_activity = Activity::all()->last();
+                // $last_activity->causer_id = $check['id'];
+                // $last_activity->save();
             }
         }
     }
@@ -1730,13 +1749,22 @@ class AssetModelInventoryController extends Controller
             $inventory = Inventory::find($inventory_part_id);
             $inventory->status_usage = 2;
             $inventory->save();
+            $last_activity = Activity::all()->last();
+            $last_activity->causer_id = $check['id'];
+            $last_activity->save();
             $remove_pivot = $pivots->where('child_id', $inventory_part_id)->first();
             $remove_pivot->delete();
+            $last_activity = Activity::all()->last();
+            $last_activity->causer_id = $check['id'];
+            $last_activity->save();
             $pivot_children = $pivots->where('parent_id', $inventory_part_id);
             if(count($pivot_children)){
                 foreach($pivot_children as $pivot_child){
-                    $this->removeChildInventoryPart($pivot_child);
-                    $pivot_child->delete();
+                    $this->removeChildInventoryPart($pivot_child, $check['id']);
+                    // $pivot_child->delete();
+                    // $last_activity = Activity::all()->last();
+                    // $last_activity->causer_id = $check['id'];
+                    // $last_activity->save();
                 }
             }
             return response()->json(["success" => true, "message" => "Berhasil Menghapus Part Inventory"]);
@@ -1749,6 +1777,22 @@ class AssetModelInventoryController extends Controller
         $pivot_is_exist = InventoryInventoryPivot::where('child_id', $id)->first();
         if($pivot_is_exist === null) return ["exist" => false, "id" => 0];
         return ["exist" => true, "id" => $pivot_is_exist->parent_id];
+    }
+
+    public function addChildInventoryPart($pivot, $login_id){
+        $pivots = InventoryInventoryPivot::get();
+        $inventory = Inventory::find($pivot['child_id']);
+        $inventory->status_usage = 1;
+        $inventory->save();
+        $last_activity = Activity::all()->last();
+        $last_activity->causer_id = $login_id;
+        $last_activity->save();
+        $pivot_children = $pivots->where('parent_id', $pivot['child_id']);
+        if(count($pivot_children)){
+            foreach($pivot_children as $pivot_child){
+                $this->addChildInventoryPart($pivot_child, $login_id);
+            }
+        }
     }
 
     public function addInventoryPart(Request $request){
@@ -1766,10 +1810,24 @@ class AssetModelInventoryController extends Controller
             if($inventory->status_usage === 1)return response()->json(["success" => false, "message" => "Inventory Sedang Digunakan"], 400);
             $inventory->status_usage = 1;
             $inventory->save();
+            $last_activity = Activity::all()->last();
+            $last_activity->causer_id = $check['id'];
+            $last_activity->save();
             $pivot = new InventoryInventoryPivot;
             $pivot->parent_id = $id;
             $pivot->child_id = $inventory_part_id;
             $pivot->save();
+            $last_activity = Activity::all()->last();
+            $last_activity->causer_id = $check['id'];
+            $last_activity->save();
+
+            $pivots = InventoryInventoryPivot::get();
+            $pivot_children = $pivots->where('parent_id', $inventory_part_id);
+            if(count($pivot_children)){
+                foreach($pivot_children as $pivot_child){
+                    $this->addChildInventoryPart($pivot_child, $check['id']);
+                }
+            }
             return response()->json(["success" => true, "message" => "Berhasil Menambah Part Inventory"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
@@ -1778,34 +1836,43 @@ class AssetModelInventoryController extends Controller
 
     public function deleteInventory(Request $request)
     {
-        $headers = ['Authorization' => $request->header("Authorization")];
-        try{
-            $response = $this->client->request('GET', '/auth/v1/get-profile', [
-                    'headers'  => $headers
-                ]);
-            $response = json_decode((string) $response->getBody(), true);
-            $log_user_id = $response['data']['user_id'];
-        }catch(ClientException $err){
-            $error_response = $err->getResponse();
-            $detail = json_decode($error_response->getBody());
-            return response()->json(["success" => false, "message" => (object)[
-                "errorInfo" => [
-                    "status" => $error_response->getStatusCode(),
-                    "reason" => $error_response->getReasonPhrase(),
-                    "server_code" => json_decode($error_response->getBody())->error->code,
-                    "status_detail" => json_decode($error_response->getBody())->error->detail
-                ]
-            ]], $error_response->getStatusCode());
-        }
+        $header = $request->header("Authorization");
+        $check = $this->checkRoute("CONTRACTS_GET", $header);
+        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        
         $id = $request->get('id', null);
         $inventory = Inventory::find($id);
         if($inventory === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
         try{
             // DB::table('inventories')->where('id', $inventory->id)->update(array('vendor_id' => $log_user_id));
             $inventory->delete();
+            $last_activity = Activity::all()->last();
+            $last_activity->causer_id = $check['id'];
+            $last_activity->save();
             $inventory_values = InventoryValue::where('inventory_id', $id)->get();
             foreach($inventory_values as $inventory_value){
                 $inventory_value->delete();
+                $last_activity = Activity::all()->last();
+                $last_activity->causer_id = $check['id'];
+                $last_activity->save();
+            }
+            $pivots = InventoryInventoryPivot::get();
+            $pivot_children = $pivots->where('parent_id', $id);
+            $inventories = Inventory::get();
+            if(count($pivot_children)){
+                foreach($pivot_children as $pivot_child){
+                    $pivot_child->delete();
+                    $last_activity = Activity::all()->last();
+                    $last_activity->causer_id = $check['id'];
+                    $last_activity->save();
+                    $inventory = $inventories->where('id', $pivot_child->child_id)->first();
+                    $inventory->status_usage = 2;
+                    $inventory->save();
+                    $last_activity = Activity::all()->last();
+                    $last_activity->causer_id = $check['id'];
+                    $last_activity->save();
+                    $this->removeChildInventoryPart($pivot_child, $check['id']);
+                }
             }
             return response()->json(["success" => true, "message" => "Data Berhasil Dihapus"]);
         } catch(Exception $err){

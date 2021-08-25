@@ -6,8 +6,9 @@ use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use Spatie\Activitylog\Models\Activity;
-use App\InventoryColumn;
-use App\Vendor;
+use App\ModelInventoryColumn;
+use App\ModelInventory;
+use App\Inventory;
 use App\Asset;
 use Exception;
 
@@ -46,40 +47,15 @@ class ActivityLogController extends Controller
             ]], $error_response->getStatusCode());
         }
 
+        
+
         $id = $request->get('id', null);
         try{
             $logs = [];
             if($id === null) return response()->json(["success" => false, "message" => "Silahkan Tambahkan Parameter Id"], 400);
-            $inventory_logs = Activity::where('log_name', 'Inventory')->where('subject_id', $id)->get();
-            foreach($inventory_logs as $inventory_log){
-                $inventory_decode = json_decode($inventory_log->properties,true);
-                if($inventory_log->description === 'created'){
-                    $vendor = Vendor::where('id', $inventory_decode['attributes']['vendor_id'])->first();
-                    if($vendor === null) $vendor_name = "Id Vendor Tidak Ditemukan";
-                    else $vendor_name = $vendor->name;
-                    $inventory_decode['attributes']['vendor_name'] = $vendor_name;
-                    $asset = Asset::where('id', $inventory_decode['attributes']['asset_id'])->first();
-                    if($asset === null) $asset_name = "Id Asset Tidak Ditemukan";
-                    else $asset_name = $asset->name;
-                    $inventory_decode['attributes']['asset_id_name'] = $asset_name;
-                } else {
-                    if (array_key_exists('vendor_id', $inventory_decode['attributes'])){
-                        $vendor = Vendor::where('id', $inventory_decode['attributes']['vendor_id'])->first();
-                        if($vendor === null) $vendor_name = "Id Vendor Tidak Ditemukan";
-                        else $vendor_name = $vendor->name;
-                        $inventory_decode['attributes']['vendor_name'] = $vendor_name;
-                    }
-                }
-                $temp = (object) [
-                    'date' => $inventory_log->created_at,
-                    'description' => $inventory_log->description.' inventory',
-                    'properties' => $inventory_decode
-                ];
-                array_push($logs, $temp);
-            }   
-
+            $models = ModelInventory::get();
             $inventory_value_logs = Activity::where('log_name', 'Inventory Value')->where('properties->attributes->inventory_id', $id)->get();
-            $inventory_columns = InventoryColumn::select('id','name')->get();
+            $inventory_columns = ModelInventoryColumn::select('id','name')->get();
             foreach($inventory_value_logs as $inventory_value_log){
                 if($inventory_value_log->description === 'updated'){
                     $inventory_decode = json_decode($inventory_value_log->properties,true);
@@ -92,6 +68,47 @@ class ActivityLogController extends Controller
                     array_push($logs, $temp);
                 }
             } 
+
+            $inventory_pivot_logs = Activity::where('log_name', 'Inventory Pivot')->where('properties->attributes->child_id', $id)->get();
+            foreach($inventory_pivot_logs as $inventory_pivot_log){
+                $inventory_decode = json_decode($inventory_pivot_log->properties,true);
+                $inventory_parent = Inventory::find($inventory_decode['attributes']['parent_id']);
+                $inventory_parent_model = $models->where('id', $inventory_parent['model_id'])->first();
+                $inventory_decode['attributes']['parent_model_name'] = $inventory_parent_model ? $inventory_parent_model->name : "Model Id Parent Tidak Ditemukan";
+                $temp = (object) [
+                    'date' => $inventory_pivot_log->created_at,
+                    'description' => $inventory_pivot_log->description.' inventory pivot',
+                    'properties' => $inventory_decode
+                ];
+                array_push($logs, $temp);
+            } 
+            
+            $inventory_logs = Activity::where('log_name', 'Inventory')->where('subject_id', $id)->get();
+            foreach($inventory_logs as $inventory_log){
+                $inventory_decode = json_decode($inventory_log->properties,true);
+                if($inventory_log->description === 'created'){
+                    $model = $models->where('id', $inventory_decode['attributes']['model_id'])->first();
+                    if($model === null) $model_name = "Id Model Tidak Ditemukan";
+                    else $model_name = $model->name;
+                    $inventory_decode['attributes']['model_name'] = $model_name;
+                } else {
+                    if (array_key_exists('model_id', $inventory_decode['attributes'])){
+                        $model = $models->where('id', $inventory_decode['attributes']['model_id'])->first();
+                        if($model === null) $model_name = "Id Model Tidak Ditemukan";
+                        else $model_name = $model->name;
+                        $inventory_decode['attributes']['model_name'] = $model_name;
+                    }
+                }
+                $temp = (object) [
+                    'date' => $inventory_log->created_at,
+                    'description' => $inventory_log->description.' inventory',
+                    'properties' => $inventory_decode,
+                    'notes' => $inventory_log->causer_type ? $inventory_log->causer_type : "-"
+                ];
+                array_push($logs, $temp);
+            }   
+
+            
 
             usort($logs, function($a, $b) {
                 return strtotime($b->date) - strtotime($a->date);
