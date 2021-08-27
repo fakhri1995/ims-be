@@ -474,7 +474,7 @@ class AssetModelInventoryController extends Controller
 
 
     // Model
-    public function getChildModel($model_part, $models, $pivots, $model_columns){
+    public function getChildModel($model_part, $models, $pivots, $model_columns, $assets){
         $search = array_search($model_part['child_id'], array_column($models, 'id'));
         if($search !== false){
             $model = $models[$search];
@@ -482,7 +482,7 @@ class AssetModelInventoryController extends Controller
             $model_child = [];
             foreach($pivots as $pivot){
                 if($pivot['parent_id'] === $model_part['child_id']){
-                    $model_child[] = $this->getChildModel($pivot, $models, $pivots, $model_columns);
+                    $model_child[] = $this->getChildModel($pivot, $models, $pivots, $model_columns, $assets);
                 }
             }
             $temp_model_columns = [];
@@ -491,6 +491,13 @@ class AssetModelInventoryController extends Controller
                     $temp_model_columns[] = $model_column;
                 }
             }
+            foreach($assets as $asset){
+                if($model['asset_id'] === $asset['id']){
+                    $asset_name = $asset['name'];
+                    break;
+                }
+            }
+            $model_part['asset_name'] = $asset_name ? $asset_name : "Asset Tidak Ditemukan";
             $model_part['model_column'] = $temp_model_columns;
             $model_part['model_child'] = $model_child;
             return $model_part;
@@ -533,7 +540,9 @@ class AssetModelInventoryController extends Controller
             $id = $request->get('id');
             $model = ModelInventory::find($id);
             if($model === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
-            $asset = Asset::withTrashed()->find($model->asset_id);
+            $assets = Asset::withTrashed()->get();
+            $asset = $assets->where(('id'), $model->asset_id)->first();
+            $model->count = Inventory::where('model_id', $id)->count();
             if($asset === null) {
                 $model->asset = [
                     "id" => $model->asset_id,
@@ -559,10 +568,11 @@ class AssetModelInventoryController extends Controller
             $full_model_parts = [];
             if(count($model_parts)){
                 $model_columns = $model_columns->toArray();
+                $assets = $assets->toArray();
                 $models = ModelInventory::get()->toArray();
                 $pivots = ModelModelPivot::get()->toArray();
                 foreach($model_parts as $model_part){
-                    $full_model_parts[] = $this->getChildModel($model_part, $models, $pivots, $model_columns); 
+                    $full_model_parts[] = $this->getChildModel($model_part, $models, $pivots, $model_columns, $assets); 
                 }
             }
             
