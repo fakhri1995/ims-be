@@ -507,12 +507,20 @@ class AssetModelInventoryController extends Controller
         $models = ModelInventory::get();
         if($models->isEmpty()) return response()->json(["success" => true, "message" => "Model Belum Terisi", "data" => []]);
         $inventories = Inventory::get();
-        $assets = Asset::select('id', 'name')->get();
+        $assets = Asset::select('id', 'name', 'code')->get();
         foreach($models as $model){
             $model->count = $inventories->where('model_id', $model->id)->count();
             $asset = $assets->where('id', $model->asset_id)->first();
-            if($asset === null) $model->asset_name = "Asset Tidak Ditemukan";
-            else $model->asset_name = $asset->name;
+            if($asset === null) {
+                $model->asset_name = "Asset Tidak Ditemukan";
+            } else {
+                $model->asset_name = $asset->name;
+                if(strlen($asset->code) > 3){
+                    $parent_model = substr($asset->code, 0, 3);
+                    $parent_name = $assets->where('code', $parent_model)->first()->name;
+                    $model->asset_name = $parent_name . " / ". $model->asset_name;
+                }
+            }
         }
         return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $models]);
     }
@@ -629,7 +637,7 @@ class AssetModelInventoryController extends Controller
                     $new_model_part->save();
                 }
             }
-            return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
+            return response()->json(["success" => true, "message" => "Data Berhasil Disimpan", "id" => $model->id]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
@@ -1596,7 +1604,7 @@ class AssetModelInventoryController extends Controller
                     $this->saveInventoryChild($inventory_part, $inventory->location, $inventory->id, $check['id']);
                 }
             }
-            return response()->json(["success" => true, "message" => "Inventory Berhasil Ditambah"]);
+            return response()->json(["success" => true, "message" => "Inventory Berhasil Ditambah", "id" => $inventory->id]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
