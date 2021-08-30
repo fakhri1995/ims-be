@@ -29,7 +29,8 @@ class ActivityLogController extends Controller
 
     public function getActivityInventoryLogs(Request $request)
     {
-        $headers = ['Authorization' => $request->header("Authorization")];
+        $header = $request->header("Authorization");
+        $headers = ['Authorization' => $header];
         try{
             $response = $this->client->request('GET', '/auth/v1/get-profile', [
                     'headers'  => $headers
@@ -48,6 +49,32 @@ class ActivityLogController extends Controller
         }
 
         
+        $headers = [
+            'Authorization' => $header,
+            'content-type' => 'application/json'
+        ];
+
+        try{
+            $check_api_user = true;
+            $response = $this->client->request('GET', '/admin/v1/get-list-account?get_all_data=true&order_by=asc', [
+                    'headers'  => $headers
+                ]);
+            $response = json_decode((string) $response->getBody(), true);
+            if(array_key_exists('error', $response)) {
+                $users = [['id' => 0, 'name' => "Error API Get List Account"]];
+                $check_api_user = false;
+            } else {
+                $users = [];
+                foreach($response['data']['accounts'] as $user){
+                    $users[] = ['id' => $user['user_id'], 'name' => $user['fullname']];
+                }
+            //   return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $users]);  
+            } 
+        }catch(ClientException $err){
+            $users = [['id' => 0, 'name' => "Error API Get List Account"]];
+            $check_api_user = false;
+        }
+        
 
         $id = $request->get('id', null);
         try{
@@ -60,10 +87,18 @@ class ActivityLogController extends Controller
                 if($inventory_value_log->description === 'updated'){
                     $inventory_decode = json_decode($inventory_value_log->properties,true);
                     $inventory_decode['attributes']['name'] = $inventory_columns->where('id', $inventory_decode['attributes']['inventory_column_id'])->first()->name;
+                    $causer_name = "Not Found";
+                    foreach($users as $user){
+                        if($user['id'] === $inventory_value_log->causer_id){
+                            $causer_name = $user['name'];
+                            break;
+                        }
+                    }
                     $temp = (object) [
                         'date' => $inventory_value_log->created_at,
                         'description' => $inventory_value_log->description.' inventory value',
-                        'properties' => $inventory_decode
+                        'properties' => $inventory_decode,
+                        'causer_name' => $causer_name
                     ];
                     array_push($logs, $temp);
                 }
@@ -75,10 +110,18 @@ class ActivityLogController extends Controller
                 $inventory_parent = Inventory::find($inventory_decode['attributes']['parent_id']);
                 $inventory_parent_model = $models->where('id', $inventory_parent['model_id'])->first();
                 $inventory_decode['attributes']['parent_model_name'] = $inventory_parent_model ? $inventory_parent_model->name : "Model Id Parent Tidak Ditemukan";
+                $causer_name = "Not Found";
+                foreach($users as $user){
+                    if($user['id'] === $inventory_value_log->causer_id){
+                        $causer_name = $user['name'];
+                        break;
+                    }
+                }
                 $temp = (object) [
                     'date' => $inventory_pivot_log->created_at,
                     'description' => $inventory_pivot_log->description.' inventory pivot',
-                    'properties' => $inventory_decode
+                    'properties' => $inventory_decode,
+                    'causer_name' => $causer_name
                 ];
                 array_push($logs, $temp);
             } 
@@ -99,10 +142,18 @@ class ActivityLogController extends Controller
                         $inventory_decode['attributes']['model_name'] = $model_name;
                     }
                 }
+                $causer_name = "Not Found";
+                foreach($users as $user){
+                    if($user['id'] === $inventory_value_log->causer_id){
+                        $causer_name = $user['name'];
+                        break;
+                    }
+                }
                 $temp = (object) [
                     'date' => $inventory_log->created_at,
                     'description' => $inventory_log->description.' inventory',
                     'properties' => $inventory_decode,
+                    'causer_name' => $causer_name,
                     'notes' => $inventory_log->causer_type ? $inventory_log->causer_type : "-"
                 ];
                 array_push($logs, $temp);
@@ -114,6 +165,7 @@ class ActivityLogController extends Controller
                 return strtotime($b->date) - strtotime($a->date);
             });
             
+            if($check_api_user === false) return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $logs, "users" => $users]);
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $logs]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
