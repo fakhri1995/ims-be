@@ -303,8 +303,34 @@ class AssetModelInventoryController extends Controller
             $asset->description = $description;
             $asset->required_sn = $required_sn;
 
-            $delete_column_ids = $request->get('delete_column_ids', []);
             $asset_columns = AssetColumn::where('asset_id', $id)->get();
+            $update_columns = $request->get('update_columns', []);
+            $delete_column_ids = $request->get('delete_column_ids', []);
+            if(count($update_columns)){
+                foreach($update_columns as $update_column){
+                    $check_column = $asset_columns->where('id', $update_column['id'])->first();
+                    if($check_column === null) return response()->json(["success" => false, "message" => "Kolom Tidak Bisa Diupdate, Id Kolom Tidak Dimiliki Asset", "id" => $update_column['id']], 400);
+                }
+            }
+            
+            if(count($delete_column_ids)){
+                foreach($delete_column_ids as $delete_column_id){
+                    $check_column = $asset_columns->where('id', $delete_column_id)->first();
+                    if($check_column === null) return response()->json(["success" => false, "message" => "Kolom Tidak Bisa Didelete, Id Kolom Tidak Dimiliki Asset", "id" => $delete_column_id], 400);
+                }
+            }
+            
+            if(count($update_columns)){
+                foreach($update_columns as $update_column){
+                    $update_asset_column = $asset_columns->where('id', $update_column['id'])->first();
+                    $update_asset_column->name = $update_column['name'];
+                    $update_asset_column->data_type = $update_column['data_type'];
+                    $update_asset_column->default = $update_column['default'];
+                    $update_asset_column->required = $update_column['required'];
+                    $update_asset_column->save();
+                }
+            }
+
             if(count($delete_column_ids)){
                 foreach($delete_column_ids as $delete_column_id){
                     $deleted_asset_column = $asset_columns->where('id', $delete_column_id)->first();
@@ -554,9 +580,9 @@ class AssetModelInventoryController extends Controller
             } else {
                 $model->asset = $asset;
             }
-            $asset_columns = AssetColumn::where('asset_id', $model->asset_id)->get();
+            // $asset_columns = AssetColumn::where('asset_id', $model->asset_id)->get();
             $model->manufacturer = Manufacturer::withTrashed()->find($model->manufacturer_id);
-            $model->asset_columns = $asset_columns;
+            // $model->asset_columns = $asset_columns;
             $model_parts = ModelModelPivot::where('parent_id', $id)->get();
             $model_columns = ModelInventoryColumn::get();
             $core_model_columns = [];
@@ -667,7 +693,33 @@ class AssetModelInventoryController extends Controller
         $model->required_sn = $request->get('required_sn');
         try{
             $delete_column_ids = $request->get('delete_column_ids', []);
+            $update_columns = $request->get('update_columns', []);
             $model_columns = ModelInventoryColumn::where('model_id', $id)->get();
+            if(count($update_columns)){
+                foreach($update_columns as $update_column){
+                    $check_column = $model_columns->where('id', $update_column['id'])->first();
+                    if($check_column === null) return response()->json(["success" => false, "message" => "Kolom Tidak Bisa Diupdate, Id Kolom Tidak Dimiliki Model", "id" => $update_column['id']], 400);
+                }
+            }
+            
+            if(count($delete_column_ids)){
+                foreach($delete_column_ids as $delete_column_id){
+                    $check_column = $model_columns->where('id', $delete_column_id)->first();
+                    if($check_column === null) return response()->json(["success" => false, "message" => "Kolom Tidak Bisa Didelete, Id Kolom Tidak Dimiliki Model", "id" => $delete_column_id], 400);
+                }
+            }
+            
+            if(count($update_columns)){
+                foreach($update_columns as $update_column){
+                    $update_model_column = $model_columns->where('id', $update_column['id'])->first();
+                    $update_model_column->name = $update_column['name'];
+                    $update_model_column->data_type = $update_column['data_type'];
+                    $update_model_column->default = $update_column['default'];
+                    $update_model_column->required = $update_column['required'];
+                    $update_model_column->save();
+                }
+            }
+
             if(count($delete_column_ids)){
                 $inventory_values = InventoryValue::get();
                 foreach($delete_column_ids as $delete_column_id){
