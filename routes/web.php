@@ -201,11 +201,13 @@ $router->delete('/deleteModel', 'AssetController@deleteModel');
 $router->get('/getInventories', 'AssetController@getInventories');
 $router->get('/getInventory', 'AssetController@getInventory');
 $router->get('/getInventoryRelations', 'AssetController@getInventoryRelations');
+$router->get('/getInventoryReplacements', 'AssetController@getInventoryReplacements');
 $router->post('/addInventory', 'AssetController@addInventory');
 $router->post('/addInventoryStock', 'AssetController@addInventoryStock');
-$router->post('/addInventoryPart', 'AssetController@addInventoryPart');
+$router->post('/addInventoryParts', 'AssetController@addInventoryParts');
 $router->put('/updateInventory', 'AssetController@updateInventory');
 $router->put('/updateInventoryParts', 'AssetController@updateInventoryParts');
+$router->put('/replaceInventoryPart', 'AssetController@replaceInventoryPart');
 $router->delete('/removeInventoryPart', 'AssetController@removeInventoryPart');
 $router->delete('/deleteInventory', 'AssetController@deleteInventory');
 
