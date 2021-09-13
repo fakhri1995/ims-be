@@ -1331,7 +1331,7 @@ class AssetController extends Controller
                 $last_activity->causer_id = $check['id'];
                 $last_activity->save();
                 $new_replacement_pivot = new InventoryInventoryPivot;
-                $new_replacement_pivot->parent_id = $id;
+                $new_replacement_pivot->parent_id = $pivot_old_inventory->parent_id;
                 $new_replacement_pivot->child_id = $replacement_id;
                 $new_replacement_pivot->save();
                 $last_activity = Activity::all()->last();
