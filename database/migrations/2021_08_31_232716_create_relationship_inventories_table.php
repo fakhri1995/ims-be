@@ -18,6 +18,7 @@ class CreateRelationshipInventoriesTable extends Migration
             $table->unsignedBigInteger('relationship_asset_id');
             $table->unsignedBigInteger('subject_id');
             $table->unsignedBigInteger('connected_id');
+            $table->unsignedBigInteger('detail_connected_id')->nullable();
             $table->integer('type_id');
             $table->boolean('is_inverse');
             $table->softDeletes();

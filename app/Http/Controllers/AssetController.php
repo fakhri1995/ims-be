@@ -925,9 +925,9 @@ class AssetController extends Controller
             $manufacturers = Manufacturer::select('id', 'name')->get();
             $assets = Asset::select('id', 'name')->get();
             $status_condition = [
-                (object)['id' => 1, 'name' => "Green"],
+                (object)['id' => 1, 'name' => "Good"],
                 (object)['id' => 2, 'name' => "Grey"],
-                (object)['id' => 3, 'name' => "Red"],
+                (object)['id' => 3, 'name' => "Bad"],
             ];
             $status_usage = [
                 (object)['id' => 1, 'name' => "In Used"],
@@ -1091,10 +1091,23 @@ class AssetController extends Controller
         // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         $id = $request->get('id', null);
         try{
-            $model = ModelInventory::withTrashed()->find($id);
-            if($model === null)return response()->json(["success" => false, "message" => "Model Tidak Ditemukan"]);
-            $inventory_replacements = Inventory::where('model_id', $id)->where('status_usage', 2)->get();
-            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventory_replacements ]);
+            // $model = ModelInventory::withTrashed()->find($id);
+            // if($model === null)return response()->json(["success" => false, "message" => "Model Tidak Ditemukan"]);
+            $inventories = Inventory::get();
+            $models = ModelInventory::get();
+            foreach($inventories as $inventory){
+                $model = $models->find($inventory->model_id);
+                if($model === null) $inventory->asset_id = null;
+                else $inventory->asset_id = $model->asset_id;
+            }
+            $inventory_replacements = $inventories->where('asset_id', $id)->where('status_usage', 2);
+            $datas = [];
+            if(count($inventory_replacements)){
+                foreach($inventory_replacements as $inventory_replacement){
+                    $datas[] = $inventory_replacement;
+                }
+            }
+            return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $datas ]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
@@ -1554,6 +1567,246 @@ class AssetController extends Controller
         }
     }
 
+    // Change Status Inventory
+
+    public function changeStatusCondition(Request $request){
+        $check = $this->checkRoute("CONTRACTS_GET", $request->header("Authorization"));
+        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        try{
+            $id = $request->get('id', null);
+            $notes = $request->get('notes', null);
+            $status_condition = $request->get('status_condition');
+            if($status_condition < 1 || $status_condition > 3){
+                return response()->json(["success" => false, "message" => "Status Usage Tidak Tepat"], 400);
+            }
+            $inventory = Inventory::find($id);
+            if($inventory === null) return response()->json(["success" => false, "message" => "Inventory Tidak Ditemukan"]);
+            $inventory->status_condition = $status_condition;
+            $inventory->save();
+            $last_activity = Activity::all()->last();
+            if($last_activity->subject_id === $id){
+                $last_activity->causer_id = $check['id'];
+                $last_activity->causer_type = $notes;
+                $last_activity->save();
+            }
+            return response()->json(["success" => true, "message" => "Status Kondisi Inventory Berhasil Diubah"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
+
+    public function changeStatusUsage(Request $request)
+    {
+        $check = $this->checkRoute("CONTRACTS_GET", $request->header("Authorization"));
+        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        try{
+            $status_usage = $request->get('status_usage', null);
+            if($status_usage < 1 || $status_usage > 3){
+                return response()->json(["success" => false, "message" => "Status Usage Tidak Tepat"], 400);
+            }
+            $id = $request->get('id', null);
+            $notes = $request->get('notes', null);
+            $relationship_type_id = $request->get('relationship_type_id', null);
+            $connected_id = $request->get('connected_id', null);
+            $detail_connected_id = $request->get('detail_connected_id', null);
+            if($status_usage === 1){
+                if($relationship_type_id === null) return response()->json(["success" => false, "message" => "Relationship Type Belum Terisi"], 400);
+                if($relationship_type_id < 1 || $relationship_type_id > 3) return response()->json(["success" => false, "message" => "Relationship Type Id Tidak Tepat"], 400);
+                if($connected_id === null) return response()->json(["success" => false, "message" => "Connected Id Belum Terisi"], 400);
+            }
+            
+            $inventory = Inventory::find($id);
+            if($inventory === null) return response()->json(["success" => false, "message" => "Inventory Tidak Ditemukan"]);
+            $model = ModelInventory::find($inventory->model_id);
+            if($model === null) return response()->json(["success" => false, "message" => "Tipe Model pada Inventory Tidak Ditemukan"]);
+            $asset = Asset::find($model->asset_id);
+            if($asset === null) return response()->json(["success" => false, "message" => "Tipe Aset pada Tipe Model pada Inventory Tidak Ditemukan"]);
+            $inventory->status_usage = $status_usage;
+            $inventory->save();
+            $last_activity = Activity::all()->last();
+            if($last_activity->subject_id === $id){
+                $last_activity->causer_id = $check['id'];
+                $last_activity->causer_type = $notes;
+                $last_activity->save();
+            }
+            if($status_usage !== 1){
+                //Delete Relationship except Inventory type (4)
+                $relationship_inventories = RelationshipInventory::where('subject_id', $inventory->id)->where('type_id', '<>', 4)->get();
+                if(count($relationship_inventories)){
+                    foreach($relationship_inventories as $relationship_inventory){
+                        $relationship_inventory->delete();
+                        $last_activity = Activity::all()->last();
+                        $last_activity->causer_id = $check['id'];
+                        $last_activity->causer_type = "Ubah Status Pemakaian";
+                        $last_activity->save();
+                    }
+                }
+                return response()->json(["success" => true, "message" => "Status Pemakaian Inventory Berhasil Diubah"]);
+            }
+
+            $relationship = Relationship::where('inverse_relationship_type', "Digunakan Oleh")->first();
+            if($relationship === null){
+                $relationship = new Relationship;
+                $relationship->relationship_type = "Menggunakan";
+                $relationship->inverse_relationship_type = "Digunakan Oleh";
+                $relationship->description = null;
+                $relationship->save();
+            }
+            $relationship_asset = RelationshipAsset::where('subject_id', $asset->id)->where('type_id', $relationship_type_id)->where('connected_id', null)->first();
+            if($relationship_asset === null){
+                $relationship_asset = new RelationshipAsset;
+                $relationship_asset->subject_id = $asset->id;
+                $relationship_asset->relationship_id = $relationship->id;
+                $relationship_asset->is_inverse = false;
+                $relationship_asset->type_id = $relationship_type_id;
+                $relationship_asset->connected_id = null;
+                $relationship_asset->save();
+            }
+            $relationship_inventory = new RelationshipInventory;
+            $relationship_inventory->relationship_asset_id = $relationship_asset->id;
+            $relationship_inventory->subject_id = $inventory->id;
+            $relationship_inventory->connected_id = $connected_id;
+            $relationship_inventory->type_id = $relationship_type_id;
+            $relationship_inventory->is_inverse = false;
+            if($relationship_type_id === 3){
+                $relationship_inventory->detail_connected_id = $detail_connected_id;
+            }
+            $relationship_inventory->save();
+            $last_activity = Activity::all()->last();
+            $last_activity->causer_id = $check['id'];
+            $last_activity->causer_type = $notes;
+            $last_activity->save();
+            
+            return response()->json(["success" => true, "message" => "Status Pemakaian Inventory Berhasil Diubah"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
+
+    public function getChildren($datas, $id_parent){
+        $new_data = [];
+        foreach($datas as $data){
+            if (array_key_exists('members', $data)){
+                    $temp = (object)[
+                        'id' => $data['company_id'],
+                        'title' => $data['company_name'],
+                        'key' => $data['company_id'],
+                        'value' => $data['company_id'],
+                        'id_parent' => $id_parent,
+                        'children' => $this->getChildren($data['members'], $data['company_id'])
+                    ];
+                } else {
+                    $temp = (object)[
+                        'id' => $data['company_id'],
+                        'title' => $data['company_name'],
+                        'key' => $data['company_id'],
+                        'value' => $data['company_id'],
+                        'id_parent' => $id_parent
+                    ];
+                }
+                $new_data[] = $temp;
+        }
+        return $new_data;
+    }
+
+    public function getChangeStatusUsageDetailList(Request $request)
+    {
+        $header = $request->header("Authorization");
+        // $check = $this->checkRoute("RELATIONSHIPS_GET", $header);
+        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        try{
+            $id = (int)$request->get('id');
+            if($id < 1) return response()->json(["success" => false, "message" => "Tipe Id Tidak Tepat"], 400);
+            $headers = [
+                'Authorization' => $header,
+                'content-type' => 'application/json'
+            ];
+            if($id === 1 || $id === 2){     
+                $role_checker = $id ;       
+                $response = $this->client->request('GET', '/admin/v1/get-list-account?get_all_data=true', [
+                        'headers'  => $headers
+                ]);
+                $response = json_decode((string) $response->getBody(), true);
+                if(array_key_exists('error', $response)) {
+                    $users[] = "Error API Server C**";
+                } else {
+                    foreach($response['data']['accounts'] as $user){
+                        if($user['role'] === $role_checker){
+                            $users[] = ['id' => $user['user_id'], 'name' => $user['fullname']];
+                        }
+                    }
+                } 
+                return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $users]);
+            } else if($id === 3){
+                $response = $this->client->request('GET', '/account/v1/company-hierarchy', [
+                    'headers'  => $headers
+                ]);
+                $response = json_decode((string) $response->getBody(), true);
+                if(array_key_exists('error', $response)) {
+                    return response()->json(["success" => false, "message" => (object)[
+                        "errorInfo" => [
+                            "status" => 400,
+                            "reason" => $response['error']['detail'],
+                            "server_code" => $response['error']['code'],
+                            "status_detail" => $response['error']['detail']
+                        ]
+                    ]], 400);
+                } else {
+                    $client_company_list = [];
+                    foreach($response['data']['members'] as $company){
+                        if($company['role'] === 2){ 
+                            $temp = [];
+                            $temp['company_id'] = $company['company_id'];
+                            $temp['company_name'] = $company['company_name'];
+                            $client_company_list[] = $temp;
+                        } 
+                    }
+                    return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $client_company_list]);
+                } 
+            } else {
+                $response = $this->client->request('GET', '/account/v1/company-hierarchy?company_id='.$id, [
+                        'headers'  => $headers
+                    ]);
+                $data = json_decode((string) $response->getBody(), true)['data'];
+                if (array_key_exists('members', $data)){
+                    $temp = (object)[
+                        'id' => $data['company_id'],
+                        'title' => $data['company_name'],
+                        'key' => $data['company_id'],
+                        'value' => $data['company_id'],
+                        'id_parent' => $data['company_id'],
+                        'children' => $this->getChildren($data['members'], $data['company_id'])
+                    ];
+                } else {
+                    $temp = (object)[
+                        'id' => $data['company_id'],
+                        'title' => $data['company_name'],
+                        'key' => $data['company_id'],
+                        'value' => $data['company_id'],
+                        'id_parent' => $data['company_id']
+                    ];
+                }
+                
+                $front_end_data = [$temp];
+                return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $front_end_data]);
+            }
+        } catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            if(json_decode($error_response->getBody())->error->code === 4046){
+                return ["success" => false, "message" => "Tidak Memiliki Akses untuk Company Id tersebut."];
+            }
+            return response()->json(["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]]);
+        }
+    }
+
     // Manufacturer
 
     public function getManufacturers(Request $request)
@@ -1945,8 +2198,17 @@ class AssetController extends Controller
                 }
                 return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $tree_assets]);
             }
-        } catch(Exception $err){
-            return response()->json(["success" => false, "message" => $err], 400);
+        } catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return ["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]];
         }
     }
 
@@ -2329,15 +2591,24 @@ class AssetController extends Controller
                 } 
                 return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventories]);
             }
-        } catch(Exception $err){
-            return response()->json(["success" => false, "message" => $err], 400);
+        } catch(ClientException $err){
+            $error_response = $err->getResponse();
+            $detail = json_decode($error_response->getBody());
+            return ["success" => false, "message" => (object)[
+                "errorInfo" => [
+                    "status" => $error_response->getStatusCode(),
+                    "reason" => $error_response->getReasonPhrase(),
+                    "server_code" => json_decode($error_response->getBody())->error->code,
+                    "status_detail" => json_decode($error_response->getBody())->error->detail
+                ]
+            ]];
         }
     }
 
     public function addRelationshipInventories(Request $request)
     {
-        // $check = $this->checkRoute("RELATIONSHIP_ADD", $request->header("Authorization"));
-        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        $check = $this->checkRoute("CONTRACTS_GET", $request->header("Authorization"));
+        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         
         $relationship_asset_id = $request->get('relationship_asset_id');
         $relationship_asset = RelationshipAsset::find($relationship_asset_id);
@@ -2346,6 +2617,7 @@ class AssetController extends Controller
         $connected_ids = $request->get('connected_ids', []);
         $subject_id = $request->get('subject_id');
         $is_inverse = $request->get('is_inverse');
+        $notes = $request->get('notes', null);
         try{
             foreach($connected_ids as $connected_id){
                 $relationship_inventory = new RelationshipInventory;
@@ -2355,6 +2627,10 @@ class AssetController extends Controller
                 $relationship_inventory->is_inverse = $is_inverse;
                 $relationship_inventory->connected_id = $connected_id;
                 $relationship_inventory->save();
+                $last_activity = Activity::all()->last();
+                $last_activity->causer_id = $check['id'];
+                $last_activity->causer_type = $notes;
+                $last_activity->save();
             }
             return response()->json(["success" => true, "message" => "Relationship Inventory berhasil dibuat"]);
         } catch(Exception $err){
@@ -2364,11 +2640,12 @@ class AssetController extends Controller
 
     public function updateRelationshipInventory(Request $request)
     {
-        // $check = $this->checkRoute("RELATIONSHIP_UPDATE", $request->header("Authorization"));
-        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        $check = $this->checkRoute("CONTRACTS_GET", $request->header("Authorization"));
+        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         $id = $request->get('id', null);
         $from_inverse = $request->get('from_inverse');
         $relationship_asset_id = $request->get('relationship_asset_id');
+        $notes = $request->get('notes', null);
         
         $relationship_inventory = RelationshipInventory::find($id);
         if($relationship_inventory === null) return response()->json(["success" => false, "message" => "Id Tidak Ditemukan"]);
@@ -2386,6 +2663,10 @@ class AssetController extends Controller
         } 
         try{
             $relationship_inventory->save();
+            $last_activity = Activity::all()->last();
+            $last_activity->causer_id = $check['id'];
+            $last_activity->causer_type = $notes;
+            $last_activity->save();
             return response()->json(["success" => true, "message" => "Relationship Inventory berhasil diubah"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
@@ -2401,6 +2682,10 @@ class AssetController extends Controller
         if($relationship_inventory === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
         try{
             $relationship_inventory->delete();
+            $last_activity = Activity::all()->last();
+            $last_activity->causer_id = $check['id'];
+            $last_activity->causer_type = $notes;
+            $last_activity->save();
             return response()->json(["success" => true, "message" => "Relationship Inventory berhasil dihapus"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);

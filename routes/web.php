@@ -183,31 +183,20 @@ $router->post('/addModel', 'AssetController@addModel');
 $router->put('/updateModel', 'AssetController@updateModel');
 $router->delete('/deleteModel', 'AssetController@deleteModel');
 
-//Inventory Column Routes
-// $router->get('/getInventoryColumns', 'AssetController@getInventoryColumns');
-// $router->get('/getDeletedInventoryColumns', 'AssetController@getDeletedInventoryColumns');
-// $router->post('/cudInventoryColumn', 'AssetController@cudInventoryColumn');
-// $router->post('/addInventoryColumn', 'AssetController@addInventoryColumn');
-// $router->put('/updateInventoryColumn', 'AssetController@updateInventoryColumn');
-// $router->delete('/deleteInventoryColumn', 'AssetController@deleteInventoryColumn');
-
-//Inventory Value Routes
-// $router->get('/getInventoryValues', 'AssetController@getInventoryValues');
-// $router->post('/addInventoryValue', 'AssetController@addInventoryValue');
-// $router->put('/updateInventoryValue', 'AssetController@updateInventoryValue');
-// $router->delete('/deleteInventoryValue', 'AssetController@deleteInventoryValue');
-
 //Inventory Routes
 $router->get('/getInventories', 'AssetController@getInventories');
 $router->get('/getInventory', 'AssetController@getInventory');
 $router->get('/getInventoryRelations', 'AssetController@getInventoryRelations');
 $router->get('/getInventoryReplacements', 'AssetController@getInventoryReplacements');
+$router->get('/getChangeStatusUsageDetailList', 'AssetController@getChangeStatusUsageDetailList');
 $router->post('/addInventory', 'AssetController@addInventory');
 $router->post('/addInventoryStock', 'AssetController@addInventoryStock');
 $router->post('/addInventoryParts', 'AssetController@addInventoryParts');
 $router->put('/updateInventory', 'AssetController@updateInventory');
 $router->put('/updateInventoryParts', 'AssetController@updateInventoryParts');
 $router->put('/replaceInventoryPart', 'AssetController@replaceInventoryPart');
+$router->put('/changeStatusUsage', 'AssetController@changeStatusUsage');
+$router->put('/changeStatusCondition', 'AssetController@changeStatusCondition');
 $router->delete('/removeInventoryPart', 'AssetController@removeInventoryPart');
 $router->delete('/deleteInventory', 'AssetController@deleteInventory');
 
