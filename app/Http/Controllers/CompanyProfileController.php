@@ -49,18 +49,23 @@ class CompanyProfileController extends Controller
                     'headers'  => $headers,
                     'json' => $body
             ]);
-            return ["success" => true];
+            $response = $this->client->request('GET', '/auth/v1/get-profile', [
+                    'headers'  => $headers
+                ]);
+            $response = json_decode((string) $response->getBody(), true);
+            $log_user_id = $response['data']['user_id'];
+            return ["success" => true, "id" => $log_user_id];
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
-            return response()->json(["success" => false, "message" => (object)[
+            return ["success" => false, "message" => (object)[
                 "errorInfo" => [
                     "status" => $error_response->getStatusCode(),
                     "reason" => $error_response->getReasonPhrase(),
                     "server_code" => json_decode($error_response->getBody())->error->code,
                     "status_detail" => json_decode($error_response->getBody())->error->detail
                 ]
-            ]]);
+            ]];
         }
     }
 
