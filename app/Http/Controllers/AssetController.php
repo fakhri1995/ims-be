@@ -553,7 +553,8 @@ class AssetController extends Controller
                 $model->asset_name = $asset->name;
                 if(strlen($asset->code) > 3){
                     $parent_model = substr($asset->code, 0, 3);
-                    $parent_name = $assets->where('code', $parent_model)->first()->name;
+                    $parent_name = $assets->where('code', $parent_model)->first();
+                    $parent_name = $parent_name === null ? "Asset Not Found" : $parent_name->name;
                     $model->asset_name = $parent_name . " / ". $model->asset_name;
                 }
             }
