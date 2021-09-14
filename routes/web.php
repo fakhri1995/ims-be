@@ -190,6 +190,7 @@ $router->get('/getInventoryRelations', 'AssetController@getInventoryRelations');
 $router->get('/getInventoryReplacements', 'AssetController@getInventoryReplacements');
 $router->get('/getChangeStatusUsageDetailList', 'AssetController@getChangeStatusUsageDetailList');
 $router->post('/addInventory', 'AssetController@addInventory');
+$router->post('/addInventoryNotes', 'AssetController@addInventoryNotes');
 $router->post('/addInventoryStock', 'AssetController@addInventoryStock');
 $router->post('/addInventoryParts', 'AssetController@addInventoryParts');
 $router->put('/updateInventory', 'AssetController@updateInventory');

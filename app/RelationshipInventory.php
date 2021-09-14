@@ -12,7 +12,7 @@ class RelationshipInventory extends Model
 
     protected static $logAttributes = ['*'];
     protected static $logName = "Inventory Relationship";
-    protected static $logOnlyDirty = true;
+    protected static $logAttributesToIgnore = [ 'deleted_at'];
 
     public $timestamps = false;
 }

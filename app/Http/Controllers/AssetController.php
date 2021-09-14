@@ -75,14 +75,14 @@ class AssetController extends Controller
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
-            return response()->json(["success" => false, "message" => (object)[
+            return ["success" => false, "message" => (object)[
                 "errorInfo" => [
                     "status" => $error_response->getStatusCode(),
                     "reason" => $error_response->getReasonPhrase(),
                     "server_code" => json_decode($error_response->getBody())->error->code,
                     "status_detail" => json_decode($error_response->getBody())->error->detail
                 ]
-            ]]);
+            ]];
         }
     }
 
@@ -822,6 +822,7 @@ class AssetController extends Controller
             $new_inventory->save();
             $last_activity = Activity::all()->last();
             $last_activity->causer_id = $causer_id;
+            $last_activity->causer_type = "Created as part of inventory with id ".$parent_id;
             $last_activity->save();
             $pivot = new InventoryInventoryPivot;
             $pivot->parent_id = $parent_id;
@@ -1156,10 +1157,12 @@ class AssetController extends Controller
         $inventory->mig_id = $mig_id;
         $inventory->serial_number = $request->get('serial_number');
         $inventory_values = $request->get('inventory_values',[]);
+        $notes = $request->get('notes', null);
         try{
             $inventory->save();
             $last_activity = Activity::all()->last();
             $last_activity->causer_id = $check['id'];
+            $last_activity->causer_type = $notes;
             $last_activity->save();
 
             foreach($inventory_values as $inventory_value){
@@ -1206,10 +1209,12 @@ class AssetController extends Controller
         $inventory->mig_id = $mig_id;
         $inventory->serial_number = $request->get('serial_number');
         $inventory_values = $request->get('inventory_values',[]);
+        $notes = $request->get('notes', null);
         try{
             $inventory->save();
             $last_activity = Activity::all()->last();
             $last_activity->causer_id = $check['id'];
+            $last_activity->causer_type = $notes;
             $last_activity->save();
             foreach($inventory_values as $inventory_value){
                 $model = new InventoryValue;
@@ -1235,6 +1240,7 @@ class AssetController extends Controller
         
         $id = $request->get('id', null);
         $mig_id = $request->get('mig_id');
+        $notes = $request->get('notes', null);
         $check_inventory = Inventory::where('mig_id', $mig_id)->first();
         if($check_inventory && $check_inventory->id !== $id) return response()->json(["success" => false, "message" => "MIG ID Sudah Terdaftar"], 400);
         try{
@@ -1242,8 +1248,8 @@ class AssetController extends Controller
             if($inventory === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
             $inventory->vendor_id = 0;
             $inventory->inventory_name = $request->get('inventory_name');
-            $inventory->status_condition = $request->get('status_condition');
-            $inventory->status_usage = $request->get('status_usage');
+            $inventory->status_condition = $inventory->status_condition;
+            $inventory->status_usage = $inventory->status_usage;
             $inventory->location = $request->get('location');
             $inventory->is_exist = $request->get('is_exist');
             $inventory->deskripsi = $request->get('deskripsi');
@@ -1254,6 +1260,7 @@ class AssetController extends Controller
             $last_activity = Activity::all()->last();
             if($last_activity->subject_id === $id){
                 $last_activity->causer_id = $check['id'];
+                $last_activity->causer_type = $notes;
                 $last_activity->save();
             }
             
@@ -1307,6 +1314,7 @@ class AssetController extends Controller
         
         $id = $request->get('id', null);
         $replacement_id = $request->get('replacement_id', null);
+        $notes = $request->get('notes', null);
         try{
             $inventory = Inventory::find($id);
             if($inventory === null) return response()->json(["success" => false, "message" => "Id Inventori yang akan Diganti Tidak Ditemukan"], 400);
@@ -1323,6 +1331,7 @@ class AssetController extends Controller
             $inventory->save();
             $last_activity = Activity::all()->last();
             $last_activity->causer_id = $check['id'];
+            $last_activity->causer_type = $notes;
             $last_activity->save();
             $pivot_children = $pivots->where('parent_id', $id);
             if(count($pivot_children)){
@@ -1335,6 +1344,7 @@ class AssetController extends Controller
             $inventory_replacement->save();
             $last_activity = Activity::all()->last();
             $last_activity->causer_id = $check['id'];
+            $last_activity->causer_type = "Replacement of inventory with id ".$id;
             $last_activity->save();
             $pivot_old_replacement = InventoryInventoryPivot::where('child_id', $replacement_id)->first();
             if($pivot_old_replacement === null){
@@ -1342,6 +1352,7 @@ class AssetController extends Controller
                 $remove_old_pivot->delete();
                 $last_activity = Activity::all()->last();
                 $last_activity->causer_id = $check['id'];
+                $last_activity->causer_type = $notes;
                 $last_activity->save();
                 $new_replacement_pivot = new InventoryInventoryPivot;
                 $new_replacement_pivot->parent_id = $pivot_old_inventory->parent_id;
@@ -1349,6 +1360,7 @@ class AssetController extends Controller
                 $new_replacement_pivot->save();
                 $last_activity = Activity::all()->last();
                 $last_activity->causer_id = $check['id'];
+                $last_activity->causer_type = "Replacement of inventory with id ".$id;
                 $last_activity->save();
             } else {
                 $parent_old_inventory = $pivot_old_inventory->parent_id;
@@ -1356,12 +1368,14 @@ class AssetController extends Controller
                 $pivot_old_inventory->save();
                 $last_activity = Activity::all()->last();
                 $last_activity->causer_id = $check['id'];
+                $last_activity->causer_type = $notes;
                 $last_activity->save();
 
                 $pivot_old_replacement->parent_id = $parent_old_inventory;
                 $pivot_old_replacement->save();
                 $last_activity = Activity::all()->last();
                 $last_activity->causer_id = $check['id'];
+                $last_activity->causer_type = "Replacement of inventory with id ".$id;
                 $last_activity->save();
                 
             }
@@ -1418,6 +1432,7 @@ class AssetController extends Controller
         if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         // return $check['id'];
         $id = $request->get('id', null);
+        $notes = $request->get('notes', null);
         try{
             $inventory_part_id = $request->get('inventory_part_id', null);
             $pivots = InventoryInventoryPivot::get();
@@ -1430,11 +1445,13 @@ class AssetController extends Controller
             $inventory->save();
             $last_activity = Activity::all()->last();
             $last_activity->causer_id = $check['id'];
+            $last_activity->causer_type = $notes;
             $last_activity->save();
             $remove_pivot = $pivots->where('child_id', $inventory_part_id)->first();
             $remove_pivot->delete();
             $last_activity = Activity::all()->last();
             $last_activity->causer_id = $check['id'];
+            $last_activity->causer_type = $notes;
             $last_activity->save();
             $pivot_children = $pivots->where('parent_id', $inventory_part_id);
             if(count($pivot_children)){
@@ -1480,6 +1497,7 @@ class AssetController extends Controller
         if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         // return $check['id'];
         $id = $request->get('id', null);
+        $notes = $request->get('notes', null);
         $inventory_part_ids = $request->get('inventory_part_ids', []);
         try{
             if(count($inventory_part_ids)){
@@ -1495,6 +1513,7 @@ class AssetController extends Controller
                     $inventory->save();
                     $last_activity = Activity::all()->last();
                     $last_activity->causer_id = $check['id'];
+                    $last_activity->causer_type = $notes;
                     $last_activity->save();
                     $pivot = new InventoryInventoryPivot;
                     $pivot->parent_id = $id;
@@ -1502,6 +1521,7 @@ class AssetController extends Controller
                     $pivot->save();
                     $last_activity = Activity::all()->last();
                     $last_activity->causer_id = $check['id'];
+                    $last_activity->causer_type = $notes;
                     $last_activity->save();
 
                     $pivots = InventoryInventoryPivot::get();
@@ -1528,6 +1548,7 @@ class AssetController extends Controller
         if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         
         $id = $request->get('id', null);
+        $notes = $request->get('notes', null);
         $inventory = Inventory::find($id);
         if($inventory === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
         try{
@@ -1535,6 +1556,7 @@ class AssetController extends Controller
             $inventory->delete();
             $last_activity = Activity::all()->last();
             $last_activity->causer_id = $check['id'];
+            $last_activity->causer_type = $notes;
             $last_activity->save();
             $inventory_values = InventoryValue::where('inventory_id', $id)->get();
             foreach($inventory_values as $inventory_value){
@@ -1562,6 +1584,31 @@ class AssetController extends Controller
                 }
             }
             return response()->json(["success" => true, "message" => "Data Berhasil Dihapus"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
+
+    // Adding Notes
+
+    public function addInventoryNotes(Request $request){
+        $check = $this->checkRoute("CONTRACTS_GET", $request->header("Authorization"));
+        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        try{
+            $id = $request->get('id', null);
+            $notes = $request->get('notes', null);
+            $inventory = Inventory::find($id);
+            if($inventory === null) return response()->json(["success" => false, "message" => "Inventory Tidak Ditemukan"]);
+            activity()->log('note');
+            $last_activity = Activity::all()->last();
+            $last_activity->log_name = "Inventory";
+            $last_activity->subject_type = "App\Inventory";
+            $last_activity->subject_id = $id;
+            $last_activity->causer_id = $check['id'];
+            $last_activity->causer_type = $notes;
+            $last_activity->save();
+            
+            return response()->json(["success" => true, "message" => "Berhasil Mebuat Note Inventory"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
         }
@@ -2675,8 +2722,8 @@ class AssetController extends Controller
 
     public function deleteRelationshipInventory(Request $request)
     {
-        // $check = $this->checkRoute("RELATIONSHIP_DELETE", $request->header("Authorization"));
-        // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        $check = $this->checkRoute("CONTRACTS_GET", $request->header("Authorization"));
+        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         $id = $request->get('id', null);
         $relationship_inventory = RelationshipInventory::find($id);
         if($relationship_inventory === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
