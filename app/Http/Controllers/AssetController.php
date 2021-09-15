@@ -10,15 +10,12 @@ use Spatie\Activitylog\Models\Activity;
 use App\AccessFeature;
 use App\Asset;
 use App\AssetColumn;
-use App\AssetRelatedPivot;
 use App\Inventory;
 use App\InventoryValue;
-use App\InventoryColumn;
 use App\InventoryInventoryPivot;
 use App\Manufacturer;
 use App\ModelInventory;
 use App\ModelInventoryColumn;
-use App\ModelInventoryValue;
 use App\ModelModelPivot;
 use App\Relationship;
 use App\RelationshipAsset;
@@ -568,7 +565,7 @@ class AssetController extends Controller
         // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         try{
             $id = $request->get('id');
-            $model = ModelInventory::find($id);
+            $model = ModelInventory::withTrashed()->find($id);
             if($model === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
             $assets = Asset::withTrashed()->get();
             $asset = $assets->where(('id'), $model->asset_id)->first();
@@ -926,6 +923,7 @@ class AssetController extends Controller
             $models = ModelInventory::select('id','name','asset_id')->get();
             $manufacturers = Manufacturer::select('id', 'name')->get();
             $assets = Asset::select('id', 'name')->get();
+            $vendors = Vendor::select('id', 'name')->get();
             $status_condition = [
                 (object)['id' => 1, 'name' => "Good"],
                 (object)['id' => 2, 'name' => "Grey"],
@@ -941,12 +939,16 @@ class AssetController extends Controller
                     'headers'  => $headers
                 ]);
             $cgx_companies = json_decode((string) $response->getBody(), true)['data']['companies'];
+            $companies = [];
+            $company['id'] = 0;
+            $company['name'] = "None";
+            $companies[] = $company;
             foreach($cgx_companies as $cgx_company){
                 $company['id'] = $cgx_company['company_id'];
                 $company['name'] = $cgx_company['company_name'];
                 $companies[] = $company;
             }
-            $data = (object)['models' => $models, 'assets' => $assets, 'manufacturers' => $manufacturers, 'status_condition' => $status_condition, 'status_usage' => $status_usage, 'companies' => $companies];
+            $data = (object)['models' => $models, 'assets' => $assets, 'vendors' => $vendors, 'manufacturers' => $manufacturers, 'status_condition' => $status_condition, 'status_usage' => $status_usage, 'companies' => $companies];
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $data]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
@@ -1147,16 +1149,16 @@ class AssetController extends Controller
         }
         $inventory = new Inventory;
         $inventory->model_id = $request->get('model_id');
-        $inventory->vendor_id = 0;
+        $inventory->vendor_id = $request->get('vendor_id', null);
         $inventory->inventory_name = $request->get('inventory_name');
         $inventory->status_condition = $request->get('status_condition');
-        $inventory->status_usage = 1;
-        $inventory->location = $request->get('location');
-        $inventory->is_exist = $request->get('is_exist');
-        $inventory->deskripsi = $request->get('deskripsi');
-        $inventory->manufacturer_id = $request->get('manufacturer_id');
+        $inventory->status_usage = $request->get('status_condition');
+        $inventory->location = $request->get('location', null);
+        $inventory->is_exist = $request->get('is_exist', null);
+        $inventory->deskripsi = $request->get('deskripsi', null);
+        $inventory->manufacturer_id = $request->get('manufacturer_id', null);
         $inventory->mig_id = $mig_id;
-        $inventory->serial_number = $request->get('serial_number');
+        $inventory->serial_number = $request->get('serial_number', null);
         $inventory_values = $request->get('inventory_values',[]);
         $notes = $request->get('notes', null);
         try{
@@ -1199,16 +1201,16 @@ class AssetController extends Controller
         if($check_inventory) return response()->json(["success" => false, "message" => "MIG ID Sudah Terdaftar"], 400);
         $inventory = new Inventory;
         $inventory->model_id = $request->get('model_id');
-        $inventory->vendor_id = 0;
+        $inventory->vendor_id = $request->get('vendor_id', null);
         $inventory->inventory_name = $request->get('inventory_name');
         $inventory->status_condition = $request->get('status_condition');
         $inventory->status_usage = 2;
-        $inventory->location = $request->get('location');
-        $inventory->is_exist = $request->get('is_exist');
-        $inventory->deskripsi = $request->get('deskripsi');
-        $inventory->manufacturer_id = $request->get('manufacturer_id');
+        $inventory->location = $request->get('location', null);
+        $inventory->is_exist = $request->get('is_exist', null);
+        $inventory->deskripsi = $request->get('deskripsi', null);
+        $inventory->manufacturer_id = $request->get('manufacturer_id', null);
         $inventory->mig_id = $mig_id;
-        $inventory->serial_number = $request->get('serial_number');
+        $inventory->serial_number = $request->get('serial_number', null);
         $inventory_values = $request->get('inventory_values',[]);
         $notes = $request->get('notes', null);
         try{
@@ -1247,16 +1249,16 @@ class AssetController extends Controller
         try{
             $inventory = Inventory::find($id);
             if($inventory === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
-            $inventory->vendor_id = 0;
+            $inventory->vendor_id = $request->get('vendor_id', null);
             $inventory->inventory_name = $request->get('inventory_name');
             $inventory->status_condition = $inventory->status_condition;
             $inventory->status_usage = $inventory->status_usage;
-            $inventory->location = $request->get('location');
-            $inventory->is_exist = $request->get('is_exist');
-            $inventory->deskripsi = $request->get('deskripsi');
-            $inventory->manufacturer_id = $request->get('manufacturer_id');
+            $inventory->location = $request->get('location', null);
+            $inventory->is_exist = $request->get('is_exist', null);
+            $inventory->deskripsi = $request->get('deskripsi', null);
+            $inventory->manufacturer_id = $request->get('manufacturer_id', null);
             $inventory->mig_id = $mig_id;
-            $inventory->serial_number = $request->get('serial_number');
+            $inventory->serial_number = $request->get('serial_number', null);
             $inventory->save();
             $last_activity = Activity::all()->last();
             if($last_activity->subject_id === $id){
@@ -2286,20 +2288,20 @@ class AssetController extends Controller
         // $check = $this->checkRoute("RELATIONSHIP_UPDATE", $request->header("Authorization"));
         // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         $id = $request->get('id', null);
-        $type_id = $request->get('type_id');
         $from_inverse = $request->get('from_inverse');
-        if($type_id < 1 || $type_id > 4) return response()->json(["success" => false, "message" => "Tipe Id Tidak Tepat"], 400);
+        // $type_id = $request->get('type_id');
+        // if($type_id < 1 || $type_id > 4) return response()->json(["success" => false, "message" => "Tipe Id Tidak Tepat"], 400);
         $relationship_asset = RelationshipAsset::find($id);
         if($relationship_asset === null) return response()->json(["success" => false, "message" => "Id Tidak Ditemukan"]);
         $relationship_asset->relationship_id = $request->get('relationship_id');
         if($from_inverse){
-            $relationship_asset->subject_id = $request->get('connected_id');
+            // $relationship_asset->subject_id = $request->get('connected_id');
             $relationship_asset->is_inverse = !$request->get('is_inverse');
         } else {
-            $relationship_asset->connected_id = $request->get('connected_id');
+            // $relationship_asset->connected_id = $request->get('connected_id');
             $relationship_asset->is_inverse = $request->get('is_inverse');
         } 
-        $relationship_asset->type_id = $type_id;
+        // $relationship_asset->type_id = $type_id;
         try{
             $relationship_asset->save();
             return response()->json(["success" => true, "message" => "Relationship Asset berhasil diubah"]);

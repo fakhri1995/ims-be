@@ -20,11 +20,11 @@ class CreateInventoriesTable extends Migration
             $table->string('inventory_name');
             $table->integer('status_condition');
             $table->integer('status_usage');
-            $table->integer('location');
-            $table->boolean('is_exist');
+            $table->integer('location')->nullable();
+            $table->boolean('is_exist')->nullable();
             $table->string('deskripsi')->nullable();
-            $table->integer('manufacturer_id');
-            $table->string('mig_id')->nullable();
+            $table->integer('manufacturer_id')->nullable();
+            $table->string('mig_id');
             $table->string('serial_number')->nullable();
             $table->timestamps();
             $table->softDeletes();
