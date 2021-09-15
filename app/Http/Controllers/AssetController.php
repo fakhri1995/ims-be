@@ -1283,6 +1283,7 @@ class AssetController extends Controller
                 if (array_key_exists('inventory_id', $check_activity->properties['attributes'])) {
                     if($check_activity->properties['attributes']['inventory_id'] === $id) {
                         $check_activity->causer_id = $check['id'];
+                        $check_activity->causer_type = $notes;
                         $check_activity->save();
                     }
                 }
