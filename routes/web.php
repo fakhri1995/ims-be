@@ -245,10 +245,15 @@ $router->post('/updateIncident', 'IncidentController@updateIncident');
 $router->delete('/deleteIncident', 'IncidentController@deleteIncident');
 
 //Ticket Routes
+$router->get('/getTicketLog', 'TicketController@getTicketLog');
+$router->get('/getTicketRelation', 'TicketController@getTicketRelation');
+$router->get('/getClosedTickets', 'TicketController@getClosedTickets');
 $router->get('/getTickets', 'TicketController@getTickets');
+$router->get('/getTicket', 'TicketController@getTicket');
 $router->post('/addTicket', 'TicketController@addTicket');
-$router->put('/updateTicket', 'TicketController@updateTicket');
-$router->delete('/deleteTicket', 'TicketController@deleteTicket');
+$router->put('/setItemTicket', 'TicketController@setItemTicket');
+$router->put('/changeStatusTicket', 'TicketController@changeStatusTicket');
+$router->put('/assignTicket', 'TicketController@assignTicket');
 
 //Service Category Routes
 $router->get('/getServiceCategories', 'ServiceController@getServiceCategories');

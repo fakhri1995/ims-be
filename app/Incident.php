@@ -8,5 +8,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Incident extends Model
 {
+    public $timestamps = false;
     use SoftDeletes;
 }

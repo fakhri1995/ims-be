@@ -3,10 +3,8 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Ticket extends Model
+class TicketActivityLog extends Model
 {
-    use SoftDeletes;
     public $timestamps = false;
 }
