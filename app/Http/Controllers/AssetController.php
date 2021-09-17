@@ -565,7 +565,7 @@ class AssetController extends Controller
         // if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         try{
             $id = $request->get('id');
-            $model = ModelInventory::withTrashed()->find($id);
+            $model = ModelInventory::find($id);
             if($model === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
             $assets = Asset::withTrashed()->get();
             $asset = $assets->where(('id'), $model->asset_id)->first();
@@ -804,7 +804,7 @@ class AssetController extends Controller
     public function saveInventoryChild($inventory, $location, $parent_id, $causer_id){
         $new_inventory = new Inventory;
         $new_inventory->model_id = $inventory['model_id'];
-        $new_inventory->vendor_id = 0;
+        $new_inventory->vendor_id = $inventory['vendor_id'];
         $new_inventory->inventory_name = $inventory['inventory_name'];
         $new_inventory->status_condition = $inventory['status_condition'];
         $new_inventory->status_usage = 1;
