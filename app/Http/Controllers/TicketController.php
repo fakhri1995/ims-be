@@ -157,12 +157,12 @@ class TicketController extends Controller
         if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         try{
             // $tickets = Ticket::where('status', '<>', 6)->get();
-            $tickets = Ticket::whereNotIn('status', [5,6])->orderBy('created_at', 'desc')->get();
+            $tickets = Ticket::where('status', '<>', 6)->orderBy('created_at', 'desc')->get();
             $open_tickets_count = $tickets->where('status', 1)->count();
             $on_progress_tickets_count = $tickets->where('status', 2)->count();
             $pending_tickets_count = $tickets->where('status', 3)->count();
             $resolved_tickets_count = $tickets->where('status', 4)->count();
-            $total_tickets = $tickets->count();
+            $total_tickets = $open_tickets_count + $on_progress_tickets_count + $pending_tickets_count + $resolved_tickets_count;
             $data = ["total_tickets" => $total_tickets, "open_tickets_count" => $open_tickets_count, "on_progress_tickets_count" => $on_progress_tickets_count, "pending_tickets_count" => $pending_tickets_count, "resolved_tickets_count" => $resolved_tickets_count, "tickets" => $tickets];
             
             if(!count($tickets)) return response()->json(["success" => false, "message" => "Ticket masih kosong", "data" => $data]);
@@ -427,6 +427,8 @@ class TicketController extends Controller
             if($ticket === null) return response()->json(["success" => false, "message" => "Id Ticket Tidak Ditemukan"]);
             if($ticket->status === 6) return response()->json(["success" => false, "message" => "Status Ticket Sudah Closed"]);
             if($status < 1 || $status > 6) return response()->json(["success" => false, "message" => "Status Tidak Tepat"]);
+            if(strlen($notes) > 1000) return response()->json(["success" => false, "message" => "Notes Melebihi 1000 Karakter"]);
+            if($ticket->status === 5 && $status === 1) return response()->json(["success" => false, "message" => "Status Canceled Tidak Dapat Diubah Menjadi Open Kembali"]);
             $current_timestamp = $this->getTimeNow();
             $old_ticket = [];
             foreach($ticket->getAttributes() as $key => $value) $old_ticket[$key] = $value;
