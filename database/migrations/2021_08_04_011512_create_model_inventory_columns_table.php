@@ -18,7 +18,7 @@ class CreateModelInventoryColumnsTable extends Migration
             $table->unsignedBigInteger('model_id');
             $table->string('name');
             $table->string('data_type');
-            $table->string('default')->nullable();
+            $table->text('default')->nullable();
             $table->boolean('required');
             $table->softDeletes();
         });
