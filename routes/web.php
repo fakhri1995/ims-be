@@ -27,6 +27,7 @@ $router->get('/ping', function(){
 //Message Routes
 $router->get('/getMessages', 'CompanyProfileController@getMessages');
 $router->post('/addMessage', 'CompanyProfileController@addMessage');
+$router->delete('/deleteMessage', 'CompanyProfileController@deleteMessage');
 
 //Career Routes
 $router->get('/getCareers', 'CompanyProfileController@getCareers');

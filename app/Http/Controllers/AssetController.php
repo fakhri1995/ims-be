@@ -144,7 +144,7 @@ class AssetController extends Controller
                 ];
                 $new_assets[] = $temp;
             }
-            if($assets->isEmpty()) return response()->json(["success" => true, "message" => "Asset Belum Terisi"]);
+            if($assets->isEmpty()) return response()->json(["success" => true, "message" => "Asset Belum Terisi", "data" => []]);
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $new_assets]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
@@ -285,21 +285,61 @@ class AssetController extends Controller
         }
         $id = $request->get('id', null);
         $name = $request->get('name');
-        $code = $request->get('code');
+        $parent = $request->get('parent', null);
         $description = $request->get('description');
         $required_sn = $request->get('required_sn');
         try{
             $asset = Asset::find($id);
             if($asset === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
-            $check_asset = Asset::where('code', $code)->first();
-            if($check_asset && $code !== $asset->code) return response()->json(["success" => false, "message" => "Code Sudah Terpakai"], 400);
-            $check_format_code = explode(".", $code);
-            foreach($check_format_code as $checker){
-                $checker = preg_replace( '/[^0-9]/', '', $checker);
-                if(strlen($checker) !== 3) return response()->json(["success" => false, "message" => "Code Tidak Sesuai dengan Format"], 400);
+            // $check_asset = Asset::where('code', $code)->first();
+            // if($check_asset && $code !== $asset->code) return response()->json(["success" => false, "message" => "Code Sudah Terpakai"], 400);
+            // $check_format_code = explode(".", $code);
+            // foreach($check_format_code as $checker){
+            //     $checker = preg_replace( '/[^0-9]/', '', $checker);
+            //     if(strlen($checker) !== 3) return response()->json(["success" => false, "message" => "Code Tidak Sesuai dengan Format"], 400);
+            // }
+            $check_old_code = $asset->code;
+            $check_old_code_length = strlen($check_old_code);
+            if($parent === $check_old_code) return response()->json(["success" => false, "message" => "Code Parent Sama dengan Code Asset yang Ingin Diubah"], 400);
+            if($parent !== null){
+                $old_parent = substr($check_old_code, -($check_old_code_length), $check_old_code_length-4); 
+                if($old_parent !== $parent){
+                    $check_parent = Asset::where('code', $parent)->first();
+                    if($check_parent === null) return response()->json(["success" => false, "message" => "Parent Tidak Ditemukan"], 400);
+                    $assets = Asset::withTrashed()->where('code', 'like', $parent.".%")->where('code', 'not like', $parent.".___.%")->orderBy('code', 'desc')->get();
+                    if(count($assets)){
+                        $new_number = (int)substr($assets->first()->code, -3) + 1;
+                        $new_string = (string)$new_number;
+                        if($new_number < 10) {
+                            $asset->code = $parent.".00".$new_string;
+                        } else if($new_number < 100) {
+                            $asset->code = $parent.".0".$new_string;
+                        } else {
+                            $asset->code = $parent.".".$new_string;
+                        }
+                    } else {
+                        $asset->code = $parent.".001";
+                    }
+                }
+            } else {
+                if($check_old_code_length > 3){
+                    $assets = Asset::withTrashed()->where('code', 'not like', "%.%")->orderBy('code', 'desc')->get();
+                    if(count($assets)){
+                        $new_number = (int)$assets->first()->code + 1;
+                        $new_string = (string)$new_number;
+                        if($new_number < 10) {
+                            $asset->code = "00".$new_string;
+                        } else if($new_number < 100) {
+                            $asset->code = "0".$new_string;
+                        } else {
+                            $asset->code = $new_string;
+                        }
+                    } else {
+                        $asset->code = "001";
+                    }
+                }
             }
             $asset->name = $name;
-            $asset->code = $code;
             $asset->description = $description;
             $asset->required_sn = $required_sn;
 
@@ -975,23 +1015,29 @@ class AssetController extends Controller
             ]], $error_response->getStatusCode());
         }
         try{
-            $assets = Asset::select('id','name')->get();
-            $models = ModelInventory::select('id','name', 'asset_id')->get();
+            $assets = Asset::withTrashed()->select('id','name','deleted_at')->get();
+            $models = ModelInventory::withTrashed()->select('id','name', 'asset_id','deleted_at')->get();
             $inventories = Inventory::select('id', 'model_id', 'status_condition', 'status_usage', 'inventory_name')->get();
             foreach($inventories as $inventory){
                 $model = $models->where('id', $inventory->model_id)->first();
                 if($model === null){
-                    $inventory->model_name = "Model Tidak Ditemukan";
-                    $inventory->asset_name = "Model Tidak Ditemukan";
+                    $inventory->model_name = "Id Model Tidak Ditemukan";
+                    $inventory->model_deleted_at = "Id Model Tidak Ditemukan";
+                    $inventory->asset_name = "Id Model Tidak Ditemukan";
+                    $inventory->asset_deleted_at = "Id Model Tidak Ditemukan";
                 } else {
                     $inventory->model_name = $model->name;
+                    $inventory->model_deleted_at = $model->deleted_at;
                     $asset = $assets->where('id', $model->asset_id)->first();
-                    if($asset === null) $inventory->asset_name = "Aset Tidak Ditemukan";
-                    else $inventory->asset_name = $asset->name;
+                    if($asset === null) $inventory->asset_name = "Id Aset Tidak Ditemukan";
+                    else {
+                        $inventory->asset_name = $asset->name;
+                        $inventory->asset_deleted_at = $asset->deleted_at;
+                    } 
                 } 
                
             }
-            if($inventories->isEmpty()) return response()->json(["success" => true, "message" => "Data Inventory Belum Terisi"]);
+            if($inventories->isEmpty()) return response()->json(["success" => true, "message" => "Data Inventory Belum Terisi", "data" => []]);
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventories]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);

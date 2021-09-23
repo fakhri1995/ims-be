@@ -91,6 +91,7 @@ class CompanyProfileController extends Controller
         $message->company_name = $request->get('company_name');
         $message->interested_in = $request->get('interested_in');
         $message->message = $request->get('message');
+        $message->phone_number = $request->get('phone_number');
         try{
             $message->save();
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
@@ -99,6 +100,20 @@ class CompanyProfileController extends Controller
         }
     }
 
+    public function deleteMessage(Request $request)
+    {
+        $check = $this->checkRoute("CAREER_DELETE", $request->header("Authorization"));
+        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        $id = $request->get('id', null);
+        $career = Message::find($id);
+        if($career === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
+        try{
+            $career->delete();
+            return response()->json(["success" => true, "message" => "Message Berhasil Dihapus"]);
+        } catch(Exception $err){
+            return response()->json(["success" => false, "message" => $err], 400);
+        }
+    }
 
     // Career
     public function getCareers(Request $request)

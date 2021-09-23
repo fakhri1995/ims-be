@@ -19,6 +19,7 @@ class CreateMessagesTable extends Migration
             $table->string('company_email');
             $table->string('company_name');
             $table->string('interested_in');
+            $table->string('phone_number');
             $table->text('message');
             $table->timestamps();
             $table->softDeletes();
