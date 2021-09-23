@@ -977,7 +977,7 @@ class AssetController extends Controller
         try{
             $assets = Asset::select('id','name')->get();
             $models = ModelInventory::select('id','name', 'asset_id')->get();
-            $inventories = Inventory::select('id', 'model_id', 'status_condition', 'status_usage')->get();
+            $inventories = Inventory::select('id', 'model_id', 'status_condition', 'status_usage', 'inventory_name')->get();
             foreach($inventories as $inventory){
                 $model = $models->where('id', $inventory->model_id)->first();
                 if($model === null){
