@@ -960,9 +960,9 @@ class AssetController extends Controller
         if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         // return $check['id'];
         try{
-            $models = ModelInventory::select('id','name','asset_id')->get();
-            $manufacturers = Manufacturer::select('id', 'name')->get();
-            $assets = Asset::select('id', 'name')->get();
+            $models = ModelInventory::withTrashed()->select('id','name','asset_id','deleted_at')->get();
+            $manufacturers = Manufacturer::withTrashed()->select('id','name','deleted_at')->get();
+            $assets = Asset::withTrashed()->select('id','name','deleted_at')->get();
             $vendors = Vendor::select('id', 'name')->get();
             $status_condition = [
                 (object)['id' => 1, 'name' => "Good"],
