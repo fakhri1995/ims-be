@@ -64,7 +64,8 @@ class TicketController extends Controller
                 ]);
             $response = json_decode((string) $response->getBody(), true);
             $log_user_id = $response['data']['user_id'];
-            return ["success" => true, "id" => $log_user_id];
+            $log_user_company_id = $response['data']['company']['company_id'];
+            return ["success" => true, "id" => $log_user_id, "company_id" => $log_user_company_id];
         }catch(ClientException $err){
             $error_response = $err->getResponse();
             $detail = json_decode($error_response->getBody());
@@ -107,6 +108,20 @@ class TicketController extends Controller
 
     public function getTicketLog(Request $request){
         $id = $request->get('id');
+        $logs = TicketActivityLog::where('subject_id', $id)->get();
+        foreach($logs as $log){
+            $log->properties = json_decode($log->properties);
+        }
+        return response()->json(["success" => true, "data" => $logs]);
+    }
+    
+    public function getClientTicketLog(Request $request){
+        $check = $this->checkRoute("CONTRACTS_GET", $request->header("Authorization"));
+        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
+        $id = $request->get('id');
+        $ticket = Ticket::find($id);
+        if($ticket === null) return response()->json(["success" => false, "message" => "Ticket Tidak Ditemukan"]);
+        if($ticket->requester_location !== $check['company_id']) return response()->json(["success" => false, "message" => "Tidak Memiliki Access untuk Ticket Ini"]);
         $logs = TicketActivityLog::where('subject_id', $id)->get();
         foreach($logs as $log){
             $log->properties = json_decode($log->properties);
@@ -376,7 +391,7 @@ class TicketController extends Controller
         $check = $this->checkRoute("CONTRACTS_GET", $request->header("Authorization"));
         if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
         try{
-            $tickets = Ticket::where('requester', $check['id'])->where('status', '<>', 6)->orderBy('created_at', 'desc')->get();
+            $tickets = Ticket::where('requester_location', $check['company_id'])->where('status', '<>', 6)->orderBy('created_at', 'desc')->get();
             $open_tickets_count = $tickets->where('status', 1)->count();
             $on_progress_tickets_count = $tickets->where('status', 2)->count();
             $pending_tickets_count = $tickets->where('status', 3)->count();

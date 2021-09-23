@@ -245,6 +245,7 @@ $router->post('/updateIncident', 'IncidentController@updateIncident');
 $router->delete('/deleteIncident', 'IncidentController@deleteIncident');
 
 //Ticket Routes
+$router->get('/getClientTicketLog', 'TicketController@getClientTicketLog');
 $router->get('/getTicketLog', 'TicketController@getTicketLog');
 $router->get('/getCloseTicketLog', 'TicketController@getCloseTicketLog');
 $router->get('/getTicketRelation', 'TicketController@getTicketRelation');
