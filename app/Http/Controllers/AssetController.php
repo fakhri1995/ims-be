@@ -291,6 +291,9 @@ class AssetController extends Controller
         try{
             $asset = Asset::find($id);
             if($asset === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"], 400);
+            
+            // Untuk ganti code langung bukan ganti parent
+            //
             // $check_asset = Asset::where('code', $code)->first();
             // if($check_asset && $code !== $asset->code) return response()->json(["success" => false, "message" => "Code Sudah Terpakai"], 400);
             // $check_format_code = explode(".", $code);
@@ -298,6 +301,7 @@ class AssetController extends Controller
             //     $checker = preg_replace( '/[^0-9]/', '', $checker);
             //     if(strlen($checker) !== 3) return response()->json(["success" => false, "message" => "Code Tidak Sesuai dengan Format"], 400);
             // }
+            
             $check_old_code = $asset->code;
             $check_old_code_length = strlen($check_old_code);
             if($parent === $check_old_code) return response()->json(["success" => false, "message" => "Code Parent Sama dengan Code Asset yang Ingin Diubah"], 400);
@@ -392,6 +396,22 @@ class AssetController extends Controller
             }
 
             $asset->save();
+            $assets = Asset::where('code', 'like', $check_old_code.".%")->get();
+            if(count($assets)){
+                $is_deleted = $request->get('is_deleted');
+                if($is_deleted){
+                    foreach($assets as $asset_child){
+                        $asset_child->delete();
+                    }
+                } else {
+                    $length_old_parent_code = $check_old_code_length + 1;
+                    foreach($assets as $asset_child){
+                        $back_string = substr($asset_child->code, $length_old_parent_code);
+                        $asset_child->code = $asset->code.'.'.$back_string;
+                        $asset_child->save();
+                    }
+                }
+            }
             return response()->json(["success" => true, "message" => "Data Berhasil Disimpan"]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
