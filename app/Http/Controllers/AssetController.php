@@ -1008,7 +1008,29 @@ class AssetController extends Controller
                 $company['name'] = $cgx_company['company_name'];
                 $companies[] = $company;
             }
-            $data = (object)['models' => $models, 'assets' => $assets, 'vendors' => $vendors, 'manufacturers' => $manufacturers, 'status_condition' => $status_condition, 'status_usage' => $status_usage, 'companies' => $companies];
+            $response = $this->client->request('GET', '/account/v1/company-hierarchy', [
+                    'headers'  => $headers
+                ]);
+            $data = json_decode((string) $response->getBody(), true)['data'];
+            if (array_key_exists('members', $data)){
+                $tree_companies = (object)[
+                    'id' => $data['company_id'],
+                    'title' => $data['company_name'],
+                    'key' => $data['company_id'],
+                    'value' => $data['company_id'],
+                    'id_parent' => $data['company_id'],
+                    'children' => $this->getChildren($data['members'], $data['company_id'])
+                ];
+            } else {
+                $tree_companies = (object)[
+                    'id' => $data['company_id'],
+                    'title' => $data['company_name'],
+                    'key' => $data['company_id'],
+                    'value' => $data['company_id'],
+                    'id_parent' => $data['company_id']
+                ];
+            }
+            $data = (object)['models' => $models, 'assets' => $assets, 'vendors' => $vendors, 'manufacturers' => $manufacturers, 'status_condition' => $status_condition, 'status_usage' => $status_usage, 'companies' => $companies, 'tree_companies' => $tree_companies];
             return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $data]);
         } catch(Exception $err){
             return response()->json(["success" => false, "message" => $err], 400);
