@@ -1115,7 +1115,8 @@ class AssetController extends Controller
                 $inventory->asset_name = "Model Tidak Ditemukan";
             } else {
                 $asset = Asset::find($model->asset_id);
-                $inventory->asset_name = "Asset Tidak Ditemukan";
+                if($asset === null) $inventory->asset_name = "Asset Tidak Ditemukan";
+                else $inventory->asset_name = $asset->name;
                 $inventory->model_name = $model->name;
             }
             $all_inventory_values = InventoryValue::get();
