@@ -938,6 +938,7 @@ class AssetController extends Controller
                 // ];
                 $temp_model['name'] = "Model Tidak Ditemukan";
                 $temp_asset['name'] = "Model Tidak Ditemukan";
+                $temp_asset['id'] = 0;
             } else {
                 $temp_asset = null;
                 foreach($assets as $asset){
@@ -947,6 +948,7 @@ class AssetController extends Controller
                 }
                 if($temp_asset === null){
                     $temp_asset['name'] = "Asset Tidak Ditemukan";
+                    $temp_asset['id'] = 0;
                 }
             }
             $inventory_parts = [];
@@ -957,17 +959,22 @@ class AssetController extends Controller
             }
             $data = [
                 'id' => $inventory['id'],
+                'inventory_name' => $inventory['inventory_name'],
                 'serial_number' => $inventory['serial_number'],
                 'model' => $temp_model['name'],
-                'asset' => $temp_asset['name'],
+                'asset_id' => $temp_asset['id'],
+                'asset_name' => $temp_asset['name'],
                 'inventory_parts' => $inventory_parts
             ];
         } else {
             $data = [
                 'id' => 0,
+                'inventory_name' => "Inventory Tidak Ditemukan",
                 'serial_number' => "Inventory Tidak Ditemukan",
                 'model' => "Inventory Tidak Ditemukan",
                 'asset' => "Inventory Tidak Ditemukan",
+                'asset_id' => 0,
+                'asset_name' => "Inventory Tidak Ditemukan",
                 'inventory_parts' => []
             ];
         }
