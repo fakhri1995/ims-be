@@ -1184,6 +1184,63 @@ class AssetController extends Controller
         }
     }
 
+    public function getInventoryReplacementChildren($inventory, $inventories, $models, $assets, $pivots, $level = 0)
+    {
+        $pivot_children = [];
+        // if($level === 0) return $inventory;
+        foreach($pivots as $pivot){
+            if($pivot['parent_id'] === $inventory['id']) $pivot_children[] = $pivot['child_id'];
+        }
+        if(!count($pivot_children)) return [];
+        
+        $inventory_children = [];
+        foreach($pivot_children as $pivot_child){
+            foreach($inventories as $check_inventory){
+                if($check_inventory['id'] === $pivot_child){
+                    $inventory_children[] = $check_inventory;
+                    break;
+                }
+            }
+        }
+        
+        $new_children = [];
+        foreach($inventory_children as $inventory_child){
+            $temp_model = null;
+            foreach($models as $model){
+                if($model['id'] === $inventory_child['model_id']){
+                    $temp_model = $model;
+                    break;
+                }
+            }
+            
+            if($temp_model === null){
+                $inventory_child['asset_id'] = 0;
+                $inventory_child['asset_name'] = "Model Tidak Ditemukan";
+            } else{
+                $inventory_child['model_name'] = $temp_model['name'];
+                $inventory_child['asset_id'] = $temp_model['asset_id'];
+                $temp_asset = null;
+                
+                foreach($assets as $asset){
+                    if($asset['id'] === $inventory_child['asset_id']){
+                        $temp_asset = $asset;
+                        break;
+                    }
+                }
+                
+                if($temp_asset === null){
+                    $inventory_child['asset_name'] = "Asset Tidak Ditemukan";
+                } else {
+                    $inventory_child['asset_name'] = $temp_asset['name'];
+                }
+            } 
+            // return $inventory_child;
+            $inventory_child['inventory_parts'] = $this->getInventoryReplacementChildren($inventory_child, $inventories, $models, $assets, $pivots, $level++);
+            $new_children[] = $inventory_child;
+        }
+        return $new_children;
+    }
+    
     public function getInventoryReplacements(Request $request)
     {
         $header = $request->header("Authorization");
@@ -1193,17 +1250,36 @@ class AssetController extends Controller
         try{
             // $model = ModelInventory::withTrashed()->find($id);
             // if($model === null)return response()->json(["success" => false, "message" => "Model Tidak Ditemukan"]);
-            $inventories = Inventory::get();
-            $models = ModelInventory::get();
+            $inventories = Inventory::select('id','inventory_name', 'model_id', 'status_usage','mig_id')->get();
+            $models = ModelInventory::select('id','name','asset_id')->get();
+            $assets = Asset::select('id','name')->get();
+            $inventories_array = $inventories->toArray();
+            $models_array = $models->toArray();
+            $assets_array = $assets->toArray();
+            $pivots = InventoryInventoryPivot::get()->toArray();
             foreach($inventories as $inventory){
                 $model = $models->find($inventory->model_id);
-                if($model === null) $inventory->asset_id = null;
-                else $inventory->asset_id = $model->asset_id;
+                if($model === null){
+                    $inventory->asset_id = 0;
+                    $inventory->asset_name = "Model Tidak Ditemukan";
+                } else{
+                    $inventory->model_name = $model->name;
+                    $inventory->asset_id = $model->asset_id;
+                    $asset = $assets->where('id', $model->asset_id)->first();
+                    if($asset === null){
+                        $inventory->asset_name = "Asset Tidak Ditemukan";
+                    } else {
+                        $inventory->asset_name = $asset->name;
+                    }
+                } 
             }
             $inventory_replacements = $inventories->where('asset_id', $id)->where('status_usage', 2);
             $datas = [];
             if(count($inventory_replacements)){
                 foreach($inventory_replacements as $inventory_replacement){
+                    // return $this->getInventoryReplacementChildren($inventory_replacement, $inventories_array, $models_array, $assets_array, $pivots);
+                    $inventory_replacement->inventory_parts = $this->getInventoryReplacementChildren($inventory_replacement, $inventories_array, $models_array, $assets_array, $pivots);
+            
                     $datas[] = $inventory_replacement;
                 }
             }
