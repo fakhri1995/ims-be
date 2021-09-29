@@ -1601,10 +1601,11 @@ class AssetController extends Controller
         $inventory_part_ids = $request->get('inventory_part_ids', []);
         try{
             if(count($inventory_part_ids)){
-                foreach($inventory_part_ids as $inventory_part_id){
-                    $check_used = $this->checkUsed($inventory_part_id);
-                    if($check_used['exist']) return response()->json(["success" => false, "message" => "Part Id ".$inventory_part_id." sedang digunakan oleh Id ".$check_used['id']], 400);
-                }
+                // foreach($inventory_part_ids as $inventory_part_id){
+                //     $check_used = $this->checkUsed($inventory_part_id);
+                //     if($check_used['exist']) return response()->json(["success" => false, "message" => "Part Id ".$inventory_part_id." sedang digunakan oleh Id ".$check_used['id']], 400);
+                // }
+                $pivots = InventoryInventoryPivot::get();
                 foreach($inventory_part_ids as $inventory_part_id){
                     $inventory = Inventory::find($inventory_part_id);
                     if($inventory === null)return response()->json(["success" => false, "message" => "Id Inventory Tidak Terdaftar"], 400);
@@ -1615,16 +1616,23 @@ class AssetController extends Controller
                     $last_activity->causer_id = $check['id'];
                     $last_activity->causer_type = $notes;
                     $last_activity->save();
-                    $pivot = new InventoryInventoryPivot;
-                    $pivot->parent_id = $id;
-                    $pivot->child_id = $inventory_part_id;
-                    $pivot->save();
+                    
+                    $pivot = $pivots->where('child_id', $inventory_part_id)->first();
+                    if($pivot === null){
+                        $pivot = new InventoryInventoryPivot;
+                        $pivot->parent_id = $id;
+                        $pivot->child_id = $inventory_part_id;
+                        $pivot->save();
+                    } else {
+                        $pivot->parent_id = $id;
+                        $pivot->save();
+                    }
                     $last_activity = Activity::all()->last();
                     $last_activity->causer_id = $check['id'];
                     $last_activity->causer_type = $notes;
                     $last_activity->save();
+                    
 
-                    $pivots = InventoryInventoryPivot::get();
                     $pivot_children = $pivots->where('parent_id', $inventory_part_id);
                     if(count($pivot_children)){
                         foreach($pivot_children as $pivot_child){
