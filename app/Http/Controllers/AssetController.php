@@ -960,7 +960,7 @@ class AssetController extends Controller
             $data = [
                 'id' => $inventory['id'],
                 'inventory_name' => $inventory['inventory_name'],
-                'serial_number' => $inventory['serial_number'],
+                'mig_id' => $inventory['mig_id'],
                 'model' => $temp_model['name'],
                 'asset_id' => $temp_asset['id'],
                 'asset_name' => $temp_asset['name'],
@@ -970,7 +970,7 @@ class AssetController extends Controller
             $data = [
                 'id' => 0,
                 'inventory_name' => "Inventory Tidak Ditemukan",
-                'serial_number' => "Inventory Tidak Ditemukan",
+                'mig_id' => "Inventory Tidak Ditemukan",
                 'model' => "Inventory Tidak Ditemukan",
                 'asset' => "Inventory Tidak Ditemukan",
                 'asset_id' => 0,
@@ -1239,6 +1239,40 @@ class AssetController extends Controller
             $new_children[] = $inventory_child;
         }
         return $new_children;
+    }
+    
+    public function getInventoryAddable(Request $request)
+    {
+        $inventories = Inventory::select('id','inventory_name', 'model_id', 'status_usage','mig_id')->get();
+        $models = ModelInventory::select('id','name','asset_id')->get();
+        $assets = Asset::select('id','name')->get();
+        $pivots = InventoryInventoryPivot::get();
+        $inventories_array = $inventories->toArray();
+        $models_array = $models->toArray();
+        $assets_array = $assets->toArray();
+        $inventory_in_stock = $inventories->where('status_usage', 2);
+        $data = [];
+        foreach($inventory_in_stock as $inventory){
+            $pivot = $pivots->where('child_id', $inventory->id)->first();
+            if($pivot) continue;
+            $model = $models->find($inventory->model_id);
+            if($model === null){
+                $inventory->asset_id = 0;
+                $inventory->asset_name = "Model Tidak Ditemukan";
+            } else{
+                $inventory->model_name = $model->name;
+                $inventory->asset_id = $model->asset_id;
+                $asset = $assets->where('id', $model->asset_id)->first();
+                if($asset === null){
+                    $inventory->asset_name = "Asset Tidak Ditemukan";
+                } else {
+                    $inventory->asset_name = $asset->name;
+                }
+            } 
+            $inventory->inventory_parts = $this->getInventoryReplacementChildren($inventory, $inventories_array, $models_array, $assets_array, $pivots);
+            $data[] = $inventory;
+        }
+        return response()->json(["success" => true, "message" => "Data Berhasil Diambil", "data" => $data ]); 
     }
     
     public function getInventoryReplacements(Request $request)
