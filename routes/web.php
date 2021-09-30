@@ -187,6 +187,7 @@ $router->delete('/deleteModel', 'AssetController@deleteModel');
 //Inventory Routes
 $router->get('/getInventories', 'AssetController@getInventories');
 $router->get('/getInventory', 'AssetController@getInventory');
+$router->get('/getInventoryAddable', 'AssetController@getInventoryAddable');
 $router->get('/getInventoryRelations', 'AssetController@getInventoryRelations');
 $router->get('/getInventoryReplacements', 'AssetController@getInventoryReplacements');
 $router->get('/getChangeStatusUsageDetailList', 'AssetController@getChangeStatusUsageDetailList');
