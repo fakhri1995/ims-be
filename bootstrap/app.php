@@ -62,6 +62,8 @@ $app->singleton(
 
 $app->configure('app');
 $app->configure('cors');
+$app->configure('auth');
+$app->configure('service');
 $app->configure('activitylog');
 
 /*
@@ -79,9 +81,9 @@ $app->middleware([
     Fruitcake\Cors\HandleCors::class,
 ]);
 
-// $app->routeMiddleware([
-//     'auth' => App\Http\Middleware\Authenticate::class,
-// ]);
+$app->routeMiddleware([
+    'auth' => App\Http\Middleware\Authenticate::class,
+]);
 
 /*
 |--------------------------------------------------------------------------
@@ -101,6 +103,8 @@ $app->register(Fruitcake\Cors\CorsServiceProvider::class);
 $app->register(Flipbox\LumenGenerator\LumenGeneratorServiceProvider::class);
 $app->register(Spatie\Activitylog\ActivitylogServiceProvider::class);
 $app->register(Illuminate\Filesystem\FilesystemServiceProvider::class);
+$app->register(Laravel\Passport\PassportServiceProvider::class);
+$app->register(Dusterio\LumenPassport\PassportServiceProvider::class);
 
 /*
 |--------------------------------------------------------------------------
@@ -112,6 +116,9 @@ $app->register(Illuminate\Filesystem\FilesystemServiceProvider::class);
 | can respond to, as well as the controllers that may handle them.
 |
 */
+
+
+\Dusterio\LumenPassport\LumenPassport::routes($app, ['prefix' => 'v1/oauth']);
 
 $app->router->group([
     'namespace' => 'App\Http\Controllers',

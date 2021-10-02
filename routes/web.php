@@ -24,102 +24,142 @@ $router->get('/ping', function(){
 
 // ------------ Company Profile ------------ //
 
-//Message Routes
-$router->get('/getMessages', 'CompanyProfileController@getMessages');
 $router->post('/addMessage', 'CompanyProfileController@addMessage');
-$router->delete('/deleteMessage', 'CompanyProfileController@deleteMessage');
-
-//Career Routes
 $router->get('/getCareers', 'CompanyProfileController@getCareers');
-$router->post('/addCareer', 'CompanyProfileController@addCareer');
-$router->put('/updateCareer', 'CompanyProfileController@updateCareer');
-$router->delete('/deleteCareer', 'CompanyProfileController@deleteCareer');
+
 
 // ----------------------------------------- //
 
+$router->post('/login', 'LoginController@login');
 
+$router->group(['middleware' => 'auth'], function($router){
+    
+    //User Routes
+    $router->post('/logout', 'LoginController@logout');
+    $router->get('/detailProfile', 'LoginController@detailProfile');
+    $router->post('/changePassword', 'LoginController@changePassword');
 
-//User Routes
-$router->post('/login', 'UserController@login');
-$router->post('/logout', 'UserController@logout');
-$router->post('/detailProfile', 'UserController@detailProfile');
-$router->post('/changePassword', 'UserController@changePassword');
+    //Message Routes
+    $router->get('/getMessages', 'CompanyProfileController@getMessages');
+    $router->delete('/deleteMessage', 'CompanyProfileController@deleteMessage');
+
+    //Career Routes
+    $router->get('/getCareers', 'CompanyProfileController@getCareers');
+    $router->post('/addCareer', 'CompanyProfileController@addCareer');
+    $router->put('/updateCareer', 'CompanyProfileController@updateCareer');
+    $router->delete('/deleteCareer', 'CompanyProfileController@deleteCareer');
+
+    //Account Routes
+    //Agent Routes
+    $router->get('/getAgentDetail', 'UserController@getAgentDetail');
+    $router->get('/getAgentList', 'UserController@getAgentList');
+    $router->post('/addAgentMember', 'UserController@addAgentMember');
+    $router->put('/updateAgentDetail', 'UserController@updateAgentDetail');
+    $router->put('/changeAgentPassword', 'UserController@changeAgentPassword');
+    $router->put('/agentActivation', 'UserController@agentActivation');
+    $router->put('/updateFeatureAgent', 'UserController@updateFeatureAgent');
+
+    //Requester Routes
+    $router->get('/getRequesterDetail', 'UserController@getRequesterDetail');
+    $router->get('/getRequesterList', 'UserController@getRequesterList');
+    $router->post('/addRequesterMember', 'UserController@addRequesterMember');
+    $router->put('/updateRequesterDetail', 'UserController@updateRequesterDetail');
+    $router->put('/changeRequesterPassword', 'UserController@changeRequesterPassword');
+    $router->put('/requesterActivation', 'UserController@requesterActivation');
+    $router->put('/updateFeatureRequester', 'UserController@updateFeatureRequester');
+
+    //Company Routes
+    $router->get('/getCompanyClientList', 'CompanyController@getCompanyClientList');
+    $router->get('/getLocations', 'CompanyController@getLocations');
+
+    //MIG Company Routes
+    $router->get('/getMainCompanyDetail', 'CompanyController@getMainCompanyDetail');
+    $router->put('/updateMainCompany', 'CompanyController@updateMainCompany');
+
+    //MIG Branch Company Routes
+    $router->get('/getBranchCompanyList', 'CompanyController@getBranchCompanyList');
+    $router->get('/getCompanyBranchDetail', 'CompanyController@getCompanyBranchDetail');
+    $router->post('/addCompanyBranch', 'CompanyController@addCompanyBranch');
+    $router->put('/updateCompanyBranch', 'CompanyController@updateCompanyBranch');
+    $router->put('/companyBranchActivation', 'CompanyController@companyBranchActivation');
+
+    //MIG Client Company Routes
+    $router->get('/getClientCompanyList', 'CompanyController@getClientCompanyList');
+    $router->get('/getCompanyClientDetail', 'CompanyController@getCompanyClientDetail');
+    $router->post('/addCompanyClient', 'CompanyController@addCompanyClient');
+    $router->put('/updateCompanyClient', 'CompanyController@updateCompanyClient');
+    $router->put('/companyClientActivation', 'CompanyController@companyClientActivation');
+
+    //Access Feature Routes
+    $router->get('/getFeatures', 'AccessFeatureController@getFeatures');
+    $router->post('/addFeature', 'AccessFeatureController@addFeature');
+    $router->delete('/deleteFeature', 'AccessFeatureController@deleteFeature');
+
+    //Module Routes
+    $router->get('/getModules', 'AccessFeatureController@getModules');
+    $router->post('/addModule', 'AccessFeatureController@addModule');
+    $router->post('/addModuleFeature', 'AccessFeatureController@addModuleFeature');
+    $router->put('/updateModuleFeature', 'AccessFeatureController@updateModuleFeature');
+    $router->delete('/deleteModuleFeature', 'AccessFeatureController@deleteModuleFeature');
+    $router->delete('/deleteModule', 'AccessFeatureController@deleteModule');
+
+    //Role Routes
+    $router->get('/getRoleUserFeatures', 'AccessFeatureController@getRoleUserFeatures');
+    $router->get('/getRoles', 'AccessFeatureController@getRoles');
+    $router->get('/getRole', 'AccessFeatureController@getRole');
+    $router->post('/addRole', 'AccessFeatureController@addRole');
+    $router->put('/updateRole', 'AccessFeatureController@updateRole');
+    $router->delete('/deleteRole', 'AccessFeatureController@deleteRole');
+
+    //Asset Routes
+    $router->get('/getAssets', 'AssetController@getAssets');
+    $router->get('/getAsset', 'AssetController@getAsset');
+    $router->get('/getDeletedAssets', 'AssetController@getDeletedAssets');
+    $router->post('/addAsset', 'AssetController@addAsset');
+    $router->put('/updateAsset', 'AssetController@updateAsset');
+    $router->delete('/deleteAsset', 'AssetController@deleteAsset');
+
+    //Model Routes
+    $router->get('/getModels', 'AssetController@getModels');
+    $router->get('/getModel', 'AssetController@getModel');
+    $router->get('/getModelRelations', 'AssetController@getModelRelations');
+    $router->post('/addModel', 'AssetController@addModel');
+    $router->put('/updateModel', 'AssetController@updateModel');
+    $router->delete('/deleteModel', 'AssetController@deleteModel');
+
+    //Inventory Routes
+    $router->get('/getInventories', 'AssetController@getInventories');
+    $router->get('/getInventory', 'AssetController@getInventory');
+    $router->get('/getInventoryAddable', 'AssetController@getInventoryAddable');
+    $router->get('/getInventoryRelations', 'AssetController@getInventoryRelations');
+    $router->get('/getInventoryReplacements', 'AssetController@getInventoryReplacements');
+    $router->get('/getChangeStatusUsageDetailList', 'AssetController@getChangeStatusUsageDetailList');
+    $router->post('/addInventory', 'AssetController@addInventory');
+    $router->post('/addInventoryNotes', 'AssetController@addInventoryNotes');
+    $router->post('/addInventoryParts', 'AssetController@addInventoryParts');
+    $router->put('/updateInventory', 'AssetController@updateInventory');
+    $router->put('/updateInventoryParts', 'AssetController@updateInventoryParts');
+    $router->put('/replaceInventoryPart', 'AssetController@replaceInventoryPart');
+    $router->put('/changeStatusUsage', 'AssetController@changeStatusUsage');
+    $router->put('/changeStatusCondition', 'AssetController@changeStatusCondition');
+    $router->delete('/removeInventoryPart', 'AssetController@removeInventoryPart');
+    $router->delete('/deleteInventory', 'AssetController@deleteInventory');
+        
+    //Manufacturer Routes
+    $router->get('/getManufacturers', 'AssetController@getManufacturers');
+    $router->post('/addManufacturer', 'AssetController@addManufacturer');
+    $router->put('/updateManufacturer', 'AssetController@updateManufacturer');
+    $router->delete('/deleteManufacturer', 'AssetController@deleteManufacturer');
+});
+
 
 //Log Routes
 $router->get('/getActivityInventoryLogs', 'ActivityLogController@getActivityInventoryLogs');
 
-//Company Routes
-// $router->post('/getCompanyDetail', 'CompanyController@getCompanyDetail');
-// $router->post('/getCompanyList', 'CompanyController@getCompanyList');
-$router->post('/getCompanyClientList', 'CompanyController@getCompanyClientList');
-// $router->post('/addCompanyMember', 'CompanyController@addCompanyMember');
-// $router->post('/updateCompanyDetail', 'CompanyController@updateCompanyDetail');
-// $router->post('/companyActivation', 'CompanyController@companyActivation');
-$router->post('/getLocations', 'CompanyController@getLocations');
 
-//MIG Company Routes
-$router->post('/getMainCompanyDetail', 'CompanyController@getMainCompanyDetail');
-$router->post('/updateMainCompany', 'CompanyController@updateMainCompany');
 
-//MIG Branch Company Routes
-$router->post('/getBranchCompanyList', 'CompanyController@getBranchCompanyList');
-$router->post('/getCompanyBranchDetail', 'CompanyController@getCompanyBranchDetail');
-$router->post('/addCompanyBranch', 'CompanyController@addCompanyBranch');
-$router->post('/updateCompanyBranch', 'CompanyController@updateCompanyBranch');
-$router->post('/companyBranchActivation', 'CompanyController@companyBranchActivation');
 
-//MIG Client Company Routes
-$router->post('/getClientCompanyList', 'CompanyController@getClientCompanyList');
-$router->post('/getCompanyClientDetail', 'CompanyController@getCompanyClientDetail');
-$router->post('/addCompanyClient', 'CompanyController@addCompanyClient');
-$router->post('/updateCompanyClient', 'CompanyController@updateCompanyClient');
-$router->post('/companyClientActivation', 'CompanyController@companyClientActivation');
 
-//Account Routes
-// $router->post('/getAccountDetail', 'AccountController@getAccountDetail');
-// $router->post('/getAccountList', 'AccountController@getAccountList');
-// $router->post('/addAccountMember', 'AccountController@addAccountMember');
-// $router->post('/updateAccountDetail', 'AccountController@updateAccountDetail');
-// $router->post('/changeAccountPassword', 'AccountController@changeAccountPassword');
-// $router->post('/accountActivation', 'accountController@accountActivation');
-
-//Agent Routes
-$router->post('/getAgentDetail', 'AccountController@getAgentDetail');
-$router->post('/getAgentList', 'AccountController@getAgentList');
-$router->post('/addAgentMember', 'AccountController@addAgentMember');
-$router->post('/updateAgentDetail', 'AccountController@updateAgentDetail');
-$router->post('/changeAgentPassword', 'AccountController@changeAgentPassword');
-$router->post('/agentActivation', 'AccountController@agentActivation');
-$router->post('/updateFeatureAgent', 'AccountController@updateFeatureAgent');
-
-//Requester Routes
-$router->post('/getRequesterDetail', 'AccountController@getRequesterDetail');
-$router->post('/getRequesterList', 'AccountController@getRequesterList');
-$router->post('/addRequesterMember', 'AccountController@addRequesterMember');
-$router->post('/updateRequesterDetail', 'AccountController@updateRequesterDetail');
-$router->post('/changeRequesterPassword', 'AccountController@changeRequesterPassword');
-$router->post('/requesterActivation', 'AccountController@requesterActivation');
-$router->post('/updateFeatureRequester', 'AccountController@updateFeatureRequester');
-
-//Access Feature Routes
-$router->post('/getAccessModule', 'AccessFeatureController@getAccessModule');
-$router->post('/getAccessFeature', 'AccessFeatureController@getAccessFeature');
-$router->post('/addAccessModule', 'AccessFeatureController@addAccessModule');
-$router->post('/getFeatures', 'AccessFeatureController@getFeatures');
-$router->post('/addFeature', 'AccessFeatureController@addFeature');
-$router->post('/deleteFeature', 'AccessFeatureController@deleteFeature');
-$router->post('/updateAccessFeature', 'AccessFeatureController@updateAccessFeature');
-$router->post('/updateModuleCompany', 'AccessFeatureController@updateModuleCompany');
-$router->post('/updateFeatureAccount', 'AccessFeatureController@updateFeatureAccount');
-
-//Module Routes
-$router->post('/addModule', 'AccessFeatureController@addModule');
-$router->post('/getModules', 'AccessFeatureController@getModules');
-$router->post('/getModule', 'AccessFeatureController@getModule');
-$router->post('/addModuleFeature', 'AccessFeatureController@addModuleFeature');
-$router->post('/updateModuleFeature', 'AccessFeatureController@updateModuleFeature');
-$router->post('/deleteModuleFeature', 'AccessFeatureController@deleteModuleFeature');
-$router->post('/deleteModule', 'AccessFeatureController@deleteModule');
 // $router->post('/getAccessFeature', 'AccessFeatureController@getAccessFeature');
 // $router->post('/addAccessModule', 'AccessFeatureController@addAccessModule');
 // $router->post('/addAccessFeature', 'AccessFeatureController@addAccessFeature');
@@ -168,41 +208,6 @@ $router->delete('/deleteRequesterGroup', 'GroupController@deleteRequesterGroup')
 // $router->post('/attachPivotGU', 'GroupUserPivotController@attachPivotGU');
 // $router->delete('/detachPivotGU', 'GroupUserPivotController@detachPivotGU');
 
-//Asset Routes
-$router->get('/getAssets', 'AssetController@getAssets');
-$router->get('/getAsset', 'AssetController@getAsset');
-$router->get('/getDeletedAssets', 'AssetController@getDeletedAssets');
-$router->post('/addAsset', 'AssetController@addAsset');
-$router->put('/updateAsset', 'AssetController@updateAsset');
-$router->delete('/deleteAsset', 'AssetController@deleteAsset');
-
-//Model Routes
-$router->get('/getModels', 'AssetController@getModels');
-$router->get('/getModel', 'AssetController@getModel');
-$router->get('/getModelRelations', 'AssetController@getModelRelations');
-$router->post('/addModel', 'AssetController@addModel');
-$router->put('/updateModel', 'AssetController@updateModel');
-$router->delete('/deleteModel', 'AssetController@deleteModel');
-
-//Inventory Routes
-$router->get('/getInventories', 'AssetController@getInventories');
-$router->get('/getInventory', 'AssetController@getInventory');
-$router->get('/getInventoryAddable', 'AssetController@getInventoryAddable');
-$router->get('/getInventoryRelations', 'AssetController@getInventoryRelations');
-$router->get('/getInventoryReplacements', 'AssetController@getInventoryReplacements');
-$router->get('/getChangeStatusUsageDetailList', 'AssetController@getChangeStatusUsageDetailList');
-$router->post('/addInventory', 'AssetController@addInventory');
-$router->post('/addInventoryNotes', 'AssetController@addInventoryNotes');
-$router->post('/addInventoryStock', 'AssetController@addInventoryStock');
-$router->post('/addInventoryParts', 'AssetController@addInventoryParts');
-$router->put('/updateInventory', 'AssetController@updateInventory');
-$router->put('/updateInventoryParts', 'AssetController@updateInventoryParts');
-$router->put('/replaceInventoryPart', 'AssetController@replaceInventoryPart');
-$router->put('/changeStatusUsage', 'AssetController@changeStatusUsage');
-$router->put('/changeStatusCondition', 'AssetController@changeStatusCondition');
-$router->delete('/removeInventoryPart', 'AssetController@removeInventoryPart');
-$router->delete('/deleteInventory', 'AssetController@deleteInventory');
-
 //Relationship
 $router->get('/getRelationships', 'AssetController@getRelationships');
 $router->get('/getRelationship', 'AssetController@getRelationship');
@@ -228,11 +233,6 @@ $router->post('/addRelationshipInventories', 'AssetController@addRelationshipInv
 $router->put('/updateRelationshipInventory', 'AssetController@updateRelationshipInventory');
 $router->delete('/deleteRelationshipInventory', 'AssetController@deleteRelationshipInventory');
 
-//Manufacturer Routes
-$router->get('/getManufacturers', 'AssetController@getManufacturers');
-$router->post('/addManufacturer', 'AssetController@addManufacturer');
-$router->put('/updateManufacturer', 'AssetController@updateManufacturer');
-$router->delete('/deleteManufacturer', 'AssetController@deleteManufacturer');
 
 //Vendor Routes
 $router->get('/getVendors', 'VendorController@getVendors');
@@ -305,13 +305,6 @@ $router->post('/addDepreciation', 'DepreciationController@addDepreciation');
 $router->put('/updateDepreciation', 'DepreciationController@updateDepreciation');
 $router->delete('/deleteDepreciation', 'DepreciationController@deleteDepreciation');
 
-//Service Category Routes
-$router->get('/getRoleUserFeatures', 'RoleController@getRoleUserFeatures');
-$router->get('/getRoles', 'RoleController@getRoles');
-$router->get('/getRole', 'RoleController@getRole');
-$router->post('/addRole', 'RoleController@addRole');
-$router->put('/updateRole', 'RoleController@updateRole');
-$router->delete('/deleteRole', 'RoleController@deleteRole');
 
 
 

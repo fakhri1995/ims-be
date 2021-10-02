@@ -35,8 +35,18 @@ class Authenticate
      */
     public function handle($request, Closure $next, $guard = null)
     {
+        $request->headers->set('Authorization', "Bearer ".$request->headers->get('Authorization'));
+        
         if ($this->auth->guard($guard)->guest()) {
-            return response('Unauthorized.', 401);
+            $response = ["success" => false, "message" => [
+                "errorInfo" => [
+                    "status" => 401, 
+                    "reason" => "Unauthorized", 
+                    "server_code" => 401, 
+                    "status_detail" => "Invalid Token Payload"
+                ]
+            ]];
+            return response()->json($response, 401);
         }
 
         return $next($request);

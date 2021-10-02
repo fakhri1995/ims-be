@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
-use App\User;
+// use App\User;
+use Laravel\Passport\Passport;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Carbon\Carbon;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -30,10 +32,12 @@ class AuthServiceProvider extends ServiceProvider
         // should return either a User instance or null. You're free to obtain
         // the User instance via an API token or any other method necessary.
 
-        $this->app['auth']->viaRequest('api', function ($request) {
-            if ($request->input('api_token')) {
-                return User::where('api_token', $request->input('api_token'))->first();
-            }
-        });
+        // $this->app['auth']->viaRequest('api', function ($request) {
+        //     if ($request->input('api_token')) {
+        //         return User::where('api_token', $request->input('api_token'))->first();
+        //     }
+        // });
+
+        Passport::tokensExpireIn(Carbon::now()->addDays(1));
     }
 }
