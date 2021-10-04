@@ -20,6 +20,7 @@ use App\RelationshipInventory;
 use App\Vendor;
 use App\User;
 use Exception;
+use Illuminate\Database\Eloquent\Collection;
 
 class AssetService{
     public function __construct()
@@ -1726,6 +1727,337 @@ class AssetService{
         try{
             $manufacturer->delete();
             return ["success" => true, "message" => "Manufacturer berhasil dihapus", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    
+    // Relationship
+    // Relationship Type
+
+    public function getRelationships($route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $relationships = Relationship::get();
+            if($relationships->isEmpty()) return ["success" => false, "message" => "Relationship Belum dibuat", "status" => 400];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $relationships, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getRelationship($id, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $relationship = Relationship::find($id);
+            if($relationship === null) return ["success" => false, "message" => "Relationship Tidak Ditemukan", "status" => 400];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $relationship, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addRelationship($data, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $relationship = new Relationship;
+            $relationship->relationship_type = $data['relationship_type'];
+            $relationship->inverse_relationship_type = $data['inverse_relationship_type'];
+            $relationship->description = $data['description'];
+            $relationship->save();
+            return ["success" => true, "message" => "Relationship berhasil dibuat", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateRelationship($data, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $relationship = Relationship::find($data['id']);
+        if($relationship === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        try{
+            $relationship->relationship_type = $data['relationship_type'];
+            $relationship->inverse_relationship_type = $data['inverse_relationship_type'];
+            $relationship->description = $data['description'];
+            $relationship->save();
+            return ["success" => true, "message" => "Relationship berhasil diubah", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteRelationship($id, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $relationship = Relationship::find($id);
+        if($relationship === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        $asset = RelationshipAsset::where('relationship_id', $relationship->id)->first();
+        if($asset) return ["success" => false, "message" => "Relationship Masih Digunakan Asset", "status" => 400];
+        try{
+            $relationship->delete();
+            return ["success" => true, "message" => "Relationship berhasil dihapus", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    // Relationship Asset
+
+    public function getRelationshipAssets($route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $relationship_assets = RelationshipAsset::get();
+            if($relationship_assets->isEmpty()) return ["success" => false, "message" => "Relationship Asset Belum dibuat", "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $relationship_assets, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getRelationshipAsset($data, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $id = $data['id'];
+            $type_id = (int)$data['type_id'];
+            $relationship_assets = RelationshipAsset::get();
+            $relationships = Relationship::get();
+            $assets = Asset::get();
+            $relationship_assets_from_inverse = $relationship_assets->where('connected_id', $id)->where('type_id', $type_id);
+            $users = [];
+            $companies = [];
+            if($type_id === -1 || -2){
+                $userService = new UserService;
+                $users = $userService->getUserList(0, auth()->user()->company_id, true)['data'];
+            } 
+            if($type_id === -3){
+                $companies = Company::select('company_id AS id', 'company_name AS name')->where('role', 2)->get();
+            } 
+            $data_not_from_invers = [];
+            if($type_id === -4){
+                $relationship_assets_not_from_inverse = $relationship_assets->where('subject_id', $id);
+                $first_type = $relationship_assets_not_from_inverse->where('type_id', -1)->first();
+                $second_type = $relationship_assets_not_from_inverse->where('type_id', -2)->first();
+                $third_type = $relationship_assets_not_from_inverse->where('type_id', -3)->first();
+                if(($first_type !== null || $second_type !== null) && $users === []){
+                    $userService = new UserService;
+                    $users = $userService->getUserList(0, auth()->user()->company_id, true)['data'];
+                }
+                if($third_type !== null && $companies === []){
+                    $companies = Company::select('company_id', 'company_name')->where('role', 2)->get();
+                }
+                
+                if(count($relationship_assets_not_from_inverse)){
+                    foreach($relationship_assets_not_from_inverse as $relationship_asset){
+                        $relationship = $relationships->find($relationship_asset->relationship_id);
+                        $relationship_subject_detail = $assets->find($relationship_asset->subject_id);
+                        if($relationship_subject_detail === null) $relationship_asset->subject_detail_name = "Asset Not Found";
+                        else $relationship_asset->subject_detail_name = $relationship_subject_detail->name;
+                        if($relationship === null) $relationship_asset->relationship = "Relationship Not Found";
+                        else $relationship_asset->relationship = $relationship_asset->is_inverse ? $relationship->inverse_relationship_type : $relationship->relationship_type;
+                        $relationship_asset->type = $relationship_asset->type_id === -1 ? "Agent" : ($relationship_asset->type_id === -2 ? "Requester" : ($relationship_asset->type_id === -3 ? "Company" : "Asset Type"));
+                        if($relationship_asset->connected_id === null){
+                            $relationship_asset->connected_detail_name = "Detail ID Kosong";
+                        } else {
+                            if($relationship_asset->type_id === -1 || $relationship_asset->type_id === -2){
+                                $check_id = $relationship_asset->connected_id;
+                                $user = $users->find($check_id);
+                                if($user === null || $user->role !== ($relationship_asset->type_id * -1)) $relationship_asset->connected_detail_name = "User Not Found";
+                                else $relationship_asset->connected_detail_name = $user->fullname;
+                            } else if($relationship_asset->type_id === -3){
+                                $check_id = $relationship_asset->connected_id;
+                                $company = $companies->find($check_id);
+                                if($company === null) $relationship_asset->connected_detail_name = "Company Not Found";
+                                else $relationship_asset->connected_detail_name = $company->company_name;
+                            } else {
+                                $asset = $assets->find($relationship_asset->connected_id);
+                                if($asset === null) $relationship_asset->connected_detail_name = "Asset Not Found";
+                                else $relationship_asset->connected_detail_name = $asset->name;
+                            }
+                        }
+                        $relationship_asset->from_inverse = false;
+                        $data_not_from_invers[] = $relationship_asset;
+                    }
+                }
+            }
+            $data_from_invers = [];
+            if(count($relationship_assets_from_inverse)){
+                foreach($relationship_assets_from_inverse as $relationship_asset){
+                    $relationship = $relationships->find($relationship_asset->relationship_id);
+                    $relationship_subject_detail = $assets->find($relationship_asset->subject_id);
+                    if($relationship_subject_detail === null) $relationship_asset->subject_detail_name = "Not Found";
+                    else $relationship_asset->subject_detail_name = $relationship_subject_detail->name;
+                    if($relationship === null) $relationship_asset->relationship = "Relationship Not Found";
+                    else $relationship_asset->relationship = $relationship_asset->is_inverse ? $relationship->relationship_type : $relationship->inverse_relationship_type;
+                    $relationship_asset->type = $relationship_asset->type_id === -1 ? "Agent" : ($relationship_asset->type_id === -2 ? "Requester" : ($relationship_asset->type_id === -3 ? "Company" : "Asset Type"));
+                    
+                    if($relationship_asset->connected_id === null){
+                        $relationship_asset->connected_detail_name = "Detail ID Kosong";
+                    } else {
+                        if($relationship_asset->type_id === -1 || $relationship_asset->type_id === -2){
+                            $check_id = $relationship_asset->connected_id;
+                            $user = $users->find($check_id);
+                            if($user === null || $user->role !== $relationship_asset->type_id * -1){
+                                $relationship_asset->connected_detail_name = "User Not Found";
+                            } 
+                            else $relationship_asset->connected_detail_name = $user->fullname;
+                        } else if($relationship_asset->type_id === -3){
+                            $check_id = $relationship_asset->connected_id;
+                            $company = $companies->find($check_id);
+                            if($company === null) $relationship_asset->connected_detail_name = "Company Not Found";
+                            else $relationship_asset->connected_detail_name = $company->company_name;
+                        } else {
+                            $asset = $assets->find($relationship_asset->connected_id);
+                            if($asset === null) $relationship_asset->connected_detail_name = "Asset Not Found";
+                            else $relationship_asset->connected_detail_name = $asset->name;
+                        }
+                    }
+                    $temp_subject_id = $relationship_asset->subject_id;
+                    $temp_subject_detail_name = $relationship_asset->subject_detail_name;
+                    $relationship_asset->subject_id = $relationship_asset->connected_id;
+                    $relationship_asset->subject_detail_name = $relationship_asset->connected_detail_name;
+                    $relationship_asset->connected_id = $temp_subject_id;
+                    $relationship_asset->connected_detail_name = $temp_subject_detail_name;
+                    $relationship_asset->from_inverse = true;
+                    $data_from_invers[] = $relationship_asset;
+                }
+            }
+             
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => ["from_inverse" => $data_from_invers, "not_from_inverse" => $data_not_from_invers], "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getRelationshipAssetRelation($route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $relationships = Relationship::get();
+            $types = [["id" => -1, "name" => "Agent"], ["id" => -2, "name" => "Requester"], ["id" => -3, "name" => "Company"], ["id" => -4, "name" => "Asset"]];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => ["relationships" => $relationships, "types" => $types], "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getRelationshipAssetDetailList($type_id, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $type = (int)$type_id;
+            if($type > -1 || $type < -4) return ["success" => false, "message" => "Tipe Id Tidak Tepat", "status" => 400];
+            if($type === -1 || $type === -2){     
+                $role_checker = $type * -1 ;       
+                $userService = new UserService;
+                $users = $userService->getUserList($role_checker, auth()->user()->company_id, true)['data'];
+                return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $users, "status" => 200];
+            } else if($type === -3){
+                $companies = Company::select('company_id AS id', 'company_name AS name')->where('role', 2)->get();
+                return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $companies, "status" => 200];
+            } else {
+                $assets[] = [
+                    'id' => null,
+                    'title' => "-",
+                    'key' => "000",
+                    'value' => "000",
+                    'children' => []
+                ];
+                $tree_assets = $this->getTreeAssets();
+                foreach($tree_assets as $tree_asset) $assets[] = $tree_asset;
+                return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $assets, "status" => 200];
+            }
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addRelationshipAsset($data, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $type_id = $data['type_id'];
+        if($type_id > -1 || $type_id < -4) return ["success" => false, "message" => "Tipe Id Tidak Tepat", "status" => 400];
+        try{
+            $relationship_asset = new RelationshipAsset;
+            $relationship_asset->relationship_id = $data['relationship_id'];
+            $relationship_asset->subject_id = $data['subject_id'];
+            $relationship_asset->is_inverse = $data['is_inverse'];
+            $relationship_asset->type_id = $type_id;
+            $relationship_asset->connected_id = $data['connected_id'];
+            $relationship_asset->save();
+            
+            return ["success" => true, "message" => "Relationship Asset berhasil dibuat", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateRelationshipAsset($data, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            // Commented codes have purpose for update type id if it is needed
+            $id = $data['id'];
+            $from_inverse = $data['from_inverse'];
+            // $type_id = $data['type_id'];
+            // if($type_id < 1 || $type_id > 4) return ["success" => false, "message" => "Tipe Id Tidak Tepat", "status" => 400];
+            $relationship_asset = RelationshipAsset::find($id);
+            if($relationship_asset === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+            $relationship_asset->relationship_id = $data['relationship_id'];
+            if($from_inverse){
+                $relationship_asset->subject_id = $data['connected_id'];
+                $relationship_asset->is_inverse = !$data['is_inverse'];
+            } else {
+                $relationship_asset->connected_id = $data['connected_id'];
+                $relationship_asset->is_inverse = $data['is_inverse'];
+            } 
+            // $relationship_asset->type_id = $type_id;
+            $relationship_asset->save();
+            return ["success" => true, "message" => "Relationship Asset berhasil diubah", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteRelationshipAsset($id, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $relationship_asset = RelationshipAsset::find($id);
+        if($relationship_asset === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        $relationship_inventory = RelationshipInventory::where('relationship_asset_id', $relationship_asset->id)->first();
+        if($relationship_inventory)return ["success" => false, "message" => "Relationship Masih Digunakan Inventory", "status" => 400];
+        try{
+            $relationship_asset->delete();
+            return ["success" => true, "message" => "Relationship Asset berhasil dihapus", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }

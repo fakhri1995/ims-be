@@ -48,9 +48,11 @@ class UserService
     public function getUserList($role_id, $company_id, $full_list = false){
         // select('user_id AS id','fullname AS name')
         if($full_list){
-            $users = User::select('user_id','fullname', 'users.company_id','companies.company_name')->leftJoin('companies', function($join) {
-            $join->on('users.company_id', '=', 'companies.company_id');
-            })->where('users.role', $role_id)->get();
+            $users = User::select('user_id','fullname', 'users.company_id','companies.company_name', 'users.role')->leftJoin('companies', function($join) {
+                $join->on('users.company_id', '=', 'companies.company_id');
+            });
+            if($role_id === 0) $users = $users->get();
+            else $users = $users->where('users.role', $role_id)->get();
             if(!count($users)) return ["success" => true, "message" => "User masih kosong", "data" => $users, "status" => 200];
             else return ["success" => true, "message" => "Users Berhasil Diambil", "data" => $users, "status" => 200 ];
         }

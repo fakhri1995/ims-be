@@ -150,6 +150,31 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addManufacturer', 'AssetController@addManufacturer');
     $router->put('/updateManufacturer', 'AssetController@updateManufacturer');
     $router->delete('/deleteManufacturer', 'AssetController@deleteManufacturer');
+
+    //Relationship
+    $router->get('/getRelationships', 'AssetController@getRelationships');
+    $router->get('/getRelationship', 'AssetController@getRelationship');
+    $router->post('/addRelationship', 'AssetController@addRelationship');
+    $router->put('/updateRelationship', 'AssetController@updateRelationship');
+    $router->delete('/deleteRelationship', 'AssetController@deleteRelationship');
+
+    //Relationship Asset
+    $router->get('/getRelationshipAssets', 'AssetController@getRelationshipAssets');
+    $router->get('/getRelationshipAsset', 'AssetController@getRelationshipAsset');
+    $router->get('/getRelationshipAssetRelation', 'AssetController@getRelationshipAssetRelation');
+    $router->get('/getRelationshipAssetDetailList', 'AssetController@getRelationshipAssetDetailList');
+    $router->post('/addRelationshipAsset', 'AssetController@addRelationshipAsset');
+    $router->put('/updateRelationshipAsset', 'AssetController@updateRelationshipAsset');
+    $router->delete('/deleteRelationshipAsset', 'AssetController@deleteRelationshipAsset');
+
+    //Relationship Inventory
+    // $router->get('/getRelationshipInventories', 'AssetController@getRelationshipInventories');
+    // $router->get('/getRelationshipInventory', 'AssetController@getRelationshipInventory');
+    // $router->get('/getRelationshipInventoryRelation', 'AssetController@getRelationshipInventoryRelation');
+    // $router->get('/getRelationshipInventoryDetailList', 'AssetController@getRelationshipInventoryDetailList');
+    // $router->post('/addRelationshipInventories', 'AssetController@addRelationshipInventories');
+    // $router->put('/updateRelationshipInventory', 'AssetController@updateRelationshipInventory');
+    // $router->delete('/deleteRelationshipInventory', 'AssetController@deleteRelationshipInventory');
 });
 
 
@@ -208,30 +233,7 @@ $router->delete('/deleteRequesterGroup', 'GroupController@deleteRequesterGroup')
 // $router->post('/attachPivotGU', 'GroupUserPivotController@attachPivotGU');
 // $router->delete('/detachPivotGU', 'GroupUserPivotController@detachPivotGU');
 
-//Relationship
-$router->get('/getRelationships', 'AssetController@getRelationships');
-$router->get('/getRelationship', 'AssetController@getRelationship');
-$router->post('/addRelationship', 'AssetController@addRelationship');
-$router->put('/updateRelationship', 'AssetController@updateRelationship');
-$router->delete('/deleteRelationship', 'AssetController@deleteRelationship');
 
-//Relationship Asset
-$router->get('/getRelationshipAssets', 'AssetController@getRelationshipAssets');
-$router->get('/getRelationshipAsset', 'AssetController@getRelationshipAsset');
-$router->get('/getRelationshipAssetRelation', 'AssetController@getRelationshipAssetRelation');
-$router->get('/getRelationshipAssetDetailList', 'AssetController@getRelationshipAssetDetailList');
-$router->post('/addRelationshipAsset', 'AssetController@addRelationshipAsset');
-$router->put('/updateRelationshipAsset', 'AssetController@updateRelationshipAsset');
-$router->delete('/deleteRelationshipAsset', 'AssetController@deleteRelationshipAsset');
-
-//Relationship Inventory
-$router->get('/getRelationshipInventories', 'AssetController@getRelationshipInventories');
-$router->get('/getRelationshipInventory', 'AssetController@getRelationshipInventory');
-$router->get('/getRelationshipInventoryRelation', 'AssetController@getRelationshipInventoryRelation');
-$router->get('/getRelationshipInventoryDetailList', 'AssetController@getRelationshipInventoryDetailList');
-$router->post('/addRelationshipInventories', 'AssetController@addRelationshipInventories');
-$router->put('/updateRelationshipInventory', 'AssetController@updateRelationshipInventory');
-$router->delete('/deleteRelationshipInventory', 'AssetController@deleteRelationshipInventory');
 
 
 //Vendor Routes
