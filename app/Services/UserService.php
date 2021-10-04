@@ -58,7 +58,9 @@ class UserService
         }
         $company_service = new CompanyService;
         $company_list = $company_service->checkCompanyList($company_id);
-        $users = User::select('user_id','fullname', 'email','role','company_id','profile_image','phone_number','created_time','is_enabled')->where('role', $role_id)->whereIn('company_id', $company_list)->get();
+        $users = User::select('users.user_id','users.fullname', 'users.email','users.role','users.company_id','users.profile_image','users.phone_number','users.created_time','users.is_enabled', 'companies.company_name')->where('users.role', $role_id)->whereIn('users.company_id', $company_list)->leftJoin('companies', function($join) {
+            $join->on('users.company_id', '=', 'companies.company_id');
+        })->get();
         if(!count($users)) return ["success" => true, "message" => "User masih kosong", "data" => $users, "status" => 200];
         else return ["success" => true, "message" => "Users Berhasil Diambil", "data" => $users, "status" => 200 ];
     }
