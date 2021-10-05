@@ -89,6 +89,18 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addCompanyClient', 'CompanyController@addCompanyClient');
     $router->put('/updateCompanyClient', 'CompanyController@updateCompanyClient');
     $router->put('/companyClientActivation', 'CompanyController@companyClientActivation');
+    
+    //Main Bank Account Routes
+    $router->get('/getMainBanks', 'BankController@getMainBanks');
+    $router->post('/addMainBank', 'BankController@addMainBank');
+    $router->put('/updateMainBank', 'BankController@updateMainBank');
+    $router->delete('/deleteMainBank', 'BankController@deleteMainBank');
+
+    //Client Bank Account Routes
+    $router->get('/getClientBanks', 'BankController@getClientBanks');
+    $router->post('/addClientBank', 'BankController@addClientBank');
+    $router->put('/updateClientBank', 'BankController@updateClientBank');
+    $router->delete('/deleteClientBank', 'BankController@deleteClientBank');
 
     //Access Feature Routes
     $router->get('/getFeatures', 'AccessFeatureController@getFeatures');
@@ -168,13 +180,13 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteRelationshipAsset', 'AssetController@deleteRelationshipAsset');
 
     //Relationship Inventory
-    // $router->get('/getRelationshipInventories', 'AssetController@getRelationshipInventories');
-    // $router->get('/getRelationshipInventory', 'AssetController@getRelationshipInventory');
-    // $router->get('/getRelationshipInventoryRelation', 'AssetController@getRelationshipInventoryRelation');
-    // $router->get('/getRelationshipInventoryDetailList', 'AssetController@getRelationshipInventoryDetailList');
-    // $router->post('/addRelationshipInventories', 'AssetController@addRelationshipInventories');
-    // $router->put('/updateRelationshipInventory', 'AssetController@updateRelationshipInventory');
-    // $router->delete('/deleteRelationshipInventory', 'AssetController@deleteRelationshipInventory');
+    $router->get('/getRelationshipInventories', 'AssetController@getRelationshipInventories');
+    $router->get('/getRelationshipInventory', 'AssetController@getRelationshipInventory');
+    $router->get('/getRelationshipInventoryRelation', 'AssetController@getRelationshipInventoryRelation');
+    $router->get('/getRelationshipInventoryDetailList', 'AssetController@getRelationshipInventoryDetailList');
+    $router->post('/addRelationshipInventories', 'AssetController@addRelationshipInventories');
+    $router->put('/updateRelationshipInventory', 'AssetController@updateRelationshipInventory');
+    $router->delete('/deleteRelationshipInventory', 'AssetController@deleteRelationshipInventory');
 });
 
 
@@ -196,17 +208,7 @@ $router->get('/getActivityInventoryLogs', 'ActivityLogController@getActivityInve
 // $router->put('/updateBank', 'BankController@updateBank');
 // $router->delete('/deleteBank', 'BankController@deleteBank');
 
-//Main Bank Account Routes
-$router->get('/getMainBanks', 'BankController@getMainBanks');
-$router->post('/addMainBank', 'BankController@addMainBank');
-$router->put('/updateMainBank', 'BankController@updateMainBank');
-$router->delete('/deleteMainBank', 'BankController@deleteMainBank');
 
-//Client Bank Account Routes
-$router->get('/getClientBanks', 'BankController@getClientBanks');
-$router->post('/addClientBank', 'BankController@addClientBank');
-$router->put('/updateClientBank', 'BankController@updateClientBank');
-$router->delete('/deleteClientBank', 'BankController@deleteClientBank');
 
 //Group Routes
 // $router->get('/getGroups', 'GroupController@getGroups');

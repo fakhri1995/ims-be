@@ -20,7 +20,6 @@ use App\RelationshipInventory;
 use App\Vendor;
 use App\User;
 use Exception;
-use Illuminate\Database\Eloquent\Collection;
 
 class AssetService{
     public function __construct()
@@ -1276,7 +1275,7 @@ class AssetService{
             $inventory_replacement = Inventory::find($replacement_id);
             if($inventory_replacement === false) return ["success" => false, "message" => "Id Inventori Pengganti Tidak Ditemukan", "status" => 400];
             
-            // if($inventory_replacement->model_id !== $inventory->model_id) return response()->json(["success" => false, "message" => "Model Kedua Inventori Tidak Sama", "status" => 400], 400);
+            // if($inventory_replacement->model_id !== $inventory->model_id) return ["success" => false, "message" => "Model Kedua Inventori Tidak Sama", "status" => 400];
             $pivots = InventoryInventoryPivot::get();
             $temp_status_usage = $inventory->status_usage;
             $inventory->status_usage = $inventory_replacement->status_usage;
@@ -1456,13 +1455,13 @@ class AssetService{
             if(count($inventory_part_ids)){
                 // foreach($inventory_part_ids as $inventory_part_id){
                 //     $check_used = $this->checkUsed($inventory_part_id);
-                //     if($check_used['exist']) return response()->json(["success" => false, "message" => "Part Id ".$inventory_part_id." sedang digunakan oleh Id ".$check_used['id']], 400);
+                //     if($check_used['exist']) return ["success" => false, "message" => "Part Id ".$inventory_part_id." sedang digunakan oleh Id ".$check_used['id'], "status" => 400];
                 // }
                 $pivots = InventoryInventoryPivot::get();
                 foreach($inventory_part_ids as $inventory_part_id){
                     $inventory = Inventory::find($inventory_part_id);
                     if($inventory === null) return ["success" => false, "message" => "Id Inventory Tidak Terdaftar", "status" => 400];
-                    // if($inventory->status_usage === 1)return response()->json(["success" => false, "message" => "Inventory Sedang Digunakan", "status" => 400], 400);
+                    // if($inventory->status_usage === 1)return ["success" => false, "message" => "Inventory Sedang Digunakan", "status" => 400];
                     $inventory->status_usage = 1;
                     $inventory->save();
                     // $last_activity = Activity::all()->last();
@@ -1858,11 +1857,11 @@ class AssetService{
                 $first_type = $relationship_assets_not_from_inverse->where('type_id', -1)->first();
                 $second_type = $relationship_assets_not_from_inverse->where('type_id', -2)->first();
                 $third_type = $relationship_assets_not_from_inverse->where('type_id', -3)->first();
-                if(($first_type !== null || $second_type !== null) && $users === []){
+                if(($first_type !== null || $second_type !== null) && !count($users)){
                     $userService = new UserService;
                     $users = $userService->getUserList(0, auth()->user()->company_id, true)['data'];
                 }
-                if($third_type !== null && $companies === []){
+                if($third_type !== null && !count($companies)){
                     $companies = Company::select('company_id', 'company_name')->where('role', 2)->get();
                 }
                 
@@ -2058,6 +2057,338 @@ class AssetService{
         try{
             $relationship_asset->delete();
             return ["success" => true, "message" => "Relationship Asset berhasil dihapus", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    // Relationship Iventory
+
+    public function getRelationshipInventories($route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $relationship_inventories = RelationshipInventory::get();
+            if($relationship_inventories->isEmpty()) return ["success" => false, "message" => "Relationship Inventory Belum dibuat", "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $relationship_inventories, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getRelationshipInventory($data, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $id = $data['id'];
+            $type_id = (int)$data['type_id'];
+            $relationship_inventories = RelationshipInventory::get();
+            $relationship_assets = RelationshipAsset::get();
+            $relationships = Relationship::get();
+            $inventories = Inventory::get();
+            $relationship_inventories_from_inverse = $relationship_inventories->where('connected_id', $id)->where('type_id', $type_id);
+            $users = [];
+            $companies = [];
+            if($type_id === -1 || $type_id === -2){
+                $userService = new UserService;
+                $users = $userService->getUserList(0, auth()->user()->company_id, true)['data'];
+            } 
+            if($type_id === -3){
+                $companies = Company::select('company_id AS id', 'company_name AS name')->where('role', 2)->get();
+            } 
+            $data_not_from_invers = [];
+            if($type_id === -4){
+                $relationship_inventories_not_from_inverse = $relationship_inventories->where('subject_id', $id);
+                $first_type = $relationship_inventories_not_from_inverse->where('type_id', -1)->first();
+                $second_type = $relationship_inventories_not_from_inverse->where('type_id', -2)->first();
+                $third_type = $relationship_inventories_not_from_inverse->where('type_id', -3)->first();
+                if(($first_type !== null || $second_type !== null) && !count($users)){
+                    $userService = new UserService;
+                    $users = $userService->getUserList(0, auth()->user()->company_id, true)['data'];
+                }
+                if($third_type !== null && !count($companies)){
+                    $companies = Company::select('company_id', 'company_name')->where('role', 2)->get();
+                }
+                if(count($relationship_inventories_not_from_inverse)){
+                    foreach($relationship_inventories_not_from_inverse as $relationship_inventory){
+                        $relationship_asset = $relationship_assets->find($relationship_inventory->relationship_asset_id);
+                        if($relationship_asset === null){
+                            $relationship_inventory->relationship = "Relationship Asset Not Found";
+                        } else {
+                            $relationship = $relationships->find($relationship_asset->relationship_id);
+                            if($relationship === null){
+                                $relationship_inventory->relationship = "Relationship Not Found";
+                            } else {
+                                $is_inverse_inventory_relationship = $relationship_asset->is_inverse === $relationship_inventory->is_inverse ? false : true;
+                                $relationship_inventory->relationship = $is_inverse_inventory_relationship ? $relationship->inverse_relationship_type : $relationship->relationship_type;
+                            }
+                        }
+                        
+                        $relationship_inventory->type = $relationship_inventory->type_id === -1 ? "Agent" : ($relationship_inventory->type_id === -2 ? "Requester" : ($relationship_inventory->type_id === -3 ? "Company" : "Inventory Type"));
+                        $relationship_subject_detail = $inventories->find($relationship_inventory->subject_id);
+                        if($relationship_subject_detail === null) $relationship_inventory->subject_detail_name = "Inventory Not Found";
+                        else $relationship_inventory->subject_detail_name = $relationship_subject_detail->inventory_name;
+                        if($relationship_inventory->connected_id === null){
+                            $relationship_inventory->connected_detail_name = "Detail ID Kosong";
+                        } else {
+                            if($relationship_inventory->type_id === -1 || $relationship_inventory->type_id === -2){
+                                $check_id = $relationship_inventory->connected_id;
+                                $user = $users->find($check_id);
+                                if($user === null || $user->role !== $relationship_inventory->type_id * -1){
+                                    $relationship_inventory->connected_detail_name = "User Not Found";
+                                } 
+                                else $relationship_inventory->connected_detail_name = $user->fullname;
+                            } else if($relationship_inventory->type_id === -3){
+                                $check_id = $relationship_inventory->connected_id;
+                                $company = $companies->find($check_id);
+                                // return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $companies, "status" => 200];
+                                if($company === null) $relationship_inventory->connected_detail_name = "Company Not Found";
+                                else $relationship_inventory->connected_detail_name = $company->company_name;
+                            } else {
+                                $inventory = $inventories->find($relationship_inventory->connected_id);
+                                if($inventory === null) $relationship_inventory->connected_detail_name = "Inventory Not Found";
+                                else $relationship_inventory->connected_detail_name = $inventory->inventory_name;
+                            }
+                        }
+                        $relationship_inventory->from_inverse = false;
+                        $data_not_from_invers[] = $relationship_inventory;
+                    }
+                }
+            }
+            $data_from_invers = [];
+            if(count($relationship_inventories_from_inverse)){
+                foreach($relationship_inventories_from_inverse as $relationship_inventory){
+                    $relationship_asset = $relationship_assets->find($relationship_inventory->relationship_asset_id);
+                    if($relationship_asset === null){
+                        $relationship_inventory->relationship = "Relationship Asset Not Found";
+                    } else {
+                        $relationship = $relationships->find($relationship_asset->relationship_id);
+                        if($relationship === null){
+                            $relationship_inventory->relationship = "Relationship Not Found";
+                        } else {
+                            $is_inverse_inventory_relationship = $relationship_asset->is_inverse === $relationship_inventory->is_inverse ? true : false;
+                            $relationship_inventory->relationship = $is_inverse_inventory_relationship ? $relationship->inverse_relationship_type : $relationship->relationship_type;
+                        }
+                    }
+
+                    $relationship_inventory->type = $relationship_inventory->type_id === -1 ? "Agent" : ($relationship_inventory->type_id === -2 ? "Requester" : ($relationship_inventory->type_id === -3 ? "Company" : "Inventory Type"));
+                    $relationship_subject_detail = $inventories->find($relationship_inventory->subject_id);
+                    if($relationship_subject_detail === null) $relationship_inventory->subject_detail_name = "Not Found";
+                    else $relationship_inventory->subject_detail_name = $relationship_subject_detail->inventory_name;
+                    if($relationship_inventory->connected_id === null){
+                        $relationship_inventory->connected_detail_name = "Detail ID Kosong";
+                    } else {
+                        if($relationship_inventory->type_id === -1 || $relationship_inventory->type_id === -2){
+                            $check_id = $relationship_inventory->connected_id;
+                            $user = $users->find($check_id);
+                            if($user === null || $user->role !== $relationship_inventory->type_id * -1){
+                                $relationship_inventory->connected_detail_name = "User Not Found";
+                            } 
+                            else $relationship_inventory->connected_detail_name = $user->fullname;
+                        } else if($relationship_inventory->type_id === -3){
+                            $check_id = $relationship_inventory->connected_id;
+                            $company = $companies->find($check_id);
+                            if($company === null) $relationship_inventory->connected_detail_name = "Company Not Found";
+                            else $relationship_inventory->connected_detail_name = $company->company_name;
+                        } else {
+                            $inventory = $inventories->find($relationship_inventory->connected_id);
+                            if($inventory === null) $relationship_inventory->connected_detail_name = "Inventory Not Found";
+                            else $relationship_inventory->connected_detail_name = $inventory->inventory_name;
+                        }
+                    }
+                    $temp_subject_id = $relationship_inventory->subject_id;
+                    $temp_subject_detail_name = $relationship_inventory->subject_detail_name;
+                    $relationship_inventory->subject_id = $relationship_inventory->connected_id;
+                    $relationship_inventory->subject_detail_name = $relationship_inventory->connected_detail_name;
+                    $relationship_inventory->connected_id = $temp_subject_id;
+                    $relationship_inventory->connected_detail_name = $temp_subject_detail_name;
+
+                    $relationship_inventory->from_inverse = true;
+                    $data_from_invers[] = $relationship_inventory;
+                }
+            }
+             
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => ["from_inverse" => $data_from_invers, "not_from_inverse" => $data_not_from_invers], "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getRelationshipInventoryRelation($route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $relationship_assets = RelationshipAsset::get();
+            if($relationship_assets->isEmpty()) return ["success" => false, "message" => "Relationship Inventory Belum dibuat", "status" => 200];
+            $relationships = Relationship::get();
+            $assets = Asset::get();
+            $userService = new UserService;
+            $users = $userService->getUserList(0, auth()->user()->company_id, true)['data'];
+            $companies = Company::select('company_id', 'company_name')->where('role', 2)->get();
+            foreach($relationship_assets as $relationship_asset){
+                $relationship = $relationships->find($relationship_asset->relationship_id);
+                if($relationship === null) $relationship_asset->relationship_detail_name = "Relationship Not Found";
+                else $relationship_asset->relationship_detail_name = $relationship->is_inverse ? $relationship->inverse_relationship_type : $relationship->relationship_type;
+                
+                $check_id = $relationship_asset->connected_id;
+                $asset = $assets->find($relationship_asset->subject_id);
+                if($asset === null) $relationship_asset->subject_detail_name = "Asset Not Found";
+                else $relationship_asset->subject_detail_name = $asset->name;
+                if($check_id !== null){
+                    if($relationship_asset->type_id === -1 || $relationship_asset->type_id === -2){
+                        $user = $users->find($check_id);
+                        if($user === null || $user->role !== $relationship_asset->type_id * -1){
+                            $relationship_asset->connected_detail_name = "User Not Found";
+                        } 
+                        else $relationship_asset->connected_detail_name = $user->fullname;
+                    } else if($relationship_asset->type_id === 3){
+                        $company = $companies->find($check_id);
+                        if($company === null) $relationship_inventory->connected_detail_name = "Company Not Found";
+                        else $relationship_inventory->connected_detail_name = $company->company_name;
+                    } else {
+                        $asset = $assets->find($check_id);
+                        if($asset === null) $relationship_asset->connected_detail_name = "Asset Not Found";
+                        else $relationship_asset->connected_detail_name = $asset->name;
+                    }
+                    $relationship_asset->detail = $relationship_asset->subject_detail_name . " " . $relationship_asset->relationship_detail_name . " " . $relationship_asset->connected_detail_name;
+                } else $relationship_asset->detail = $relationship_asset->subject_detail_name . " " . $relationship_asset->relationship_detail_name;
+                
+            }
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $relationship_assets, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getRelationshipInventoryDetailList($relationship_asset_id, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $relationship_asset = RelationshipAsset::find($relationship_asset_id);
+            if($relationship_asset === null) return ["success" => false, "message" => "Relationship Asset Tidak Ditemukan", "status" => 400];
+            if($relationship_asset->type_id === -1 || $relationship_asset->type_id === -2){     
+                $role_checker = $relationship_asset->type_id * -1;       
+                $userService = new UserService;
+                $users = $userService->getUserList($role_checker, auth()->user()->company_id, true)['data'];
+                return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $users, "status" => 200];
+            } else if($relationship_asset->type_id === -3){
+                $companies = Company::select('company_id', 'company_name')->where('role', 2)->get();
+                return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $companies, "status" => 200];
+            } else {
+                $inventories = Inventory::select('id','inventory_name','mig_id','serial_number','status_usage','model_id')->where('status_usage', 2)->get();
+                if($relationship_asset->connected_id){
+                    $models = ModelInventory::select('id', 'asset_id')->get();
+                    $assets = Asset::select('id')->get();
+                    foreach($inventories as $inventory){
+                        $model = $models->find($inventory->model_id);
+                        if($model === null) $inventory->asset_id = null;
+                        else $inventory->asset_id = $model->asset_id;
+                    }
+                    $inventories = $inventories->where('asset_id', $relationship_asset->connected_id);
+                    $new_inventories = [];
+                    foreach($inventories as $inventory){
+                        $new_inventories[] = $inventory; 
+                    }
+                    return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $new_inventories, "status" => 200];
+                } 
+                return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventories, "status" => 200];
+            }
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addRelationshipInventories($data, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $relationship_asset_id = $data['relationship_asset_id'];
+        $relationship_asset = RelationshipAsset::find($relationship_asset_id);
+        if($relationship_asset === null) return ["success" => false, "message" => "Relationship Asset Id Tidak Ditemukan", "status" => 400];
+        
+        $connected_ids = $data['connected_ids'];
+        $subject_id = $data['subject_id'];
+        $is_inverse = $data['is_inverse'];
+        $notes = $data['notes'];
+        try{
+            foreach($connected_ids as $connected_id){
+                $relationship_inventory = new RelationshipInventory;
+                $relationship_inventory->relationship_asset_id = $relationship_asset_id;
+                $relationship_inventory->type_id = $relationship_asset->type_id;
+                $relationship_inventory->subject_id = $subject_id;
+                $relationship_inventory->is_inverse = $is_inverse;
+                $relationship_inventory->connected_id = $connected_id;
+                $relationship_inventory->save();
+                // $last_activity = Activity::all()->last();
+                // $last_activity->causer_id = $check['id'];
+                // $last_activity->causer_type = $notes;
+                // $last_activity->save();
+            }
+            return ["success" => true, "message" => "Relationship Inventory berhasil dibuat", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateRelationshipInventory($data, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $id = $data['id'];
+        $from_inverse = $data['from_inverse'];
+        $relationship_asset_id = $data['relationship_asset_id'];
+        $notes = $data['notes'];
+        
+        $relationship_inventory = RelationshipInventory::find($id);
+        if($relationship_inventory === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        $relationship_asset = RelationshipAsset::find($relationship_asset_id);
+        if($relationship_asset === null) return ["success" => false, "message" => "Relationship Asset Id Tidak Ditemukan", "status" => 400];
+        
+        $relationship_inventory->relationship_asset_id = $relationship_asset_id;
+        $relationship_inventory->type_id = $relationship_asset->type_id;
+        if($from_inverse){
+            $relationship_inventory->subject_id = $data['connected_id'];
+            $relationship_inventory->is_inverse = !$data['is_inverse'];
+        } else {
+            $relationship_inventory->connected_id = $data['connected_id'];
+            $relationship_inventory->is_inverse = $data['is_inverse'];
+        } 
+        try{
+            $relationship_inventory->save();
+            // $last_activity = Activity::all()->last();
+            // $last_activity->causer_id = $check['id'];
+            // $last_activity->causer_type = $notes;
+            // $last_activity->save();
+            return ["success" => true, "message" => "Relationship Inventory berhasil diubah", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteRelationshipInventory($id, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $relationship_inventory = RelationshipInventory::find($id);
+        if($relationship_inventory === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 200];
+        try{
+            $relationship_inventory->delete();
+            // $last_activity = Activity::all()->last();
+            // $last_activity->causer_id = $check['id'];
+            // $last_activity->causer_type = $notes;
+            // $last_activity->save();
+            return ["success" => true, "message" => "Relationship Inventory berhasil dihapus", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
