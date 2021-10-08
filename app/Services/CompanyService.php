@@ -200,7 +200,9 @@ class CompanyService
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
-        return $this->getCompanyDetail(1, 1);
+        $company_id = auth()->user()->company_id;
+        $company_role = auth()->user()->company->role;
+        return $this->getCompanyDetail($company_id, $company_role);
     }
 
     public function getCompanyBranchDetail($id, $route_name){
@@ -287,8 +289,8 @@ class CompanyService
     }
 
     public function updateMainCompany($data){
-        if(auth()->user()->company_id !== 1) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Melakukan Proses Ini", "status" => 401];
-        return $this->updateCompany($data, 1);
+        $company_role = auth()->user()->company->role;
+        return $this->updateCompany($data, $company_role);
     }
 
     public function updateCompanyBranch($data, $route_name){

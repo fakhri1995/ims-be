@@ -44,7 +44,7 @@ class CompanyController extends Controller
         $route_name = "MAIN_COMPANY_UPDATE";
         
         $data_request = [
-            'id' => 1,
+            'id' => auth()->user()->company_id,
             'company_name' => $request->get('company_name'),
             'address' => $request->get('address'),
             'phone_number' => $request->get('phone_number'),
