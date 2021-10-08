@@ -6,12 +6,13 @@ use Laravel\Passport\HasApiTokens;
 use Illuminate\Auth\Authenticatable;
 use Laravel\Lumen\Auth\Authorizable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 
 class User extends Model implements AuthenticatableContract, AuthorizableContract
 {
-    use HasApiTokens, Authenticatable, Authorizable;
+    use HasApiTokens, Authenticatable, Authorizable, SoftDeletes;
     protected $primaryKey = 'user_id';
     /**
      * The attributes that are mass assignable.

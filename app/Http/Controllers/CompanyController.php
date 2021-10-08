@@ -33,16 +33,16 @@ class CompanyController extends Controller
 
     public function getMainCompanyDetail(Request $request)
     {
-        $access = $this->checkRouteService->checkRoute("MAIN_COMPANY_GET");
-        if($access["success"] === false) return response()->json($access);
-        $response = $this->companyService->getMainCompanyDetail();
+        $route_name = "MAIN_COMPANY_GET";
+        
+        $response = $this->companyService->getMainCompanyDetail($route_name);
         return response()->json($response, $response['status']);
     }
 
     public function updateMainCompany(Request $request)
     {
-        $access = $this->checkRouteService->checkRoute("MAIN_COMPANY_UPDATE");
-        if($access["success"] === false) return response()->json($access);
+        $route_name = "MAIN_COMPANY_UPDATE";
+        
         $data_request = [
             'id' => 1,
             'company_name' => $request->get('company_name'),
@@ -58,7 +58,7 @@ class CompanyController extends Controller
             'website' => $request->get('website')
         ];
 
-        $response = $this->companyService->updateMainCompany($data_request);
+        $response = $this->companyService->updateMainCompany($data_request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -66,41 +66,41 @@ class CompanyController extends Controller
     
     public function getCompanyBranchDetail(Request $request)
     {
-        $access = $this->checkRouteService->checkRoute("COMPANY_BRANCH_GET");
-        if($access["success"] === false) return response()->json($access);
+        $route_name = "COMPANY_BRANCH_GET";
+        
         $id = $request->get('id', null);
-        $response = $this->companyService->getCompanyBranchDetail($id);
+        $response = $this->companyService->getCompanyBranchDetail($id, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function getBranchCompanyList(Request $request)
     {
-        $access = $this->checkRouteService->checkRoute("COMPANY_BRANCHS_GET");
-        if($access["success"] === false) return response()->json($access);
-        $response = $this->companyService->getBranchCompanyList();
+        $route_name = "COMPANY_BRANCHS_GET";
+        
+        $response = $this->companyService->getBranchCompanyList($route_name);
         return response()->json($response, $response['status']);
     }
     
     public function addCompanyBranch(Request $request)
     {
-        $access = $this->checkRouteService->checkRoute("COMPANY_BRANCH_ADD");
-        if($access["success"] === false) return response()->json($access);
+        $route_name = "COMPANY_BRANCH_ADD";
+        
         $data_request = [
             'name' => $request->get('name'),
             'address' => $request->get('address'),
             'phone_number' => $request->get('phone_number'),
             'image_logo' => $request->get('image_logo', null),
-            'parent_id' => $request->get('parent_id')
+            'parent_id' => $request->get('parent_id', auth()->user()->company->parent_id)
         ];
         
-        $response = $this->companyService->addCompanyBranch($data_request);
+        $response = $this->companyService->addCompanyBranch($data_request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function updateCompanyBranch(Request $request)
     {
-        $access = $this->checkRouteService->checkRoute("COMPANY_BRANCH_UPDATE");
-        if($access["success"] === false) return response()->json($access);
+        $route_name = "COMPANY_BRANCH_UPDATE";
+        
         $data_request = [
             'id' => $request->get('id'),
             'company_name' => $request->get('company_name'),
@@ -116,20 +116,29 @@ class CompanyController extends Controller
             'website' => $request->get('website')
         ];
 
-        $response = $this->companyService->updateCompanyBranch($data_request);
+        $response = $this->companyService->updateCompanyBranch($data_request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function companyBranchActivation(Request $request)
     {
-        $access = $this->checkRouteService->checkRoute("COMPANY_BRANCH_STATUS");
-        if($access["success"] === false) return response()->json($access);
+        $route_name = "COMPANY_BRANCH_STATUS";
+        
         $data_request = [
             'id' => $request->get('company_id'),
             'is_enabled' => $request->get('is_enabled')
         ];
 
-        $response = $this->companyService->companyBranchActivation($data_request);
+        $response = $this->companyService->companyBranchActivation($data_request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteCompanyBranch(Request $request)
+    {
+        $route_name = "COMPANY_BRANCH_DELETE";
+
+        $id = $request->get('id', null);
+        $response = $this->companyService->deleteCompanyBranch($id, $route_name);
         return response()->json($response, $response['status']);
     }
     
@@ -137,49 +146,49 @@ class CompanyController extends Controller
     
     public function getCompanyClientDetail(Request $request)
     {
-        $access = $this->checkRouteService->checkRoute("COMPANY_CLIENT_GET");
-        if($access["success"] === false) return response()->json($access);
+        $route_name = "COMPANY_CLIENT_GET";
+        
         $id = $request->get('id', null);
-        $response = $this->companyService->getCompanyClientDetail($id);
+        $response = $this->companyService->getCompanyClientDetail($id, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function getClientCompanyList(Request $request)
     {
-        $access = $this->checkRouteService->checkRoute("COMPANY_CLIENTS_GET");
-        if($access["success"] === false) return response()->json($access);
-        $response = $this->companyService->getClientCompanyList();
+        $route_name = "COMPANY_CLIENTS_GET";
+        
+        $response = $this->companyService->getClientCompanyList($route_name);
         return response()->json($response, $response['status']);
     }
     
     public function getCompanyClientList(Request $request)
     {
-        $access = $this->checkRouteService->checkRoute("COMPANY_CLIENTS_GET");
-        if($access["success"] === false) return response()->json($access);
-        $response = $this->companyService->getCompanyClientList();
+        $route_name = "COMPANY_CLIENTS_GET";
+        
+        $response = $this->companyService->getCompanyClientList($route_name);
         return response()->json($response, $response['status']);
     }
 
     public function addCompanyClient(Request $request)
     {
-        $access = $this->checkRouteService->checkRoute("COMPANY_CLIENT_ADD");
-        if($access["success"] === false) return response()->json($access);
+        $route_name = "COMPANY_CLIENT_ADD";
+        
         $data_request = [
             'name' => $request->get('name'),
             'address' => $request->get('address'),
             'phone_number' => $request->get('phone_number'),
             'image_logo' => $request->get('image_logo', null),
-            'parent_id' => $request->get('parent_id')
+            'parent_id' => $request->get('parent_id', auth()->user()->company->parent_id)
         ];
         
-        $response = $this->companyService->addCompanyClient($data_request);
+        $response = $this->companyService->addCompanyClient($data_request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function updateCompanyClient(Request $request)
     {
-        $access = $this->checkRouteService->checkRoute("COMPANY_CLIENT_UPDATE");
-        if($access["success"] === false) return response()->json($access);
+        $route_name = "COMPANY_CLIENT_UPDATE";
+        
         $data_request = [
             'id' => $request->get('id'),
             'company_name' => $request->get('company_name'),
@@ -195,20 +204,29 @@ class CompanyController extends Controller
             'website' => $request->get('website')
         ];
 
-        $response = $this->companyService->updateCompanyClient($data_request);
+        $response = $this->companyService->updateCompanyClient($data_request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function companyClientActivation(Request $request)
     {
-        $access = $this->checkRouteService->checkRoute("COMPANY_CLIENT_STATUS");
-        if($access["success"] === false) return response()->json($access);
+        $route_name = "COMPANY_CLIENT_STATUS";
+        
         $data_request = [
             'id' => $request->get('company_id'),
             'is_enabled' => $request->get('is_enabled')
         ];
 
-        $response = $this->companyService->companyClientActivation($data_request);
+        $response = $this->companyService->companyClientActivation($data_request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteCompanyClient(Request $request)
+    {
+        $route_name = "COMPANY_CLIENT_DELETE";
+
+        $id = $request->get('id', null);
+        $response = $this->companyService->deleteCompanyClient($id, $route_name);
         return response()->json($response, $response['status']);
     }
 

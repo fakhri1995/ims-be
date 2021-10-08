@@ -1,13 +1,16 @@
 <?php
 
 namespace App\Services;
-use App\Services\GeneralService;
 use App\Company;
+use App\Services\GeneralService;
+use App\Services\CheckRouteService;
+use Exception;
 
 class CompanyService
 {
     public function __construct()
     {
+        $this->checkRouteService = new CheckRouteService;
         $this->client_role_id = 2;
         $this->branch_role_id = 3;
     }
@@ -55,6 +58,15 @@ class CompanyService
         return $this->haveChild($company_user_id, $companies, $company->parent_id);
     }
 
+    public function getTopCompany($companies, $company_id){
+        $search = array_search($company_id, array_column($companies, 'company_id'));
+        $company = $companies[$search];
+        if($company['parent_id'] === 1 || $company['parent_id'] === null){
+            return $company['company_name'];
+        }
+        return $this->getTopCompany($companies, $company['parent_id']);
+    }
+
     public function getCompanyTreeChildren($companies, $sub_company){
         $company_children = [];
         foreach($companies as $company){
@@ -67,17 +79,22 @@ class CompanyService
             }
         } 
         if(count($members)) $sub_company['members'] = $members;
+        if($sub_company['parent_id'] !== 1 && $sub_company['parent_id'] !== null){
+            $parent_company_name = $this->getTopCompany($companies, $sub_company["parent_id"]);
+            $sub_company['company_name'] = $parent_company_name.' / '.$sub_company['company_name'];
+        } 
+        
         unset($sub_company["parent_id"]); 
         return $sub_company;
     }    
 
     public function getCompanyTree($id, $role_id = null){
         $companies = Company::select('company_id','company_name','address','phone_number','image_logo','role','parent_id')->get();
+        $companies_array = $companies->toArray();
         $company = $companies->find($id);
         if($company === null) return ["success" => false, "message" => "Company Tidak Ditemukan", "code" => 400];
         if($role_id !== null) $companies = $companies->where('role', $role_id);
         $company_children = $companies->where('parent_id', $id);
-        $companies_array = $companies->toArray();
         $members = [];
         if(count($company_children)){
             foreach($company_children as $company_child){
@@ -144,15 +161,24 @@ class CompanyService
         return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
     }
 
-    public function getBranchCompanyList(){
+    public function getBranchCompanyList($route_name){
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
         return $this->getCompanyTreeSelect(auth()->user()->company_id);
     }
 
-    public function getClientCompanyList(){
+    public function getClientCompanyList($route_name){
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
         return $this->getCompanyTree(auth()->user()->company_id, $this->client_role_id);
     }
 
-    public function getCompanyClientList(){
+    public function getCompanyClientList($route_name){
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         $companies = Company::select('company_id','company_name','address','phone_number','image_logo','role','parent_id')->where('parent_id', 1)->where('role', 2)->get();
         $companies->makeHidden('parent_id');
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $companies, "status" => 200];
@@ -170,20 +196,30 @@ class CompanyService
         }
     }
 
-    public function getMainCompanyDetail(){
+    public function getMainCompanyDetail($route_name){
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         return $this->getCompanyDetail(1, 1);
     }
 
-    public function getCompanyBranchDetail($id){
+    public function getCompanyBranchDetail($id, $route_name){
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         return $this->getCompanyDetail($id, $this->branch_role_id);
     }
 
-    public function getCompanyClientDetail($id){
+    public function getCompanyClientDetail($id, $route_name){
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         return $this->getCompanyDetail($id, $this->client_role_id);
     }
 
     public function addCompany($data, $role_id){
         $generalService = new GeneralService;
+        if($data['parent_id'] === null) return ["success" => false, "message" => "Parent Id Tidak Boleh Null", "status" => 400];
         try{
             $company = new Company;
             $company->company_name = $data['name'];
@@ -203,18 +239,24 @@ class CompanyService
             $company->email = '-';
             $company->website = '-';
             $company->save();
-            if($role_id === 2) return ["success" => true, "message" => "Client Company Berhasil Dibentuk", "status" => 200];
-            else return ["success" => true, "message" => "Branch Company Berhasil Dibentuk", "status" => 200];
+            if($role_id === 2) return ["success" => true, "message" => "Client Company Berhasil Dibentuk", "id" => $company->company_id, "status" => 200];
+            else return ["success" => true, "message" => "Branch Company Berhasil Dibentuk", "id" => $company->company_id, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
 
-    public function addCompanyBranch($data){
+    public function addCompanyBranch($data, $route_name){
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         return $this->addCompany($data, $this->branch_role_id);
     }
 
-    public function addCompanyClient($data){
+    public function addCompanyClient($data, $route_name){
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         return $this->addCompany($data, $this->client_role_id);
     }
 
@@ -249,11 +291,17 @@ class CompanyService
         return $this->updateCompany($data, 1);
     }
 
-    public function updateCompanyBranch($data){
+    public function updateCompanyBranch($data, $route_name){
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         return $this->updateCompany($data, $this->branch_role_id);
     }
 
-    public function updateCompanyClient($data){
+    public function updateCompanyClient($data, $route_name){
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         return $this->updateCompany($data, $this->client_role_id);
     }
 
@@ -271,11 +319,49 @@ class CompanyService
         }
     }
 
-    public function companyBranchActivation($data){
+    public function companyBranchActivation($data, $route_name){
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         return $this->companyActivation($data, $this->branch_role_id);
     }
 
-    public function companyClientActivation($data){
+    public function companyClientActivation($data, $route_name){
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         return $this->companyActivation($data, $this->client_role_id);
+    }
+
+    public function deleteCompany($id, $role_id){
+        try{
+            $company = Company::find($id);
+            if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
+            if($company->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
+            $company->delete();
+            $companies = Company::where('parent_id', $company->company_id)->get();
+            foreach($companies as $temp_company)
+            {
+                $temp_company->parent_id = $company->parent_id;
+                $temp_company->save();
+            }
+            return ["success" => true, "message" => "Company Berhasil Dihapus", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteCompanyBranch($id, $route_name){
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        return $this->deleteCompany($id, $this->branch_role_id);
+    }
+
+    public function deleteCompanyClient($id, $route_name){
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        return $this->deleteCompany($id, $this->client_role_id);
     }
 }

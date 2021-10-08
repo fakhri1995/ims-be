@@ -50,6 +50,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/changeAgentPassword', 'UserController@changeAgentPassword');
     $router->put('/agentActivation', 'UserController@agentActivation');
     $router->put('/updateFeatureAgent', 'UserController@updateFeatureAgent');
+    $router->delete('/deleteAgent', 'UserController@deleteAgent');
 
     //Requester Routes
     $router->get('/getRequesterDetail', 'UserController@getRequesterDetail');
@@ -59,6 +60,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/changeRequesterPassword', 'UserController@changeRequesterPassword');
     $router->put('/requesterActivation', 'UserController@requesterActivation');
     $router->put('/updateFeatureRequester', 'UserController@updateFeatureRequester');
+    $router->delete('/deleteRequester', 'UserController@deleteRequester');
 
     //Company Routes
     $router->get('/getCompanyClientList', 'CompanyController@getCompanyClientList');
@@ -74,6 +76,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addCompanyBranch', 'CompanyController@addCompanyBranch');
     $router->put('/updateCompanyBranch', 'CompanyController@updateCompanyBranch');
     $router->put('/companyBranchActivation', 'CompanyController@companyBranchActivation');
+    $router->delete('/deleteCompanyBranch', 'CompanyController@deleteCompanyBranch');
 
     //MIG Client Company Routes
     $router->get('/getClientCompanyList', 'CompanyController@getClientCompanyList');
@@ -81,6 +84,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addCompanyClient', 'CompanyController@addCompanyClient');
     $router->put('/updateCompanyClient', 'CompanyController@updateCompanyClient');
     $router->put('/companyClientActivation', 'CompanyController@companyClientActivation');
+    $router->delete('/deleteCompanyClient', 'CompanyController@deleteCompanyClient');
     
     //Main Bank Account Routes
     $router->get('/getMainBanks', 'BankController@getMainBanks');
@@ -97,13 +101,14 @@ $router->group(['middleware' => 'auth'], function($router){
     //Access Feature Routes
     $router->get('/getFeatures', 'AccessFeatureController@getFeatures');
     $router->post('/addFeature', 'AccessFeatureController@addFeature');
+    $router->put('/updateFeature', 'AccessFeatureController@updateFeature');
     $router->delete('/deleteFeature', 'AccessFeatureController@deleteFeature');
 
     //Module Routes
     $router->get('/getModules', 'AccessFeatureController@getModules');
     $router->post('/addModule', 'AccessFeatureController@addModule');
+    $router->put('/updateModule', 'AccessFeatureController@updateModule');
     $router->post('/addModuleFeature', 'AccessFeatureController@addModuleFeature');
-    $router->put('/updateModuleFeature', 'AccessFeatureController@updateModuleFeature');
     $router->delete('/deleteModuleFeature', 'AccessFeatureController@deleteModuleFeature');
     $router->delete('/deleteModule', 'AccessFeatureController@deleteModule');
 

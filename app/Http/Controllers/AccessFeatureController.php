@@ -21,151 +21,150 @@ class AccessFeatureController extends Controller
     // Feature
     public function getFeatures(Request $request)
     {
-        // $access = $this->checkRouteService->checkRoute("MAIN_COMPANY_GET");
-        // if($access["success"] === false) return response()->json($access);
-        $response = $this->accessService->getFeatures();
+        $route_name = "FEATURES_GET";
+        $response = $this->accessService->getFeatures($route_name);
         return response()->json($response, $response['status']);
     }
 
     public function addFeature(Request $request)
     {
-        // $access = $this->checkRouteService->checkRoute("COMPANY_BRANCH_ADD");
-        // if($access["success"] === false) return response()->json($access);
+        $route_name = "FEATURE_ADD";
         $data_request = [
             'name' => $request->get('name'),
             'description' => $request->get('description')
         ];
         
-        $response = $this->accessService->addFeature($data_request);
+        $response = $this->accessService->addFeature($data_request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateFeature(Request $request)
+    {
+        $route_name = "FEATURE_UPDATE";
+        $data_request = [
+            'id' => $request->get('id'),
+            'name' => $request->get('name'),
+            'description' => $request->get('description')
+        ];
+        
+        $response = $this->accessService->updateFeature($data_request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function deleteFeature(Request $request)
     {
-        // $access = $this->checkRouteService->checkRoute("COMPANY_BRANCH_ADD");
-        // if($access["success"] === false) return response()->json($access);
+        $route_name = "FEATURE_DELETE";
         $id = $request->get('id', null);
         
-        $response = $this->accessService->deleteFeature($id);
+        $response = $this->accessService->deleteFeature($id, $route_name);
         return response()->json($response, $response['status']);
     }
 
     // Module
     public function getModules(Request $request)
     {
-        // $access = $this->checkRouteService->checkRoute("MAIN_COMPANY_GET");
-        // if($access["success"] === false) return response()->json($access);
-        $response = $this->accessService->getModules();
-        return $response;
+        $route_name = "MODULES_GET";
+        $response = $this->accessService->getModules($route_name, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function addModule(Request $request)
     {
-        // $access = $this->checkRouteService->checkRoute("COMPANY_BRANCH_ADD");
-        // if($access["success"] === false) return response()->json($access);
+        $route_name = "MODULE_ADD";
         $data_request = [
             'name' => $request->get('name'),
             'description' => $request->get('description')
         ];
         
-        $response = $this->accessService->addModule($data_request);
+        $response = $this->accessService->addModule($data_request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function addModuleFeature(Request $request)
     {
-        // $access = $this->checkRouteService->checkRoute("COMPANY_BRANCH_ADD");
-        // if($access["success"] === false) return response()->json($access);
+        $route_name = "MODULE_FEATURE_ADD";
         $data_request = [
             'id' => $request->get('id', null),
             'feature_ids' => $request->get('feature_ids', [])
         ];
-        $response = $this->accessService->addModuleFeature($data_request);
+        $response = $this->accessService->addModuleFeature($data_request, $route_name);
         return response()->json($response, $response['status']);
     }
 
-    // public function updateModule(Request $request)
-    // {
-    //     // $access = $this->checkRouteService->checkRoute("COMPANY_BRANCH_ADD");
-    //     // if($access["success"] === false) return response()->json($access);
-    //     $data_request = [
-    //         'id' => $request->get('id'),
-    //         'name' => $request->get('name'),
-    //         'description' => $request->get('description')
-    //     ];
+    public function updateModule(Request $request)
+    {
+        $route_name = "MODULE_UPDATE";
         
-    //     $response = $this->accessService->updateModule($data_request);
-    //     return response()->json($response, $response['status']);
-    // }
+        $data_request = [
+            'id' => $request->get('id', null),
+            'name' => $request->get('name'),
+            'description' => $request->get('description')
+        ];
+        
+        $response = $this->accessService->updateModule($data_request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 
     public function deleteModuleFeature(Request $request)
     {
-        // $access = $this->checkRouteService->checkRoute("COMPANY_BRANCH_ADD");
-        // if($access["success"] === false) return response()->json($access);
+        $route_name = "MODULE_FEATURE_DELETE";
         $data_request = [
             'id' => $request->get('id', null),
             'feature_ids' => $request->get('feature_ids', [])
         ];
-        $response = $this->accessService->deleteModuleFeature($data_request);
+        $response = $this->accessService->deleteModuleFeature($data_request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function deleteModule(Request $request)
     {
-        // $access = $this->checkRouteService->checkRoute("COMPANY_BRANCH_ADD");
-        // if($access["success"] === false) return response()->json($access);
+        $route_name = "MODULE_DELETE";
         $id = $request->get('id', null);
         
-        $response = $this->accessService->deleteModule($id);
+        $response = $this->accessService->deleteModule($id, $route_name);
         return response()->json($response, $response['status']);
     }
 
     // Role
     public function getRoleUserFeatures(Request $request)
     {
-        // $access = $this->checkRouteService->checkRoute("ROLE_USER_FEATURES_GET");
-        // if($access["success"] === false) return response()->json($access);
+        $route_name = "ROLE_USER_FEATURES_GET";
         $role_id = $request->get('id');
-        $response = $this->accessService->getRoleUserFeatures($role_id);
+        $response = $this->accessService->getRoleUserFeatures($role_id, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function getRoles(Request $request)
     {
-        // $access = $this->checkRouteService->checkRoute("ROLES_GET");
-        // if($access["success"] === false) return response()->json($access);
-        $response = $this->accessService->getRoles();
+        $route_name = "ROLES_GET";
+        $response = $this->accessService->getRoles($route_name);
         return response()->json($response, $response['status']);
     }
 
     public function getRole(Request $request)
     {
-        // $access = $this->checkRouteService->checkRoute("ROLE_GET");
-        // if($access["success"] === false) return response()->json($access);
+        $route_name = "ROLE_GET";
         $id = $request->get('id', null);
-        $response = $this->accessService->getRole($id);
+        $response = $this->accessService->getRole($id, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function addRole(Request $request)
     {
-        // $access = $this->checkRouteService->checkRoute("ROLE_ADD");
-        // if($access["success"] === false) return response()->json($access);
+        $route_name = "ROLE_ADD";
         $data_request = [
             'name' => $request->get('name'),
             'description' => $request->get('description'),
             'feature_ids' => $request->get('feature_ids', [])
         ];
 
-        $response = $this->accessService->addRole($data_request);
+        $response = $this->accessService->addRole($data_request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function updateRole(Request $request)
     {
-        // $access = $this->checkRouteService->checkRoute("ROLE_UPDATE");
-        // if($access["success"] === false) return response()->json($access);
+        $route_name = "ROLE_UPDATE";
         $data_request = [
             'id' => $request->get('id'),
             'name' => $request->get('name'),
@@ -173,16 +172,15 @@ class AccessFeatureController extends Controller
             'feature_ids' => $request->get('feature_ids', [])
         ];
 
-        $response = $this->accessService->updateRole($data_request);
+        $response = $this->accessService->updateRole($data_request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function deleteRole(Request $request)
     {
-        // $access = $this->checkRouteService->checkRoute("ROLE_DELETE");
-        // if($access["success"] === false) return response()->json($access);
+        $route_name = "ROLE_DELETE";
         $id = $request->get('id', null);
-        $response = $this->accessService->deleteRole($id);
+        $response = $this->accessService->deleteRole($id, $route_name);
         return response()->json($response, $response['status']);
     }  
 

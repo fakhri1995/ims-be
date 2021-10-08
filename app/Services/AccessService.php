@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+use App\Services\CheckRouteService;
 use App\AccessFeature;
 use App\Module;
 use App\Role;
@@ -11,16 +12,27 @@ use Exception;
 
 class AccessService
 {
-    // Features
-    public function getFeatures()
+    public function __construct()
     {
+        $this->checkRouteService = new CheckRouteService;
+    }
+
+    // Features
+    public function getFeatures($route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
         $features = AccessFeature::select('id','feature_id', 'feature_key','name','description')->get();
         if(!count($features)) return ["success" => true, "message" => "Fitur masih kosong", "data" => $features, "status" => 200];
         else return ["success" => true, "message" => "Users Berhasil Diambil", "data" => $features, "status" => 200 ];
     }
 
-    public function addFeature($data)
+    public function addFeature($data, $route_name)
     {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         try{
             $access_feature = new AccessFeature;
             $access_feature->name = $data['name'];
@@ -28,14 +40,35 @@ class AccessService
             $access_feature->feature_id = 1;
             $access_feature->feature_key = "-";
             $access_feature->save();
-            return ["success" => true, "message" => "Feature Berhasil Dibuat", "status" => 200];
+            return ["success" => true, "message" => "Feature Berhasil Dibuat", "id" => $access_feature->id, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
 
-    public function deleteFeature($id)
+    public function updateFeature($data, $route_name)
     {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $id = $data['id'];
+        try{
+            $access_feature = AccessFeature::find($id);
+            if($access_feature === null) ["success" => false, "message" => "Id Feature Tidak Ditemukan", "status" => 400];
+            $access_feature->name = $data['name'];
+            $access_feature->description = $data['description'];
+            $access_feature->save();
+            return ["success" => true, "message" => "Feature Berhasil Diubah", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteFeature($id, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         $access_feature = AccessFeature::find($id);
         if($access_feature === null) return ["success" => false, "message" => "Id Feature Tidak Ditemukan", "status" => 400];
         try{
@@ -47,8 +80,11 @@ class AccessService
     }
 
     //Modules
-    public function getModules()
+    public function getModules($route_name)
     {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         $modules = Module::get();
         if(!count($modules)) return ["success" => true, "message" => "Fitur masih kosong", "data" => $modules, "status" => 200];
         $access_feature = AccessFeature::select('id', 'name')->get();
@@ -63,8 +99,11 @@ class AccessService
         return ["success" => true, "message" => "Modules Berhasil Diambil", "data" => $modules, "status" => 200 ];
     }
 
-    public function addModule($data)
+    public function addModule($data, $route_name)
     {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         try{
             $module = new Module;
             $module->name = $data['name'];
@@ -77,8 +116,29 @@ class AccessService
         }
     }
 
-    public function addModuleFeature($data)
+    public function updateModule($data, $route_name)
     {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $id = $data['id'];
+        try{
+            $module = Module::find($id);
+            if($module === null) return ["success" => false, "message" => "Id Module Tidak Ditemukan", "status" => 400];
+            $module->name = $data['name'];
+            $module->description = $data['description'];
+            $module->save();
+            return ["success" => true, "message" => "Module Berhasil Diubah", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addModuleFeature($data, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         $module = Module::find($data['id']);
         if($module === null) return ["success" => false, "message" => "Id Module Tidak Ditemukan", "status" => 400];
         foreach($module->features as $feature){
@@ -98,8 +158,11 @@ class AccessService
         }
     }
 
-    public function deleteModuleFeature($data)
+    public function deleteModuleFeature($data, $route_name)
     {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         $module = Module::find($data['id']);
         if($module === null) return ["success" => false, "message" => "Id Module Tidak Ditemukan", "status" => 400];
         $temp_features = array_diff($module->features, $data['feature_ids']);
@@ -116,8 +179,11 @@ class AccessService
         }
     }
 
-    public function deleteModule($id)
+    public function deleteModule($id, $route_name)
     {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         $module = Module::find($id);
         if($module === null) return ["success" => false, "message" => "Id Module Tidak Ditemukan", "status" => 400];
         try{
@@ -129,8 +195,11 @@ class AccessService
     }
 
     //Roles
-    public function getRoleUserFeatures($role_id)
+    public function getRoleUserFeatures($role_id, $route_name)
     {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         try{
             $role_user_ids = UserRolePivot::where('role_id', $role_id)->pluck('user_id')->toArray();
             $role_feature_ids = RoleFeaturePivot::where('role_id', $role_id)->pluck('feature_id')->toArray();
@@ -159,8 +228,11 @@ class AccessService
         }
     }
 
-    public function getRoles()
+    public function getRoles($route_name)
     {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         try{
             $roles = Role::all();
             if(!count($roles)) return ["success" => true, "message" => "Roles masih kosong", "data" => $roles, "status" => 200];
@@ -173,8 +245,11 @@ class AccessService
         }
     }
 
-    public function getRole($id)
+    public function getRole($id, $route_name)
     {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         try{
             $role = Role::find($id);
             if($role === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
@@ -198,8 +273,11 @@ class AccessService
         }
     }
 
-    public function addRole($data)
+    public function addRole($data, $route_name)
     {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         try{
             $role = new Role;
             $role->name = $data['name'];
@@ -221,8 +299,11 @@ class AccessService
         }
     }
 
-    public function updateRole($data)
+    public function updateRole($data, $route_name)
     {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         $id = $data['id'];
         $role = Role::find($id);
         if($role === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400]);
@@ -264,8 +345,11 @@ class AccessService
         }
     }
 
-    public function deleteRole($id)
+    public function deleteRole($id, $route_name)
     {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         $role = Role::find($id);
         if($role === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         try{

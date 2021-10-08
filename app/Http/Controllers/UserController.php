@@ -3,12 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
-use App\Role;
-use App\RoleFeaturePivot;
-use App\UserRolePivot;
-use App\AccessFeature;
 use App\Services\UserService;
 
 class UserController extends Controller
@@ -29,145 +23,199 @@ class UserController extends Controller
 
     public function getAgentDetail(Request $request)
     {
+        $route_name = "AGENT_GET";
+
         $account_id = $request->get('account_id');
-        $response = $this->userService->getAgentDetail($account_id);
+        $response = $this->userService->getAgentDetail($account_id, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function getAgentList(Request $request)
     {
-        $response = $this->userService->getAgentList();
+        $route_name = "AGENTS_GET";
+        
+        $response = $this->userService->getAgentList($route_name);
         return response()->json($response, $response['status']);
     }
 
     public function addAgentMember(Request $request)
     {
+        $route_name = "AGENT_ADD";
+        
         $data_request = [
             "fullname" => $request->get('fullname'),
             "company_id" => $request->get('company_id'),
             "email" => $request->get('email'),
             "phone_number" => $request->get('phone_number'),
-            "profile_image" => $request->get('profile_image', null)
+            "profile_image" => $request->get('profile_image', null),
+            "password" => $request->get('password'),
+            "confirm_password" => $request->get('confirm_password'),
+            "role_ids" => $request->get('role_ids', [])
         ];
         
-        $response = $this->userService->addAgentMember($data_request);
+        $response = $this->userService->addAgentMember($data_request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function updateAgentDetail(Request $request)
     {
+        $route_name = "AGENT_UPDATE";
+        
         $data_request = [
             "id" => $request->get('id'),
             "fullname" => $request->get('fullname'),
             "phone_number" => $request->get('phone_number')
         ];
 
-        $response = $this->userService->updateAgentDetail($data_request);
+        $response = $this->userService->updateAgentDetail($data_request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function changeAgentPassword(Request $request)
     {
+        $route_name = "AGENT_PASSWORD_UPDATE";
+        
         $data_request = [
             "id" => $request->get('id'),
             "password" => $request->get('password')
         ];
 
-        $response = $this->userService->changeAgentPassword($data_request);
+        $response = $this->userService->changeAgentPassword($data_request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function agentActivation(Request $request)
     {
+        $route_name = "AGENT_STATUS";
+        
         $data_request = [
             "id" => $request->get('user_id'),
             "is_enabled" => $request->get('is_enabled')
         ];
 
-        $response = $this->userService->agentActivation($data_request);
+        $response = $this->userService->agentActivation($data_request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function updateFeatureAgent(Request $request)
     {
+        $route_name = "AGENT_UPDATE_FEATURE";
+        
         $data_request = [
             "id" => $request->get('account_id', null),
             "role_ids" => $request->get('role_ids', [])
         ];
 
-        $response = $this->userService->updateFeatureAgent($data_request);
+        $response = $this->userService->updateFeatureAgent($data_request, $route_name);
         return response()->json($response, $response['status']);
     }
 
+    public function deleteAgent(Request $request)
+    {
+        $route_name = "AGENT_DELETE";
+        
+        $id = $request->get('id', null);
+        $response = $this->userService->deleteAgent($id, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    //Requester
+
     public function getRequesterDetail(Request $request)
     {
+        $route_name = "REQUESTER_GET";
+        
         $account_id = $request->get('account_id');
-        $response = $this->userService->getRequesterDetail($account_id);
+        $response = $this->userService->getRequesterDetail($account_id, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function getRequesterList(Request $request)
     {
-        $response = $this->userService->getRequesterList();
+        $route_name = "REQUESTERS_GET";
+        
+        $response = $this->userService->getRequesterList($route_name);
         return response()->json($response, $response['status']);
     }
 
     public function addRequesterMember(Request $request)
     {
+        $route_name = "REQUESTER_ADD";
+        
         $data_request = [
             "fullname" => $request->get('fullname'),
             "company_id" => $request->get('company_id'),
             "email" => $request->get('email'),
             "phone_number" => $request->get('phone_number'),
-            "profile_image" => $request->get('profile_image', null)
+            "profile_image" => $request->get('profile_image', null),
+            "password" => $request->get('password'),
+            "confirm_password" => $request->get('confirm_password'),
+            "role_ids" => $request->get('role_ids', [])
         ];
         
-        $response = $this->userService->addRequesterMember($data_request);
+        $response = $this->userService->addRequesterMember($data_request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function updateRequesterDetail(Request $request)
     {
+        $route_name = "REQUESTER_UPDATE";
+        
         $data_request = [
             "id" => $request->get('id'),
             "fullname" => $request->get('fullname'),
             "phone_number" => $request->get('phone_number')
         ];
 
-        $response = $this->userService->updateRequesterDetail($data_request);
+        $response = $this->userService->updateRequesterDetail($data_request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function changeRequesterPassword(Request $request)
     {
+        $route_name = "REQUESTER_PASSWORD_UPDATE";
+        
         $data_request = [
             "id" => $request->get('id'),
             "password" => $request->get('password')
         ];
 
-        $response = $this->userService->changeRequesterPassword($data_request);
+        $response = $this->userService->changeRequesterPassword($data_request, $route_name);
         return response()->json($response, $response['status']);     
     }
 
     public function requesterActivation(Request $request)
     {
+        $route_name = "REQUESTER_STATUS";
+        
         $data_request = [
             "id" => $request->get('user_id'),
             "is_enabled" => $request->get('is_enabled')
         ];
 
-        $response = $this->userService->requesterActivation($data_request);
+        $response = $this->userService->requesterActivation($data_request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function updateFeatureRequester(Request $request)
     {
+        $route_name = "REQUESTER_UPDATE_FEATURE";
+        
         $data_request = [
             "id" => $request->get('account_id', null),
             "role_ids" => $request->get('role_ids', [])
         ];
 
-        $response = $this->userService->updateFeatureRequester($data_request);
+        $response = $this->userService->updateFeatureRequester($data_request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteRequester(Request $request)
+    {
+        $route_name = "REQUESTER_DELETE";
+        
+        $id = $request->get('id', null);
+        $response = $this->userService->deleteRequester($id, $route_name);
         return response()->json($response, $response['status']);
     }
 
