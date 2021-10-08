@@ -3,6 +3,7 @@
 namespace App\Services;
 use App\Services\CheckRouteService;
 use App\Services\CompanyService;
+use App\Services\LogService;
 use App\Services\UserService;
 use App\Asset;
 use App\AssetColumn;
@@ -1059,7 +1060,7 @@ class AssetService{
         }
     }
 
-    public function saveInventoryParts($inventory, $location, $parent_id, $causer_id)
+    public function saveInventoryParts($inventory, $location, $parent_id, $causer_id, $model_inventory_columns)
     {
         $new_inventory = new Inventory;
         $new_inventory->model_id = $inventory['model_id'];
@@ -1077,18 +1078,16 @@ class AssetService{
         $inventory_parts = $inventory['inventory_parts'];
         try{
             $new_inventory->save();
-            // $last_activity = Activity::all()->last();
-            // $last_activity->causer_id = $causer_id;
-            // $last_activity->causer_type = "Created as part of inventory with id ".$parent_id;
-            // $last_activity->save();
             $pivot = new InventoryInventoryPivot;
             $pivot->parent_id = $parent_id;
             $pivot->child_id = $new_inventory->id;
             $pivot->save();
-            // $last_activity = Activity::all()->last();
-            // $last_activity->causer_id = $causer_id;
-            // $last_activity->save();
-
+            $logService = new LogService;
+            $properties['attributes'] = $pivot;
+            $logService->createLogInventoryPivot($new_inventory->id, $causer_id, $properties);
+            
+            $not_found_index = 1;
+            $not_found = "Not Found ";
             if(count($inventory_values)){
                 foreach($inventory_values as $inventory_value){
                     $model = new InventoryValue;
@@ -1096,14 +1095,19 @@ class AssetService{
                     $model->model_inventory_column_id = $inventory_value['model_inventory_column_id'];
                     $model->value = $inventory_value['value'];
                     $model->save();
-                    // $last_activity = Activity::all()->last();
-                    // $last_activity->causer_id = $causer_id;
-                    // $last_activity->save();
+                    $search = array_search($inventory_value['model_inventory_column_id'], array_column($model_inventory_columns, 'id'));
+                    if($search === false){
+                        $new_inventory[$not_found.$not_found_index] = $inventory_value['value'];
+                        $not_found_index += 1;
+                    } else $new_inventory[$model_inventory_columns[$search]['name']] = $inventory_value['value'];
                 }
             } 
+            $properties['attributes'] = $new_inventory;
+            $notes = "Created as part of inventory with id ".$parent_id;
+            $logService->createLogInventory($new_inventory->id, $causer_id, $properties, $notes);
             if(count($inventory_parts)){
                 foreach($inventory_parts as $inventory_part){
-                    $this->saveInventoryParts($inventory_part, $location, $new_inventory->id, $causer_id);
+                    $this->saveInventoryParts($inventory_part, $location, $new_inventory->id, $causer_id, $model_inventory_columns);
                 }
             }
         } catch(Exception $err){
@@ -1156,31 +1160,59 @@ class AssetService{
         $notes = $data['notes'];
         try{
             $inventory->save();
-            // $last_activity = Activity::all()->last();
-            // $last_activity->causer_id = $check['id'];
-            // $last_activity->causer_type = $notes;
-            // $last_activity->save();
-
+            $model_inventory_columns = ModelInventoryColumn::select('id', 'name')->get();
+            $not_found_index = 1;
+            $not_found = "Not Found ";
             foreach($inventory_values as $inventory_value){
                 $model = new InventoryValue;
                 $model->inventory_id = $inventory->id;
                 $model->model_inventory_column_id = $inventory_value['model_inventory_column_id'];
                 $model->value = $inventory_value['value'];
                 $model->save();
-                // $last_activity = Activity::all()->last();
-                // $last_activity->causer_id = $check['id'];
-                // $last_activity->save();
+                $model_inventory_column = $model_inventory_columns->find($inventory_value['model_inventory_column_id']);
+                if($model_inventory_column === null){
+                    $inventory[$not_found.$not_found_index] = $inventory_value['value'];
+                    $not_found_index += 1;
+                } else $inventory[$model_inventory_column->name] = $inventory_value['value'];
                 
             }
+            $causer_id = auth()->user()->user_id; 
+            $logService = new LogService;
+            $properties['attributes'] = $inventory;
+            $logService->createLogInventory($inventory->id, $causer_id, $properties, $notes);
+            $model_inventory_columns = $model_inventory_columns->toArray();
             if(count($inventory_parts)){
                 foreach($inventory_parts as $inventory_part){
-                    $this->saveInventoryParts($inventory_part, $inventory->location, $inventory->id, auth()->user()->user_id);
+                    $this->saveInventoryParts($inventory_part, $inventory->location, $inventory->id, $causer_id, $model_inventory_columns);
                 }
             }
             return ["success" => true, "message" => "Inventory Berhasil Ditambah", "id" => $inventory->id, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
+    }
+
+    public function addInventoryNotes($data, $route_name)
+    {
+        $logService = new LogService;
+        $subject_id = $data['id'];
+        $causer_id = auth()->user()->user_id;
+        $notes = $data['notes'];
+        $logService->noteLogInventory($subject_id, $causer_id, $notes);
+        return ["success" => true, "message" => "Notes Berhasil Ditambah", "status" => 200];
+    }
+
+    public function checkUpdateProperties($old_inventory, $new_inventory)
+    {
+        $properties = false;
+        foreach($new_inventory->getAttributes() as $key => $value){
+            if($key === "created_at" || $key === "updated_at") continue;
+            if($new_inventory->$key !== $old_inventory[$key]){
+                $properties['attributes'][$key] = $new_inventory->$key;
+                $properties['old'][$key] = $old_inventory[$key];
+            }
+        }
+        return $properties;
     }
 
     public function updateInventory($data, $route_name)
@@ -1196,6 +1228,10 @@ class AssetService{
         try{
             $inventory = Inventory::find($id);
             if($inventory === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+            
+            $old_inventory = [];
+            foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
+
             $inventory->vendor_id = $data['vendor_id'];
             $inventory->inventory_name = $data['inventory_name'];
             // $inventory->status_condition = $inventory->status_condition;
@@ -1207,16 +1243,10 @@ class AssetService{
             $inventory->mig_id = $mig_id;
             $inventory->serial_number = $data['serial_number'];
             $inventory->save();
-            // $last_activity = Activity::all()->last();
-            // if($last_activity->subject_id === $id){
-            //     $last_activity->causer_id = $check['id'];
-            //     $last_activity->causer_type = $notes;
-            //     $last_activity->save();
-            // }
             
             $new_inventory_values = $data['inventory_values'];
             $inventory_values = InventoryValue::get();
-
+            $model_inventory_columns = ModelInventoryColumn::select('id', 'name')->get();
             foreach($new_inventory_values as $inventory_value){
                 $new_value = $inventory_values->where('id', $inventory_value['id'])->first();
                 if($new_value === null) return ["success" => false, "message" => "Id Inventory Value Tidak Ditemukan", "error_id" => $inventory_value['id'], "status" => 400];
@@ -1224,36 +1254,45 @@ class AssetService{
             }
             foreach($new_inventory_values as $inventory_value){
                 $new_value = $inventory_values->where('id', $inventory_value['id'])->first();
+                $model_inventory_column = $model_inventory_columns->find($new_value->model_inventory_column_id);
+                $old_inventory[$model_inventory_column->name] = $new_value->value;
                 $new_value->value = $inventory_value['value'];
                 $new_value->save();
-                // $check_activity = Activity::all()->last();;
-                // if (array_key_exists('inventory_id', $check_activity->properties['attributes'])) {
-                //     if($check_activity->properties['attributes']['inventory_id'] === $id) {
-                //         $check_activity->causer_id = $check['id'];
-                //         $check_activity->causer_type = $notes;
-                //         $check_activity->save();
-                //     }
-                // }
+                $inventory[$model_inventory_column->name] = $inventory_value['value'];
             }
-
+            $properties = $this->checkUpdateProperties($old_inventory, $inventory);
+            if($properties){
+                $causer_id = auth()->user()->user_id; 
+                $logService = new LogService;
+                $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
+            }
             return ["success" => true, "message" => "Inventory Berhasil Diubah", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
 
-    public function setStatusInventoryPartReplacements($pivot, $login_id, $status){
+    public function setStatusInventoryPartReplacements($pivot, $causer_id, $status, $replacement){
         $pivots = InventoryInventoryPivot::get();
         $inventory = Inventory::find($pivot['child_id']);
+        $old_inventory = [];
+        foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
+
         $inventory->status_usage = $status;
         $inventory->save();
-        // $last_activity = Activity::all()->last();
-        // $last_activity->causer_id = $login_id;
-        // $last_activity->save();
+
+        $logService = new LogService;
+        if($replacement) $notes = "Became Replacements with Its Parent";
+        else $notes = "Replaced Along with Its Parent";
+        $properties = $this->checkUpdateProperties($old_inventory, $inventory);
+        if($properties){
+            $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
+        }
+        
         $pivot_children = $pivots->where('parent_id', $pivot['child_id']);
         if(count($pivot_children)){
             foreach($pivot_children as $pivot_child){
-                $this->setStatusInventoryPartReplacements($pivot_child, $login_id, $status);
+                $this->setStatusInventoryPartReplacements($pivot_child, $causer_id, $status, $replacement);
             }
         }
     }
@@ -1267,78 +1306,88 @@ class AssetService{
         $replacement_id = $data['replacement_id'];
         $notes = $data['notes'];
         $causer_id = auth()->user()->user_id;
+        $logService = new LogService;
         try{
             $inventory = Inventory::find($id);
             if($inventory === null) return ["success" => false, "message" => "Id Inventori yang akan Diganti Tidak Ditemukan", "status" => 400];
+            $old_inventory = [];
+            foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
+            
             $pivot_old_inventory = InventoryInventoryPivot::where('child_id', $id)->first();
             
             $inventory_replacement = Inventory::find($replacement_id);
             if($inventory_replacement === false) return ["success" => false, "message" => "Id Inventori Pengganti Tidak Ditemukan", "status" => 400];
-            
+            $old_inventory_replacement = [];
+            foreach($inventory_replacement->getAttributes() as $key => $value) $old_inventory_replacement[$key] = $value;
+
             // if($inventory_replacement->model_id !== $inventory->model_id) return ["success" => false, "message" => "Model Kedua Inventori Tidak Sama", "status" => 400];
             $pivots = InventoryInventoryPivot::get();
             $temp_status_usage = $inventory->status_usage;
             $inventory->status_usage = $inventory_replacement->status_usage;
             $inventory->save();
-            // $last_activity = Activity::all()->last();
-            // $last_activity->causer_id = $check['id'];
-            // $last_activity->causer_type = $notes;
-            // $last_activity->save();
+            $properties = $this->checkUpdateProperties($old_inventory, $inventory);
+            if($properties){
+                $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
+            }
+            
             $pivot_children = $pivots->where('parent_id', $id);
             if(count($pivot_children)){
                 foreach($pivot_children as $pivot_child){
-                    $this->setStatusInventoryPartReplacements($pivot_child, $causer_id, $inventory->status_usage);
+                    $this->setStatusInventoryPartReplacements($pivot_child, $causer_id, $inventory->status_usage, false);
                 }
             }
             
             $inventory_replacement->status_usage = $temp_status_usage;
             $inventory_replacement->save();
-            // $last_activity = Activity::all()->last();
-            // $last_activity->causer_id = $check['id'];
-            // $last_activity->causer_type = "Replacement of inventory with id ".$id;
-            // $last_activity->save();
+            $properties = $this->checkUpdateProperties($old_inventory_replacement, $inventory_replacement);
+            if($properties){
+                $log_notes = "Replacement of inventory with id ".$id;
+                $logService->updateLogInventory($inventory_replacement->id, $causer_id, $properties, $log_notes);
+            }
+            
             $pivot_old_replacement = InventoryInventoryPivot::where('child_id', $replacement_id)->first();
             if($pivot_old_replacement === null){
                 $remove_old_pivot = $pivots->where('child_id', $id)->first();
                 $remove_old_pivot->delete();
-                // $last_activity = Activity::all()->last();
-                // $last_activity->causer_id = $check['id'];
-                // $last_activity->causer_type = $notes;
-                // $last_activity->save();
+                $properties['old'] = $remove_old_pivot;
+                $logService->deleteLogInventoryPivot($id, $causer_id, $properties, $notes);
+
                 $new_replacement_pivot = new InventoryInventoryPivot;
                 $new_replacement_pivot->parent_id = $pivot_old_inventory->parent_id;
                 $new_replacement_pivot->child_id = $replacement_id;
                 $new_replacement_pivot->save();
-                // $last_activity = Activity::all()->last();
-                // $last_activity->causer_id = $check['id'];
-                // $last_activity->causer_type = "Replacement of inventory with id ".$id;
-                // $last_activity->save();
+
+                $log_notes = "Replacement of inventory with id ".$id;
+                $logService->createLogInventoryPivot($replacement_id, $causer_id, $new_replacement_pivot, $log_notes);
             } else {
+                $temp_pivot_old_inventory = [];
+                foreach($pivot_old_inventory->getAttributes() as $key => $value) $temp_pivot_old_inventory[$key] = $value;
+
                 $parent_old_inventory = $pivot_old_inventory->parent_id;
                 $pivot_old_inventory->parent_id = $pivot_old_replacement->parent_id;
                 $pivot_old_inventory->save();
-                // $last_activity = Activity::all()->last();
-                // $last_activity->causer_id = $check['id'];
-                // $last_activity->causer_type = $notes;
-                // $last_activity->save();
-                
+
+                $properties = $this->checkUpdateProperties($temp_pivot_old_inventory, $pivot_old_inventory);
+                if($properties){
+                    $logService->updateLogInventoryPivot($id, $causer_id, $properties, $notes);
+                }
+                $temp_pivot_old_replacement = [];
+                foreach($pivot_old_replacement->getAttributes() as $key => $value) $temp_pivot_old_replacement[$key] = $value;
+
                 $pivot_old_replacement->parent_id = $parent_old_inventory;
                 $pivot_old_replacement->save();
-                // $last_activity = Activity::all()->last();
-                // $last_activity->causer_id = $check['id'];
-                // $last_activity->causer_type = "Replacement of inventory with id ".$id;
-                // $last_activity->save();
-                
+
+                $properties = $this->checkUpdateProperties($temp_pivot_old_replacement, $pivot_old_replacement);
+                if($properties){
+                    $log_notes = "Replacement of inventory with id ".$id;
+                    $logService->updateLogInventoryPivot($replacement_id, $causer_id, $properties, $log_notes);
+                }
             }
             
-            // $last_activity = Activity::all()->last();
-            // $last_activity->causer_id = $check['id'];
-            // $last_activity->save();
-
             $pivot_children = $pivots->where('parent_id', $replacement_id);
             if(count($pivot_children)){
                 foreach($pivot_children as $pivot_child){
-                    $this->setStatusInventoryPartReplacements($pivot_child, $causer_id, $inventory_replacement->status_usage);
+                    $this->setStatusInventoryPartReplacements($pivot_child, $causer_id, $inventory_replacement->status_usage, true);
                 }
             }
             return ["success" => true, "message" => "Berhasil Melakukan Replacement Part Inventory", "status" => 200];
@@ -1357,22 +1406,27 @@ class AssetService{
         return false;
     }
 
-    public function removeChildInventoryPart($pivot, $login_id){
+    public function removeChildInventoryPart($pivot, $causer_id, $status = null){
         $pivots = InventoryInventoryPivot::get();
         $inventory = Inventory::find($pivot['child_id']);
+        $old_inventory = [];
+        foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
+
         $inventory->status_usage = 2;
         $inventory->save();
-        // $last_activity = Activity::all()->last();
-        // $last_activity->causer_id = $login_id;
-        // $last_activity->save();
+
+        $logService = new LogService;
+        $properties = $this->checkUpdateProperties($old_inventory, $inventory);
+        if($properties){
+            if($status === "delete inventory") $notes = "Parent Has Been Deleted";
+            else $notes = "Removed as Parts with Its Parent";
+            $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
+        }
+        
         $pivot_children = $pivots->where('parent_id', $pivot['child_id']);
         if(count($pivot_children)){
             foreach($pivot_children as $pivot_child){
-                $this->removeChildInventoryPart($pivot_child, $login_id);
-                // $pivot_child->delete();
-                // $last_activity = Activity::all()->last();
-                // $last_activity->causer_id = $check['id'];
-                // $last_activity->save();
+                $this->removeChildInventoryPart($pivot_child, $causer_id, $status);
             }
         }
     }
@@ -1393,26 +1447,27 @@ class AssetService{
             if($check_parent === false) return ["success" => false, "message" => "Id Part Tidak Termasuk dari Part yang Dimiliki Inventory Ini", "error_id" => $inventory_part_id, "status" => 400];
             
             $inventory = Inventory::find($inventory_part_id);
+            $old_inventory = [];
+            foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
+
             $inventory->status_usage = 2;
             $inventory->save();
-            // $last_activity = Activity::all()->last();
-            // $last_activity->causer_id = $check['id'];
-            // $last_activity->causer_type = $notes;
-            // $last_activity->save();
+
+            $logService = new LogService;
+            $properties = $this->checkUpdateProperties($old_inventory, $inventory);
+            if($properties){
+                $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
+            }
+            
             $remove_pivot = $pivots->where('child_id', $inventory_part_id)->first();
             $remove_pivot->delete();
-            // $last_activity = Activity::all()->last();
-            // $last_activity->causer_id = $check['id'];
-            // $last_activity->causer_type = $notes;
-            // $last_activity->save();
+            $properties['old'] = $remove_pivot;
+            $logService->deleteLogInventoryPivot($inventory_part_id, $causer_id, $properties, $notes);
+
             $pivot_children = $pivots->where('parent_id', $inventory_part_id);
             if(count($pivot_children)){
                 foreach($pivot_children as $pivot_child){
                     $this->removeChildInventoryPart($pivot_child, $causer_id);
-                    // $pivot_child->delete();
-                    // $last_activity = Activity::all()->last();
-                    // $last_activity->causer_id = $check['id'];
-                    // $last_activity->save();
                 }
             }
             return ["success" => true, "message" => "Berhasil Menghapus Part Inventory", "status" => 200];
@@ -1427,18 +1482,25 @@ class AssetService{
         return ["exist" => true, "id" => $pivot_is_exist->parent_id];
     }
 
-    public function addChildInventoryPart($pivot, $login_id){
+    public function addChildInventoryPart($pivot, $causer_id){
         $pivots = InventoryInventoryPivot::get();
         $inventory = Inventory::find($pivot['child_id']);
+        $old_inventory = [];
+        foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
+
         $inventory->status_usage = 1;
         $inventory->save();
-        // $last_activity = Activity::all()->last();
-        // $last_activity->causer_id = $login_id;
-        // $last_activity->save();
+
+        $logService = new LogService;
+        $properties = $this->checkUpdateProperties($old_inventory, $inventory);
+        if($properties){
+            $notes = "Added as Parts with Its Parent";
+            $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
+        }
         $pivot_children = $pivots->where('parent_id', $pivot['child_id']);
         if(count($pivot_children)){
             foreach($pivot_children as $pivot_child){
-                $this->addChildInventoryPart($pivot_child, $login_id);
+                $this->addChildInventoryPart($pivot_child, $causer_id);
             }
         }
     }
@@ -1451,6 +1513,7 @@ class AssetService{
         $id = $data['id'];
         $notes = $data['notes'];
         $inventory_part_ids = $data['inventory_part_ids'];
+        $causer_id = auth()->user()->user_id;
         try{
             if(count($inventory_part_ids)){
                 // foreach($inventory_part_ids as $inventory_part_id){
@@ -1462,12 +1525,17 @@ class AssetService{
                     $inventory = Inventory::find($inventory_part_id);
                     if($inventory === null) return ["success" => false, "message" => "Id Inventory Tidak Terdaftar", "status" => 400];
                     // if($inventory->status_usage === 1)return ["success" => false, "message" => "Inventory Sedang Digunakan", "status" => 400];
+                    
+                    $old_inventory = [];
+                    foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
                     $inventory->status_usage = 1;
                     $inventory->save();
-                    // $last_activity = Activity::all()->last();
-                    // $last_activity->causer_id = $check['id'];
-                    // $last_activity->causer_type = $notes;
-                    // $last_activity->save();
+                    
+                    $logService = new LogService;
+                    $properties = $this->checkUpdateProperties($old_inventory, $inventory);
+                    if($properties){
+                        $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
+                    }
                     
                     $pivot = $pivots->where('child_id', $inventory_part_id)->first();
                     if($pivot === null){
@@ -1475,20 +1543,23 @@ class AssetService{
                         $pivot->parent_id = $id;
                         $pivot->child_id = $inventory_part_id;
                         $pivot->save();
+                        $properties['attributes'] = $pivot;
+                        $logService->createLogInventoryPivot($inventory_part_id, $causer_id, $properties, $notes);
                     } else {
+                        $old_pivot = [];
+                        foreach($pivot->getAttributes() as $key => $value) $old_pivot[$key] = $value;
                         $pivot->parent_id = $id;
                         $pivot->save();
+                        $properties = $this->checkUpdateProperties($old_pivot, $pivot);
+                        if($properties){
+                            $logService->updateLogInventoryPivot($inventory_part_id, $causer_id, $properties, $notes);
+                        }
                     }
-                    // $last_activity = Activity::all()->last();
-                    // $last_activity->causer_id = $check['id'];
-                    // $last_activity->causer_type = $notes;
-                    // $last_activity->save();
                     
-
                     $pivot_children = $pivots->where('parent_id', $inventory_part_id);
                     if(count($pivot_children)){
                         foreach($pivot_children as $pivot_child){
-                            $this->addChildInventoryPart($pivot_child, auth()->user()->user_id);
+                            $this->addChildInventoryPart($pivot_child, $causer_id);
                         }
                     }
                 }
@@ -1512,37 +1583,49 @@ class AssetService{
         $causer_id = auth()->user()->user_id;
         if($inventory === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         try{
-            // DB::table('inventories')->where('id', $inventory->id)->update(array('vendor_id' => $log_user_id));
             $inventory->delete();
-            // $last_activity = Activity::all()->last();
-            // $last_activity->causer_id = $check['id'];
-            // $last_activity->causer_type = $notes;
-            // $last_activity->save();
+
             $inventory_values = InventoryValue::where('inventory_id', $id)->get();
+            $model_inventory_columns = ModelInventoryColumn::select('id', 'name')->get();
             if(count($inventory_values)){
+                $not_found_index = 1;
+                $not_found = "Not Found ";
                 foreach($inventory_values as $inventory_value){
                     $inventory_value->delete();
-                    $last_activity = Activity::all()->last();
-                    $last_activity->causer_id = $check['id'];
-                    $last_activity->save();
+                    $model_inventory_column = $model_inventory_columns->find($inventory_value->model_inventory_column_id);
+                    if($model_inventory_column === null){
+                        $name = $not_found.$not_found_index;
+                        $inventory->$name = $inventory_value->value;
+                        $not_found_index += 1;
+                    } else{
+                        $name = $model_inventory_column->name;
+                        $inventory->$name = $inventory_value->value;
+                    } 
                 }
             }
+            $logService = new LogService;
+            $properties['old'] = $inventory;
+            $logService->deleteLogInventory($id, $causer_id, $properties, $notes);
+
             $pivots = InventoryInventoryPivot::get();
+
+            // Will be Deleted from Its Parent Without Trace
+            // $pivot = $pivots->where('child_id', $id)->first();
+            // if($pivot !== null){
+            //     $pivot->delete();
+            //     $properties['old'] = $pivot;
+            //     $logService->deleteLogInventoryPivot($id, $causer_id, $properties, $notes);
+            // }
+
             $pivot_children = $pivots->where('parent_id', $id);
             $inventories = Inventory::get();
             if(count($pivot_children)){
+                $notes = "Parent Has Been Deleted";
                 foreach($pivot_children as $pivot_child){
                     $pivot_child->delete();
-                    // $last_activity = Activity::all()->last();
-                    // $last_activity->causer_id = $check['id'];
-                    // $last_activity->save();
-                    $inventory = $inventories->where('id', $pivot_child->child_id)->first();
-                    $inventory->status_usage = 2;
-                    $inventory->save();
-                    // $last_activity = Activity::all()->last();
-                    // $last_activity->causer_id = $check['id'];
-                    // $last_activity->save();
-                    $this->removeChildInventoryPart($pivot_child, $check['id']);
+                    $properties['old'] = $pivot_child;
+                    $logService->deleteLogInventoryPivot($pivot_child->child_id, $causer_id, $properties, $notes);
+                    $this->removeChildInventoryPart($pivot_child, $causer_id, "delete inventory");
                 }
             }
             return ["success" => true, "message" => "Data Berhasil Dihapus", "status" => 200];
@@ -1559,20 +1642,23 @@ class AssetService{
         $id = $data['id'];
         $notes = $data['notes'];
         $status_condition = $data['status_condition'];
+        $causer_id = auth()->user()->user_id;
         try{
             if($status_condition < 1 || $status_condition > 3){
                 return ["success" => false, "message" => "Status Usage Tidak Tepat", "status" => 400];
             }
             $inventory = Inventory::find($id);
             if($inventory === null) return ["success" => false, "message" => "Inventory Tidak Ditemukan", "status" => 400];
+            $old_inventory = [];
+            foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
             $inventory->status_condition = $status_condition;
             $inventory->save();
-            // $last_activity = Activity::all()->last();
-            // if($last_activity->subject_id === $id){
-            //     $last_activity->causer_id = $check['id'];
-            //     $last_activity->causer_type = $notes;
-            //     $last_activity->save();
-            // }
+            
+            $logService = new LogService;
+            $properties = $this->checkUpdateProperties($old_inventory, $inventory);
+            if($properties){
+                $logService->updateLogInventory($id, $causer_id, $properties, $notes);
+            }
             return ["success" => true, "message" => "Status Kondisi Inventory Berhasil Diubah", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -1596,7 +1682,7 @@ class AssetService{
             $detail_connected_id = $data['detail_connected_id'];
             if($status_usage === 1){
                 if($relationship_type_id === null) return ["success" => false, "message" => "Relationship Type Belum Terisi", "status" => 400];
-                if($relationship_type_id < 1 || $relationship_type_id > 3) return ["success" => false, "message" => "Relationship Type Id Tidak Tepat", "status" => 400];
+                if($relationship_type_id > -1 || $relationship_type_id < -3) return ["success" => false, "message" => "Relationship Type Id Tidak Tepat", "status" => 400];
                 if($connected_id === null) return ["success" => false, "message" => "Connected Id Belum Terisi", "status" => 400];
             }
             
@@ -1606,24 +1692,28 @@ class AssetService{
             if($model === null) return ["success" => false, "message" => "Tipe Model pada Inventory Tidak Ditemukan", "status" => 400];
             $asset = Asset::find($model->asset_id);
             if($asset === null) return ["success" => false, "message" => "Tipe Aset pada Tipe Model pada Inventory Tidak Ditemukan", "status" => 400];
+            
+            $old_inventory = [];
+            foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
             $inventory->status_usage = $status_usage;
             $inventory->save();
-            // $last_activity = Activity::all()->last();
-            // if($last_activity->subject_id === $id){
-            //     $last_activity->causer_id = $check['id'];
-            //     $last_activity->causer_type = $notes;
-            //     $last_activity->save();
-            // }
+            
+            $logService = new LogService;
+            $causer_id = auth()->user()->user_id; 
+            $properties = $this->checkUpdateProperties($old_inventory, $inventory);
+            if($properties){
+                $logService->updateLogInventory($id, $causer_id, $properties, $notes);
+            }
             if($status_usage !== 1){
                 //Delete Relationship except Inventory type (4)
                 $relationship_inventories = RelationshipInventory::where('subject_id', $inventory->id)->where('type_id', '<>', 4)->get();
                 if(count($relationship_inventories)){
                     foreach($relationship_inventories as $relationship_inventory){
                         $relationship_inventory->delete();
-                        // $last_activity = Activity::all()->last();
-                        // $last_activity->causer_id = $check['id'];
-                        // $last_activity->causer_type = "Ubah Status Pemakaian";
-                        // $last_activity->save();
+                        
+                        $properties['old'] = $relationship_inventory;
+                        $notes = "Changed Status Item";
+                        $logService->deleteLogInventoryRelationship($relationship_inventory->subject_id, $causer_id, $properties, $notes);
                     }
                 }
                 return ["success" => true, "message" => "Status Pemakaian Inventory Berhasil Diubah", "status" => 200];
@@ -1653,14 +1743,13 @@ class AssetService{
             $relationship_inventory->connected_id = $connected_id;
             $relationship_inventory->type_id = $relationship_type_id;
             $relationship_inventory->is_inverse = false;
-            if($relationship_type_id === 3){
+            if($relationship_type_id === -3){
                 $relationship_inventory->detail_connected_id = $detail_connected_id;
             }
             $relationship_inventory->save();
-            // $last_activity = Activity::all()->last();
-            // $last_activity->causer_id = $check['id'];
-            // $last_activity->causer_type = $notes;
-            // $last_activity->save();
+
+            $properties['attributes'] = $relationship_inventory;
+            $logService->createLogInventoryRelationship($relationship_inventory->subject_id, $causer_id, $properties, $notes);
             
             return ["success" => true, "message" => "Status Pemakaian Inventory Berhasil Diubah", "status" => 200];
         } catch(Exception $err){
@@ -1742,6 +1831,10 @@ class AssetService{
         try{
             $relationships = Relationship::get();
             if($relationships->isEmpty()) return ["success" => false, "message" => "Relationship Belum dibuat", "status" => 400];
+            $relationship_assets = RelationshipAsset::select('relationship_id')->get();
+            foreach($relationships as $relationship){
+                $relationship->count = $relationship_assets->where('relationship_id', $relationship->id)->count();
+            }
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $relationships, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -1824,6 +1917,10 @@ class AssetService{
         try{
             $relationship_assets = RelationshipAsset::get();
             if($relationship_assets->isEmpty()) return ["success" => false, "message" => "Relationship Asset Belum dibuat", "status" => 200];
+            $relationship_inventories = RelationshipInventory::select('relationship_asset_id')->get();
+            foreach($relationship_assets as $relationship_asset){
+                $relationship_asset->count = $relationship_inventories->where('relationship_asset_id', $relationship_asset->id)->count();
+            }
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $relationship_assets, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -2062,7 +2159,7 @@ class AssetService{
         }
     }
 
-    // Relationship Iventory
+    // Relationship Inventory
 
     public function getRelationshipInventories($route_name)
     {
@@ -2328,10 +2425,11 @@ class AssetService{
                 $relationship_inventory->is_inverse = $is_inverse;
                 $relationship_inventory->connected_id = $connected_id;
                 $relationship_inventory->save();
-                // $last_activity = Activity::all()->last();
-                // $last_activity->causer_id = $check['id'];
-                // $last_activity->causer_type = $notes;
-                // $last_activity->save();
+
+                $causer_id = auth()->user()->user_id; 
+                $logService = new LogService;
+                $properties['attributes'] = $relationship_inventory;
+                $logService->createLogInventoryRelationship($subject_id, $causer_id, $properties, $notes);
             }
             return ["success" => true, "message" => "Relationship Inventory berhasil dibuat", "status" => 200];
         } catch(Exception $err){
@@ -2354,21 +2452,32 @@ class AssetService{
         $relationship_asset = RelationshipAsset::find($relationship_asset_id);
         if($relationship_asset === null) return ["success" => false, "message" => "Relationship Asset Id Tidak Ditemukan", "status" => 400];
         
+        $causer_id = auth()->user()->user_id; 
+        $old_relationship_inventory = [];
+        foreach($relationship_inventory->getAttributes() as $key => $value) $old_relationship_inventory[$key] = $value;
+        
         $relationship_inventory->relationship_asset_id = $relationship_asset_id;
         $relationship_inventory->type_id = $relationship_asset->type_id;
+
+        $logService = new LogService;
         if($from_inverse){
+            $properties['old'] = $old_relationship_inventory;
+            $temp_notes = "Item Has Been Changed Into Item with Id ". $data['connected_id'];
+            $logService->deleteLogInventoryRelationship($relationship_inventory->subject_id, $causer_id, $properties, $temp_notes);
             $relationship_inventory->subject_id = $data['connected_id'];
             $relationship_inventory->is_inverse = !$data['is_inverse'];
+            $new_properties['attributes'] = $relationship_inventory;
+            $logService->createLogInventoryRelationship($relationship_inventory->subject_id, $causer_id, $new_properties, $notes);
         } else {
             $relationship_inventory->connected_id = $data['connected_id'];
             $relationship_inventory->is_inverse = $data['is_inverse'];
+            $properties = $this->checkUpdateProperties($old_relationship_inventory, $relationship_inventory);
+            if($properties){
+                $logService->updateLogInventoryRelationship($relationship_inventory->subject_id, $causer_id, $properties, $notes);
+            }
         } 
         try{
             $relationship_inventory->save();
-            // $last_activity = Activity::all()->last();
-            // $last_activity->causer_id = $check['id'];
-            // $last_activity->causer_type = $notes;
-            // $last_activity->save();
             return ["success" => true, "message" => "Relationship Inventory berhasil diubah", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -2384,10 +2493,10 @@ class AssetService{
         if($relationship_inventory === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 200];
         try{
             $relationship_inventory->delete();
-            // $last_activity = Activity::all()->last();
-            // $last_activity->causer_id = $check['id'];
-            // $last_activity->causer_type = $notes;
-            // $last_activity->save();
+            $causer_id = auth()->user()->user_id; 
+            $properties['old'] = $relationship_inventory;
+            $logService = new LogService;
+            $logService->deleteLogInventoryRelationship($relationship_inventory->subject_id, $causer_id, $properties);
             return ["success" => true, "message" => "Relationship Inventory berhasil dihapus", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];

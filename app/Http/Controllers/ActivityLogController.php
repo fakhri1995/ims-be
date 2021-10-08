@@ -3,14 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
-use Spatie\Activitylog\Models\Activity;
-use App\ModelInventoryColumn;
-use App\ModelInventory;
-use App\Inventory;
-use App\Asset;
-use Exception;
+use App\Services\LogService;
 
 class ActivityLogController extends Controller
 {
@@ -22,13 +15,21 @@ class ActivityLogController extends Controller
 
     public function __construct()
     {
-        $this->client = new Client(['base_uri' => 'https://go.cgx.co.id/']);
+        $this->logService = new LogService;
     }
 
     // Normal Route
 
     public function getActivityInventoryLogs(Request $request)
     {
+
+        $route_name = "LOG_INVENTORY_GET";
+        
+        $id = $request->get('id', null);
+        
+        $response = $this->logService->getActivityInventoryLogs($id, $route_name);
+        return response()->json($response, $response['status']);
+
         $header = $request->header("Authorization");
         $headers = ['Authorization' => $header];
         try{

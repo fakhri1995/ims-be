@@ -15,7 +15,6 @@ use App\ModelInventory;
 use App\Incident;
 use App\Ticket;
 use App\TicketActivityLog;
-use Spatie\Activitylog\Models\Activity;
 use DateTime;
 use DateTimeZone;
 use Exception;

@@ -4,7 +4,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class TicketActivityLog extends Model
+class ActivityLogInventoryRelationship extends Model
 {
     public $timestamps = false;
     protected $casts = [

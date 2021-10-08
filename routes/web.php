@@ -1,5 +1,4 @@
 <?php
-// use Spatie\Activitylog\Models\Activity;
 
 /*
 |--------------------------------------------------------------------------
@@ -11,16 +10,6 @@
 | and give it the Closure to call when that URI is requested.
 |
 */
-
-// $router->get('/', function () use ($router) {
-//     return Activity::all()->last();
-//     return $router->app->version();
-//     return base64_encode(hash("sha1", "GET"."\n"."/admin/v1/get-company"."\n"."02 Jan 06 15:04 MST", $raw_output=TRUE));
-// });
-
-$router->get('/ping', function(){
-    return "pong";
-});
 
 // ------------ Company Profile ------------ //
 
@@ -34,6 +23,9 @@ $router->post('/login', 'LoginController@login');
 
 $router->group(['middleware' => 'auth'], function($router){
     
+    //Log Routes
+    $router->get('/getActivityInventoryLogs', 'ActivityLogController@getActivityInventoryLogs');
+
     //User Routes
     $router->post('/logout', 'LoginController@logout');
     $router->get('/detailProfile', 'LoginController@detailProfile');
@@ -189,27 +181,6 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteRelationshipInventory', 'AssetController@deleteRelationshipInventory');
 });
 
-
-//Log Routes
-$router->get('/getActivityInventoryLogs', 'ActivityLogController@getActivityInventoryLogs');
-
-
-
-
-
-// $router->post('/getAccessFeature', 'AccessFeatureController@getAccessFeature');
-// $router->post('/addAccessModule', 'AccessFeatureController@addAccessModule');
-// $router->post('/addAccessFeature', 'AccessFeatureController@addAccessFeature');
-
-
-//Bank Account Routes
-// $router->get('/getBanks', 'BankController@getBanks');
-// $router->post('/addBank', 'BankController@addBank');
-// $router->put('/updateBank', 'BankController@updateBank');
-// $router->delete('/deleteBank', 'BankController@deleteBank');
-
-
-
 //Group Routes
 // $router->get('/getGroups', 'GroupController@getGroups');
 // $router->get('/getGroup', 'GroupController@getGroup');
@@ -314,5 +285,5 @@ $router->delete('/deleteDepreciation', 'DepreciationController@deleteDepreciatio
 
 
 
-//Terms of Payment
-$router->post('/addDefaultPayments', 'ServiceController@addDefaultPayments');
+// //Terms of Payment
+// $router->post('/addDefaultPayments', 'ServiceController@addDefaultPayments');

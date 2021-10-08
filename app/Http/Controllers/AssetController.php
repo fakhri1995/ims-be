@@ -350,26 +350,15 @@ class AssetController extends Controller
     // Adding Notes
 
     public function addInventoryNotes(Request $request){
-        $check = $this->checkRoute("CONTRACTS_GET", $request->header("Authorization"));
-        if($check['success'] === false) return response()->json($check, $check['message']->errorInfo['status']);
-        try{
-            $id = $request->get('id', null);
-            $notes = $request->get('notes', null);
-            $inventory = Inventory::find($id);
-            if($inventory === null) return response()->json(["success" => false, "message" => "Inventory Tidak Ditemukan"]);
-            activity()->log('note');
-            $last_activity = Activity::all()->last();
-            $last_activity->log_name = "Inventory";
-            $last_activity->subject_type = "App\Inventory";
-            $last_activity->subject_id = $id;
-            $last_activity->causer_id = $check['id'];
-            $last_activity->causer_type = $notes;
-            $last_activity->save();
-            
-            return response()->json(["success" => true, "message" => "Berhasil Mebuat Note Inventory"]);
-        } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
+        $route_name = "INVENTORY_ADD";
+        
+        $data_request = [
+            'id' => $request->get('id', null),
+            'notes' => $request->get('notes')
+        ];
+        
+        $response = $this->assetService->addInventoryNotes($data_request, $route_name);
+        return response()->json($response, $response['status']);
     }
 
     // Manufacturer
