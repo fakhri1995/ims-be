@@ -96,7 +96,7 @@ class CompanyService
     }    
 
     public function getCompanyTree($id, $role_id = null){
-        $companies = Company::select('company_id','company_name','address','phone_number','image_logo','role','parent_id')->get();
+        $companies = Company::select('company_id','company_name','address','phone_number','image_logo','role','parent_id','is_enabled')->get();
         $companies_array = $companies->toArray();
         $company = $companies->find($id);
         if($company === null) return ["success" => false, "message" => "Company Tidak Ditemukan", "code" => 400];
