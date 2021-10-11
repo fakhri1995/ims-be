@@ -22,6 +22,13 @@ class CompanyService
         else return "Perusahaan Tidak Ditemukan";
     }
 
+    public function getCompanyList($parent = false)
+    {
+        if($parent) $companies = Company::select('company_id', 'company_name', 'parent_id')->get();
+        else $companies = Company::select('company_id', 'company_name')->get();
+        return $companies;
+    }
+
     public function findLowerCompanyList($companies, $id, $company_list)
     {
         foreach($companies as $company){
