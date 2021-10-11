@@ -129,8 +129,9 @@ class CompanyService
         return $new_company;
     }
 
-    public function getCompanyTreeSelect($id){
-        $companies = Company::select('company_id','company_name','parent_id')->get();
+    public function getCompanyTreeSelect($id, $branch = false){
+        if($branch === true) $companies = Company::select('company_id','company_name','parent_id','role')->where('role','<>', 2)->get();
+        else $companies = Company::select('company_id','company_name','parent_id')->get();
         $company = $companies->find($id);
         if($company === null) return ["success" => false, "message" => "Company Tidak Ditemukan", "data" => [], "code" => 400];
         else {
@@ -154,6 +155,18 @@ class CompanyService
         }
     }
 
+    public function getCompanyListWithTop(){
+        $companies = Company::select('company_id', 'company_name', 'parent_id')->get();
+        $companies_array = $companies->toArray();
+        foreach($companies as $company){
+            if($company->parent_id !== 1 && $company->parent_id !== null){
+                $parent_company_name = $this->getTopCompany($companies_array, $company->parent_id);
+                $company->company_name = $parent_company_name.' / '.$company->company_name;
+            } 
+        }
+        return $companies;
+    }
+
     public function getLocations($id = null, $bypass = false){
         if($bypass) return $this->getCompanyTreeSelect($id);
         if($id === null) $id = auth()->user()->company_id;
@@ -165,7 +178,7 @@ class CompanyService
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        return $this->getCompanyTreeSelect(auth()->user()->company_id);
+        return $this->getCompanyTreeSelect(auth()->user()->company_id, true);
     }
 
     public function getClientCompanyList($route_name){
