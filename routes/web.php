@@ -25,6 +25,9 @@ $router->group(['middleware' => 'auth'], function($router){
     
     //Log Routes
     $router->get('/getActivityInventoryLogs', 'ActivityLogController@getActivityInventoryLogs');
+    $router->get('/getClientTicketLog', 'ActivityLogController@getClientTicketLog');
+    $router->get('/getTicketLog', 'ActivityLogController@getTicketLog');
+    $router->get('/getCloseTicketLog', 'ActivityLogController@getCloseTicketLog');
 
     //User Routes
     $router->post('/logout', 'LoginController@logout');
@@ -184,6 +187,21 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addRelationshipInventories', 'AssetController@addRelationshipInventories');
     $router->put('/updateRelationshipInventory', 'AssetController@updateRelationshipInventory');
     $router->delete('/deleteRelationshipInventory', 'AssetController@deleteRelationshipInventory');
+
+    //Ticket Routes
+    $router->get('/getTicketRelation', 'TicketController@getTicketRelation');
+    $router->get('/getClientTicketRelation', 'TicketController@getClientTicketRelation');
+    $router->get('/getClosedTickets', 'TicketController@getClosedTickets');
+    $router->get('/getClientClosedTickets', 'TicketController@getClientClosedTickets');
+    $router->get('/getTickets', 'TicketController@getTickets');
+    $router->get('/getClientTickets', 'TicketController@getClientTickets');
+    $router->get('/getTicket', 'TicketController@getTicket');
+    $router->get('/getClientTicket', 'TicketController@getClientTicket');
+    $router->post('/addTicket', 'TicketController@addTicket');
+    $router->put('/setItemTicket', 'TicketController@setItemTicket');
+    $router->put('/changeStatusTicket', 'TicketController@changeStatusTicket');
+    $router->put('/cancelClientTicket', 'TicketController@cancelClientTicket');
+    $router->put('/assignTicket', 'TicketController@assignTicket');
 });
 
 //Group Routes
@@ -225,24 +243,6 @@ $router->get('/getIncidents', 'IncidentController@getIncidents');
 $router->post('/addIncident', 'IncidentController@addIncident');
 $router->post('/updateIncident', 'IncidentController@updateIncident');
 $router->delete('/deleteIncident', 'IncidentController@deleteIncident');
-
-//Ticket Routes
-$router->get('/getClientTicketLog', 'TicketController@getClientTicketLog');
-$router->get('/getTicketLog', 'TicketController@getTicketLog');
-$router->get('/getCloseTicketLog', 'TicketController@getCloseTicketLog');
-$router->get('/getTicketRelation', 'TicketController@getTicketRelation');
-$router->get('/getClientTicketRelation', 'TicketController@getClientTicketRelation');
-$router->get('/getClosedTickets', 'TicketController@getClosedTickets');
-$router->get('/getClientClosedTickets', 'TicketController@getClientClosedTickets');
-$router->get('/getTickets', 'TicketController@getTickets');
-$router->get('/getClientTickets', 'TicketController@getClientTickets');
-$router->get('/getTicket', 'TicketController@getTicket');
-$router->get('/getClientTicket', 'TicketController@getClientTicket');
-$router->post('/addTicket', 'TicketController@addTicket');
-$router->put('/setItemTicket', 'TicketController@setItemTicket');
-$router->put('/changeStatusTicket', 'TicketController@changeStatusTicket');
-$router->put('/cancelClientTicket', 'TicketController@cancelClientTicket');
-$router->put('/assignTicket', 'TicketController@assignTicket');
 
 //Service Category Routes
 $router->get('/getServiceCategories', 'ServiceController@getServiceCategories');

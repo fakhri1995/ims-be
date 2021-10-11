@@ -22,10 +22,8 @@ class CreateTicketsTable extends Migration
             $table->dateTime('created_at');
             $table->dateTime('due_to')->nullable();
             $table->unsignedBigInteger('asign_to')->nullable();
-            $table->string('asign_to_name')->nullable();
             $table->unsignedBigInteger('requester_location');
             $table->unsignedBigInteger('requester');
-            $table->string('requester_name');
             $table->softDeletes();
         });
     }
