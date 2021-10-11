@@ -66,11 +66,19 @@ class UserService
         }
         $company_service = new CompanyService;
         $company_list = $company_service->checkCompanyList($company_id);
-        $users = User::select('users.user_id','users.fullname', 'users.email','users.role','users.company_id','users.profile_image','users.phone_number','users.created_time','users.is_enabled', 'companies.company_name')->where('users.role', $role_id)->whereIn('users.company_id', $company_list)->leftJoin('companies', function($join) {
+        $users = User::select('users.user_id','users.fullname', 'users.email','users.role','users.company_id','users.profile_image','users.phone_number','users.created_time','users.is_enabled', 'companies.company_name', 'companies.parent_id')->where('users.role', $role_id)->whereIn('users.company_id', $company_list)->leftJoin('companies', function($join) {
             $join->on('users.company_id', '=', 'companies.company_id');
         })->get();
         if(!count($users)) return ["success" => true, "message" => "User masih kosong", "data" => $users, "status" => 200];
-        else return ["success" => true, "message" => "Users Berhasil Diambil", "data" => $users, "status" => 200 ];
+        $companies = $company_service->getCompanyList(true);
+        $companies = $companies->toArray();
+        foreach($users as $user){
+            if($user->parent_id !== 1 && $user->parent_id !== null){
+                $parent_company_name = $company_service->getTopCompany($companies, $user->parent_id);
+                $user->company_name = $parent_company_name.' / '.$user->company_name;
+            } 
+        }
+        return ["success" => true, "message" => "Users Berhasil Diambil", "data" => $users, "status" => 200 ];
     }
 
     public function getAgentList($route_name){
