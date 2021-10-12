@@ -64,7 +64,8 @@ class UserController extends Controller
         $data_request = [
             "id" => $request->get('id'),
             "fullname" => $request->get('fullname'),
-            "phone_number" => $request->get('phone_number')
+            "phone_number" => $request->get('phone_number'),
+            "role_ids" => $request->get('role_ids', [])
         ];
 
         $response = $this->userService->updateAgentDetail($data_request, $route_name);
@@ -97,18 +98,18 @@ class UserController extends Controller
         return response()->json($response, $response['status']);
     }
 
-    public function updateFeatureAgent(Request $request)
-    {
-        $route_name = "AGENT_UPDATE_FEATURE";
+    // public function updateFeatureAgent(Request $request)
+    // {
+    //     $route_name = "AGENT_UPDATE_FEATURE";
         
-        $data_request = [
-            "id" => $request->get('account_id', null),
-            "role_ids" => $request->get('role_ids', [])
-        ];
+    //     $data_request = [
+    //         "id" => $request->get('account_id', null),
+    //         "role_ids" => $request->get('role_ids', [])
+    //     ];
 
-        $response = $this->userService->updateFeatureAgent($data_request, $route_name);
-        return response()->json($response, $response['status']);
-    }
+    //     $response = $this->userService->updateFeatureAgent($data_request, $route_name);
+    //     return response()->json($response, $response['status']);
+    // }
 
     public function deleteAgent(Request $request)
     {
@@ -164,7 +165,8 @@ class UserController extends Controller
         $data_request = [
             "id" => $request->get('id'),
             "fullname" => $request->get('fullname'),
-            "phone_number" => $request->get('phone_number')
+            "phone_number" => $request->get('phone_number'),
+            "role_ids" => $request->get('role_ids', [])
         ];
 
         $response = $this->userService->updateRequesterDetail($data_request, $route_name);
@@ -197,18 +199,18 @@ class UserController extends Controller
         return response()->json($response, $response['status']);
     }
 
-    public function updateFeatureRequester(Request $request)
-    {
-        $route_name = "REQUESTER_UPDATE_FEATURE";
+    // public function updateFeatureRequester(Request $request)
+    // {
+    //     $route_name = "REQUESTER_UPDATE_FEATURE";
         
-        $data_request = [
-            "id" => $request->get('account_id', null),
-            "role_ids" => $request->get('role_ids', [])
-        ];
+    //     $data_request = [
+    //         "id" => $request->get('account_id', null),
+    //         "role_ids" => $request->get('role_ids', [])
+    //     ];
 
-        $response = $this->userService->updateFeatureRequester($data_request, $route_name);
-        return response()->json($response, $response['status']);
-    }
+    //     $response = $this->userService->updateFeatureRequester($data_request, $route_name);
+    //     return response()->json($response, $response['status']);
+    // }
 
     public function deleteRequester(Request $request)
     {

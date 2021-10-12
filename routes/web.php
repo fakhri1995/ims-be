@@ -52,7 +52,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/updateAgentDetail', 'UserController@updateAgentDetail');
     $router->put('/changeAgentPassword', 'UserController@changeAgentPassword');
     $router->put('/agentActivation', 'UserController@agentActivation');
-    $router->put('/updateFeatureAgent', 'UserController@updateFeatureAgent');
+    // $router->put('/updateFeatureAgent', 'UserController@updateFeatureAgent');
     $router->delete('/deleteAgent', 'UserController@deleteAgent');
 
     //Requester Routes
@@ -62,7 +62,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/updateRequesterDetail', 'UserController@updateRequesterDetail');
     $router->put('/changeRequesterPassword', 'UserController@changeRequesterPassword');
     $router->put('/requesterActivation', 'UserController@requesterActivation');
-    $router->put('/updateFeatureRequester', 'UserController@updateFeatureRequester');
+    // $router->put('/updateFeatureRequester', 'UserController@updateFeatureRequester');
     $router->delete('/deleteRequester', 'UserController@deleteRequester');
 
     //Company Routes

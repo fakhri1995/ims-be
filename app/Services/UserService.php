@@ -147,6 +147,12 @@ class UserService
             $user->fullname = $data['fullname'];
             $user->phone_number = $data['phone_number'];
             $user->save();
+            $data_request = [
+                "id" => $data['id'],
+                "role_ids" => $data['role_ids']
+            ];
+            $save_role = $this->updateRoleUser($data_request, $role_id);
+            if(!$save_role["success"]) return $save_role;
             if($role_id === 1) return ["success" => true, "message" => "Akun Agent berhasil diperbarui", "status" => 200];
             else return ["success" => true, "message" => "Akun Requester berhasil diperbarui", "status" => 200];
         } catch(Exception $err){
