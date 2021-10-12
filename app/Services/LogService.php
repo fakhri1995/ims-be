@@ -71,7 +71,7 @@ class LogService
             $inventory_logs = ActivityLogInventory::where('subject_id', $id)->get();
             foreach($inventory_logs as $inventory_log){
                 if($inventory_log->log_name === 'Notes'){
-                    $user = $users->find($inventory_pivot_log->causer_id);
+                    $user = $users->find($inventory_log->causer_id);
                     if($user === null) $causer_name = "Not Found";
                     else $causer_name = $user->fullname;
                     $temp = (object) [
@@ -97,7 +97,7 @@ class LogService
                         $properties->attributes->model_name = $model_name;
                     }
                 }
-                $user = $users->find($inventory_pivot_log->causer_id);
+                $user = $users->find($inventory_log->causer_id);
                 if($user === null) $causer_name = "Not Found";
                 else $causer_name = $user->fullname;
     
