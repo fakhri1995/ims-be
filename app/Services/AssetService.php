@@ -1106,10 +1106,16 @@ class AssetService{
             $notes = "Created as part of inventory with id ".$parent_id;
             $logService->createLogInventory($new_inventory->id, $causer_id, $properties, $notes);
             if(count($inventory_parts)){
+                $properties = [];
+                $list_id = [];
                 foreach($inventory_parts as $inventory_part){
-                    $this->saveInventoryParts($inventory_part, $location, $new_inventory->id, $causer_id, $model_inventory_columns);
+                    $list_id[] = $this->saveInventoryParts($inventory_part, $location, $new_inventory->id, $causer_id, $model_inventory_columns);
                 }
+
+                $properties['attributes']['list_parts'] = $list_id;
+                $logService->createLogInventoryPivotParts($new_inventory->id, $causer_id, $properties);
             }
+            return $new_inventory->id;
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -1182,9 +1188,14 @@ class AssetService{
             $logService->createLogInventory($inventory->id, $causer_id, $properties, $notes);
             $model_inventory_columns = $model_inventory_columns->toArray();
             if(count($inventory_parts)){
+                $properties = [];
+                $list_id = [];
                 foreach($inventory_parts as $inventory_part){
-                    $this->saveInventoryParts($inventory_part, $inventory->location, $inventory->id, $causer_id, $model_inventory_columns);
+                    $list_id[] = $this->saveInventoryParts($inventory_part, $inventory->location, $inventory->id, $causer_id, $model_inventory_columns);
                 }
+
+                $properties['attributes']['list_parts'] = $list_id;
+                $logService->createLogInventoryPivotParts($inventory->id, $causer_id, $properties);
             }
             return ["success" => true, "message" => "Inventory Berhasil Ditambah", "id" => $inventory->id, "status" => 200];
         } catch(Exception $err){
@@ -1322,6 +1333,9 @@ class AssetService{
 
             // if($inventory_replacement->model_id !== $inventory->model_id) return ["success" => false, "message" => "Model Kedua Inventori Tidak Sama", "status" => 400];
             $pivots = InventoryInventoryPivot::get();
+            $parent_inventory_id = $pivot_old_inventory->parent_id;
+            $old_inventory_parent_list = $pivots->where('parent_id', $parent_inventory_id)->pluck('child_id');
+            
             $temp_status_usage = $inventory->status_usage;
             $inventory->status_usage = $inventory_replacement->status_usage;
             $inventory->save();
@@ -1360,6 +1374,9 @@ class AssetService{
                 $log_notes = "Replacement of inventory with id ".$id;
                 $logService->createLogInventoryPivot($replacement_id, $causer_id, $new_replacement_pivot, $log_notes);
             } else {
+                $parent_replacement_id = $pivot_old_replacement->parent_id;
+                $old_replacement_parent_list = $pivots->where('parent_id', $parent_replacement_id)->pluck('child_id');
+
                 $temp_pivot_old_inventory = [];
                 foreach($pivot_old_inventory->getAttributes() as $key => $value) $temp_pivot_old_inventory[$key] = $value;
 
@@ -1382,6 +1399,13 @@ class AssetService{
                     $log_notes = "Replacement of inventory with id ".$id;
                     $logService->updateLogInventoryPivot($replacement_id, $causer_id, $properties, $log_notes);
                 }
+
+                $replacement_parent_list = InventoryInventoryPivot::where('parent_id', $parent_replacement_id)->pluck('child_id');
+                $properties = [];
+                $properties['attributes']['list_parts'] = $replacement_parent_list;
+                $properties['old']['list_parts'] = $old_replacement_parent_list;
+                $notes = "Part Used as Replacement";
+                $logService->updateLogInventoryPivotParts($parent_replacement_id, $causer_id, $properties, $notes);
             }
             
             $pivot_children = $pivots->where('parent_id', $replacement_id);
@@ -1390,6 +1414,15 @@ class AssetService{
                     $this->setStatusInventoryPartReplacements($pivot_child, $causer_id, $inventory_replacement->status_usage, true);
                 }
             }
+
+            $inventory_parent_list = InventoryInventoryPivot::where('parent_id', $parent_inventory_id)->pluck('child_id');
+            
+            $properties = [];
+            $properties['attributes']['list_parts'] = $inventory_parent_list;
+            $properties['old']['list_parts'] = $old_inventory_parent_list;
+            $notes = "Part Replaced";
+            $logService->updateLogInventoryPivotParts($parent_inventory_id, $causer_id, $properties, $notes);
+
             return ["success" => true, "message" => "Berhasil Melakukan Replacement Part Inventory", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -1445,7 +1478,8 @@ class AssetService{
             $array_pivots = $pivots->toArray();
             $check_parent = $this->checkParent($inventory_part_id, $id, $array_pivots);
             if($check_parent === false) return ["success" => false, "message" => "Id Part Tidak Termasuk dari Part yang Dimiliki Inventory Ini", "error_id" => $inventory_part_id, "status" => 400];
-            
+            $old_inventory_parent_list = $pivots->where('parent_id', $id)->pluck('child_id');
+
             $inventory = Inventory::find($inventory_part_id);
             $old_inventory = [];
             foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
@@ -1461,6 +1495,7 @@ class AssetService{
             
             $remove_pivot = $pivots->where('child_id', $inventory_part_id)->first();
             $remove_pivot->delete();
+            $properties = [];
             $properties['old'] = $remove_pivot;
             $logService->deleteLogInventoryPivot($inventory_part_id, $causer_id, $properties, $notes);
 
@@ -1470,6 +1505,15 @@ class AssetService{
                     $this->removeChildInventoryPart($pivot_child, $causer_id);
                 }
             }
+            
+            $inventory_parent_list = InventoryInventoryPivot::where('parent_id', $id)->pluck('child_id');
+
+            $properties = [];
+            $properties['attributes']['list_parts'] = $inventory_parent_list;
+            $properties['old']['list_parts'] = $old_inventory_parent_list;
+            $notes = "Part Removed";
+            $logService->updateLogInventoryPivotParts($id, $causer_id, $properties, $notes);
+            
             return ["success" => true, "message" => "Berhasil Menghapus Part Inventory", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -1521,6 +1565,7 @@ class AssetService{
                 //     if($check_used['exist']) return ["success" => false, "message" => "Part Id ".$inventory_part_id." sedang digunakan oleh Id ".$check_used['id'], "status" => 400];
                 // }
                 $pivots = InventoryInventoryPivot::get();
+                $old_inventory_parent_list = $pivots->where('parent_id', $id)->pluck('child_id');
                 foreach($inventory_part_ids as $inventory_part_id){
                     $inventory = Inventory::find($inventory_part_id);
                     if($inventory === null) return ["success" => false, "message" => "Id Inventory Tidak Terdaftar", "status" => 400];
@@ -1543,6 +1588,7 @@ class AssetService{
                         $pivot->parent_id = $id;
                         $pivot->child_id = $inventory_part_id;
                         $pivot->save();
+                        $properties = [];
                         $properties['attributes'] = $pivot;
                         $logService->createLogInventoryPivot($inventory_part_id, $causer_id, $properties, $notes);
                     } else {
@@ -1563,6 +1609,14 @@ class AssetService{
                         }
                     }
                 }
+                $inventory_parent_list = InventoryInventoryPivot::where('parent_id', $id)->pluck('child_id');
+
+                $properties = [];
+                $properties['attributes']['list_parts'] = $inventory_parent_list;
+                $properties['old']['list_parts'] = $old_inventory_parent_list;
+                $notes = "Parts Added";
+                $logService->updateLogInventoryPivotParts($id, $causer_id, $properties, $notes);
+                
                 return ["success" => true, "message" => "Berhasil Menambah Part Inventory", "status" => 200];
             } else {
                 return ["success" => false, "message" => "Id Part yang Ingin Ditambahkan Kosong", "status" => 200];

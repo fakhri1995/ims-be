@@ -253,6 +253,30 @@ class LogService
 
     // Inventory Pivot Log
 
+    public function createLogInventoryPivotParts($subject_id, $causer_id, $properties)
+    {
+        $log = new ActivityLogInventoryPivot;
+        $log->subject_id = $subject_id;
+        $log->causer_id = $causer_id;
+        $log->properties = $properties;
+        $log->description = "List Parts of Inventory";
+        $log->log_name = "Created";
+        $log->created_at = $this->current_timestamp;
+        $log->save();
+    }
+
+    public function updateLogInventoryPivotParts($subject_id, $causer_id, $properties, $notes)
+    {
+        $log = new ActivityLogInventoryPivot;
+        $log->subject_id = $subject_id;
+        $log->causer_id = $causer_id;
+        $log->properties = $properties;
+        $log->description = $notes;
+        $log->log_name = "Updated";
+        $log->created_at = $this->current_timestamp;
+        $log->save();
+    }
+
     public function createLogInventoryPivot($subject_id, $causer_id, $properties, $notes = null)
     {
         $log = new ActivityLogInventoryPivot;
