@@ -18,6 +18,12 @@ class UserService
         $this->requester_role_id = 2;
     }
 
+    public function getUserListRoles($role){
+        $users = User::with('featureRoles')->select('user_id','fullname', 'company_id', 'role')->where('role', $role)->get();
+        
+        return $users;
+    }
+
     public function getUserDetail($account_id, $role_id){
         try{
             $user = User::find($account_id);

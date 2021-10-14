@@ -136,9 +136,11 @@ class CompanyService
         return $new_company;
     }
 
-    public function getCompanyTreeSelect($id, $branch = false){
-        if($branch === true) $companies = Company::select('company_id','company_name','parent_id','role')->where('role','<>', 2)->get();
-        else $companies = Company::select('company_id','company_name','parent_id')->get();
+    public function getCompanyTreeSelect($id, $limit = false, $branch = false){
+        if($limit){
+            if($branch) $companies = Company::select('company_id','company_name','parent_id','role')->where('role','<>', 2)->get();
+            else $companies = Company::select('company_id','company_name','parent_id','role')->where('role','<>', 3)->get();
+        } else $companies = Company::select('company_id','company_name','parent_id')->get();
         $company = $companies->find($id);
         if($company === null) return ["success" => false, "message" => "Company Tidak Ditemukan", "data" => [], "code" => 400];
         else {
@@ -185,7 +187,7 @@ class CompanyService
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        return $this->getCompanyTreeSelect(auth()->user()->company_id, true);
+        return $this->getCompanyTreeSelect(auth()->user()->company_id, true, true);
     }
 
     public function getClientCompanyList($route_name){

@@ -39,6 +39,6 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     }
 
     public function featureRoles(){
-        return $this->hasMany(UserRolePivot::class, 'user_id', 'user_id')->select(['role_id']);
+        return $this->hasMany(UserRolePivot::class, 'user_id', 'user_id')->select('user_id', 'role_id');
     }
 }

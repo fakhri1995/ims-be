@@ -5,12 +5,14 @@ use App\User;
 use App\Ticket;
 use App\Incident;
 use App\Inventory;
+use App\Relationship;
 use App\ModelInventory;
+use App\ActivityLogTicket;
+use App\RelationshipAsset;
 use App\ActivityLogInventory;
 use App\ModelInventoryColumn;
 use App\Services\GeneralService;
 use App\ActivityLogInventoryPivot;
-use App\ActivityLogTicket;
 use App\Services\CheckRouteService;
 use App\ActivityLogInventoryRelationship;
 
@@ -126,17 +128,50 @@ class LogService
     public function relationshipInventoryLog($id)
     {
         $users = User::select('user_id', 'fullname')->get();
+        $relationship_assets = RelationshipAsset::withTrashed()->select('id','relationship_id','is_inverse')->get();
+        $relationships = Relationship::withTrashed()->select('id','relationship_type','inverse_relationship_type')->get();
         $relationship_logs = [];
         $inventory_relationship_logs = ActivityLogInventoryRelationship::where('subject_id', $id)->get();
         foreach($inventory_relationship_logs as $inventory_relationship_log){
+            $properties = $inventory_relationship_log->properties;
             $user = $users->find($inventory_relationship_log->causer_id);
             if($user === null) $causer_name = "Not Found";
             else $causer_name = $user->fullname;
 
+            if(isset($properties->attributes->relationship_asset_id)){
+                $relationship_asset = $relationship_assets->find($properties->attributes->relationship_asset_id);
+                if($relationship_asset === null){
+                    $properties->attributes->relationship = "Relationship Asset Not Found";
+                } else {
+                    $relationship = $relationships->find($relationship_asset->relationship_id);
+                    if($relationship === null){
+                        $properties->attributes->relationship = "Relationship Not Found";
+                    } else {
+                        $is_inverse_inventory_relationship = $relationship_asset->is_inverse === $properties->attributes->is_inverse ? false : true;
+                        $properties->attributes->relationship = $is_inverse_inventory_relationship ? $relationship->inverse_relationship_type : $relationship->relationship_type;
+                    }
+                }
+            }
+
+            if(isset($properties->old->relationship_asset_id)){
+                $relationship_asset = $relationship_assets->find($properties->old->relationship_asset_id);
+                if($relationship_asset === null){
+                    $properties->old->relationship = "Relationship Asset Not Found";
+                } else {
+                    $relationship = $relationships->find($relationship_asset->relationship_id);
+                    if($relationship === null){
+                        $properties->old->relationship = "Relationship Not Found";
+                    } else {
+                        $is_inverse_inventory_relationship = $relationship_asset->is_inverse === $properties->old->is_inverse ? false : true;
+                        $properties->old->relationship = $is_inverse_inventory_relationship ? $relationship->inverse_relationship_type : $relationship->relationship_type;
+                    }
+                }
+            }
+
             $temp = (object) [
                 'date' => $inventory_relationship_log->created_at,
                 'description' => $inventory_relationship_log->log_name.' Inventory Relationship',
-                'properties' => $inventory_relationship_log->properties,
+                'properties' => $properties,
                 'causer_name' => $causer_name,
                 'notes' => $inventory_relationship_log->description ? $inventory_relationship_log->description : "-"
             ];
