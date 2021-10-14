@@ -2414,8 +2414,8 @@ class AssetService{
                         else $relationship_asset->connected_detail_name = $user->fullname;
                     } else if($relationship_asset->type_id === -3){
                         $company = $companies->find($check_id);
-                        if($company === null) $relationship_inventory->connected_detail_name = "Company Not Found";
-                        else $relationship_inventory->connected_detail_name = $company->company_name;
+                        if($company === null) $relationship_asset->connected_detail_name = "Company Not Found";
+                        else $relationship_asset->connected_detail_name = $company->company_name;
                     } else {
                         $asset = $assets->find($check_id);
                         if($asset === null) $relationship_asset->connected_detail_name = "Asset Not Found";
