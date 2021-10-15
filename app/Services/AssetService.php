@@ -2261,8 +2261,8 @@ class AssetService{
                 $users = $userService->getUserList(0, auth()->user()->company_id, true)['data'];
             } 
             if($type_id === -3){
-                $this->companyService = new CompanyService;
-                $companies = $this->companyService->getCompanyTreeSelect(auth()->user()->company_id, true, false)['data'];
+                $companyService = new CompanyService;
+                $companies = $companyService->getCompanyList();
             } 
             $data_not_from_invers = [];
             if($type_id === -4){
@@ -2275,8 +2275,8 @@ class AssetService{
                     $users = $userService->getUserList(0, auth()->user()->company_id, true)['data'];
                 }
                 if($third_type !== null && !count($companies)){
-                    $this->companyService = new CompanyService;
-                    $companies = $this->companyService->getCompanyTreeSelect(auth()->user()->company_id, true, false)['data'];
+                    $companyService = new CompanyService;
+                    $companies = $companyService->getCompanyList();
                 }
                 if(count($relationship_inventories_not_from_inverse)){
                     foreach($relationship_inventories_not_from_inverse as $relationship_inventory){
@@ -2310,7 +2310,6 @@ class AssetService{
                             } else if($relationship_inventory->type_id === -3){
                                 $check_id = $relationship_inventory->connected_id;
                                 $company = $companies->find($check_id);
-                                // return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $companies, "status" => 200];
                                 if($company === null) $relationship_inventory->connected_detail_name = "Company Not Found";
                                 else $relationship_inventory->connected_detail_name = $company->company_name;
                             } else {
