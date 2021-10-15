@@ -165,7 +165,7 @@ class CompanyService
     }
 
     public function getCompanyListWithTop(){
-        $companies = Company::select('company_id', 'company_name', 'parent_id')->get();
+        $companies = Company::select('company_id', 'company_name', 'parent_id')->where('role','<>', 3)->get();
         $companies_array = $companies->toArray();
         foreach($companies as $company){
             if($company->parent_id !== 1 && $company->parent_id !== null){
