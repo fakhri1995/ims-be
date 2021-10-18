@@ -2138,7 +2138,8 @@ class AssetService{
                 $users->makeHidden(['featureRoles']);
                 return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $users, "status" => 200];
             } else if($type === -3){
-                $companies = Company::select('company_id AS id', 'company_name AS name')->where('role', 2)->get();
+                $this->companyService = new CompanyService;
+                $companies = $this->companyService->getCompanyTreeSelect(auth()->user()->company_id, true, false)['data'];
                 return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $companies, "status" => 200];
             } else {
                 $assets[] = [
@@ -2382,13 +2383,14 @@ class AssetService{
         }
     }
 
-    public function getRelationshipInventoryRelation($route_name)
+    public function getRelationshipInventoryRelation($id, $route_name)
     {
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
+        if($id === null) return ["success" => false, "message" => "Asset Id Kosong", "status" => 200];
         
         try{
-            $relationship_assets = RelationshipAsset::get();
+            $relationship_assets = RelationshipAsset::where('subject_id', $id)->get();
             if($relationship_assets->isEmpty()) return ["success" => false, "message" => "Relationship Inventory Belum dibuat", "status" => 200];
             $relationships = Relationship::get();
             $assets = Asset::get();

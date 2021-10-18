@@ -427,7 +427,7 @@ class AssetController extends Controller
 
     public function addRelationship(Request $request)
     {
-        $route_name = "MANUFACTURER_UPDATE";
+        $route_name = "RELATIONSHIP_ADD";
         
         $data_request = [
             'relationship_type' => $request->get('relationship_type'),
@@ -441,7 +441,7 @@ class AssetController extends Controller
 
     public function updateRelationship(Request $request)
     {
-        $route_name = "MANUFACTURER_UPDATE";
+        $route_name = "RELATIONSHIP_UPDATE";
         
         $data_request = [
             'id' => $request->get('id', null),
@@ -567,8 +567,9 @@ class AssetController extends Controller
     public function getRelationshipInventoryRelation(Request $request)
     {
         $route_name = "RELATIONSHIP_INVENTORY_ADD";
+        $id = $request->get('asset_id', null);
 
-        $response = $this->assetService->getRelationshipInventoryRelation($route_name);
+        $response = $this->assetService->getRelationshipInventoryRelation($id, $route_name);
         return response()->json($response, $response['status']);
     }
 
