@@ -52,7 +52,6 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/updateAgentDetail', 'UserController@updateAgentDetail');
     $router->put('/changeAgentPassword', 'UserController@changeAgentPassword');
     $router->put('/agentActivation', 'UserController@agentActivation');
-    // $router->put('/updateFeatureAgent', 'UserController@updateFeatureAgent');
     $router->delete('/deleteAgent', 'UserController@deleteAgent');
 
     //Requester Routes
@@ -62,8 +61,21 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/updateRequesterDetail', 'UserController@updateRequesterDetail');
     $router->put('/changeRequesterPassword', 'UserController@changeRequesterPassword');
     $router->put('/requesterActivation', 'UserController@requesterActivation');
-    // $router->put('/updateFeatureRequester', 'UserController@updateFeatureRequester');
     $router->delete('/deleteRequester', 'UserController@deleteRequester');
+
+    //Agent Group Routes
+    $router->get('/getAgentGroups', 'GroupController@getAgentGroups');
+    $router->get('/getAgentGroup', 'GroupController@getAgentGroup');
+    $router->post('/addAgentGroup', 'GroupController@addAgentGroup');
+    $router->put('/updateAgentGroup', 'GroupController@updateAgentGroup');
+    $router->delete('/deleteAgentGroup', 'GroupController@deleteAgentGroup');
+
+    //Requester Group Routes
+    $router->get('/getRequesterGroups', 'GroupController@getRequesterGroups');
+    $router->get('/getRequesterGroup', 'GroupController@getRequesterGroup');
+    $router->post('/addRequesterGroup', 'GroupController@addRequesterGroup');
+    $router->put('/updateRequesterGroup', 'GroupController@updateRequesterGroup');
+    $router->delete('/deleteRequesterGroup', 'GroupController@deleteRequesterGroup');
 
     //Company Routes
     $router->get('/getCompanyClientList', 'CompanyController@getCompanyClientList');
@@ -211,19 +223,6 @@ $router->group(['middleware' => 'auth'], function($router){
 // $router->put('/updateGroup', 'GroupController@updateGroup');
 // $router->delete('/deleteGroup', 'GroupController@deleteGroup');
 
-//Agent Group Routes
-$router->get('/getAgentGroups', 'GroupController@getAgentGroups');
-$router->get('/getAgentGroup', 'GroupController@getAgentGroup');
-$router->post('/addAgentGroup', 'GroupController@addAgentGroup');
-$router->put('/updateAgentGroup', 'GroupController@updateAgentGroup');
-$router->delete('/deleteAgentGroup', 'GroupController@deleteAgentGroup');
-
-//Requester Group Routes
-$router->get('/getRequesterGroups', 'GroupController@getRequesterGroups');
-$router->get('/getRequesterGroup', 'GroupController@getRequesterGroup');
-$router->post('/addRequesterGroup', 'GroupController@addRequesterGroup');
-$router->put('/updateRequesterGroup', 'GroupController@updateRequesterGroup');
-$router->delete('/deleteRequesterGroup', 'GroupController@deleteRequesterGroup');
 
 //Group Routes
 // $router->post('/attachPivotGU', 'GroupUserPivotController@attachPivotGU');
