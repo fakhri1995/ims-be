@@ -27,12 +27,12 @@ class Inventory extends Model
 
     public function statusCondition()
     {
-        return $this->belongsTo(statusConditionInventory::class, 'status_condition');
+        return $this->belongsTo(StatusConditionInventory::class, 'status_condition');
     }
 
     public function statusUsage()
     {
-        return $this->belongsTo(statusUsageInventory::class, 'status_usage');
+        return $this->belongsTo(StatusUsageInventory::class, 'status_usage');
     }
 
     public function locationInventory()
