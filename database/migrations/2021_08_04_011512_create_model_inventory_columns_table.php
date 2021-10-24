@@ -21,6 +21,7 @@ class CreateModelInventoryColumnsTable extends Migration
             $table->text('default')->nullable();
             $table->boolean('required');
             $table->softDeletes();
+            $table->index('model_id');
         });
     }
 

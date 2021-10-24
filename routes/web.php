@@ -192,7 +192,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteRelationshipAsset', 'AssetController@deleteRelationshipAsset');
 
     //Relationship Inventory
-    $router->get('/getRelationshipInventories', 'AssetController@getRelationshipInventories');
+    // $router->get('/getRelationshipInventories', 'AssetController@getRelationshipInventories');
     $router->get('/getRelationshipInventory', 'AssetController@getRelationshipInventory');
     $router->get('/getRelationshipInventoryRelation', 'AssetController@getRelationshipInventoryRelation');
     $router->get('/getRelationshipInventoryDetailList', 'AssetController@getRelationshipInventoryDetailList');

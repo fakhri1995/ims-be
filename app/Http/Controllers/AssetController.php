@@ -42,7 +42,7 @@ class AssetController extends Controller
         
         $data_request = [
             'name' => $request->get('name'),
-            'parent' => $request->get('parent'),
+            'parent' => $request->get('parent', null),
             'description' => $request->get('description'),
             'required_sn' => $request->get('required_sn'),
             'asset_columns' => $request->get('asset_columns', [])
@@ -92,7 +92,7 @@ class AssetController extends Controller
     {
         $route_name = "MODELS_GET";
 
-        $response = $this->assetService->getModels($route_name);
+        $response = $this->assetService->getModels($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -175,7 +175,7 @@ class AssetController extends Controller
     {
         $route_name = "INVENTORIES_GET";
 
-        $response = $this->assetService->getInventories($route_name);
+        $response = $this->assetService->getInventories($request, $route_name);
         return response()->json($response, $response['status']);
     }
     
@@ -576,9 +576,8 @@ class AssetController extends Controller
     public function getRelationshipInventoryDetailList(Request $request)
     {
         $route_name = "RELATIONSHIP_INVENTORY_ADD";
-        $relationship_asset_id = $request->get('relationship_asset_id');
 
-        $response = $this->assetService->getRelationshipInventoryDetailList($relationship_asset_id, $route_name);
+        $response = $this->assetService->getRelationshipInventoryDetailList($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -617,9 +616,12 @@ class AssetController extends Controller
     public function deleteRelationshipInventory(Request $request)
     {
         $route_name = "RELATIONSHIP_INVENTORY_DELETE";
-        $id = $request->get('id');
+        $data_request = [
+            'id' => $request->get('id'),
+            'notes' => $request->get('notes', null)
+        ];
 
-        $response = $this->assetService->deleteRelationshipInventory($id, $route_name);
+        $response = $this->assetService->deleteRelationshipInventory($data_request, $route_name);
         return response()->json($response, $response['status']);
     }
 }

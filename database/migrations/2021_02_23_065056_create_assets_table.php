@@ -15,11 +15,14 @@ class CreateAssetsTable extends Migration
     {
         Schema::create('assets', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('parent_id')->nullable();
             $table->string('name');
             $table->string('code');
             $table->string('description');
             $table->boolean('required_sn');
             $table->softDeletes();
+            $table->index('parent_id');
+            $table->index('code');
         });
     }
 

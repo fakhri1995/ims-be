@@ -21,6 +21,9 @@ class CreateRelationshipAssetsTable extends Migration
             $table->integer('type_id');
             $table->unsignedBigInteger('connected_id')->nullable();
             $table->softDeletes();
+            $table->index('relationship_id');
+            $table->index('subject_id');
+            $table->index('connected_id');
         });
     }
 

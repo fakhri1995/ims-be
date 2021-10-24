@@ -19,6 +19,8 @@ class CreateInventoryValuesTable extends Migration
             $table->unsignedBigInteger('model_inventory_column_id');
             $table->string('value');
             $table->softDeletes();
+
+            $table->index('inventory_id');
         });
     }
 

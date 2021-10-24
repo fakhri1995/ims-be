@@ -21,6 +21,7 @@ class CreateActivityLogInventoryPivotsTable extends Migration
             $table->unsignedBigInteger('causer_id');
             $table->jsonb('properties')->nullable();
             $table->dateTime('created_at');
+            $table->index('subject_id');
         });
     }
 

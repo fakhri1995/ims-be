@@ -18,7 +18,7 @@ class CreateModelModelPivotsTable extends Migration
             $table->unsignedBigInteger('parent_id');
             $table->unsignedBigInteger('child_id');
             $table->integer('quantity');
-            $table->softDeletes();
+            $table->index('parent_id');
         });
     }
 
