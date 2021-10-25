@@ -1722,6 +1722,111 @@ class AssetService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
+
+    // Vendor
+
+    public function getVendors(Request $request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $vendors = Vendor::all();
+            if($vendors->isEmpty()) return ["success" => false, "message" => "Vendor Account Belum Terdaftar", "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $vendors, "status" => 200];
+            
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getVendor(Request $request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $id = $request->get('id', null);
+            $vendor = Vendor::find($id);
+            if($vendor === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $vendor, "status" => 200];
+            
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addVendor(Request $request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $vendor = new Vendor;
+        $vendor->name = $request->get('name');
+        $vendor->singkatan_nama = $request->get('singkatan_nama');
+        $vendor->npwp = $request->get('npwp');
+        $vendor->pic = $request->get('pic');
+        $vendor->jabatan_pic = $request->get('jabatan_pic');
+        $vendor->alamat = $request->get('alamat');
+        $vendor->provinsi = $request->get('provinsi');
+        $vendor->kab_kota = $request->get('kab_kota');
+        $vendor->kode_pos = $request->get('kode_pos');
+        $vendor->telepon = $request->get('telepon');
+        $vendor->fax = $request->get('fax');
+        $vendor->email = $request->get('email');
+        $vendor->website = $request->get('website');
+        try{
+            $vendor->save();
+            return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateVendor(Request $request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $id = $request->get('id', null);
+        $vendor = Vendor::find($id);
+        if($vendor === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        $vendor->name = $request->get('name');
+        $vendor->singkatan_nama = $request->get('singkatan_nama');
+        $vendor->npwp = $request->get('npwp');
+        $vendor->pic = $request->get('pic');
+        $vendor->jabatan_pic = $request->get('jabatan_pic');
+        $vendor->alamat = $request->get('alamat');
+        $vendor->provinsi = $request->get('provinsi');
+        $vendor->kab_kota = $request->get('kab_kota');
+        $vendor->kode_pos = $request->get('kode_pos');
+        $vendor->telepon = $request->get('telepon');
+        $vendor->fax = $request->get('fax');
+        $vendor->email = $request->get('email');
+        $vendor->website = $request->get('website');
+        try{
+            $vendor->save();
+            return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteVendor(Request $request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $id = $request->get('id', null);
+        $vendor = Vendor::find($id);
+        if($vendor === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        try{
+            $vendor->delete();
+            return ["success" => true, "message" => "Data Berhasil Dihapus", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
     
     // Relationship
     // Relationship Type

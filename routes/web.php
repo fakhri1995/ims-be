@@ -174,6 +174,13 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/updateManufacturer', 'AssetController@updateManufacturer');
     $router->delete('/deleteManufacturer', 'AssetController@deleteManufacturer');
 
+    //Vendor Routes
+    $router->get('/getVendors', 'AssetController@getVendors');
+    $router->get('/getVendor', 'AssetController@getVendor');
+    $router->post('/addVendor', 'AssetController@addVendor');
+    $router->put('/updateVendor', 'AssetController@updateVendor');
+    $router->delete('/deleteVendor', 'AssetController@deleteVendor');
+
     //Relationship
     $router->get('/getRelationships', 'AssetController@getRelationships');
     $router->get('/getRelationship', 'AssetController@getRelationship');
@@ -228,13 +235,6 @@ $router->group(['middleware' => 'auth'], function($router){
 // $router->delete('/detachPivotGU', 'GroupUserPivotController@detachPivotGU');
 
 
-
-
-//Vendor Routes
-$router->get('/getVendors', 'VendorController@getVendors');
-$router->post('/addVendor', 'VendorController@addVendor');
-$router->put('/updateVendor', 'VendorController@updateVendor');
-$router->delete('/deleteVendor', 'VendorController@deleteVendor');
 
 //Incident Routes
 $router->get('/getIncidents', 'IncidentController@getIncidents');

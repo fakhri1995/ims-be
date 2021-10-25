@@ -405,6 +405,49 @@ class AssetController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    // Vendor
+
+    public function getVendors(Request $request)
+    {
+        $route_name = "VENDORS_GET";
+
+        $response = $this->assetService->getVendors($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getVendor(Request $request)
+    {
+        $route_name = "VENDOR_GET";
+
+        $response = $this->assetService->getVendor($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function addVendor(Request $request)
+    {
+        $route_name = "VENDOR_ADD";
+
+        $response = $this->assetService->addVendor($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateVendor(Request $request)
+    {
+        $route_name = "VENDOR_UPDATE";
+
+        $response = $this->assetService->updateVendor($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteVendor(Request $request)
+    {
+        $route_name = "VENDOR_DELETE";
+
+        $response = $this->assetService->deleteVendor($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+
     // Relationship
     // Relationship Type
 
