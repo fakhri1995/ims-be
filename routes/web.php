@@ -39,7 +39,6 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteMessage', 'CompanyProfileController@deleteMessage');
 
     //Career Routes
-    $router->get('/getCareers', 'CompanyProfileController@getCareers');
     $router->post('/addCareer', 'CompanyProfileController@addCareer');
     $router->put('/updateCareer', 'CompanyProfileController@updateCareer');
     $router->delete('/deleteCareer', 'CompanyProfileController@deleteCareer');
