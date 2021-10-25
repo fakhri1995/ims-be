@@ -79,7 +79,7 @@ class AssetManagementSeeder extends Seeder
     private function makeBulkModels()
     {   
         $name_model = "Model ";
-        for($x = 1; $x < 10; $x++){
+        for($x = 1; $x < 5; $x++){
             for($i = 0; $i < 4; $i++){
                 $id = $i * 4 + 1;
                 $code_int = $i+1;
@@ -130,7 +130,7 @@ class AssetManagementSeeder extends Seeder
 
     private function makeBulkModelInventoryColumns()
     {
-        for($i = 1; $i < 181; $i++){
+        for($i = 1; $i < 91; $i++){
             $model_inventory_column = new ModelInventoryColumn;
             $model_inventory_column->model_id = $i;
             $model_inventory_column->name = "Kapasitas";
@@ -152,10 +152,10 @@ class AssetManagementSeeder extends Seeder
     {   
         $name_inventory = "Inventories ";
         $index = 1;
-        for($v = 1; $v < 10; $v++){
+        for($v = 1; $v < 3; $v++){
             $model_id = 1;
             $model_inventory_column_id = 1;
-            for($x = 1; $x < 10; $x++){
+            for($x = 1; $x < 5; $x++){
                 for($i = 0; $i < 4; $i++){
                     $id = $i * 4 + 1;
                     $code_int = $i+1;
@@ -269,7 +269,7 @@ class AssetManagementSeeder extends Seeder
 
     private function makeRelationshipAssets()
     {
-        for($y = 1; $y < 17; $y++){
+        for($y = 1; $y < 6; $y++){
             for($i = 1; $i < 6; $i++){
                 $relationship_asset = new RelationshipAsset;
                 $relationship_asset->relationship_id = $i;
