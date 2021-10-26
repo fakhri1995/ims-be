@@ -130,7 +130,7 @@ class AssetManagementSeeder extends Seeder
 
     private function makeBulkModelInventoryColumns()
     {
-        for($i = 1; $i < 91; $i++){
+        for($i = 1; $i < 81; $i++){
             $model_inventory_column = new ModelInventoryColumn;
             $model_inventory_column->model_id = $i;
             $model_inventory_column->name = "Kapasitas";
