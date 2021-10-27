@@ -19,7 +19,6 @@ class CreateActivityLogTicketsTable extends Migration
             $table->text('description')->nullable();
             $table->unsignedBigInteger('subject_id');
             $table->unsignedBigInteger('causer_id');
-            $table->jsonb('properties')->nullable();
             $table->dateTime('created_at');
             $table->index('subject_id');
         });

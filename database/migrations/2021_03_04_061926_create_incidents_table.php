@@ -15,12 +15,15 @@ class CreateIncidentsTable extends Migration
     {
         Schema::create('incidents', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('incident_place_id');
-            $table->unsignedBigInteger('asset_id');
-            $table->unsignedBigInteger('inventory_id')->nullable();
-            $table->text('description');
-            $table->string('files')->nullable();
-            $table->dateTime('incident_time');
+            $table->integer('product_type');
+            $table->string('product_id');
+            $table->string('pic_name')->nullable();
+            $table->string('pic_contact')->nullable();
+            $table->unsignedBigInteger('location');
+            $table->string('problem')->nullable();
+            $table->dateTime('incident_time')->nullable();
+            $table->jsonb('files')->nullable();
+            $table->text('description')->nullable();
             $table->softDeletes();
         });
     }

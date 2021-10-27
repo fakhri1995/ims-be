@@ -2,10 +2,12 @@
 
 namespace App\Services;
 use App\User;
+use App\Group;
 use App\Ticket;
 use App\Incident;
 use App\Inventory;
 use App\Relationship;
+use App\TicketStatus;
 use App\ModelInventory;
 use App\ActivityLogTicket;
 use App\RelationshipAsset;
@@ -193,7 +195,7 @@ class LogService
         $access = $checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $logs = ActivityLogTicket::where('subject_id', $id)->get();
+        $logs = ActivityLogTicket::where('subject_id', $id)->orderBy('created_at','desc')->get();
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $logs, "status" => 200];
     }
     
@@ -203,11 +205,11 @@ class LogService
         $access = $checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $ticket = Ticket::find($id);
+        $ticket = Ticket::with('requester.company')->find($id);
         if($ticket === null) return ["success" => false, "message" => "Ticket Tidak Ditemukan", "status" => 400];
         $user_company_id = auth()->user()->company_id;
-        if($ticket->requester_location !== $user_company_id) return ["success" => false, "message" => "Tidak Memiliki Access untuk Ticket Ini", "status" => 401];
-        $logs = ActivityLogTicket::where('subject_id', $id)->get();
+        if($ticket->requester->company->company_id !== $user_company_id) return ["success" => false, "message" => "Tidak Memiliki Access untuk Ticket Ini", "status" => 401];
+        $logs = ActivityLogTicket::where('subject_id', $id)->orderBy('created_at','desc')->get();
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $logs, "status" => 200];
     }
 
@@ -388,51 +390,75 @@ class LogService
 
     // Ticket Log
 
+    private function addLogTicket($subject_id, $causer_id, $log_name, $created_at = null, $description = null)
+    {
+        $log = new ActivityLogTicket;
+        $log->subject_id = $subject_id;
+        $log->causer_id = $causer_id;
+        $log->log_name = $log_name;
+        $log->created_at = $created_at;
+        $log->description = $description;
+        $log->save();
+    }
+
+    public function updateIncidentLogTicket($subject_id, $incident_time)
+    {
+        $log = ActivityLogTicket::where('subject_id', $subject_id)->where('log_name','Waktu Kejadian')->first();
+        $log->created_at = $incident_time;
+        $log->save();
+    }
+
     public function createLogTicketIncident($subject_id, $causer_id, $created_at)
     {
-        $log = new ActivityLogTicket;
-        $log->subject_id = $subject_id;
-        $log->causer_id = $causer_id;
-        $log->properties = (object)[];
-        $log->description = "Incident Happened";
-        $log->log_name = "Incident";
-        $log->created_at = $created_at;
-        $log->save();
+        $log_name = "Waktu Kejadian";
+        $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at);
     }
     
-    public function createLogTicket($subject_id, $causer_id, $properties)
+    public function createLogTicket($subject_id, $causer_id)
     {
-        $log = new ActivityLogTicket;
-        $log->subject_id = $subject_id;
-        $log->causer_id = $causer_id;
-        $log->properties = $properties;
-        $log->description = "Raised Ticket";
-        $log->log_name = "Created";
-        $log->created_at = $this->current_timestamp;
-        $log->save();
+        $log_name = "Raised Ticket";
+        $created_at = $this->current_timestamp;
+        $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at);
     }
 
-    public function updateLogTicket($subject_id, $causer_id, $properties, $notes = null)
+    public function updateLogTicket($subject_id, $causer_id)
     {
-        $log = new ActivityLogTicket;
-        $log->subject_id = $subject_id;
-        $log->causer_id = $causer_id;
-        $log->properties = $properties;
-        $log->description = $notes;
-        $log->log_name = "Updated";
-        $log->created_at = $this->current_timestamp;
-        $log->save();
+        $log_name = "Ticket Telah Diperbarui";
+        $created_at = $this->current_timestamp;
+        $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at);
     }
 
-    public function assignLogTicket($subject_id, $causer_id, $properties, $notes = null)
+    public function updateStatusLogTicket($subject_id, $causer_id, $type, $notes = null)
     {
-        $log = new ActivityLogTicket;
-        $log->subject_id = $subject_id;
-        $log->causer_id = $causer_id;
-        $log->properties = $properties;
-        $log->description = $notes;
-        $log->log_name = "Assigned";
-        $log->created_at = $this->current_timestamp;
-        $log->save();
+        $type_status = TicketStatus::find($type);
+        if(!$type_status) $type_detail = "Status Tidak Ditemukan";
+        else $type_detail = $type_status->name;
+        $log_name = "Status Berubah Menjadi $type_detail";
+        $created_at = $this->current_timestamp;
+        $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, $notes);
+    }
+
+
+    public function assignLogTicket($subject_id, $causer_id, $asign_to, $asign_id)
+    {
+        if($asign_to){
+            $user = User::find($asign_id);
+            if(!$user) $name = "User Tidak Ditemukan";
+            else $name = $user->fullname;
+        } else {
+            $group = Group::find($asign_id);
+            if(!$group) $name = "Group Tidak Ditemukan";
+            else $name = $group->name;
+        }
+        $log_name = "Assigned to $name";
+        $created_at = $this->current_timestamp;
+        $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at);
+    }
+
+    public function addNoteLogTicket($subject_id, $causer_id, $notes)
+    {
+        $log_name = "Note Khusus";
+        $created_at = $this->current_timestamp;
+        $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, $notes);
     }
 }

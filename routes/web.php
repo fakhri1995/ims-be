@@ -216,6 +216,8 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getTicket', 'TicketController@getTicket');
     $router->get('/getClientTicket', 'TicketController@getClientTicket');
     $router->post('/addTicket', 'TicketController@addTicket');
+    $router->post('/addNoteTicket', 'TicketController@addNoteTicket');
+    $router->put('/updateTicket', 'TicketController@updateTicket');
     $router->put('/setItemTicket', 'TicketController@setItemTicket');
     $router->put('/changeStatusTicket', 'TicketController@changeStatusTicket');
     $router->put('/cancelClientTicket', 'TicketController@cancelClientTicket');

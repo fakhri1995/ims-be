@@ -39,7 +39,7 @@ class TicketController extends Controller
     {
         $route_name = "TICKETS_GET";
         
-        $response = $this->ticketService->getAdminTickets($route_name);
+        $response = $this->ticketService->getAdminTickets($request, $route_name);
         return response()->json($response, $response['status']);
     }
     
@@ -47,7 +47,7 @@ class TicketController extends Controller
     {
         $route_name = "CLIENT_TICKETS_GET";
         
-        $response = $this->ticketService->getClientTickets($route_name);
+        $response = $this->ticketService->getClientTickets($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -55,7 +55,7 @@ class TicketController extends Controller
     {
         $route_name = "CLOSED_TICKETS_GET";
         
-        $response = $this->ticketService->getAdminClosedTickets($route_name);
+        $response = $this->ticketService->getAdminClosedTickets($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -63,17 +63,15 @@ class TicketController extends Controller
     {
         $route_name = "CLIENT_CLOSED_TICKETS_GET";
         
-        $response = $this->ticketService->getClientClosedTickets($route_name);
+        $response = $this->ticketService->getClientClosedTickets($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function getTicket(Request $request)
     {
-        
         $route_name = "TICKET_GET";   
-        $id = $request->get('id', null);
         
-        $response = $this->ticketService->getAdminTicket($id, $route_name);
+        $response = $this->ticketService->getAdminTicket($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -81,9 +79,8 @@ class TicketController extends Controller
     {
         
         $route_name = "CLIENT_TICKET_GET";   
-        $id = $request->get('id', null);
         
-        $response = $this->ticketService->getClientTicket($id, $route_name);
+        $response = $this->ticketService->getClientTicket($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -92,18 +89,27 @@ class TicketController extends Controller
         $route_name = "TICKET_ADD";
         
         $data_request = [
-            'type' => (int)$request->get('type', null),
-            'requester' => (int)$request->get('requester', null),
-            'files' => $request->file('files'),
-            'incident_place_id' => $request->get('incident_place_id'),
-            'asset_id' => $request->get('asset_id'),
-            'incident_time' => $request->get('incident_time'),
-            'description' => $request->get('description'),
-            'requester_location' => $request->get('requester_location'),
-            'due_to' => $request->get('due_to', null)
+            'type_id' => (int)$request->get('type_id', null),
+            'product_type' => $request->get('product_type'),
+            'product_id' => $request->get('product_id'),
+            'pic_name' => $request->get('pic_name', null),
+            'pic_contact' => $request->get('pic_contact', null),
+            'location' => $request->get('location'),
+            'problem' => $request->get('problem', null),
+            'incident_time' => $request->get('incident_time', null),
+            'files' => $request->get('files', []),
+            'description' => $request->get('description', null),
         ];
 
         $response = $this->ticketService->addTicket($data_request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateTicket(Request $request)
+    {
+        $route_name = "TICKET_UPDATE";
+
+        $response = $this->ticketService->updateTicket($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -127,7 +133,7 @@ class TicketController extends Controller
         $data_request = [
             'id' => $request->get('id', null),
             'notes' => $request->get('notes', null),
-            'status' => $request->get('status', null),
+            'status_id' => $request->get('status_id', null),
         ];
 
         $response = $this->ticketService->changeStatusTicket($data_request, $route_name);
@@ -153,10 +159,20 @@ class TicketController extends Controller
         
         $data_request = [
             'id' => $request->get('id', null),
-            'asign_to_id' => $request->get('asign_to_id', null)
+            'asign_to' => $request->get('asign_to', null),
+            'asign_id' => $request->get('asign_id', null)
         ];
 
         $response = $this->ticketService->assignTicket($data_request, $route_name);
         return response()->json($response, $response['status']);
+    }
+
+    public function addNoteTicket(Request $request)
+    {
+        $route_name = "TICKET_NOTE_ADD";
+
+        $response = $this->ticketService->addNoteTicket($request, $route_name);
+        return response()->json($response, $response['status']);
+        
     }
 }
