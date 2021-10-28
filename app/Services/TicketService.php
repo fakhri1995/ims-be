@@ -86,7 +86,7 @@ class TicketService
                     if($value->status->id < 4) $value->status->name = "Open";
                     return $value;
                 });
-                if(!count($tickets)) return ["success" => false, "message" => "Ticket masih kosong", "data" => $tickets, "status" => 200];
+                // if(!count($tickets)) return ["success" => false, "message" => "Ticket masih kosong", "data" => $tickets, "status" => 200];
                 $data = ["total_tickets" => $total_tickets, "open_tickets_count" => $open_tickets_count, "canceled_tickets_count" => $canceled_tickets_count, "closed_tickets_count" => $closed_tickets_count, "tickets" => $tickets];
             } else {
                 $tickets = Ticket::select('id', 'subject_id', 'requester_id', 'raised_at', 'type_id', 'status_id','asign_id' )->with(['type','status', 'detail', 'requester','asign'])->paginate($rows);
@@ -97,7 +97,7 @@ class TicketService
                 $on_hold_tickets_count = $statuses[2];
                 $canceled_tickets_count = $statuses[3];
                 $closed_tickets_count = $statuses[4];
-                if(!count($tickets)) return ["success" => false, "message" => "Ticket masih kosong", "data" => $tickets, "status" => 200];
+                // if(!count($tickets)) return ["success" => false, "message" => "Ticket masih kosong", "data" => $tickets, "status" => 200];
                 $total_tickets = $open_tickets_count + $on_progress_tickets_count + $on_hold_tickets_count + $canceled_tickets_count + $closed_tickets_count;
                 $data = ["total_tickets" => $total_tickets, "open_tickets_count" => $open_tickets_count, "on_progress_tickets_count" => $on_progress_tickets_count, "on_hold_tickets_count" => $on_hold_tickets_count, "canceled_tickets_count" => $canceled_tickets_count, "closed_tickets_count" => $closed_tickets_count, "tickets" => $tickets];
             }
