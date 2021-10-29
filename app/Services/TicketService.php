@@ -82,7 +82,7 @@ class TicketService
                 });
                 
                 if($ticket_id){
-                    $tickets = $tickets->where('ticket_id', $ticket_id);
+                    $tickets = $tickets->where('ticketable_id', $ticket_id);
                 }
                 if($status_id){
                     if($status_id == 1) $tickets = $tickets->whereNotIn('status_id', [4,5]);
@@ -114,7 +114,7 @@ class TicketService
             } else {
                 $tickets = Ticket::select('id', 'ticketable_id', 'requester_id', 'raised_at', 'ticketable_type', 'status_id','assignable_id', 'assignable_type' )->with(['type','status', 'ticketable:id,location_id', 'requester','assignable']);
                 if($ticket_id){
-                    $tickets = $tickets->where('ticket_id', $ticket_id);
+                    $tickets = $tickets->where('ticketable_id', $ticket_id);
                 }
                 if($status_id){
                     $tickets = $tickets->where('status_id', $status_id);
@@ -163,9 +163,10 @@ class TicketService
         return $this->getTickets($request, false);
     }
 
-    public function getClosedTickets($request, $admin)
+    public function getClosedTickets(Request $request, $admin)
     {   
         try{
+            $ticket_id = $request->get('ticket_id', null);
             $rows = $request->get('rows', 10);
             if($rows < 0) $rows = 10;
             if($rows > 100) $rows = 100;
@@ -174,10 +175,16 @@ class TicketService
                 $company_user_login_id = auth()->user()->company_id;
                 $tickets = Ticket::select('id', 'ticketable_id', 'requester_id', 'raised_at', 'ticketable_type','assignable_id', 'assignable_type')->whereHas('requester', function($q) use ($company_user_login_id){
                     $q->where('users.company_id', $company_user_login_id);
-                })->with(['type', 'ticketable', 'requester','assignable'])->where('status_id', 5)->paginate($rows);
+                })->with(['type', 'ticketable', 'requester','assignable'])->where('status_id', 5);
             } else {
-                $tickets = Ticket::select('id', 'ticketable_id', 'requester_id', 'raised_at', 'ticketable_type','assignable_id', 'assignable_type')->with(['type', 'ticketable', 'requester','assignable'])->where('status_id', 5)->paginate($rows);
+                $tickets = Ticket::select('id', 'ticketable_id', 'requester_id', 'raised_at', 'ticketable_type','assignable_id', 'assignable_type')->with(['type', 'ticketable', 'requester','assignable'])->where('status_id', 5);
             }
+            
+            if($ticket_id){
+                $tickets = $tickets->where('ticketable_id', $ticket_id);
+            }
+            $tickets = $tickets->paginate($rows);
+            // return ["success" => false, "message" => "MASUK", "status" => 400];
             $data = ["tickets" => $tickets];
             
             if(!count($tickets)) return ["success" => false, "message" => "Closed Ticket Kosong", "data" => $data, "status" => 200];
