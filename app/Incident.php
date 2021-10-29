@@ -7,15 +7,17 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Incident extends Model
 {
+    use SoftDeletes;
+
     public $timestamps = false;
     protected $casts = [
         'files' => 'array'
     ];
-    use SoftDeletes;
+    protected $with = ['location'];
 
     public function location()
     {
-        return $this->belongsTo(Company::class, 'location')->select('company_id', 'company_name');
+        return $this->belongsTo(Company::class, 'location_id')->select('company_id', 'company_name');
     }
 
     public function productType()

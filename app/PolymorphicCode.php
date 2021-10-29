@@ -4,8 +4,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class TicketType extends Model
+class PolymorphicCode extends Model
 {
     public $timestamps = false;
-    protected $hidden = ['table_name'];
 }

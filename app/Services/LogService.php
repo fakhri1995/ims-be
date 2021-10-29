@@ -439,14 +439,14 @@ class LogService
     }
 
 
-    public function assignLogTicket($subject_id, $causer_id, $asign_to, $asign_id)
+    public function assignLogTicket($subject_id, $causer_id, $assignable_type, $assignable_id)
     {
-        if($asign_to){
-            $user = User::find($asign_id);
+        if($assignable_type === 'App\User'){
+            $user = User::find($assignable_id);
             if(!$user) $name = "User Tidak Ditemukan";
             else $name = $user->fullname;
         } else {
-            $group = Group::find($asign_id);
+            $group = Group::find($assignable_id);
             if(!$group) $name = "Group Tidak Ditemukan";
             else $name = $group->name;
         }

@@ -16,8 +16,8 @@ class TicketStatus extends Model
     public function clientTickets()
     {
         $company_user_login_id = auth()->user()->company_id;
-        return $this->hasMany(Ticket::class, 'status_id')->whereHas('requester.company', function($q) use ($company_user_login_id){
-            $q->where('companies.company_id', $company_user_login_id);
+        return $this->hasMany(Ticket::class, 'status_id')->whereHas('requester', function($q) use ($company_user_login_id){
+            $q->where('users.company_id', $company_user_login_id);
         });
     }
 }

@@ -13,6 +13,7 @@ use App\TicketActivityLog;
 use App\IncidentProductType;
 use App\Services\LogService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use App\Services\CompanyService;
 use App\Services\GeneralService;
 use App\Services\CheckRouteService;
@@ -66,16 +67,38 @@ class TicketService
     public function getTickets(Request $request, $admin)
     {
         try{
+            $ticket_id = $request->get('ticket_id', null);
+            $location_id = $request->get('location_id', null);
+            $status_id = $request->get('status_id', null);
+            
             $rows = $request->get('rows', 10);
             if($rows < 0) $rows = 10;
             if($rows > 100) $rows = 100;
             if(!$admin){
                 $company_user_login_id = auth()->user()->company_id;
-                $tickets = Ticket::select('id', 'subject_id', 'requester_id', 'raised_at', 'type_id', 'status_id', 'asign_id')->with(['type','status', 'detail', 'requester','asign'])->orderBy('raised_at', 'desc')
-                ->whereHas('requester.company', function($q) use ($company_user_login_id){
-                    $q->where('companies.company_id', $company_user_login_id);
-                })->paginate($rows);
+                $tickets = Ticket::select('id', 'ticketable_id', 'requester_id', 'raised_at', 'ticketable_type', 'status_id', 'assignable_id', 'assignable_type')->with(['type','status', 'ticketable:id,location_id', 'requester','assignable'])
+                ->whereHas('requester', function($q) use ($company_user_login_id){
+                    $q->where('users.company_id', $company_user_login_id);
+                });
                 
+                if($ticket_id){
+                    $tickets = $tickets->where('ticket_id', $ticket_id);
+                }
+                if($status_id){
+                    if($status_id == 1) $tickets = $tickets->whereNotIn('status_id', [4,5]);
+                    else $tickets = $tickets->where('status_id', $status_id);
+                }
+                if($location_id){
+                    $tickets = $tickets->whereHasMorph(
+                        'ticketable',
+                        ['App\Incident'],
+                        function ($query) use ($location_id){
+                            $query->where('location_id', '=', $location_id);
+                        }
+                    );
+                }
+
+                $tickets = $tickets->orderBy('raised_at', 'desc')->paginate($rows);
                 $statuses = TicketStatus::withCount('clientTickets')->pluck('client_tickets_count');
                 $open_tickets_count = $statuses[0] + $statuses[1] + $statuses[2];
                 $canceled_tickets_count = $statuses[3];
@@ -86,18 +109,33 @@ class TicketService
                     if($value->status->id < 4) $value->status->name = "Open";
                     return $value;
                 });
-                // if(!count($tickets)) return ["success" => false, "message" => "Ticket masih kosong", "data" => $tickets, "status" => 200];
+                
                 $data = ["total_tickets" => $total_tickets, "open_tickets_count" => $open_tickets_count, "canceled_tickets_count" => $canceled_tickets_count, "closed_tickets_count" => $closed_tickets_count, "tickets" => $tickets];
             } else {
-                $tickets = Ticket::select('id', 'subject_id', 'requester_id', 'raised_at', 'type_id', 'status_id','asign_id' )->with(['type','status', 'detail', 'requester','asign'])->paginate($rows);
-                
+                $tickets = Ticket::select('id', 'ticketable_id', 'requester_id', 'raised_at', 'ticketable_type', 'status_id','assignable_id', 'assignable_type' )->with(['type','status', 'ticketable:id,location_id', 'requester','assignable']);
+                if($ticket_id){
+                    $tickets = $tickets->where('ticket_id', $ticket_id);
+                }
+                if($status_id){
+                    $tickets = $tickets->where('status_id', $status_id);
+                }
+                if($location_id){
+                    $tickets = $tickets->whereHasMorph(
+                        'ticketable',
+                        ['App\Incident'],
+                        function ($query) use ($location_id){
+                            $query->where('location_id', '=', $location_id);
+                        }
+                    );
+                }
+                $tickets = $tickets->paginate($rows);
                 $statuses = TicketStatus::withCount('tickets')->pluck('tickets_count');
                 $open_tickets_count = $statuses[0];
                 $on_progress_tickets_count = $statuses[1];
                 $on_hold_tickets_count = $statuses[2];
                 $canceled_tickets_count = $statuses[3];
                 $closed_tickets_count = $statuses[4];
-                // if(!count($tickets)) return ["success" => false, "message" => "Ticket masih kosong", "data" => $tickets, "status" => 200];
+                
                 $total_tickets = $open_tickets_count + $on_progress_tickets_count + $on_hold_tickets_count + $canceled_tickets_count + $closed_tickets_count;
                 $data = ["total_tickets" => $total_tickets, "open_tickets_count" => $open_tickets_count, "on_progress_tickets_count" => $on_progress_tickets_count, "on_hold_tickets_count" => $on_hold_tickets_count, "canceled_tickets_count" => $canceled_tickets_count, "closed_tickets_count" => $closed_tickets_count, "tickets" => $tickets];
             }
@@ -134,11 +172,11 @@ class TicketService
 
             if(!$admin){
                 $company_user_login_id = auth()->user()->company_id;
-                $tickets = Ticket::select('id', 'subject_id', 'requester_id', 'raised_at', 'type_id','asign_id')->whereHas('requester.company', function($q) use ($company_user_login_id){
-                    $q->where('companies.company_id', $company_user_login_id);
-                })->with(['type', 'detail', 'requester','asign'])->where('status_id', 5)->paginate($rows);
+                $tickets = Ticket::select('id', 'ticketable_id', 'requester_id', 'raised_at', 'ticketable_type','assignable_id', 'assignable_type')->whereHas('requester', function($q) use ($company_user_login_id){
+                    $q->where('users.company_id', $company_user_login_id);
+                })->with(['type', 'ticketable', 'requester','assignable'])->where('status_id', 5)->paginate($rows);
             } else {
-                $tickets = Ticket::select('id', 'subject_id', 'requester_id', 'raised_at', 'type_id','asign_id')->with(['type', 'detail', 'requester','asign'])->where('status_id', 5)->paginate($rows);
+                $tickets = Ticket::select('id', 'ticketable_id', 'requester_id', 'raised_at', 'ticketable_type','assignable_id', 'assignable_type')->with(['type', 'ticketable', 'requester','assignable'])->where('status_id', 5)->paginate($rows);
             }
             $data = ["tickets" => $tickets];
             
@@ -170,11 +208,14 @@ class TicketService
     {
         try{
             $id = $request->get('id');
-            $ticket = Ticket::with(['type','status', 'requester.company:company_id,company_name', 'fullDetail','asign'])->find($id);
+            $ticket = Ticket::with(['type','status', 'requester', 'ticketable.location','assignable'])->find($id);
+            $ticket->original_raised_at = $ticket->getRawOriginal('raised_at');
+            if(!$ticket->closed_at) $ticket->resolved_time = "-";
+            else $ticket->resolved_time = Carbon::parse($ticket->original_raised_at)->diffForHumans($ticket->closed_at, true);
             if($ticket === null) return ["success" => false, "message" => "Ticket Tidak Ditemukan", "status" => 400];
             if(!$admin){
                 $company_user_login_id = auth()->user()->company_id;
-                if($ticket->requester->company->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
+                if($ticket->requester->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
             }
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => ["ticket" => $ticket], "status" => 200];
         } catch(Exception $err){
@@ -205,7 +246,8 @@ class TicketService
             $type_id = $data['type_id'];
             if($type_id === null) return ["success" => false, "message" => "Field Tipe Ticket Belum Terisi", "status" => 400];
             
-            $subject_id = 0;
+            $ticketable_id = 0;
+            $ticketable_type = '-';
             if($type_id === 1){
                 // $files = $data['files'];
                 // $names = [];
@@ -224,14 +266,15 @@ class TicketService
                 $incident->product_id = $data['product_id'];
                 $incident->pic_name = $data['pic_name'];
                 $incident->pic_contact = $data['pic_contact'];
-                $incident->location = $data['location'];
+                $incident->location_id = $data['location_id'];
                 $incident->problem = $data['problem'];
                 $incident->incident_time = $data['incident_time'];
                 $incident->files = $data['files'];
                 $incident->description = $data['description'];
                 $incident->save();
-                
-                $subject_id = $incident->id;
+
+                $ticketable_type = 'App\Incident';
+                $ticketable_id = $incident->id;
             }
             
             $causer_id = auth()->user()->user_id;
@@ -239,8 +282,8 @@ class TicketService
             $current_timestamp = $generalService->getTimeNow();
             
             $ticket = new Ticket;
-            $ticket->subject_id = $subject_id;
-            $ticket->type_id = $type_id;
+            $ticket->ticketable_id = $ticketable_id;
+            $ticket->ticketable_type = $ticketable_type;
             $ticket->status_id = 1;
             $ticket->raised_at = $current_timestamp;
             $ticket->requester_id = $causer_id;
@@ -270,15 +313,16 @@ class TicketService
             $causer_id = auth()->user()->user_id;
             $logService = new LogService;
 
-            if($ticket->type_id === 1){
-                $incident = Incident::find($ticket->subject_id);
+            if($ticket->ticketable_type === 'App\Incident'){
+                $incident = Incident::find($ticket->ticketable_id);
+                // return ["success" => false, "message" => [$ticket, $incident], "status" => 400];
                 if($incident === null) return ["success" => false, "message" => "Ticket Tidak Memiliki Incident", "status" => 400];
                 $old_incident_time = $incident->incident_time;
                 $incident->product_type = $request->get('product_type');
                 $incident->product_id = $request->get('product_id');
                 $incident->pic_name = $request->get('pic_name');
                 $incident->pic_contact = $request->get('pic_contact');
-                $incident->location = $request->get('location');
+                $incident->location_id = $request->get('location_id');
                 $incident->problem = $request->get('problem');
                 $incident->incident_time = $request->get('incident_time');
                 $incident->files = $request->get('files');
@@ -287,8 +331,6 @@ class TicketService
                 if($old_incident_time !== $incident->incident_time) $logService->updateIncidentLogTicket($id, $incident->incident_time);
             }
             
-            
-            // return ["success" => false, "message" => $ticket, "status" => 400];
             $ticket->requester_id = $request->get('requester_id');
             $ticket->raised_at = $request->get('raised_at');
             $ticket->closed_at = $request->get('closed_at');
@@ -314,8 +356,8 @@ class TicketService
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
             if($ticket->status === 5) return ["success" => false, "message" => "Status Ticket Sudah Closed", "status" => 400];
             if($inventory_id === null) return ["success" => false, "message" => "Id Inventory Kosong", "status" => 400];
-            if($ticket->type !== 1) return ["success" => false, "message" => "Tipe Tiket Tidak Sesuai", "status" => 400];
-            $incident = Incident::find($ticket->subject_id);
+            if($ticket->ticketable_type !== 'App\Incident') return ["success" => false, "message" => "Tipe Tiket Tidak Sesuai", "status" => 400];
+            $incident = Incident::find($ticket->ticketable_id);
             if($incident === null) return ["success" => false, "message" => "Incident pada Ticket Tidak Ditemukan", "status" => 400];
             $incident->inventory_id = $inventory_id;
             $incident->save();
@@ -353,7 +395,7 @@ class TicketService
             
             // if($ticket->status_id === 5){
             //     if($ticket->type === 1){
-            //         $incident = Incident::find($ticket->subject_id);
+            //         $incident = Incident::find($ticket->ticketable_id);
             //         $properties = [];
             //         if($incident === null) $properties = ["false_message" => "Incident Id Not Found"];
             //         else {
@@ -401,10 +443,10 @@ class TicketService
             $notes = $data['notes'];
             // return ["success" => true, "message" => $data, "status" => 400];
             if($notes === null) return ["success" => false, "message" => "Untuk Status Canceled Diperlukan Keterangan (Notes)", "status" => 400];
-            $ticket = Ticket::with(['requester.company:company_id'])->find($id);
+            $ticket = Ticket::with(['requester'])->find($id);
             $company_user_login_id = auth()->user()->company_id;
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
-            if($ticket->requester->company->company_id !== $company_user_login_id) return ["success" => false, "message" => "Tidak Memiliki Akses Tiket Ini", "status" => 401];
+            if($ticket->requester->company_id !== $company_user_login_id) return ["success" => false, "message" => "Tidak Memiliki Akses Tiket Ini", "status" => 401];
             if($ticket->status === 4) return ["success" => false, "message" => "Ticket Sudah Dalam Status Canceled", "status" => 400];
             if($ticket->status === 5) return ["success" => false, "message" => "Ticket Dalam Status Closed", "status" => 400];
             $ticket->status_id = 4;
@@ -426,32 +468,34 @@ class TicketService
         
         try{
             $id = $data['id'];
-            $asign_to = $data['asign_to'];
-            $asign_id = $data['asign_id'];
+            $assignable_type = $data['assignable_type'];
+            $assignable_id = $data['assignable_id'];
             $ticket = Ticket::find($id);
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
-            if($asign_to === null) return ["success" => false, "message" => "Jenis yang Ditugaskan Kosong", "status" => 400];
-            if($asign_id === null) return ["success" => false, "message" => "Tujuan Penugasan Kosong", "status" => 400];
-            
-            if($asign_to){
-                $user = User::find($asign_id);
+            if($assignable_type === null) return ["success" => false, "message" => "Jenis yang Ditugaskan Kosong", "status" => 400];
+            if($assignable_id === null) return ["success" => false, "message" => "Tujuan Penugasan Kosong", "status" => 400];
+            // return ["success" => false, "message" => "MASUK", "status" => 400];
+            if($assignable_type){
+                $assignable_type = 'App\User';
+                $user = User::find($assignable_id);
                 if($user === null) return ["success" => false, "message" => "Id Petugas Tidak Ditemukan", "status" => 400];
             } else {
-                $group = Group::find($asign_id);
+                $assignable_type = 'App\Group';
+                $group = Group::find($assignable_id);
                 if($group === null) return ["success" => false, "message" => "Id Group Tidak Ditemukan", "status" => 400];
             }
             
-            $old_asign_to = $ticket->asign_to;
-            $old_asign_id = $ticket->asign_id;
+            $old_assignable_type = $ticket->assignable_type;
+            $old_assignable_id = $ticket->assignable_id;
             
-            $ticket->asign_to = $asign_to;
-            $ticket->asign_id = $asign_id;
+            $ticket->assignable_type = $assignable_type;
+            $ticket->assignable_id = $assignable_id;
             $ticket->save();
 
-            if($old_asign_id !== $ticket->asign_id || $old_asign_to !== $ticket->asign_to){
+            if($old_assignable_id !== $ticket->assignable_id || $old_assignable_type !== $ticket->assignable_type){
                 $logService = new LogService;
                 $causer_id = auth()->user()->user_id;
-                $logService->assignLogTicket($ticket->id, $causer_id, $ticket->asign_to, $ticket->asign_id);
+                $logService->assignLogTicket($ticket->id, $causer_id, $ticket->assignable_type, $ticket->assignable_id);
             }
             
             return ["success" => true, "message" => "Ticket Berhasil Ditugaskan", "status" => 200];
@@ -475,7 +519,7 @@ class TicketService
             $causer_id = auth()->user()->user_id;
             $logService->addNoteLogTicket($id, $causer_id, $notes);
             
-            return ["success" => true, "message" => "Ticket Berhasil Ditugaskan", "status" => 200];
+            return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }

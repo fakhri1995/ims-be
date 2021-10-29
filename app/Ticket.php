@@ -2,92 +2,46 @@
 
 namespace App;
 
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class Ticket extends Model
 {
     public $timestamps = false;
-    // protected $fillable = ['type'];
-    // protected $attributes = ['type'];
-    // protected $appends = ['type'];
-
+    protected $hidden = ['ticketable_type', 'requester_id', 'status_id', 'assignable_id', 'ticketable_id', 'assignable_type'];
+    
+    public function getRaisedAtAttribute($value){
+        $time_difference = Carbon::parse($value)->diffForHumans();
+        $splits = explode(" ", $value); 
+        return $splits[0]." ($time_difference)";
+    }
+    
     public function type()
     {
-        return $this->belongsTo(TicketType::class, 'type_id');
+        return $this->belongsTo(TicketType::class, 'ticketable_type', 'table_name');
     }
-
-    // public function getTypeAttribute($value)
-    // {
-    //     return $value * 5;
-    // }
-
-    // public function getFullTypeAttribute()
-    // {
-    //     return $this->type * 5;
-    // }
 
     public function status()
     {
         return $this->belongsTo(TicketStatus::class, 'status_id');
     }
 
-    public function asignTo()
-    {
-        if($this->asign_to) return "Group";
-        else return "Engineer";
-    }
-
-    public function fullDetail()
-    {
-        return $this->belongsTo(Incident::class, 'subject_id')->with(['productType','location'])->withDefault([
+    public function ticketable(){
+        return $this->morphTo()->withDefault([
             'id' => 0,
-            'product_type' => (object)[
-                "id" => 1,
-                "name" => "UPS"
-            ],
-            'product_id'=> '-',
-            'pic_name'=> 'Incident Tidak Ditemukan',
-            'pic_contact'=> 'Incident Tidak Ditemukan',
-            'location'=> (object)[
-                'company_id'=> 0,
-                'company_name'=> 'Perusahaan Tidak Ditemukan'
-            ],
-            'problem'=> '-',
-            'incident_time'=> null,
-            'files'=> [],
-            'description'=> null,
-            'deleted_at'=> null
+            'location_id' => 0,
+            'location' => (object)[
+                'company_id' => 0,
+                'company_name' => 'Perusahaan Tidak Ditemukan'
+            ]
         ]);
     }
 
-    public function detail()
-    {
-        return $this->belongsTo(Incident::class, 'subject_id')->select('id','location')->with('location');
-        if($this->getTypeAttribute == 1){
-        // if($this->type == 1){
-        }
-        return (object)[
+    public function assignable(){
+        return $this->morphTo()->withDefault([
             'id' => 0,
-            'location' => (object)[
-                'id' => 0,
-                'location_name' => 'Location Tidak Ditemukan'
-            ]
-        ];
-    }
-
-    public function asign()
-    {
-        return $this->belongsTo(User::class, 'asign_id')->withDefault([
-            'id' => 0,
-            'fullname' => 'User Tidak Ditemukan'
-        ])->select('user_id AS id', 'fullname');
-        if($this->asign_to)
-        {
-            return $this->belongsTo(Group::class, 'asign_id')->withDefault([
-                'id' => 0,
-                'name' => 'User Tidak Ditemukan'
-            ])->select('user_id As id', 'fullname as name');
-        }
+            'name' => 'Penugasan Tidak Ditemukan'
+        ]);
     }
 
     public function requester()
@@ -97,20 +51,4 @@ class Ticket extends Model
             'fullname' => 'User Tidak Ditemukan'
         ])->select('user_id', 'fullname','role','company_id')->where('role', 2);
     }
-
-    // public function scopeDetail($query)
-    // {
-    //     return $query
-    //           ->when($this->status === 1,function($q){
-    //               return $q->with('incident');
-    //          })
-    //          ->when($this->type === 'school',function($q){
-    //               return $q->with('schoolProfile');
-    //          })
-    //          ->when($this->type === 'academy',function($q){
-    //               return $q->with('academyProfile');
-    //          },function($q){
-    //              return $q->with('abc');
-    //          });
-    // }
 }

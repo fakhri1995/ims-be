@@ -35,20 +35,21 @@ class TicketManagementSeeder extends Seeder
 
     private function makeTypes()
     {
-        $status_names = [['name' =>'Incident', 'code' => 'INC']];
+        $status_names = [['name' =>'Incident', 'code' => 'INC', 'table_name' => 'App\Incident']];
         foreach($status_names as $status_name){
             $status = new TicketType;
             $status->name = $status_name['name'];
             $status->code = $status_name['code'];
+            $status->table_name = $status_name['table_name'];
             $status->save();
         }
     }
 
     public function run()
     {
-        $this->makeStatusConditions();
+        // $this->makeStatusConditions();
         $this->makeTypes();
-        $this->makeProductTypeIncidents();
+        // $this->makeProductTypeIncidents();
     }
 
 }

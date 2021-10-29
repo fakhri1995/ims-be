@@ -15,15 +15,17 @@ class CreateTicketsTable extends Migration
     {
         Schema::create('tickets', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('subject_id');
-            $table->integer('type_id');
+            $table->unsignedBigInteger('ticketable_id');
+            $table->string('ticketable_type');
             $table->integer('status_id');
             $table->dateTime('raised_at');
             $table->dateTime('closed_at')->nullable();
-            $table->boolean('asign_to')->nullable();
-            $table->unsignedBigInteger('asign_id')->nullable();
+            $table->string('assignable_type')->nullable();
+            $table->unsignedBigInteger('assignable_id')->nullable();
             $table->unsignedBigInteger('requester_id');
-            $table->index('status_id');
+            $table->index('requester_id');
+            $table->index('ticketable_id');
+            $table->index('raised_at');
         });
     }
 

@@ -89,12 +89,12 @@ class TicketController extends Controller
         $route_name = "TICKET_ADD";
         
         $data_request = [
-            'type_id' => (int)$request->get('type_id', null),
+            'type_id' => $request->get('type_id', null),
             'product_type' => $request->get('product_type'),
             'product_id' => $request->get('product_id'),
             'pic_name' => $request->get('pic_name', null),
             'pic_contact' => $request->get('pic_contact', null),
-            'location' => $request->get('location'),
+            'location_id' => $request->get('location_id'),
             'problem' => $request->get('problem', null),
             'incident_time' => $request->get('incident_time', null),
             'files' => $request->get('files', []),
@@ -159,8 +159,8 @@ class TicketController extends Controller
         
         $data_request = [
             'id' => $request->get('id', null),
-            'asign_to' => $request->get('asign_to', null),
-            'asign_id' => $request->get('asign_id', null)
+            'assignable_type' => $request->get('assignable_type', null),
+            'assignable_id' => $request->get('assignable_id', null)
         ];
 
         $response = $this->ticketService->assignTicket($data_request, $route_name);
