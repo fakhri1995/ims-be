@@ -70,6 +70,8 @@ class TicketService
             $ticket_id = $request->get('ticket_id', null);
             $location_id = $request->get('location_id', null);
             $status_id = $request->get('status_id', null);
+            $from = $request->get('from', null);
+            $to = $request->get('to', null);
             
             $rows = $request->get('rows', 10);
             if($rows < 0) $rows = 10;
@@ -87,6 +89,9 @@ class TicketService
                 if($status_id){
                     if($status_id == 1) $tickets = $tickets->whereNotIn('status_id', [4,5]);
                     else $tickets = $tickets->where('status_id', $status_id);
+                }
+                if($from && $to){
+                    $tickets = $tickets->whereBetween('raised_at', [$from, $to]);
                 }
                 if($location_id){
                     $tickets = $tickets->whereHasMorph(
@@ -118,6 +123,9 @@ class TicketService
                 }
                 if($status_id){
                     $tickets = $tickets->where('status_id', $status_id);
+                }
+                if($from && $to){
+                    $tickets = $tickets->whereBetween('raised_at', [$from, $to]);
                 }
                 if($location_id){
                     $tickets = $tickets->whereHasMorph(
