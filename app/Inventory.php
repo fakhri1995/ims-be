@@ -58,6 +58,16 @@ class Inventory extends Model
         return $this->inventoryPart()->with('inventoryParts')->withTrashed();
     }
 
+    public function inventoryAddableParts()
+    {
+        return $this->belongsToMany(Inventory::class, 'inventory_inventory_pivots', 'parent_id', 'child_id')->select('inventories.id', 'inventories.model_id', 'inventories.inventory_name', 'inventories.mig_id', 'inventories.deleted_at')->with('modelInventory.asset', 'inventoryAddableParts');
+    }
+
+    public function inventoryReplacementParts()
+    {
+        return $this->belongsToMany(Inventory::class, 'inventory_inventory_pivots', 'parent_id', 'child_id')->select('inventories.id', 'inventories.inventory_name')->with('inventoryReplacementParts');
+    }
+
     public function inventoryParent()
     {
         return $this->belongsToMany(Inventory::class, 'inventory_inventory_pivots', 'child_id', 'parent_id')->select('inventories.id', 'inventories.model_id', 'inventories.inventory_name', 'inventories.mig_id', 'inventories.status_condition', 'inventories.status_usage');

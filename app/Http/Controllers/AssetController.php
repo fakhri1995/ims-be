@@ -192,7 +192,7 @@ class AssetController extends Controller
     {
         $route_name = "INVENTORY_ADDABLE_GET";
 
-        $response = $this->assetService->getInventoryAddable($route_name);
+        $response = $this->assetService->getInventoryAddable($request, $route_name);
         return response()->json($response, $response['status']);
     }
     
@@ -200,8 +200,7 @@ class AssetController extends Controller
     {
         $route_name = "INVENTORY_REPLACEMENTS_GET";
 
-        $id = $request->get('id', null);    
-        $response = $this->assetService->getInventoryReplacements($id, $route_name);
+        $response = $this->assetService->getInventoryReplacements($request, $route_name);
         return response()->json($response, $response['status']);
     }
 

@@ -812,118 +812,60 @@ class AssetService{
         }
     }
 
-    public function getInventoryAddable($route_name)
-    {
-        $access = $this->checkRouteService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
-
-        $inventories = Inventory::select('id','inventory_name', 'model_id', 'status_usage','mig_id')->get();
-        $models = ModelInventory::withTrashed()->select('id','name','asset_id','deleted_at')->get();
-        $assets = Asset::withTrashed()->select('id','name','deleted_at')->get();
-        $pivots = InventoryInventoryPivot::get();
-        $inventories_array = $inventories->toArray();
-        $models_array = $models->toArray();
-        $assets_array = $assets->toArray();
-        $pivots_array = $pivots->toArray();
-        $inventory_in_stock = $inventories->where('status_usage', 2);
-        $data = [];
-        foreach($inventory_in_stock as $inventory){
-            $pivot = $pivots->where('child_id', $inventory->id)->first();
-            if($pivot) continue;
-            $model = $models->find($inventory->model_id);
-            if($model === null){
-                $inventory->asset_id = 0;
-                $inventory->asset_name = "Model Tidak Ditemukan";
-            } else{
-                $inventory->model_name = $model->name;
-                $inventory->asset_id = $model->asset_id;
-                $asset = $assets->where('id', $model->asset_id)->first();
-                if($asset === null){
-                    $inventory->asset_name = "Asset Tidak Ditemukan";
-                } else {
-                    $inventory->asset_name = $asset->name;
-                }
-            } 
-            $core_pivots = $pivots->where('parent_id', $inventory->id);
-            if(count($pivots)){
-                $inventory_parts = [];
-                if(count($core_pivots)){
-                    foreach($core_pivots as $pivot){
-                        $inventory_parts[] = $this->getInventoryParts($pivot, $pivots_array, $inventories_array, $models_array, $assets_array);
-                    }
-                }
-                $inventory->inventory_parts = $inventory_parts;
-            } else {
-                $inventory->inventory_parts = [];
-            }
-            $data[] = $inventory;
-        }
-        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200]; 
-    }
-
-    public function getInventoryReplacements($id, $route_name)
+    public function getInventoryAddable(Request $request, $route_name)
     {
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
-            $inventories = Inventory::select('id','inventory_name', 'model_id', 'status_usage','mig_id')->limit(50)->get();
-            $models = ModelInventory::withTrashed()->select('id','name','asset_id', 'deleted_at')->get();
-            $assets = Asset::withTrashed()->select('id','name', 'deleted_at')->get();
-            $pivots = InventoryInventoryPivot::get();
-            foreach($inventories as $inventory){
-                $model = $models->find($inventory->model_id);
-                if($model === null){
-                    $inventory->asset_id = 0;
-                    $inventory->asset_name = "Model Tidak Ditemukan";
-                } else{
-                    $inventory->model_name = $model->name;
-                    $inventory->asset_id = $model->asset_id;
-                    $asset = $assets->where('id', $model->asset_id)->first();
-                    if($asset === null){
-                        $inventory->asset_name = "Asset Tidak Ditemukan";
-                    } else {
-                        $inventory->asset_name = $asset->name;
-                    }
-                } 
+            $asset_id = $request->get('asset_id', null);
+            $model_id = $request->get('model_id', null);
+            $name = $request->get('name', null);
+            $rows = $request->get('rows', 10);
+            if($rows > 100) $rows = 100;
+            if($rows < 1) $rows = 10;
+            
+            $inventories = Inventory::with(['modelInventory.asset:id,name,deleted_at', 'inventoryAddableParts'])->select('id', 'model_id', 'inventory_name', 'mig_id')->where('status_usage', 2);
+
+            if($asset_id){
+                $inventories = $inventories->whereHas('modelInventory', function($q) use ($asset_id){
+                    $q->where('model_inventories.asset_id', $asset_id);
+                });
             }
-            $inventory_replacements = $inventories->where('asset_id', $id)->where('status_usage', 2);
-            $pivots_array = $pivots->toArray();
-            $inventories_array = $inventories->toArray();
-            $models = $models->toArray();
-            $assets = $assets->toArray();
-            $datas = [];
-            // return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventory_replacements, "status" => 200];
-            if(count($inventory_replacements)){
-                foreach($inventory_replacements as $inventory_replacement){
-                    $core_pivots = $pivots->where('parent_id', $inventory_replacement->id);
-                    $check_parent = $pivots->where('child_id', $inventory_replacement->id)->first();
-                    if(count($pivots)){
-                        $inventory_parts = [];
-                        if(count($core_pivots)){
-                            foreach($core_pivots as $pivot){
-                                $inventory_parts[] = $this->getInventoryParts($pivot, $pivots_array, $inventories_array, $models, $assets);
-                            }
-                        }
-                        $inventory_replacement->inventory_parts = $inventory_parts;
-                    } else {
-                        $inventory_replacement->inventory_parts = [];
-                    }
-                    if($check_parent === null){
-                        $inventory_replacement->parent_id = null;
-                        $inventory_replacement->parent_name = "Tidak Memiliki Parent";
-                    } 
-                    else{
-                        $parent_id = $check_parent->parent_id;
-                        $inventory_replacement->parent_id = $parent_id;
-                        $parent = $inventories->find($parent_id);
-                        if($parent === null) $inventory_replacement->name = "Inventory Parent Tidak Ditemukan";
-                        $inventory_replacement->parent_name = $parent->inventory_name;
-                    } 
-                    $datas[] = $inventory_replacement;
-                }
+            if($model_id){
+                $inventories = $inventories->where('model_id', $model_id);
             }
-            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $datas, "status" => 200];
+            if($name){
+                $inventories = $inventories->where('inventory_name', 'like', "%".$name."%");
+            }
+            
+            $inventories = $inventories->paginate($rows);
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventories, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getInventoryReplacements(Request $request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $id = $request->get('id', null);
+            $name = $request->get('name', null);
+            if(!$id) return ["success" => false, "message" => "Id Asset Kosong", "status" => 400];
+            $inventories = Inventory::with(['modelInventory.asset:id,name,deleted_at', 'inventoryReplacementParts'])->select('id', 'model_id', 'inventory_name', 'mig_id')
+                    ->whereHas('modelInventory', function($q) use ($id){
+                        $q->where('model_inventories.asset_id', $id);
+                    });
+
+            if($name){
+                $inventories = $inventories->where('inventory_name', 'like', "%".$name."%");
+            }
+            
+            $inventories = $inventories->limit(50)->get();
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventories, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
