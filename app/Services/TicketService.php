@@ -403,44 +403,46 @@ class TicketService
             $current_timestamp = $generalService->getTimeNow();
             $old_status = $ticket->status_id;
             $ticket->status_id = $status_id;
+            
+            if($ticket->status_id === 5){
+                $ticket->closed_at = $current_timestamp;
+                // if($ticket->type === 1){
+                //     $incident = Incident::find($ticket->ticketable_id);
+                //     $properties = [];
+                //     if($incident === null) $properties = ["false_message" => "Incident Id Not Found"];
+                //     else {
+                //         $inventory = Inventory::find($incident->inventory_id);
+                //         if($inventory === null) $properties = ["false_message" => "Inventory Id Not Found"];
+                //         else {
+                //             $inventory_columns = ModelInventoryColumn::get();
+                //             $inventory_values = InventoryValue::where('inventory_id', $inventory->id)->get();
+                //             $additional_attributes = [];
+                //             if(count($inventory_values)){
+                //                 foreach($inventory_values as $inventory_value){
+                //                     $inventory_value_column = $inventory_columns->where('id', $inventory_value->model_inventory_column_id)->first();
+                //                     $inventory_value->name = $inventory_value_column === null ? "not_found_column" : $inventory_value_column->name;
+                //                     $additional_attributes[] = $inventory_value;
+                //                 }
+                //             }
+                //             foreach($inventory->getAttributes() as $key => $value){
+                //                 $properties['attributes']['inventory'][$key] = $value;
+                //             }
+                //             if(count($additional_attributes)){
+                //                 foreach($additional_attributes as $additional_attribute){
+                //                     $properties['attributes']['inventory'][$additional_attribute->name] = $additional_attribute->value;
+                //                 }
+                //             }
+                //         }
+                //     }
+                //     $notes = "Closed Condition Inventory";
+                //     $logService->updateStatusLogTicket($ticket->id, $causer_id, $properties, $notes);
+                // }
+            }
+
             $ticket->save();
             $causer_id = auth()->user()->user_id;
             $logService = new LogService;
             if($old_status !== $ticket->status_id) $logService->updateStatusLogTicket($ticket->id, $causer_id, $ticket->status_id, $notes);
-            
-            // if($ticket->status_id === 5){
-            //     if($ticket->type === 1){
-            //         $incident = Incident::find($ticket->ticketable_id);
-            //         $properties = [];
-            //         if($incident === null) $properties = ["false_message" => "Incident Id Not Found"];
-            //         else {
-            //             $inventory = Inventory::find($incident->inventory_id);
-            //             if($inventory === null) $properties = ["false_message" => "Inventory Id Not Found"];
-            //             else {
-            //                 $inventory_columns = ModelInventoryColumn::get();
-            //                 $inventory_values = InventoryValue::where('inventory_id', $inventory->id)->get();
-            //                 $additional_attributes = [];
-            //                 if(count($inventory_values)){
-            //                     foreach($inventory_values as $inventory_value){
-            //                         $inventory_value_column = $inventory_columns->where('id', $inventory_value->model_inventory_column_id)->first();
-            //                         $inventory_value->name = $inventory_value_column === null ? "not_found_column" : $inventory_value_column->name;
-            //                         $additional_attributes[] = $inventory_value;
-            //                     }
-            //                 }
-            //                 foreach($inventory->getAttributes() as $key => $value){
-            //                     $properties['attributes']['inventory'][$key] = $value;
-            //                 }
-            //                 if(count($additional_attributes)){
-            //                     foreach($additional_attributes as $additional_attribute){
-            //                         $properties['attributes']['inventory'][$additional_attribute->name] = $additional_attribute->value;
-            //                     }
-            //                 }
-            //             }
-            //         }
-            //         $notes = "Closed Condition Inventory";
-            //         $logService->updateStatusLogTicket($ticket->id, $causer_id, $properties, $notes);
-            //     }
-            // }
 
             return ["success" => true, "message" => "Berhasil Merubah Status Ticket", "status" => 200];
         } catch(Exception $err){

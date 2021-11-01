@@ -17,7 +17,10 @@ class Incident extends Model
 
     public function location()
     {
-        return $this->belongsTo(Company::class, 'location_id')->select('company_id', 'company_name');
+        return $this->belongsTo(Company::class, 'location_id')->withDefault([
+            'company_id' => 0,
+            'company_name' => 'Perusahaan Tidak Ditemukan'
+        ])->select('company_id', 'company_name');
     }
 
     public function productType()
