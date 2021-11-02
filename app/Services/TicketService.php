@@ -380,7 +380,7 @@ class TicketService
             $incident->inventory_id = $inventory_id;
             $incident->save();
 
-            $causer_id = auth()->user()->id;
+            $causer_id = auth()->user()->user_id;
             $logService = new LogService;
             $logService->setItemLogTicket($id, $causer_id, $old_inventory_id, $inventory_id);
             return ["success" => true, "message" => "Inventory Berhasil Ditambahkan pada Ticket", "status" => 200];
