@@ -305,7 +305,9 @@ class TicketService
             $ticket->save();
 
             $logService = new LogService;
-            $logService->createLogTicketIncident($ticket->id, $causer_id, $incident->incident_time);
+            if($data['incident_time'] === null) $time = $current_timestamp;
+            else $time = $data['incident_time'];
+            $logService->createLogTicketIncident($ticket->id, $causer_id, $time);
             
             
             $logService->createLogTicket($ticket->id, $causer_id);
