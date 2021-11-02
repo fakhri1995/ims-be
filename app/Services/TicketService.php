@@ -103,7 +103,7 @@ class TicketService
                     );
                 }
 
-                $tickets = $tickets->orderBy('raised_at', 'desc')->paginate($rows);
+                $tickets = $tickets->orderBy('status_id', 'asc')->orderBy('raised_at', 'desc')->paginate($rows);
                 $statuses = TicketStatus::withCount('clientTickets')->pluck('client_tickets_count');
                 $open_tickets_count = $statuses[0] + $statuses[1] + $statuses[2];
                 $canceled_tickets_count = $statuses[3];
@@ -136,7 +136,7 @@ class TicketService
                         }
                     );
                 }
-                $tickets = $tickets->paginate($rows);
+                $tickets = $tickets->orderBy('status_id', 'asc')->orderBy('raised_at', 'desc')->paginate($rows);
                 $statuses = TicketStatus::withCount('tickets')->pluck('tickets_count');
                 $open_tickets_count = $statuses[0];
                 $on_progress_tickets_count = $statuses[1];
