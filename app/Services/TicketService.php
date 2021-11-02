@@ -374,8 +374,13 @@ class TicketService
             if($ticket->ticketable_type !== 'App\Incident') return ["success" => false, "message" => "Tipe Tiket Tidak Sesuai", "status" => 400];
             $incident = Incident::find($ticket->ticketable_id);
             if($incident === null) return ["success" => false, "message" => "Incident pada Ticket Tidak Ditemukan", "status" => 400];
+            $old_inventory_id = $incident->inventory_id;
             $incident->inventory_id = $inventory_id;
             $incident->save();
+
+            $causer_id = auth()->user()->id;
+            $logService = new LogService;
+            $logService->setItemLogTicket($id, $causer_id, $old_inventory_id, $inventory_id);
             return ["success" => true, "message" => "Inventory Berhasil Ditambahkan pada Ticket", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];

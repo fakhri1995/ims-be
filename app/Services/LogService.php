@@ -247,6 +247,18 @@ class LogService
         if($access["success"] === false) return $access;
 
         $logs = ActivityLogTicket::where('subject_id', $id)->orderBy('created_at','desc')->get();
+        foreach($logs as $log){
+            if($log->description === 'SeT IteM'){
+                $old_exist = false;
+                $properties = json_decode($log->log_name, false);
+                $inventory = Inventory::find($properties->attributes->inventory);
+                if($inventory) $inventory_name = $inventory->inventory_name;
+                else $inventory_name = "Inventory Not Found";
+                if(isset($properties->old->inventory))$old_exist = true;
+                if($old_exist) $log->log_name = "Pengubahan Association menjadi $inventory_name";
+                else $log->log_name = "Penambahan Association $inventory_name";
+            }
+        }
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $logs, "status" => 200];
     }
     
@@ -261,6 +273,18 @@ class LogService
         $user_company_id = auth()->user()->company_id;
         if($ticket->requester->company_id !== $user_company_id) return ["success" => false, "message" => "Tidak Memiliki Access untuk Ticket Ini", "status" => 401];
         $logs = ActivityLogTicket::where('subject_id', $id)->orderBy('created_at','desc')->get();
+        foreach($logs as $log){
+            if($log->description === 'SeT IteM'){
+                $old_exist = false;
+                $properties = json_decode($log->log_name, false);
+                $inventory = Inventory::find($properties->attributes->inventory);
+                if($inventory) $inventory_name = $inventory->inventory_name;
+                else $inventory_name = "Inventory Not Found";
+                if(isset($properties->old->inventory))$old_exist = true;
+                if($old_exist) $log->log_name = "Pengubahan Association menjadi $inventory_name";
+                else $log->log_name = "Penambahan Association $inventory_name";
+            }
+        }
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $logs, "status" => 200];
     }
 
@@ -510,6 +534,16 @@ class LogService
     {
         $log_name = "Note Khusus";
         $created_at = $this->current_timestamp;
+        $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, $notes);
+    }
+
+    public function setItemLogTicket($subject_id, $causer_id, $old_inventory_id, $inventory_id)
+    {
+        if($old_inventory_id !== null) $properties['old'] = ['inventory' => $old_inventory_id];
+        $properties['attributes'] = ['inventory' => $inventory_id];
+        $created_at = $this->current_timestamp;
+        $log_name = json_encode($properties);
+        $notes = "SeT IteM";
         $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, $notes);
     }
 }
