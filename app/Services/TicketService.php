@@ -345,7 +345,10 @@ class TicketService
                 $incident->files = $request->get('files');
                 $incident->description = $request->get('description');
                 $incident->save();
-                if($old_incident_time !== $incident->incident_time) $logService->updateIncidentLogTicket($id, $incident->incident_time);
+                if($old_incident_time !== $incident->incident_time){
+                    if($request->get('incident_time') === null) $logService->updateIncidentLogTicket($id, $ticket->raised_at);
+                    else $logService->updateIncidentLogTicket($id, $incident->incident_time);
+                } 
             }
             
             $ticket->requester_id = $request->get('requester_id');
