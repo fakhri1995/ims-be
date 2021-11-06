@@ -285,7 +285,7 @@ class CompanyService
         if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
         if($company->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
         try{
-            $company->name = $data['company_name'];
+            $company->name = $data['name'];
             $company->address = $data['address'];
             $company->phone_number = $data['phone_number'];
             $company->image_logo = $data['image_logo'];

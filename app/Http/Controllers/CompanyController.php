@@ -103,7 +103,7 @@ class CompanyController extends Controller
         
         $data_request = [
             'id' => $request->get('id'),
-            'company_name' => $request->get('company_name'),
+            'name' => $request->get('name'),
             'address' => $request->get('address'),
             'phone_number' => $request->get('phone_number'),
             'image_logo' => $request->get('image_logo'),
@@ -191,7 +191,7 @@ class CompanyController extends Controller
         
         $data_request = [
             'id' => $request->get('id'),
-            'company_name' => $request->get('company_name'),
+            'name' => $request->get('name'),
             'address' => $request->get('address'),
             'phone_number' => $request->get('phone_number'),
             'image_logo' => $request->get('image_logo'),
