@@ -17,8 +17,8 @@ class CreateUserRolePivotsTable extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('role_id');
-            $table->unsignedInteger('user_id');
-            $table->unsignedInteger('role_id');
+            $table->index('user_id');
+            $table->index('role_id');
         });
     }
 
