@@ -51,19 +51,19 @@ class RelationshipInventory extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'connected_id', 'user_id')->withDefault([
-            'user_id' => 0,
-            'fullname' => 'User Tidak Ditemukan',
+        return $this->belongsTo(User::class, 'connected_id')->withDefault([
+            'id' => 0,
+            'name' => 'User Tidak Ditemukan',
             'role' => 0
-        ])->withTrashed()->select('user_id', 'fullname', 'role');
+        ])->withTrashed()->select('id', 'name', 'role');
     }
 
     public function company()
     {
-        return $this->belongsTo(Company::class, 'connected_id', 'company_id')->withDefault([
-            'company_id' => 0,
-            'company_name' => 'Perusahaan Tidak Ditemukan',
+        return $this->belongsTo(Company::class, 'connected_id')->withDefault([
+            'id' => 0,
+            'name' => 'Perusahaan Tidak Ditemukan',
             'role' => 0,
-        ])->withTrashed()->select('company_id', 'company_name', 'role');
+        ])->withTrashed()->select('id', 'name', 'role');
     }
 }

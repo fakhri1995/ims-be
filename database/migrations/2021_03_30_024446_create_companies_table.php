@@ -14,9 +14,10 @@ class CreateCompaniesTable extends Migration
     public function up()
     {
         Schema::create('companies', function (Blueprint $table) {
-            $table->bigIncrements('company_id');
+            $table->id();
             $table->unsignedBigInteger("parent_id")->nullable();
-            $table->string("company_name");
+            $table->unsignedBigInteger("top_parent_id")->nullable();
+            $table->string("name");
             $table->string("image_logo")->nullable();
             $table->string("phone_number");
             $table->string("address");
@@ -31,6 +32,7 @@ class CreateCompaniesTable extends Migration
             $table->string('email');
             $table->string('website');
             $table->softDeletes();
+            $table->index('parent_id');
         });
     }
 

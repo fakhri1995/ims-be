@@ -18,37 +18,28 @@ class CompanyService
     public function findCompany($id)
     {
         $company = Company::find($id);
-        if($company) return $company->company_name;
+        if($company) return $company->name;
         else return "Perusahaan Tidak Ditemukan";
     }
 
     public function getCompanyList($parent = false)
     {
-        if($parent) $companies = Company::select('company_id', 'company_name', 'parent_id')->get();
-        else $companies = Company::select('company_id', 'company_name')->get();
+        if($parent) $companies = Company::select('id', 'name', 'parent_id')->get();
+        else $companies = Company::select('id', 'name')->get();
         return $companies;
-    }
-
-    public function findLowerCompanyList($companies, $id, $company_list)
-    {
-        foreach($companies as $company){
-            if($company['parent_id'] === $id){
-                $company_list = $this->findLowerCompanyList($companies, $company['company_id'], $company_list);
-            }
-        }
-        $company_list[] = $id;
-        return $company_list;
     }
 
     public function checkCompanyList($id)
     {
-        $companies = Company::select('company_id', 'parent_id')->get()->toArray();
-        return $this->findLowerCompanyList($companies, $id, []);
+        $company = Company::find($id);
+        $list_company = $company->getAllChildren()->pluck('id');
+        $list_company[] = $company->id;
+        return $list_company;
     }
 
     public function haveChild($company_user_id, $companies, $parent_id){
         foreach($companies as $company){
-            if($company['company_id'] === $parent_id){
+            if($company['id'] === $parent_id){
                 if($company['parent_id'] === null) return false;
                 if($company['parent_id'] === $company_user_id) return true;
                 return $this->haveChild($company_user_id, $companies, $company['parent_id']);
@@ -57,19 +48,19 @@ class CompanyService
     }
 
     public function checkPermission($target_id, $company_user_id){
-        $companies = Company::select('company_id', 'parent_id')->get();
+        $companies = Company::select('id', 'parent_id')->get();
         $company = $companies->find($target_id);
-        if($company->company_id === $company_user_id) return true;
+        if($company->id === $company_user_id) return true;
         if($company->parent_id === $company_user_id) return true;
         $companies = $companies->toArray();
         return $this->haveChild($company_user_id, $companies, $company->parent_id);
     }
 
     public function getTopCompany($companies, $company_id){
-        $search = array_search($company_id, array_column($companies, 'company_id'));
+        $search = array_search($company_id, array_column($companies, 'id'));
         $company = $companies[$search];
         if($company['parent_id'] === 1 || $company['parent_id'] === null){
-            return $company['company_name'];
+            return $company['name'];
         }
         return $this->getTopCompany($companies, $company['parent_id']);
     }
@@ -77,7 +68,7 @@ class CompanyService
     public function getCompanyTreeChildren($companies, $sub_company){
         $company_children = [];
         foreach($companies as $company){
-            if($company['parent_id'] === $sub_company['company_id']) $company_children[] = $company;
+            if($company['parent_id'] === $sub_company['id']) $company_children[] = $company;
         }
         $members = [];
         if(count($company_children)){
@@ -88,7 +79,7 @@ class CompanyService
         if(count($members)) $sub_company['members'] = $members;
         if($sub_company['parent_id'] !== 1 && $sub_company['parent_id'] !== null){
             $parent_company_name = $this->getTopCompany($companies, $sub_company["parent_id"]);
-            $sub_company['company_name'] = $parent_company_name.' / '.$sub_company['company_name'];
+            $sub_company['name'] = $parent_company_name.' / '.$sub_company['name'];
         } 
         
         unset($sub_company["parent_id"]); 
@@ -96,7 +87,7 @@ class CompanyService
     }    
 
     public function getCompanyTree($id, $role_id = null){
-        $companies = Company::select('company_id','company_name','address','phone_number','image_logo','role','parent_id','is_enabled')->get();
+        $companies = Company::select('id','name','address','phone_number','image_logo','role','parent_id','is_enabled')->get();
         $companies_array = $companies->toArray();
         $company = $companies->find($id);
         if($company === null) return ["success" => false, "message" => "Company Tidak Ditemukan", "code" => 400];
@@ -117,19 +108,19 @@ class CompanyService
     public function getCompanyTreeSelectChildren($companies, $sub_company, $parent_id){
         $company_children = [];
         foreach($companies as $company){
-            if($company['parent_id'] === $sub_company['company_id']) $company_children[] = $company;
+            if($company['parent_id'] === $sub_company['id']) $company_children[] = $company;
         }
         $children = [];
         if(count($company_children)){
             foreach($company_children as $company_child){
-                $children[] = $this->getCompanyTreeSelectChildren($companies, $company_child, $sub_company['company_id']);
+                $children[] = $this->getCompanyTreeSelectChildren($companies, $company_child, $sub_company['id']);
             }
         } 
         $new_company = [
-            "id" => $sub_company['company_id'],
-            "title" => $sub_company['company_name'],
-            "key" => $sub_company['company_id'],
-            "value" => $sub_company['company_id'],
+            "id" => $sub_company['id'],
+            "title" => $sub_company['name'],
+            "key" => $sub_company['id'],
+            "value" => $sub_company['id'],
             "id_parent" => $parent_id
         ];
         if(count($children)) $new_company['children'] = $children;
@@ -138,9 +129,9 @@ class CompanyService
 
     public function getCompanyTreeSelect($id, $limit = false, $branch = false){
         if($limit){
-            if($branch) $companies = Company::select('company_id','company_name','parent_id','role')->where('role','<>', 2)->get();
-            else $companies = Company::select('company_id','company_name','parent_id','role')->where('role','<>', 3)->get();
-        } else $companies = Company::select('company_id','company_name','parent_id')->get();
+            if($branch) $companies = Company::select('id','name','parent_id','role')->where('role','<>', 2)->get();
+            else $companies = Company::select('id','name','parent_id','role')->where('role','<>', 3)->get();
+        } else $companies = Company::select('id','name','parent_id')->get();
         $company = $companies->find($id);
         if($company === null) return ["success" => false, "message" => "Company Tidak Ditemukan", "data" => [], "code" => 400];
         else {
@@ -149,15 +140,15 @@ class CompanyService
             $children = [];
             if(count($company_children)){
                 foreach($company_children as $company_child){
-                    $children[] = $this->getCompanyTreeSelectChildren($companies_array, $company_child, $company->company_id);
+                    $children[] = $this->getCompanyTreeSelectChildren($companies_array, $company_child, $company->id);
                 }
             } 
             $new_company = [
-                "id" => $company->company_id,
-                "title" => $company->company_name,
-                "key" => $company->company_id,
-                "value" => $company->company_id,
-                "id_parent" => $company->company_id
+                "id" => $company->id,
+                "title" => $company->name,
+                "key" => $company->id,
+                "value" => $company->id,
+                "id_parent" => $company->id
             ];
             if(count($children)) $new_company['children'] = $children;
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $new_company, "status" => 200];
@@ -165,12 +156,12 @@ class CompanyService
     }
 
     public function getCompanyListWithTop(){
-        $companies = Company::select('company_id', 'company_name', 'parent_id')->where('role','<>', 3)->get();
+        $companies = Company::select('id', 'name', 'parent_id')->where('role','<>', 3)->get();
         $companies_array = $companies->toArray();
         foreach($companies as $company){
             if($company->parent_id !== 1 && $company->parent_id !== null){
                 $parent_company_name = $this->getTopCompany($companies_array, $company->parent_id);
-                $company->company_name = $parent_company_name.' / '.$company->company_name;
+                $company->name = $parent_company_name.' / '.$company->name;
             } 
         }
         return $companies;
@@ -201,7 +192,7 @@ class CompanyService
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
-        $companies = Company::select('company_id','company_name','address','phone_number','image_logo','role','parent_id')->where('parent_id', 1)->where('role', 2)->get();
+        $companies = Company::select('id','name','address','phone_number','image_logo','role','parent_id')->where('parent_id', 1)->where('role', 2)->get();
         $companies->makeHidden('parent_id');
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $companies, "status" => 200];
     }
@@ -245,9 +236,14 @@ class CompanyService
         $generalService = new GeneralService;
         if($data['parent_id'] === null) return ["success" => false, "message" => "Parent Id Tidak Boleh Null", "status" => 400];
         try{
+            $parent_company = Company::find($data['parent_id']);
+            if($parent_company === null) return ["success" => false, "message" => "Parent Company Tidak Ditemukan", "status" => 400];
+
+            $top_parent_id = $parent_company->getTopParent()->id ?? null;
             $company = new Company;
-            $company->company_name = $data['name'];
+            $company->name = $data['name'];
             $company->parent_id = $data['parent_id'];
+            $company->top_parent_id = $top_parent_id;
             $company->address = $data['address'];
             $company->phone_number = $data['phone_number'];
             $company->image_logo = $data['image_logo'];
@@ -263,8 +259,8 @@ class CompanyService
             $company->email = '-';
             $company->website = '-';
             $company->save();
-            if($role_id === 2) return ["success" => true, "message" => "Client Company Berhasil Dibentuk", "id" => $company->company_id, "status" => 200];
-            else return ["success" => true, "message" => "Branch Company Berhasil Dibentuk", "id" => $company->company_id, "status" => 200];
+            if($role_id === 2) return ["success" => true, "message" => "Client Company Berhasil Dibentuk", "id" => $company->id, "status" => 200];
+            else return ["success" => true, "message" => "Branch Company Berhasil Dibentuk", "id" => $company->id, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -289,7 +285,7 @@ class CompanyService
         if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
         if($company->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
         try{
-            $company->company_name = $data['company_name'];
+            $company->name = $data['company_name'];
             $company->address = $data['address'];
             $company->phone_number = $data['phone_number'];
             $company->image_logo = $data['image_logo'];
@@ -363,7 +359,7 @@ class CompanyService
             if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
             if($company->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
             $company->delete();
-            $companies = Company::where('parent_id', $company->company_id)->get();
+            $companies = Company::where('parent_id', $company->id)->get();
             foreach($companies as $temp_company)
             {
                 $temp_company->parent_id = $company->parent_id;

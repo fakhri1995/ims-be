@@ -1,9 +1,10 @@
 <?php 
 
 namespace App\Services;
-use App\Services\CheckRouteService;
+use App\User;
 use App\Group;
 use Exception;
+use App\Services\CheckRouteService;
 
 class GroupService{
     public function __construct()
@@ -11,6 +12,24 @@ class GroupService{
         $this->agent = true;
         $this->requester = false;
         $this->checkRouteService = new CheckRouteService;
+    }
+
+    public function getAssignToList($request)
+    {
+        $assignable_type = $request->get('assignable_type', 1);
+        $name = $request->get('name', null);
+        if($assignable_type){
+            $users = User::select('id','name')->whereHas('groups', function($q){
+                $q->where('groups.id', 1);
+            });
+            if($name) $users = $users->where('users.name', 'like', "%".$name."%");
+            $data = $users->limit(50)->get();
+        } else {
+            $groups = Group::select('id', 'name');
+            if($name) $groups = $groups->where('groups.name', 'like', "%".$name."%");
+            $data = $groups->limit(50)->get();
+        }
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
     }
 
     // Client Groups
@@ -48,7 +67,7 @@ class GroupService{
             $group = Group::with('users')->find($id);
             if($group === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             if($group->is_agent != $is_agent) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
-            $group_user = $group->users->pluck('user_id');
+            $group_user = $group->users->pluck('id');
             $group->makeHidden('users');
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => ["group_detail" => $group, "group_user" => $group_user], "status" => 200];
         } catch(Exception $err){

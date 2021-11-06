@@ -175,4 +175,14 @@ class TicketController extends Controller
         return response()->json($response, $response['status']);
         
     }
+
+    public function downloadTickets(Request $request)
+    {
+        return $this->ticketService->TicketsExport($request);
+    }
+
+    public function downloadTicket(Request $request)
+    {
+        return $this->ticketService->TicketExport($request);
+    }
 }

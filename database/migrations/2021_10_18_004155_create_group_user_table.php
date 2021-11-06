@@ -18,6 +18,7 @@ class CreateGroupUserTable extends Migration
             $table->unsignedBigInteger('group_id');
             $table->unsignedBigInteger('user_id');
             $table->index('group_id');
+            $table->index('user_id');
         });
     }
 

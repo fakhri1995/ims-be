@@ -682,7 +682,7 @@ class AssetService{
             $vendors = Vendor::select('id', 'name')->get();
             $status_condition = StatusConditionInventory::get();
             $status_usage = StatusUsageInventory::get();
-            $companies = Company::select('company_id AS id', 'company_name AS name')->where('role', '<>', 2)->get();
+            $companies = Company::select('id', 'name')->where('role', '<>', 2)->get();
             
             $this->companyService = new CompanyService;
             $tree_companies = $this->companyService->getCompanyTreeSelect(auth()->user()->company_id)['data'];
@@ -871,18 +871,19 @@ class AssetService{
         }
     }
 
-    public function getChangeStatusUsageDetailList($id, $route_name)
+    public function getChangeStatusUsageDetailList(Request $request, $route_name)
     {
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $id = (int)$id;
+        $id = (int)$request->get('id', null);    
+        $name = $request->get('name', null);    
         try{
             if($id < -3) return ["success" => false, "message" => "Tipe Id Tidak Tepat", "status" => 400];
             if($id === -1 || $id === -2){     
                 $role_checker = $id * -1;
                 $userService = new UserService;
-                $users = $userService->getUserList($role_checker, auth()->user()->company_id, true);
+                $users = $userService->getFullUserList($role_checker, $name);
                 return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $users, "status" => 200];
             } else if($id === -3){
                 $this->companyService = new CompanyService;
@@ -1025,7 +1026,7 @@ class AssetService{
                     $inventory[$model_inventory_column->name] = $inventory_value['value'];
                 }
             }
-            $causer_id = auth()->user()->user_id; 
+            $causer_id = auth()->user()->id; 
             $logService = new LogService;
             $properties['attributes'] = $inventory;
             $logService->createLogInventory($inventory->id, $causer_id, $properties, $notes);
@@ -1049,7 +1050,7 @@ class AssetService{
     {
         $logService = new LogService;
         $subject_id = $data['id'];
-        $causer_id = auth()->user()->user_id;
+        $causer_id = auth()->user()->id;
         $notes = $data['notes'];
         $logService->noteLogInventory($subject_id, $causer_id, $notes);
         return ["success" => true, "message" => "Notes Berhasil Ditambah", "status" => 200];
@@ -1107,7 +1108,7 @@ class AssetService{
             }
             $properties = $this->checkUpdateProperties($old_inventory, $inventory);
             if($properties){
-                $causer_id = auth()->user()->user_id; 
+                $causer_id = auth()->user()->id; 
                 $logService = new LogService;
                 $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
             }
@@ -1148,7 +1149,7 @@ class AssetService{
         $id = $data['id'];
         $replacement_id = $data['replacement_id'];
         $notes = $data['notes'];
-        $causer_id = auth()->user()->user_id;
+        $causer_id = auth()->user()->id;
         $logService = new LogService;
         try{
             $inventory = Inventory::find($id);
@@ -1297,7 +1298,7 @@ class AssetService{
         $id = $data['id'];
         $notes = $data['notes'];
         $inventory_part_id = $data['inventory_part_id'];
-        $causer_id = auth()->user()->user_id;
+        $causer_id = auth()->user()->id;
         try{
             $check_parent = $this->checkParent($inventory_part_id, $id);
             if($check_parent === false) return ["success" => false, "message" => "Id Part Tidak Termasuk dari Part yang Dimiliki Inventory Ini", "error_id" => $inventory_part_id, "status" => 400];
@@ -1374,7 +1375,7 @@ class AssetService{
         $id = $data['id'];
         $notes = $data['notes'];
         $inventory_part_ids = $data['inventory_part_ids'];
-        $causer_id = auth()->user()->user_id;
+        $causer_id = auth()->user()->id;
         try{
             if(count($inventory_part_ids)){
                 $parent_inventory = Inventory::with(['inventoryPart', 'inventoryParts'])->select('id', 'status_usage')->find($id);
@@ -1445,7 +1446,7 @@ class AssetService{
         $id = $data['id'];
         $notes = $data['notes'];
         $inventory = Inventory::with('additionalAttributes','inventoryPart')->find($id);
-        $causer_id = auth()->user()->user_id;
+        $causer_id = auth()->user()->id;
         if($inventory === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         try{
             foreach($inventory->additionalAttributes as $temp_inventory_value){
@@ -1494,7 +1495,7 @@ class AssetService{
         $id = $data['id'];
         $notes = $data['notes'];
         $status_condition = $data['status_condition'];
-        $causer_id = auth()->user()->user_id;
+        $causer_id = auth()->user()->id;
         try{
             if($status_condition < 1 || $status_condition > 3){
                 return ["success" => false, "message" => "Status Usage Tidak Tepat", "status" => 400];
@@ -1543,7 +1544,7 @@ class AssetService{
             if($inventory->modelInventory->id === 0) return ["success" => false, "message" => "Tipe Model pada Inventory Tidak Ditemukan", "status" => 400];
             if($inventory->modelInventory->asset->id === 0) return ["success" => false, "message" => "Tipe Aset pada Tipe Model pada Inventory Tidak Ditemukan", "status" => 400];
             
-            $causer_id = auth()->user()->user_id; 
+            $causer_id = auth()->user()->id; 
             $properties['old'] = ['status_usage' => $inventory->status_usage];
             $inventory->status_usage = $status_usage;
             $inventory->save();
@@ -1894,10 +1895,10 @@ class AssetService{
                             $relationship_asset->connected_detail_name = "Detail ID Kosong";
                         } else {
                             if($relationship_asset->type_id === -1 || $relationship_asset->type_id === -2){
-                                $relationship_asset->connected_detail_name = $relationship_asset->user->user_id && ($relationship_asset->user->role === $relationship_asset->type_id * -1) ? $relationship_asset->user->fullname : "User Not Found";
+                                $relationship_asset->connected_detail_name = $relationship_asset->user->id && ($relationship_asset->user->role === $relationship_asset->type_id * -1) ? $relationship_asset->user->name : "User Not Found";
                                 $relationship_asset->makeHidden('user');
                             } else if($relationship_asset->type_id === -3){
-                                $relationship_asset->connected_detail_name = $relationship_asset->company->company_id && ($relationship_asset->company->role === 2) ? $relationship_asset->company->company_name : "Company Not Found";
+                                $relationship_asset->connected_detail_name = $relationship_asset->company->id && ($relationship_asset->company->role === 2) ? $relationship_asset->company->name : "Company Not Found";
                                 $relationship_asset->makeHidden('company');
                             } else {
                                 $relationship_asset->connected_detail_name = $relationship_asset->assetConnected->name;
@@ -1922,10 +1923,10 @@ class AssetService{
                         $relationship_asset->subject_detail_name = "Detail ID Kosong";
                     } else {
                         if($relationship_asset->type_id === -1 || $relationship_asset->type_id === -2){
-                            $relationship_asset->subject_detail_name = $relationship_asset->user->user_id && ($relationship_asset->user->role === $relationship_asset->type_id * -1) ? $relationship_asset->user->fullname : "User Not Found";
+                            $relationship_asset->subject_detail_name = $relationship_asset->user->id && ($relationship_asset->user->role === $relationship_asset->type_id * -1) ? $relationship_asset->user->name : "User Not Found";
                             $relationship_asset->makeHidden('user');
                         } else if($relationship_asset->type_id === -3){
-                            $relationship_asset->subject_detail_name = $relationship_asset->company->company_id && ($relationship_asset->company->role === 2) ? $relationship_asset->company->company_name : "Company Not Found";
+                            $relationship_asset->subject_detail_name = $relationship_asset->company->id && ($relationship_asset->company->role === 2) ? $relationship_asset->company->name : "Company Not Found";
                             $relationship_asset->makeHidden('company');
                         } else {
                             $relationship_asset->subject_detail_name = $relationship_asset->assetConnected->name;
@@ -1972,17 +1973,6 @@ class AssetService{
                 $role_checker = $type * -1 ;       
                 $userService = new UserService;
                 $users = $userService->getUserListRoles($role_checker);
-                $roles = Role::select('id', 'name')->get();
-                foreach($users as $user){
-                    $user_role_ids = [];
-                    if(count($user->featureRoles)){
-                        foreach($user->featureRoles as $feature_role){
-                            $user_role_ids[] = $feature_role->role_id;
-                        }
-                    }
-                    $user->roles = $roles->whereIn('id', $user_role_ids)->values();
-                }
-                $users->makeHidden(['featureRoles']);
                 return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $users, "status" => 200];
             } else if($type === -3){
                 $this->companyService = new CompanyService;
@@ -2112,10 +2102,10 @@ class AssetService{
                             $relationship_inventory->connected_detail_name = "Detail ID Kosong";
                         } else {
                             if($relationship_inventory->relationshipAsset->type_id === -1 || $relationship_inventory->relationshipAsset->type_id === -2){
-                                $relationship_inventory->connected_detail_name = $relationship_inventory->user->user_id && ($relationship_inventory->user->role === $relationship_inventory->relationshipAsset->type_id * -1) ? $relationship_inventory->user->fullname : "User Not Found";
+                                $relationship_inventory->connected_detail_name = $relationship_inventory->user->id && ($relationship_inventory->user->role === $relationship_inventory->relationshipAsset->type_id * -1) ? $relationship_inventory->user->name : "User Not Found";
                                 $relationship_inventory->makeHidden('user');
                             } else if($relationship_inventory->relationshipAsset->type_id === -3){
-                                $relationship_inventory->connected_detail_name = $relationship_inventory->company->company_id && ($relationship_inventory->company->role === 2) ? $relationship_inventory->company->company_name : "Company Not Found";
+                                $relationship_inventory->connected_detail_name = $relationship_inventory->company->id && ($relationship_inventory->company->role === 2) ? $relationship_inventory->company->name : "Company Not Found";
                                 $relationship_inventory->makeHidden('company');
                             } else {
                                 $relationship_inventory->connected_detail_name = $relationship_inventory->inventoryConnected->inventory_name;
@@ -2141,10 +2131,10 @@ class AssetService{
                         $relationship_inventory->subject_detail_name = "Detail ID Kosong";
                     } else {
                         if($relationship_inventory->relationshipAsset->type_id === -1 || $relationship_inventory->relationshipAsset->type_id === -2){
-                            $relationship_inventory->subject_detail_name = $relationship_inventory->user->user_id && ($relationship_inventory->user->role === $relationship_inventory->relationshipAsset->type_id * -1) ? $relationship_inventory->user->fullname : "User Not Found";
+                            $relationship_inventory->subject_detail_name = $relationship_inventory->user->id && ($relationship_inventory->user->role === $relationship_inventory->relationshipAsset->type_id * -1) ? $relationship_inventory->user->name : "User Not Found";
                             $relationship_inventory->makeHidden('user');
                         } else if($relationship_inventory->relationshipAsset->type_id === -3){
-                            $relationship_inventory->subject_detail_name = $relationship_inventory->company->company_id && ($relationship_inventory->company->role === 2) ? $relationship_inventory->company->company_name : "Company Not Found";
+                            $relationship_inventory->subject_detail_name = $relationship_inventory->company->id && ($relationship_inventory->company->role === 2) ? $relationship_inventory->company->name : "Company Not Found";
                             $relationship_inventory->makeHidden('company');
                         } else {
                             $relationship_inventory->subject_detail_name = $relationship_inventory->inventoryConnected->inventory_name;
@@ -2180,10 +2170,10 @@ class AssetService{
                 $check_id = $relationship_asset->connected_id;
                 if($check_id !== null){
                     if($relationship_asset->type_id === -1 || $relationship_asset->type_id === -2){
-                        $relationship_asset->connected_detail_name = $relationship_asset->user->user_id && ($relationship_asset->user->role === $relationship_asset->type_id * -1) ? $relationship_asset->user->fullname : "User Not Found";
+                        $relationship_asset->connected_detail_name = $relationship_asset->user->id && ($relationship_asset->user->role === $relationship_asset->type_id * -1) ? $relationship_asset->user->name : "User Not Found";
                         $relationship_asset->makeHidden('user');
                     } else if($relationship_asset->type_id === -3){
-                        $relationship_asset->connected_detail_name = $relationship_asset->company->company_id && ($relationship_asset->company->role === 2) ? $relationship_asset->company->company_name : "Company Not Found";
+                        $relationship_asset->connected_detail_name = $relationship_asset->company->id && ($relationship_asset->company->role === 2) ? $relationship_asset->company->name : "Company Not Found";
                         $relationship_asset->makeHidden('company');
                     } else {
                         $relationship_asset->connected_detail_name = $relationship_asset->assetConnected->name;
@@ -2212,17 +2202,6 @@ class AssetService{
                 $role_checker = $relationship_asset->type_id * -1;       
                 $userService = new UserService;
                 $users = $userService->getUserListRoles($role_checker);
-                $roles = Role::select('id', 'name')->get();
-                foreach($users as $user){
-                    $user_role_ids = [];
-                    if(count($user->featureRoles)){
-                        foreach($user->featureRoles as $feature_role){
-                            $user_role_ids[] = $feature_role->role_id;
-                        }
-                    }
-                    $user->roles = $roles->whereIn('id', $user_role_ids)->values();
-                }
-                $users->makeHidden(['featureRoles']);
                 return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $users, "status" => 200];
             } else if($relationship_asset->type_id === -3){
                 $this->companyService = new CompanyService;
@@ -2271,7 +2250,7 @@ class AssetService{
                 $relationship_inventory->connected_id = $connected_id;
                 $relationship_inventory->save();
 
-                $causer_id = auth()->user()->user_id; 
+                $causer_id = auth()->user()->id; 
                 $logService = new LogService;
                 $properties['attributes'] = $relationship_inventory;
                 $logService->createLogInventoryRelationship($subject_id, $causer_id, $properties, $notes);
@@ -2308,7 +2287,7 @@ class AssetService{
         // $relationship_asset = RelationshipAsset::find($relationship_asset_id);
         // if($relationship_asset === null) return ["success" => false, "message" => "Relationship Asset Id Tidak Ditemukan", "status" => 400];
         
-        $causer_id = auth()->user()->user_id; 
+        $causer_id = auth()->user()->id; 
         $old_relationship_inventory = [];
         foreach($relationship_inventory->getAttributes() as $key => $value) $old_relationship_inventory[$key] = $value;
         
@@ -2391,7 +2370,7 @@ class AssetService{
         if($relationship_inventory === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 200];
         try{
             $relationship_inventory->delete();
-            $causer_id = auth()->user()->user_id; 
+            $causer_id = auth()->user()->id; 
             $properties['old'] = $relationship_inventory;
             $logService = new LogService;
             $logService->deleteLogInventoryRelationship($relationship_inventory->subject_id, $causer_id, $properties, $notes);

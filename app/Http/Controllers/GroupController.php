@@ -16,6 +16,13 @@ class GroupController extends Controller
     {
         $this->groupService = new GroupService;
     }
+
+    public function getAssignToList(Request $request)
+    {
+        // $route_name = "AGENT_GROUPS_GET";
+        $response = $this->groupService->getAssignToList($request);
+        return response()->json($response, $response['status']);
+    }
     
     public function getAgentGroups(Request $request)
     {

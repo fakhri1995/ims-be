@@ -14,10 +14,10 @@ class CreateUsersTable extends Migration
     public function up()
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->bigIncrements('user_id');
+            $table->id();
             $table->string("email")->unique();
             $table->string("password");
-            $table->string("fullname");
+            $table->string("name");
             $table->string("profile_image")->nullable();
             $table->string("phone_number");
             $table->unsignedBigInteger("company_id");
@@ -25,6 +25,7 @@ class CreateUsersTable extends Migration
             $table->boolean("is_enabled");
             $table->dateTime('created_time');
             $table->softDeletes();
+            $table->index('company_id');
         });
     }
 

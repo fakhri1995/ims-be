@@ -17,7 +17,9 @@ use Illuminate\Support\Carbon;
 use App\Services\CompanyService;
 use App\Services\GeneralService;
 use App\Services\CheckRouteService;
-// use Illuminate\Support\Facades\Storage;
+use App\Exports\TicketsExport;
+use Excel;
+use PDF;
 
 class TicketService
 {
@@ -35,7 +37,7 @@ class TicketService
 
         $companyService = new CompanyService;
         $companies = $companyService->getCompanyTreeSelect(1, true);
-        $users = User::select('user_id', 'fullname','company_id')->with('company:company_id,company_name')->get();
+        $users = User::select('id', 'name','company_id')->with('company:id,name')->get();
 
         $status_ticket = TicketStatus::all();
 
@@ -50,7 +52,7 @@ class TicketService
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
-        $users = User::select('user_id', 'fullname', 'company_id')->where('company_id', $company_id)->get();
+        $users = User::select('id', 'name', 'company_id')->where('company_id', $company_id)->get();
         
         $companyService = new CompanyService;
         $companies = $companyService->getLocations();
@@ -110,10 +112,14 @@ class TicketService
                 $closed_tickets_count = $statuses[4];
                 $total_tickets = $open_tickets_count + $canceled_tickets_count + $closed_tickets_count;
                 
-                $tickets->getCollection()->transform(function ($value) {
-                    if($value->status->id < 4) $value->status->name = "Open";
-                    return $value;
-                });
+                foreach($tickets as $ticket)
+                {
+                    if($ticket->status->id < 4) $ticket->status->name = "Open";
+                    if($ticket->ticketable->id !== 0 || $ticket->ticketable->location->id !== 0){
+                        $ticket->ticketable->location->full_name = $ticket->ticketable->location->topParent ? $ticket->ticketable->location->topParent->name.' - '.$ticket->ticketable->location->name : $ticket->ticketable->location->name;
+                    }
+                    $ticket->ticketable->location->makeHidden('topParent');
+                }
                 
                 $data = ["total_tickets" => $total_tickets, "open_tickets_count" => $open_tickets_count, "canceled_tickets_count" => $canceled_tickets_count, "closed_tickets_count" => $closed_tickets_count, "tickets" => $tickets];
             } else {
@@ -137,6 +143,15 @@ class TicketService
                     );
                 }
                 $tickets = $tickets->orderBy('status_id', 'asc')->orderBy('raised_at', 'desc')->paginate($rows);
+                
+                foreach($tickets as $ticket)
+                {
+                    if($ticket->ticketable->id !== 0 || $ticket->ticketable->location->id !== 0){
+                        $ticket->ticketable->location->full_name = $ticket->ticketable->location->topParent ? $ticket->ticketable->location->topParent->name.' - '.$ticket->ticketable->location->name : $ticket->ticketable->location->name;
+                    }
+                    $ticket->ticketable->location->makeHidden('topParent');
+                }
+
                 $statuses = TicketStatus::withCount('tickets')->pluck('tickets_count');
                 $open_tickets_count = $statuses[0];
                 $on_progress_tickets_count = $statuses[1];
@@ -223,7 +238,7 @@ class TicketService
     {
         try{
             $id = $request->get('id');
-            $ticket = Ticket::with(['type','status', 'requester', 'ticketable.location','assignable'])->find($id);
+            $ticket = Ticket::with(['type','status', 'requester.company', 'ticketable.location','assignable'])->find($id);
             $ticket->original_raised_at = $ticket->getRawOriginal('raised_at');
             if(!$ticket->closed_at) $ticket->resolved_time = "-";
             else $ticket->resolved_time = Carbon::parse($ticket->original_raised_at)->diffForHumans($ticket->closed_at, true);
@@ -292,7 +307,7 @@ class TicketService
                 $ticketable_id = $incident->id;
             }
             
-            $causer_id = auth()->user()->user_id;
+            $causer_id = auth()->user()->id;
             $generalService = new GeneralService;
             $current_timestamp = $generalService->getTimeNow();
             
@@ -327,7 +342,7 @@ class TicketService
             $ticket = Ticket::find($id);
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
                         
-            $causer_id = auth()->user()->user_id;
+            $causer_id = auth()->user()->id;
             $logService = new LogService;
 
             if($ticket->ticketable_type === 'App\Incident'){
@@ -346,7 +361,7 @@ class TicketService
                 $incident->description = $request->get('description');
                 $incident->save();
                 if($old_incident_time !== $incident->incident_time){
-                    if($request->get('incident_time') === null) $logService->updateIncidentLogTicket($id, $ticket->raised_at);
+                    if($request->get('incident_time') === null) $logService->updateIncidentLogTicket($id, $ticket->getRawOriginal('raised_at'));
                     else $logService->updateIncidentLogTicket($id, $incident->incident_time);
                 } 
             }
@@ -383,7 +398,7 @@ class TicketService
             $incident->inventory_id = $inventory_id;
             $incident->save();
 
-            $causer_id = auth()->user()->user_id;
+            $causer_id = auth()->user()->id;
             $logService = new LogService;
             $logService->setItemLogTicket($id, $causer_id, $old_inventory_id, $inventory_id);
             return ["success" => true, "message" => "Inventory Berhasil Ditambahkan pada Ticket", "status" => 200];
@@ -450,7 +465,7 @@ class TicketService
             }
 
             $ticket->save();
-            $causer_id = auth()->user()->user_id;
+            $causer_id = auth()->user()->id;
             $logService = new LogService;
             if($old_status !== $ticket->status_id) $logService->updateStatusLogTicket($ticket->id, $causer_id, $ticket->status_id, $notes);
 
@@ -478,7 +493,7 @@ class TicketService
             if($ticket->status === 5) return ["success" => false, "message" => "Ticket Dalam Status Closed", "status" => 400];
             $ticket->status_id = 4;
             $ticket->save();
-            $causer_id = auth()->user()->user_id;
+            $causer_id = auth()->user()->id;
             $logService = new LogService;
             $logService->updateStatusLogTicket($ticket->id, $causer_id, $ticket->status_id, $notes);
             
@@ -521,7 +536,7 @@ class TicketService
 
             if($old_assignable_id !== $ticket->assignable_id || $old_assignable_type !== $ticket->assignable_type){
                 $logService = new LogService;
-                $causer_id = auth()->user()->user_id;
+                $causer_id = auth()->user()->id;
                 $logService->assignLogTicket($ticket->id, $causer_id, $ticket->assignable_type, $ticket->assignable_id);
             }
             
@@ -543,7 +558,7 @@ class TicketService
             $ticket = Ticket::find($id);
             if($id === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
             $logService = new LogService;
-            $causer_id = auth()->user()->user_id;
+            $causer_id = auth()->user()->id;
             $logService->addNoteLogTicket($id, $causer_id, $notes);
             
             return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "status" => 200];
@@ -552,4 +567,25 @@ class TicketService
         }
     }
     
+    public function TicketsExport()
+    {
+        return Excel::download(new TicketsExport, 'tickets.xlsx');
+    }
+
+    public function TicketExport()
+    {
+        $ticket = Ticket::find(1);
+        $visible = [];
+        if(1)$visible[] = 'assignable_id';
+        if(1)$visible[] = 'ticketable_id';
+        if(1)$visible[] = 'assignable_type';
+        if(1)$visible[] = 'ticketable_type';
+        if(1)$visible[] = 'requester_id';
+        if(1)$visible[] = 'status_id';
+        $ticket->makeVisible($visible);
+        $data = ['judul' => 'Ticket Mitramas Infosys Global',
+        'ticket' => $ticket];
+        $pdf = PDF::loadView('pdf.new_ticket', $data);
+        return $pdf->download('ticket.pdf');
+    }
 }

@@ -76,8 +76,15 @@ class LoginService
 
     public function detailProfile(){
         auth()->user()->company;
-        auth()->user()->company->makeHidden('parent_id','singkatan','tanggal_pkp','penanggung_jawab','npwp','fax','email','website','deleted_at');
-        auth()->user()->makeHidden('deleted_at', 'is_enabled', 'company_id');
+        auth()->user()->company->makeHidden(['parent_id','singkatan','tanggal_pkp','penanggung_jawab','npwp','fax','email','website','deleted_at']);
+        auth()->user()->makeHidden(['deleted_at', 'is_enabled', 'company_id']);
+        $list_feature = [];
+        foreach(auth()->user()->roles as $role)
+        {
+            foreach($role->features as $feature) $list_feature[] = $feature->id;
+            auth()->user()->roles->makeHidden(['features', 'description', 'deleted_at']);
+        }
+        auth()->user()->features = array_values(array_unique($list_feature, SORT_NUMERIC));
         return [
                 "success" => true,
                 "data" => auth()->user(),

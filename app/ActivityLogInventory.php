@@ -12,10 +12,10 @@ class ActivityLogInventory extends Model
 
     public function causer()
     {
-        return $this->belongsTo(User::class, 'causer_id', 'user_id')->withDefault([
+        return $this->belongsTo(User::class, 'causer_id')->withDefault([
             'id' => 0,
             'name' => 'User Tidak Ditemukan'
-        ])->select('user_id', 'fullname');
+        ])->select('id', 'name');
     }
 
     public function inventory()

@@ -1,13 +1,12 @@
 <?php
 
 namespace App\Services;
+use App\User;
+use Exception;
+use App\Services\CompanyService;
 use App\Services\GeneralService;
 use App\Services\CheckRouteService;
-use App\Services\CompanyService;
 use Illuminate\Support\Facades\Hash;
-use App\User;
-use App\UserRolePivot;
-use Exception;
 
 class UserService
 {
@@ -19,21 +18,27 @@ class UserService
     }
 
     public function getUserListRoles($role){
-        $users = User::with('featureRoles')->select('user_id','fullname', 'company_id', 'role')->where('role', $role)->get();
+        $users = User::with('roles:id,name')->select('id', 'name', 'company_id', 'role')->where('role', $role)->get();
         
         return $users;
     }
 
     public function getUserDetail($account_id, $role_id){
         try{
-            $user = User::find($account_id);
+            $user = User::with(['roles:id,name', 'company'])->find($account_id);
             if($user === null) return ["success" => false, "message" => "Id Akun Tidak Ditemukan", "status" => 400];
             if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 401];
             else {
-                $user->company;
                 $user->company->makeHidden('phone_number','address','role','is_enabled','parent_id','singkatan','tanggal_pkp','penanggung_jawab','npwp','fax','email','website','deleted_at');
                 $user->makeHidden('deleted_at');
-                $user->feature_roles = UserRolePivot::where('user_id', $user->user_id)->pluck('role_id')->toArray();
+                $list_feature = [];
+                foreach($user->roles as $role)
+                {
+                    foreach($role->features as $feature) $list_feature[] = $feature->id;
+                    $user->roles->makeHidden('features');
+                }
+                $user->features = array_values(array_unique($list_feature, SORT_NUMERIC));
+                
                 return [
                     "success" => true,
                     "data" => $user,
@@ -59,46 +64,64 @@ class UserService
         return $this->getUserDetail($account_id, $this->requester_role_id);
     }
 
-    public function getUserList($role_id, $company_id, $full_list = false){
-        // select('user_id AS id','fullname AS name')
-        if($full_list){
-            $users = User::select('user_id','fullname', 'users.company_id','companies.company_name', 'users.role')->leftJoin('companies', function($join) {
-                $join->on('users.company_id', '=', 'companies.company_id');
-            });
-            if($role_id === 0) $users = $users->get();
-            else $users = $users->where('users.role', $role_id)->get();
-            if(!count($users)) return ["success" => true, "message" => "User masih kosong", "data" => $users, "status" => 200];
-            else return ["success" => true, "message" => "Users Berhasil Diambil", "data" => $users, "status" => 200 ];
-        }
-        $company_service = new CompanyService;
-        $company_list = $company_service->checkCompanyList($company_id);
-        $users = User::select('users.user_id','users.fullname', 'users.email','users.role','users.company_id','users.profile_image','users.phone_number','users.created_time','users.is_enabled', 'companies.company_name', 'companies.parent_id')->where('users.role', $role_id)->whereIn('users.company_id', $company_list)->leftJoin('companies', function($join) {
-            $join->on('users.company_id', '=', 'companies.company_id');
-        })->get();
-        if(!count($users)) return ["success" => true, "message" => "User masih kosong", "data" => $users, "status" => 200];
-        $companies = $company_service->getCompanyList(true);
-        $companies = $companies->toArray();
+    public function getFullUserList($role_id = 0, $name = null)
+    {
+        $users = User::select('id','name', 'company_id', 'role')->with(['company:id,parent_id,name,top_parent_id', 'company.topParent']);
+        if($role_id !== 0) $users = $users->where('users.role', $role_id);
+        if($name) $users = $users->where('name', 'like', "%".$name."%");
+        $users = $users->limit(50)->get();
         foreach($users as $user){
-            if($user->parent_id !== 1 && $user->parent_id !== null){
-                $parent_company_name = $company_service->getTopCompany($companies, $user->parent_id);
-                $user->company_name = $parent_company_name.' / '.$user->company_name;
-            } 
+            $user->company_name = $user->company->topParent ? $user->company->topParent->name. ' - ' . $user->company->name : $user->company->name;
+            $user->makeHidden(['role', 'company', 'company_id']);
+        }
+        if(!count($users)) return ["success" => true, "message" => "User masih kosong", "data" => $users, "status" => 200];
+        else return ["success" => true, "message" => "Users Berhasil Diambil", "data" => $users, "status" => 200 ];
+    }
+
+    public function getUserList($request, $role_id){
+        $company_id = auth()->user()->company_id;
+        $users = User::with(['company:id,parent_id,name,top_parent_id', 'company.topParent'])
+        ->select('id','name', 'email','role','company_id','profile_image','phone_number','created_time','is_enabled')
+        ->where('users.role', $role_id);
+        if($company_id !== 1){
+            $company_service = new CompanyService;
+            $company_list = $company_service->checkCompanyList($company_id);
+            $users = $users->whereIn('users.company_id', $company_list);
+        }
+        
+        $name = $request->get('name', null);
+        $company_id = $request->get('company_id', null);
+        $is_enabled = $request->get('is_enabled', null);
+        $rows = $request->get('rows', 10);
+
+        if($company_id) $users = $users->where('company_id', $company_id);
+        if($is_enabled !== null) $users = $users->where('is_enabled', $is_enabled);
+        if($name) $users = $users->where('name', 'like', "%".$name."%");
+
+        if($rows > 100) $rows = 100;
+        if($rows < 1) $rows = 10;
+
+        $users = $users->paginate($rows);
+        if(!count($users)) return ["success" => true, "message" => "User masih kosong", "data" => $users, "status" => 200];
+        foreach($users as $user){
+            $user->company_name = $user->company->topParent ? $user->company->topParent->name. ' - ' . $user->company->name : $user->company->name;
+            $user->makeHidden(['company']);
         }
         return ["success" => true, "message" => "Users Berhasil Diambil", "data" => $users, "status" => 200 ];
     }
 
-    public function getAgentList($route_name){
+    public function getAgentList($request, $route_name){
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
-        return $this->getUserList($this->agent_role_id, auth()->user()->company_id);
+        return $this->getUserList($request, $this->agent_role_id);
     }
 
-    public function getRequesterList($route_name){
+    public function getRequesterList($request, $route_name){
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
-        return $this->getUserList($this->requester_role_id, auth()->user()->company_id);
+        return $this->getUserList($request, $this->requester_role_id);
     }
 
     public function addUserMember($data, $role_id){
@@ -108,7 +131,7 @@ class UserService
         $generalService = new GeneralService;
         try{
             $user = new User;
-            $user->fullname = $data['fullname'];
+            $user->name = $data['fullname'];
             $user->company_id = $data['company_id'];
             $user->email = $data['email'];
             $user->password = Hash::make($data['password']);
@@ -119,13 +142,13 @@ class UserService
             $user->created_time = $generalService->getTimeNow();
             $user->save();
             $data_request = [
-                "id" => $user->user_id,
+                "id" => $user->id,
                 "role_ids" => $data['role_ids']
             ];
 
             $set_role = $this->updateRoleUser($data_request, $role_id);
-            if($role_id === 1) return ["success" => true, "message" => "Akun Agent berhasil ditambah", "id" => $user->user_id, "status" => 200];
-            else return ["success" => true, "message" => "Akun Requester berhasil ditambah", "id" => $user->user_id, "status" => 200];
+            if($role_id === 1) return ["success" => true, "message" => "Akun Agent berhasil ditambah", "id" => $user->id, "status" => 200];
+            else return ["success" => true, "message" => "Akun Requester berhasil ditambah", "id" => $user->id, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -150,7 +173,7 @@ class UserService
         if($user === null) return ["success" => false, "message" => "Id Pengguna Tidak Ditemukan", "status" => 400];
         if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 401];
         try{
-            $user->fullname = $data['fullname'];
+            $user->name = $data['fullname'];
             $user->phone_number = $data['phone_number'];
             $user->save();
             $data_request = [
@@ -243,31 +266,7 @@ class UserService
         if($user === null) return ["success" => false, "message" => "Id Pengguna Tidak Ditemukan", "status" => 400];
         if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 401];
         try{
-            $user_role_ids = UserRolePivot::where('user_id', $id)->pluck('role_id')->toArray();
-            if(!count($user_role_ids)) {
-                foreach($role_ids as $role_id){
-                    $pivot = new UserRolePivot;
-                    $pivot->user_id = $id;
-                    $pivot->role_id = $role_id;
-                    $pivot->save();
-                }
-            } else {
-                $difference_array_new = array_diff($role_ids, $user_role_ids);
-                $difference_array_delete = array_diff($user_role_ids, $role_ids);
-                $difference_array_new = array_unique($difference_array_new);
-                $difference_array_delete = array_unique($difference_array_delete);
-                foreach($difference_array_new as $role_id){
-                    $pivot = new UserRolePivot;
-                    $pivot->user_id = $id;
-                    $pivot->role_id = $role_id;
-                    $pivot->save();
-                }
-                $user = UserRolePivot::where('user_id', $id)->get();
-                foreach($difference_array_delete as $role_id){
-                    $role_user = $user->where('role_id', $role_id)->first();
-                    $role_user->delete();
-                }
-            }
+            $user->roles()->sync($role_ids);
             return ["success" => true, "message" => "Berhasil Merubah Fitur Akun", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -294,8 +293,7 @@ class UserService
             if($user === null) return ["success" => false, "message" => "Id Pengguna Tidak Ditemukan", "status" => 400];
             if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 401];
             $user->delete();
-            $user_roles = UserRolePivot::where('user_id', $id)->get();
-            foreach($user_roles as $user_role) $user_role->delete();
+            $user->roles()->detach();
             return ["success" => true, "message" => "User Berhasil Dihapus", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];

@@ -13,14 +13,13 @@ use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 class User extends Model implements AuthenticatableContract, AuthorizableContract
 {
     use HasApiTokens, Authenticatable, Authorizable, SoftDeletes;
-    protected $primaryKey = 'user_id';
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'email', 'password', 'fullname', 'image_profile', 'phone_number', 'company_id', 'role', 'is_active', 'created_time'
+        'email', 'password', 'name', 'image_profile', 'phone_number', 'company_id', 'role', 'is_active', 'created_time'
     ];
 
     /**
@@ -35,10 +34,16 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     public $timestamps = false;
 
     public function company(){
-        return $this->hasOne(Company::class, 'company_id', 'company_id');
+        return $this->belongsTo(Company::class);
     }
 
-    public function featureRoles(){
-        return $this->hasMany(UserRolePivot::class, 'user_id', 'user_id')->select('user_id', 'role_id');
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'user_role_pivots');
+    }
+
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'group_user')->select('groups.id','groups.name');
     }
 }

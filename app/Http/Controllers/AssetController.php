@@ -208,8 +208,7 @@ class AssetController extends Controller
     {
         $route_name = "STATUS_USAGE_UPDATE";
 
-        $id = $request->get('id', null);    
-        $response = $this->assetService->getChangeStatusUsageDetailList($id, $route_name);
+        $response = $this->assetService->getChangeStatusUsageDetailList($request, $route_name);
         return response()->json($response, $response['status']);
     }
 

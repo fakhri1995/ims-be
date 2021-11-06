@@ -88,7 +88,7 @@ class LogService
             $inventory_pivot_logs = ActivityLogInventoryPivot::where('subject_id', $id)->get();
             foreach($inventory_pivot_logs as $inventory_pivot_log){
                 $properties = $inventory_pivot_log->properties;
-                $causer_name = $inventory_pivot_log->causer->fullname;
+                $causer_name = $inventory_pivot_log->causer->name;
                 $temp = (object) [
                     'date' => $inventory_pivot_log->created_at,
                     'description' => $inventory_pivot_log->log_name.' Inventory Pivot',
@@ -102,7 +102,7 @@ class LogService
             $inventory_logs = ActivityLogInventory::where('subject_id', $id)->get();
             foreach($inventory_logs as $inventory_log){
                 if($inventory_log->log_name === 'Notes'){
-                    $causer_name = $inventory_log->causer->fullname;
+                    $causer_name = $inventory_log->causer->name;
                     $temp = (object) [
                         'date' => $inventory_log->created_at,
                         'description' => $inventory_log->log_name.' Inventory',
@@ -151,7 +151,7 @@ class LogService
                     if($location) $properties->old->location_name = $location->name;
                     else $properties->old->location_name = "Location Tidak Ditemukan";
                 }
-                $causer_name = $inventory_log->causer->fullname;
+                $causer_name = $inventory_log->causer->name;
                 $temp = (object) [
                     'date' => $inventory_log->created_at,
                     'description' => $inventory_log->log_name.' Inventory',
@@ -165,7 +165,7 @@ class LogService
             $inventory_relationship_logs = ActivityLogInventoryRelationship::where('subject_id', $id)->get();
             foreach($inventory_relationship_logs as $inventory_relationship_log){
                 $properties = $inventory_relationship_log->properties;
-                $causer_name = $inventory_relationship_log->causer->fullname;
+                $causer_name = $inventory_relationship_log->causer->name;
 
                 if(isset($properties->attributes->relationship_asset_id)){
                     $relationship_asset = RelationshipAsset::with('relationship')->withTrashed()->select('id','is_inverse','relationship_id')->find($properties->attributes->relationship_asset_id);
@@ -207,7 +207,7 @@ class LogService
         $inventory_relationship_logs = ActivityLogInventoryRelationship::where('subject_id', $id)->get();
         foreach($inventory_relationship_logs as $inventory_relationship_log){
             $properties = $inventory_relationship_log->properties;
-            $causer_name = $inventory_relationship_log->causer->fullname;
+            $causer_name = $inventory_relationship_log->causer->name;
 
             if(isset($properties->attributes->relationship_asset_id)){
                 $relationship_asset = $relationship_assets->find($properties->attributes->relationship_asset_id);
@@ -519,7 +519,7 @@ class LogService
         if($assignable_type === 'App\User'){
             $user = User::find($assignable_id);
             if(!$user) $name = "User Tidak Ditemukan";
-            else $name = $user->fullname;
+            else $name = $user->name;
         } else {
             $group = Group::find($assignable_id);
             if(!$group) $name = "Group Tidak Ditemukan";

@@ -6,7 +6,6 @@ use App\AccessFeature;
 use App\Module;
 use App\Role;
 use App\RoleFeaturePivot;
-use App\UserRolePivot;
 use App\User;
 use Exception;
 
@@ -201,27 +200,21 @@ class AccessService
         if($access["success"] === false) return $access;
         
         try{
-            $role_user_ids = UserRolePivot::where('role_id', $role_id)->pluck('user_id')->toArray();
-            $role_feature_ids = RoleFeaturePivot::where('role_id', $role_id)->pluck('feature_id')->toArray();
-            $features = AccessFeature::select('id','name', 'description')->get();
+            $role = Role::find($role_id);
+            if(!$role) return ["success" => false, "message" => "Id Role Tidak Ditemukan", "status" => 400];
+            $role_user_ids = $role->users->pluck('id')->toArray();
+            $role_feature = $role->features;
             $data_module = Module::get();
             $list_feature = [];
-            foreach($role_feature_ids as $feature_id){
-                foreach($features as $feature){
-                    if($feature->id === $feature_id){
-                        $list_module = [];
-                        foreach($data_module as $module){
-                            if(in_array($feature_id, $module->features)) $list_module[] = $module->name;
-                        }
-                        $feature['list_module'] = $list_module;
-                        $list_feature[] = $feature;
-                        break;
-                    }
+            foreach($role_feature as $feature){
+                $list_module = [];
+                foreach($data_module as $module){
+                    if(in_array($feature->id, $module->features)) $list_module[] = $module->name;
                 }
+                $feature->list_module = $list_module;
             }
-            $list_user = [];
-            $users = User::select('fullname AS name', 'is_enabled AS status')->whereIn('user_id', $role_user_ids)->get();
-            $data = ["users" => $users, "features" => $list_feature];
+            $users = User::select('name', 'is_enabled AS status')->whereIn('id', $role_user_ids)->get();
+            $data = ["users" => $users, "features" => $role_feature];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];  
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -234,11 +227,8 @@ class AccessService
         if($access["success"] === false) return $access;
         
         try{
-            $roles = Role::all();
+            $roles = Role::withCount('users')->get();
             if(!count($roles)) return ["success" => true, "message" => "Roles masih kosong", "data" => $roles, "status" => 200];
-            foreach($roles as $role){
-                $role->member = UserRolePivot::where('role_id', $role->id)->count();
-            }
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $roles, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];

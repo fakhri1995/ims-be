@@ -34,7 +34,7 @@ class UserController extends Controller
     {
         $route_name = "AGENTS_GET";
         
-        $response = $this->userService->getAgentList($route_name);
+        $response = $this->userService->getAgentList($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -135,7 +135,7 @@ class UserController extends Controller
     {
         $route_name = "REQUESTERS_GET";
         
-        $response = $this->userService->getRequesterList($route_name);
+        $response = $this->userService->getRequesterList($request, $route_name);
         return response()->json($response, $response['status']);
     }
 

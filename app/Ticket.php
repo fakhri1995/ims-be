@@ -31,8 +31,8 @@ class Ticket extends Model
             'id' => 0,
             'location_id' => 0,
             'location' => (object)[
-                'company_id' => 0,
-                'company_name' => 'Perusahaan Tidak Ditemukan'
+                'id' => 0,
+                'name' => 'Perusahaan Tidak Ditemukan'
             ]
         ]);
     }
@@ -41,14 +41,14 @@ class Ticket extends Model
         return $this->morphTo()->withDefault([
             'id' => 0,
             'name' => 'Penugasan Tidak Ditemukan'
-        ]);
+        ])->select('id', 'name');
     }
 
     public function requester()
     {
-        return $this->belongsTo(User::class, 'requester_id', 'user_id')->withDefault([
-            'user_id' => 0,
-            'fullname' => 'User Tidak Ditemukan'
-        ])->select('user_id', 'fullname','company_id');
+        return $this->belongsTo(User::class, 'requester_id')->withDefault([
+            'id' => 0,
+            'name' => 'User Tidak Ditemukan'
+        ])->select('id', 'name','company_id');
     }
 }

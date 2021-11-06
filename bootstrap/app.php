@@ -65,6 +65,7 @@ $app->configure('cors');
 $app->configure('auth');
 $app->configure('service');
 $app->configure('activitylog');
+$app->configure('dompdf');
 
 /*
 |--------------------------------------------------------------------------
@@ -104,6 +105,8 @@ $app->register(Flipbox\LumenGenerator\LumenGeneratorServiceProvider::class);
 $app->register(Illuminate\Filesystem\FilesystemServiceProvider::class);
 $app->register(Laravel\Passport\PassportServiceProvider::class);
 $app->register(Dusterio\LumenPassport\PassportServiceProvider::class);
+$app->register(Maatwebsite\Excel\ExcelServiceProvider::class);
+$app->register(Barryvdh\DomPDF\ServiceProvider::class);
 
 /*
 |--------------------------------------------------------------------------
@@ -116,6 +119,8 @@ $app->register(Dusterio\LumenPassport\PassportServiceProvider::class);
 |
 */
 
+class_alias('Maatwebsite\Excel\Facades\Excel', 'Excel');
+class_alias('Barryvdh\DomPDF\Facade', 'PDF');
 
 \Dusterio\LumenPassport\LumenPassport::routes($app, ['prefix' => 'v1/oauth']);
 

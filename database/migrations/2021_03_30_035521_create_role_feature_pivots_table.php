@@ -17,7 +17,8 @@ class CreateRoleFeaturePivotsTable extends Migration
             $table->id();
             $table->unsignedBigInteger('role_id');
             $table->unsignedBigInteger('feature_id');
-            $table->softDeletes();
+            $table->index('role_id');
+            $table->index('feature_id');
         });
     }
 

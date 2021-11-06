@@ -26,6 +26,7 @@ class CreateTicketsTable extends Migration
             $table->index('requester_id');
             $table->index('ticketable_id');
             $table->index('raised_at');
+            $table->index('assignable_id');
         });
     }
 
