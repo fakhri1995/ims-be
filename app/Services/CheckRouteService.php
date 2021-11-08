@@ -2,7 +2,6 @@
 
 namespace App\Services;
 use App\AccessFeature;
-use App\RoleFeaturePivot;
 use App\Role;
 
 class CheckRouteService

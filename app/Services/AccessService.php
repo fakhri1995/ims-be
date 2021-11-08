@@ -5,7 +5,6 @@ use App\Services\CheckRouteService;
 use App\AccessFeature;
 use App\Module;
 use App\Role;
-use App\RoleFeaturePivot;
 use App\User;
 use Exception;
 
@@ -241,23 +240,9 @@ class AccessService
         if($access["success"] === false) return $access;
         
         try{
-            $role = Role::find($id);
+            $role = Role::with('features')->find($id);
             if($role === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan"]);
-            // return $role;
-            $role_feature_ids = RoleFeaturePivot::where('role_id', $id)->pluck('feature_id');
-            $features = AccessFeature::get();
-            foreach($role_feature_ids as $role_feature_id){
-                $role_feature = $features->where('id', $role_feature_id)->first();
-                if($role_feature === null) {
-                    $role_feature['id'] = $role_feature_id;
-                    $role_feature['feature_id'] = "Data Tidak Ditemukan";
-                    $role_feature['name'] = "Data Tidak Ditemukan";
-                    $role_feature['description'] = "Data Tidak Ditemukan";
-                    $role_feature['feature_key'] = "Data Tidak Ditemukan";
-                } 
-                $role_features[] = $role_feature;
-            }
-            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => ["role_detail" => $role, "role_features" => $role_features], "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $role, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -276,13 +261,7 @@ class AccessService
             $role->save();
 
             $role_id = $role->id;
-            $feature_ids = array_unique($feature_ids);
-            foreach($feature_ids as $feature_id){
-                $pivot = new RoleFeaturePivot;
-                $pivot->role_id = $role_id;
-                $pivot->feature_id = $feature_id;
-                $pivot->save();
-            }
+            $role->features()->sync($data['feature_ids']);
             return ["success" => true, "message" => "Role Berhasil Disimpan", "id" => $role->id, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -295,40 +274,15 @@ class AccessService
         if($access["success"] === false) return $access;
         
         $id = $data['id'];
-        $role = Role::find($id);
+        $role = Role::with('features')->find($id);
         if($role === null) return response()->json(["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400]);
         $role->name = $data['name'];
         $role->description = $data['description'];
         $feature_ids = $data['feature_ids'];
         try{
             $role->save();
+            $role->features()->sync($feature_ids);
 
-            $role_feature_ids = RoleFeaturePivot::where('role_id', $id)->pluck('feature_id')->toArray();
-            if(!count($role_feature_ids)) {
-                $feature_ids = array_unique($feature_ids);
-                foreach($feature_ids as $feature_id){
-                    $pivot = new RoleFeaturePivot;
-                    $pivot->role_id = $id;
-                    $pivot->feature_id = $feature_id;
-                    $pivot->save();
-                }
-            } else {
-                $difference_array_new = array_diff($feature_ids, $role_feature_ids);
-                $difference_array_delete = array_diff($role_feature_ids, $feature_ids);
-                $difference_array_new = array_unique($difference_array_new);
-                $difference_array_delete = array_unique($difference_array_delete);
-                foreach($difference_array_new as $feature_id){
-                    $pivot = new RoleFeaturePivot;
-                    $pivot->role_id = $id;
-                    $pivot->feature_id = $feature_id;
-                    $pivot->save();
-                }
-                $role = RoleFeaturePivot::where('role_id', $id)->get();
-                foreach($difference_array_delete as $feature_id){
-                    $feature_role = $role->where('feature_id', $feature_id)->first();
-                    $feature_role->delete();
-                }
-            }
             return ["success" => true, "message" => "Role Berhasil Diperbarui", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -340,14 +294,11 @@ class AccessService
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
-        $role = Role::find($id);
+        $role = Role::with('features')->find($id);
         if($role === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         try{
             $role->delete();
-            $role_feature = RoleFeaturePivot::where('role_id', $id)->get();
-            foreach($role_feature as $feature){
-                $feature->delete();
-            }
+            $role->features()->detach();
             return ["success" => true, "message" => "Role Berhasil Dihapus", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
