@@ -298,9 +298,7 @@ class CompanyService
             $company->email = $data['email'];
             $company->website = $data['website'];
             $company->save();
-            if($role_id === 2) return ["success" => true, "message" => "Client Company Berhasil Diperbarui", "status" => 200];
-            else if($role_id === 3) return ["success" => true, "message" => "Branch Company Berhasil Diperbarui", "status" => 200];
-            else return ["success" => true, "message" => "MIG Company Berhasil Diperbarui", "status" => 200];
+            return ["success" => true, "message" => "Detail Company Berhasil Diperbarui", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
