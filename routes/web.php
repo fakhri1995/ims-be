@@ -143,6 +143,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteAsset', 'AssetController@deleteAsset');
 
     //Model Routes
+    $router->get('/getFilterModels', 'AssetController@getFilterModels');
     $router->get('/getModels', 'AssetController@getModels');
     $router->get('/getModel', 'AssetController@getModel');
     $router->get('/getModelRelations', 'AssetController@getModelRelations');
@@ -225,8 +226,8 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/assignTicket', 'TicketController@assignTicket');
 });
 
-    // $router->get('/downloadTickets', 'TicketController@downloadTickets');
-    // $router->get('/downloadTicket', 'TicketController@downloadTicket');
+    $router->get('/downloadTickets', 'TicketController@downloadTickets');
+    $router->get('/downloadTicket', 'TicketController@downloadTicket');
 //Group Routes
 // $router->get('/getGroups', 'GroupController@getGroups');
 // $router->get('/getGroup', 'GroupController@getGroup');

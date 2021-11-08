@@ -20,7 +20,6 @@ use App\ModelInventoryColumn;
 use App\Services\UserService;
 use App\StatusUsageInventory;
 use App\RelationshipInventory;
-use App\InventoryInventoryPivot;
 use App\Services\CompanyService;
 use App\StatusConditionInventory;
 use App\Services\CheckRouteService;
@@ -458,6 +457,22 @@ class AssetService{
 
     // Models
 
+    public function getFilterModels($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $name = $request->get('name', null);
+            $models = ModelInventory::select('id','name');
+            if($name) $models->where('name', 'like', "%".$name."%");
+            $models = $models->limit(50)->get();
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $models, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    
     public function getModels(Request $request, $route_name)
     {
         $access = $this->checkRouteService->checkRoute($route_name);
@@ -676,18 +691,15 @@ class AssetService{
         if($access["success"] === false) return $access;
 
         try{
-            $models = ModelInventory::withTrashed()->select('id','name','asset_id','deleted_at')->get();
             $manufacturers = Manufacturer::withTrashed()->select('id','name','deleted_at')->get();
-            $assets = Asset::withTrashed()->select('id','name','deleted_at')->get();
             $vendors = Vendor::select('id', 'name')->get();
             $status_condition = StatusConditionInventory::get();
             $status_usage = StatusUsageInventory::get();
-            $companies = Company::select('id', 'name')->where('role', '<>', 2)->get();
             
             $this->companyService = new CompanyService;
             $tree_companies = $this->companyService->getCompanyTreeSelect(auth()->user()->company_id)['data'];
             
-            $data = (object)['models' => $models, 'assets' => $assets, 'vendors' => $vendors, 'manufacturers' => $manufacturers, 'status_condition' => $status_condition, 'status_usage' => $status_usage, 'companies' => $companies, 'tree_companies' => $tree_companies];
+            $data = (object)['vendors' => $vendors, 'manufacturers' => $manufacturers, 'status_condition' => $status_condition, 'status_usage' => $status_usage, 'tree_companies' => $tree_companies];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -710,7 +722,7 @@ class AssetService{
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
             
-            $inventories = Inventory::with(['statusCondition', 'statusUsage', 'modelInventory.asset:id,name,deleted_at'])->select('id', 'model_id', 'inventory_name', 'status_condition', 'status_usage');
+            $inventories = Inventory::with(['statusCondition', 'statusUsage', 'locationInventory', 'modelInventory.asset:id,name,deleted_at'])->select('id', 'model_id', 'inventory_name', 'mig_id', 'status_condition', 'status_usage', 'location');
 
             if($asset_id){
                 $inventories = $inventories->whereHas('modelInventory', function($q) use ($asset_id){
@@ -735,67 +747,6 @@ class AssetService{
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
-    }
-
-    public function getInventoryParts($pivot, $pivots, $inventories, $models, $assets){
-        $search = array_search($pivot['child_id'], array_column($inventories, 'id'));
-        if($search !== false){
-            $inventory = $inventories[$search];
-            $search_model = array_search($inventory['model_id'], array_column($models, 'id'));
-            if($search_model !== false){
-                $temp_model = $models[$search_model];
-                $search_asset = array_search($temp_model['asset_id'], array_column($assets, 'id'));
-                if($search_asset !== false){
-                    $temp_asset = $models[$search_asset];
-                } else {
-                    $temp_asset['name'] = "Asset Tidak Ditemukan";
-                    $temp_asset['id'] = 0;
-                    $temp_asset['deleted_at'] = null;
-                }
-            } else {
-                $temp_model['name'] = "Model Tidak Ditemukan";
-                $temp_model['id'] = 0;
-                $temp_model['deleted_at'] = null;
-                $temp_asset['name'] = "Model Tidak Ditemukan";
-                $temp_asset['id'] = 0;
-                $temp_asset['deleted_at'] = null;
-            }
-            $inventory_parts = [];
-            foreach($pivots as $p){
-                if($p['parent_id'] === $pivot['child_id']){
-                    $inventory_parts[] = $this->getInventoryParts($p, $pivots, $inventories, $models, $assets);
-                }
-            }
-            $data = [
-                'id' => $inventory['id'],
-                'inventory_name' => $inventory['inventory_name'],
-                'status_usage' => $inventory['status_usage'],
-                'mig_id' => $inventory['mig_id'],
-                'model_id' => $temp_model['id'],
-                'model_name' => $temp_model['name'],
-                'model_deleted_at' => $temp_model['deleted_at'],
-                'asset_id' => $temp_asset['id'],
-                'asset_name' => $temp_asset['name'],
-                'asset_deleted_at' => $temp_asset['deleted_at'],
-                'inventory_parts' => $inventory_parts
-            ];
-        } else {
-            $data = [
-                'id' => 0,
-                'inventory_name' => "Inventory Tidak Ditemukan",
-                'status_usage' => "Inventory Tidak Ditemukan",
-                'mig_id' => "Inventory Tidak Ditemukan",
-                'model_id' => "Inventory Tidak Ditemukan",
-                'model_name' => "Inventory Tidak Ditemukan",
-                'model_deleted_at' => null,
-                'asset' => "Inventory Tidak Ditemukan",
-                'asset_id' => 0,
-                'asset_name' => "Inventory Tidak Ditemukan",
-                'asset_deleted_at' => null,
-                'inventory_parts' => []
-            ];
-        }
-        return $data;
     }
 
     public function getInventory($id, $route_name)

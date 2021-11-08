@@ -88,6 +88,14 @@ class AssetController extends Controller
 
     // Model
 
+    public function getFilterModels(Request $request)
+    {
+        $route_name = "INVENTORY_ADD";
+
+        $response = $this->assetService->getFilterModels($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getModels(Request $request)
     {
         $route_name = "MODELS_GET";
@@ -214,7 +222,7 @@ class AssetController extends Controller
 
     public function addInventory(Request $request)
     {
-        $route_name = "ASSET_ADD";
+        $route_name = "INVENTORY_ADD";
         
         $data_request = [
             'model_id' => $request->get('model_id'),
@@ -239,7 +247,7 @@ class AssetController extends Controller
 
     public function updateInventory(Request $request)
     {
-        $route_name = "ASSET_UPDATE";
+        $route_name = "INVENTORY_UPDATE";
         
         $data_request = [
             'id' => $request->get('id'),
