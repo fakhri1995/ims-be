@@ -464,7 +464,7 @@ class AssetService{
         
         try{
             $name = $request->get('name', null);
-            $models = ModelInventory::select('id','name');
+            $models = ModelInventory::with('asset')->select('id','name');
             if($name) $models->where('name', 'like', "%".$name."%");
             $models = $models->limit(50)->get();
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $models, "status" => 200];
