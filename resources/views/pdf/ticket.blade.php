@@ -77,7 +77,7 @@
                     </div>
                     <div class="lokasi" style=" margin-bottom: 1rem;">
                         <h2>Lokasi</h2>
-                        <p style="text-transform: capitalize;">{{ $ticket->requester->company->name }}</p>
+                        <p style="text-transform: capitalize;">{{ $ticket->requester->company->name ?? '-'}}</p>
                     </div>
                     <div class="waktuKejadian" style=" margin-bottom: 1rem;">
                         <h2>Waktu Pengajuan</h2>
