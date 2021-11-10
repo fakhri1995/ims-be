@@ -93,7 +93,7 @@
                     </div>
                     <div style=" margin-bottom: 3rem;">
                         <h2 style="font-size: 18px;">Nomor Tiket</h2>
-                        <h1>{{ '#'. $ticket->type->code .'-'. $ticket->type->id }}</h1>
+                        <h1>{{ '#'. $ticket->type->code .'-'. $ticket->ticketable->id }}</h1>
                     </div>
                     <div>
                         <h2 style="font-size: 18px;">Status</h2>
