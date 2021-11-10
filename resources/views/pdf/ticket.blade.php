@@ -1,66 +1,142 @@
 <!DOCTYPE html>
-<html>
-<head>
-	<style type="text/css">
+<html lang="en">
 
-		.page-break {
-		    page-break-after: always;
-		}
-		table, tr, td, th, tbody, thead, tfoot {
-		    page-break-inside: avoid !important;
-		}
-		.table-full{
-			width: 100%;
-			border-collapse: collapse;
-		}
-		th{
-			height: 20px;
-		}
-		td{
-			height: 15px;
-		}
-		.table-utama{
-			border-bottom: 0px solid #fff;
-			align-content: center;
-			text-align: center;
-		}
-		.table-content > thead > tr > th{
-			font-size: 18px;
-			text-align: center;
-		}
-		.table-content-heder{
-			font-size: 18px;
-			text-align: left;
-			height: 20px;
-			font-weight: bold;
-		}
-		.table-content > thead > tr > th,
-		.table-content > tbody > tr > td
-		{
-			border: 2px solid #000000;
-			font-size: 13px;
-			padding: 2px;
-		}
-		.table-tanda-tangan{
-			border-bottom: 0px solid #fff;
-			width: 100%;
-			align-content: center;
-			text-align: center;
-			font-size: 14px;
-		}
-	</style>
+<head>
+    <style type="text/css">
+        @page {
+            margin:0;
+        }
+        body {
+            background-color: rgb(239, 245, 239);
+            padding-left: 2rem;
+            padding-right: 2rem;
+            padding-top: 3rem;
+            padding-bottom: 4rem;
+            height:1100px; 
+            width: 730px;
+        }
+
+        h1 {
+            color: black;
+            font-size: 20px;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            margin-bottom: 0;
+        }
+
+        h2 {
+            color: gray;
+            font-size: smaller;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            margin-bottom: 0;
+        }
+
+        p {
+            color: black;
+            font-size: small;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+        }
+
+        .boxContainer {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .boxRow {
+            margin-bottom: 1rem;
+        }
+
+        .boxColumn {
+            margin-bottom: 2rem;
+        }
+
+        .box {
+            background-color: white;
+            box-shadow: 0.2rem 0.2rem 5px #bbbbbb;
+            border-radius: 0.5rem;
+            padding-top: 1rem;
+            padding-left: 3rem;
+            padding-right: 3rem;
+        }
+    </style>
 </head>
+
 <body>
-<table class="margin-kertas table-utama table-full">
-	<tr>
-		<td><strong> {{ $judul }} <br><br></strong></td>
-	</tr>
-    @foreach( $ticket->toArray() as $key => $value )
-	<tr>
-		<td> {{ $value }} </td>
-	</tr>
-    @endforeach
-	
-</table>
+    <div>
+        <div class="boxRow">
+            <div class="box" style="justify-content: space-between; align-items: center;">
+                <img src="{{ public_path('img/logoTicket.png') }}" height="50px" alt="">
+                <h1 style="margin-top: 5px; float:right;">Detail Tiket</h1>
+            </div>
+        </div>
+        <div class="boxRow">
+            <div class="boxColumn" style="float:right;">
+                <div class="box" style="margin-bottom: 1rem;">
+                    <div class="diajukanOleh" style=" margin-bottom: 1rem;">
+                        <h2>Diajukan Oleh</h2>
+                        <p>{{ $ticket->requester->name }}</p>
+                    </div>
+                    <div class="lokasi" style=" margin-bottom: 1rem;">
+                        <h2>Lokasi</h2>
+                        <p style="text-transform: capitalize;">{{ $ticket->requester->company->name }}</p>
+                    </div>
+                    <div class="waktuKejadian" style=" margin-bottom: 1rem;">
+                        <h2>Waktu Pengajuan</h2>
+                        <p style=" margin-bottom: 2rem;">{{ $ticket->original_raised_at }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="boxColumn" style="margin-right: 1rem;">
+                <div class="box" style=" width:350px; ">
+                    <div style=" margin-bottom: 1rem; float:right; padding-right:2rem;">
+                        <h2 style="font-size: 18px;">Tipe Tiket</h2>
+                        <h1>{{ $ticket->type->name }}</h1>
+                    </div>
+                    <div style=" margin-bottom: 3rem;">
+                        <h2 style="font-size: 18px;">Nomor Tiket</h2>
+                        <h1>{{ '#'. $ticket->type->code .'-'. $ticket->type->id }}</h1>
+                    </div>
+                    <div>
+                        <h2 style="font-size: 18px;">Status</h2>
+                        @if($ticket->status->id === 4) <h1 style="color: red; margin-bottom: 3rem;">
+                        @else <h1 style="margin-bottom: 3rem;">
+                        @endif
+                        {{ $ticket->status->name }}</h1>
+                    </div>
+                </div>
+                
+            </div>
+            <div class="boxColumn">
+                <div class="box" style="">
+                    <div class="tipeAset" style=" margin-bottom: 1rem;">
+                        <h2>Tipe Aset</h2>
+                        <p>{{ $ticket->ticketable->productType->name }}</p>
+                    </div>
+                    <div class="lokasi" style=" margin-bottom: 1rem;">
+                        <h2>Lokasi</h2>
+                        <p>{{ $ticket->ticketable->location->full_name }}</p>
+                    </div>
+                    <div class="waktuKejadian" style=" margin-bottom: 1rem;">
+                        <h2>Waktu Kejadian</h2>
+                        <p>{{ $ticket->ticketable->incident_time }}</p>
+                    </div>
+                    <div class="deskripsi" style=" margin-bottom: 1rem;">
+                        <h2>Deskripsi Kerusakan</h2>
+                        <p style="margin-bottom: 2rem;">
+                            {{ $ticket->ticketable->description }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <!-- <div class="boxColumn">
+
+                <div class="box" style="">
+                    <div class="buktiInsiden" style=" margin-bottom: 1rem;">
+                        <h2 style="margin-bottom: 1.5rem;">Bukti Insiden</h2>
+                    </div>
+                </div>
+            </div> -->
+        </div>
+    </div>
 </body>
+
 </html>

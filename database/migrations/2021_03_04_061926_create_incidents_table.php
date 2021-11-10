@@ -19,7 +19,7 @@ class CreateIncidentsTable extends Migration
             $table->string('product_id');
             $table->string('pic_name')->nullable();
             $table->string('pic_contact')->nullable();
-            $table->unsignedBigInteger('location_id');
+            $table->unsignedBigInteger('location_id')->nullable();
             $table->unsignedBigInteger('inventory_id')->nullable();
             $table->string('problem')->nullable();
             $table->dateTime('incident_time')->nullable();

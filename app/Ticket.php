@@ -49,6 +49,6 @@ class Ticket extends Model
         return $this->belongsTo(User::class, 'requester_id')->withDefault([
             'id' => 0,
             'name' => 'User Tidak Ditemukan'
-        ])->select('id', 'name','company_id');
+        ])->select('id', 'name','company_id')->with('company:id,name');
     }
 }

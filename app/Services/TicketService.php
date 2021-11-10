@@ -238,7 +238,7 @@ class TicketService
     {
         try{
             $id = $request->get('id');
-            $ticket = Ticket::with(['type','status', 'requester.company', 'ticketable.location','assignable'])->find($id);
+            $ticket = Ticket::with(['type','status', 'requester', 'ticketable.location','assignable'])->find($id);
             $ticket->original_raised_at = $ticket->getRawOriginal('raised_at');
             if(!$ticket->closed_at) $ticket->resolved_time = "-";
             else $ticket->resolved_time = Carbon::parse($ticket->original_raised_at)->diffForHumans($ticket->closed_at, true);
@@ -247,6 +247,10 @@ class TicketService
                 $company_user_login_id = auth()->user()->company_id;
                 if($ticket->requester->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
             }
+            if($ticket->ticketable->id !== 0 || $ticket->ticketable->location->id !== 0){
+                $ticket->ticketable->location->full_name = $ticket->ticketable->location->topParent ? $ticket->ticketable->location->topParent->name.' - '.$ticket->ticketable->location->name : $ticket->ticketable->location->name;
+            }
+            $ticket->ticketable->location->makeHidden('topParent');
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => ["ticket" => $ticket], "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -567,25 +571,56 @@ class TicketService
         }
     }
     
-    public function TicketsExport()
+    // type
+
+    // all_field
+    // requester_name
+    // requester_location
+    // raised_at_ticket
+    // closed_ticket
+    // resolved_time
+    // ticket_number
+    // ticket_type
+    // status_ticket
+    // assign_to
+
+    // (Incident Type)
+    // Jenis Produk
+    // Id Produk
+    // Nama PIC
+    // Kontak PIC
+    // Problem
+    // Lokasi Problem
+    // Waktu Kejadian
+    // Deskripsi Kerusakan
+    
+    public function TicketsExport($request)
     {
-        return Excel::download(new TicketsExport, 'tickets.xlsx');
+        $generalService = new GeneralService;
+        $current_timestamp = $generalService->getTimeNow();
+        $from = $request->get('from', null);
+        $to = $request->get('to', null);
+        $engineer = $request->get('engineer', null);
+        $group = $request->get('group', null);
+        $type = $request->get('type', null);
+        $core_attributes = json_decode($request->get('core_attributes','[1,0,0,0,0,0,0,0,0]'));
+        $secondary_attributes = json_decode($request->get('secondary_attributes','[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]'));
+        return Excel::download(new TicketsExport($from, $to, $group, $engineer, $type, $core_attributes, $secondary_attributes), 'tickets.xlsx');
     }
 
-    public function TicketExport()
+    public function TicketExport($request)
     {
-        $ticket = Ticket::find(1);
-        $visible = [];
-        if(1)$visible[] = 'assignable_id';
-        if(1)$visible[] = 'ticketable_id';
-        if(1)$visible[] = 'assignable_type';
-        if(1)$visible[] = 'ticketable_type';
-        if(1)$visible[] = 'requester_id';
-        if(1)$visible[] = 'status_id';
+        $id = $request->get('id');
+        $ticket = Ticket::with(['type','status', 'requester', 'ticketable.location','assignable'])->find($id);
+        $ticket->original_raised_at = $ticket->getRawOriginal('raised_at');
+        if($ticket->ticketable->id !== 0 || $ticket->ticketable->location->id !== 0){
+            $ticket->ticketable->location->full_name = $ticket->ticketable->location->topParent ? $ticket->ticketable->location->topParent->name.' - '.$ticket->ticketable->location->name : $ticket->ticketable->location->name;
+        }
+        $ticket->ticketable->location->makeHidden('topParent');
+        $visible = ['assignable_id', 'ticketable_id', 'assignable_type', 'ticketable_type', 'requester_id', 'status_id'];
         $ticket->makeVisible($visible);
-        $data = ['judul' => 'Ticket Mitramas Infosys Global',
-        'ticket' => $ticket];
-        $pdf = PDF::loadView('pdf.new_ticket', $data);
+        $data = ['ticket' => $ticket];
+        $pdf = PDF::loadView('pdf.ticket', $data);
         return $pdf->download('ticket.pdf');
     }
 }

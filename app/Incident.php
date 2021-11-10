@@ -13,7 +13,7 @@ class Incident extends Model
     protected $casts = [
         'files' => 'array'
     ];
-    protected $with = ['location'];
+    protected $with = ['location', 'productType'];
 
     public function location()
     {
