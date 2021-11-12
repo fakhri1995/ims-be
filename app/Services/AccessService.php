@@ -21,7 +21,7 @@ class AccessService
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $features = AccessFeature::select('id','feature_id', 'feature_key','name','description')->get();
+        $features = AccessFeature::get();
         if(!count($features)) return ["success" => true, "message" => "Fitur masih kosong", "data" => $features, "status" => 200];
         else return ["success" => true, "message" => "Users Berhasil Diambil", "data" => $features, "status" => 200 ];
     }
@@ -35,8 +35,6 @@ class AccessService
             $access_feature = new AccessFeature;
             $access_feature->name = $data['name'];
             $access_feature->description = $data['description'];
-            $access_feature->feature_id = 1;
-            $access_feature->feature_key = "-";
             $access_feature->save();
             return ["success" => true, "message" => "Feature Berhasil Dibuat", "id" => $access_feature->id, "status" => 200];
         } catch(Exception $err){
@@ -71,6 +69,7 @@ class AccessService
         if($access_feature === null) return ["success" => false, "message" => "Id Feature Tidak Ditemukan", "status" => 400];
         try{
             $access_feature->delete();
+            $access_feature->roles()->detach();
             return ["success" => true, "message" => "Feature Berhasil Dihapus", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
