@@ -27,4 +27,14 @@ class Incident extends Model
     {
         return $this->belongsTo(IncidentProductType::class, 'product_type');
     }
+
+    public function ticket()
+    {
+        return $this->morphOne(Ticket::class, 'ticketable')->select('ticketable_id', 'ticketable_type', 'status_id')->with('status', 'type');
+    }
+
+    public function inventory()
+    {
+        return $this->belongsTo(Inventory::class)->with('additionalAttributes');
+    }
 }

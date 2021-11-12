@@ -40,5 +40,6 @@ class AuthServiceProvider extends ServiceProvider
 
         // LumenPassport::tokensExpireIn(Carbon::now()->addDays(1));
         LumenPassport::allowMultipleTokens();
+        Carbon::setLocale('id');
     }
 }

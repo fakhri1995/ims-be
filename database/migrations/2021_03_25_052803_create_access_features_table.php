@@ -15,11 +15,8 @@ class CreateAccessFeaturesTable extends Migration
     {
         Schema::create('access_features', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('feature_id');
-            $table->string('feature_key');
             $table->string('name');
             $table->string('description');
-            $table->softDeletes();
         });
     }
 

@@ -162,7 +162,7 @@ class AssetController extends Controller
 
     public function deleteModel(Request $request)
     {
-        $route_name = "ASSET_DELETE";
+        $route_name = "MODEL_DELETE";
         $id = $request->get('id', null);
         
         $response = $this->assetService->deleteModel($id, $route_name);
@@ -198,7 +198,7 @@ class AssetController extends Controller
     
     public function getInventoryAddable(Request $request)
     {
-        $route_name = "INVENTORY_ADDABLE_GET";
+        $route_name = "INVENTORY_PARTS_ADD";
 
         $response = $this->assetService->getInventoryAddable($request, $route_name);
         return response()->json($response, $response['status']);
@@ -206,7 +206,7 @@ class AssetController extends Controller
     
     public function getInventoryReplacements(Request $request)
     {
-        $route_name = "INVENTORY_REPLACEMENTS_GET";
+        $route_name = "INVENTORY_PART_REPLACE";
 
         $response = $this->assetService->getInventoryReplacements($request, $route_name);
         return response()->json($response, $response['status']);
@@ -214,8 +214,16 @@ class AssetController extends Controller
 
     public function getChangeStatusUsageDetailList(Request $request)
     {
-        $route_name = "STATUS_USAGE_UPDATE";
+        $route_name = "INVENTORY_STATUS_USAGE";
 
+        $response = $this->assetService->getChangeStatusUsageDetailList($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getInventoryAssociation(Request $request)
+    {
+        $route_name = "INVENTORY_ASSOCIATION_GET";
+        
         $response = $this->assetService->getChangeStatusUsageDetailList($request, $route_name);
         return response()->json($response, $response['status']);
     }
@@ -281,7 +289,7 @@ class AssetController extends Controller
     }
 
     public function removeInventoryPart(Request $request){
-        $route_name = "INVENTORY_PART_REPLACE";
+        $route_name = "INVENTORY_PART_REMOVE";
         
         $data_request = [
             'id' => $request->get('id', null),
@@ -324,7 +332,7 @@ class AssetController extends Controller
     // Change Status Inventory
 
     public function changeStatusCondition(Request $request){
-        $route_name = "INVENTORY_STATUS_CONDITION_UPDATE";
+        $route_name = "INVENTORY_STATUS_CONDITION";
         
         $data_request = [
             'id' => $request->get('id', null),
@@ -338,7 +346,7 @@ class AssetController extends Controller
 
     public function changeStatusUsage(Request $request)
     {
-        $route_name = "INVENTORY_STATUS_CONDITION_USAGE";
+        $route_name = "INVENTORY_STATUS_USAGE";
         
         $data_request = [
             'id' => $request->get('id', null),
@@ -356,7 +364,7 @@ class AssetController extends Controller
     // Adding Notes
 
     public function addInventoryNotes(Request $request){
-        $route_name = "INVENTORY_ADD";
+        $route_name = "INVENTORY_NOTES_ADD";
         
         $data_request = [
             'id' => $request->get('id', null),
@@ -536,7 +544,7 @@ class AssetController extends Controller
 
     public function getRelationshipAssetRelation(Request $request)
     {
-        $route_name = "RELATIONSHIP_ASSET_GET";
+        $route_name = "RELATIONSHIP_ASSET_ADD";
 
         $response = $this->assetService->getRelationshipAssetRelation($route_name);
         return response()->json($response, $response['status']);
@@ -591,25 +599,25 @@ class AssetController extends Controller
         return response()->json($response, $response['status']);
     }
 
-    // Relationship Iventory
+    // Relationship Inventory
 
-    public function getRelationshipInventories(Request $request)
-    {
-        $route_name = "RELATIONSHIP_INVENTORIES_GET";
+    // public function getRelationshipInventories(Request $request)
+    // {
+    //     $route_name = "RELATIONSHIP_INVENTORIES_GET";
 
-        $response = $this->assetService->addRelationshipAsset($route_name);
-        return response()->json($response, $response['status']);
-    }
+    //     $response = $this->assetService->addRelationshipAsset($route_name);
+    //     return response()->json($response, $response['status']);
+    // }
 
     public function getRelationshipInventory(Request $request)
     {
-        $route_name = "RELATIONSHIP_INVENTORY_GET";
+        $route_names = ["RELATIONSHIP_INVENTORY_GET", "AGENT_RELATIONSHIP_INVENTORY_GET" , "REQUESTER_RELATIONSHIP_INVENTORY_GET" , "COMPANY_RELATIONSHIP_INVENTORY_GET"];
         $data_request = [
             'id' => $request->get('id', null),
             'type_id' => $request->get('type_id')
         ];
 
-        $response = $this->assetService->getRelationshipInventory($data_request, $route_name);
+        $response = $this->assetService->getRelationshipInventory($data_request, $route_names);
         return response()->json($response, $response['status']);
     }
 

@@ -167,6 +167,30 @@ class LogService
                 $properties = $inventory_relationship_log->properties;
                 $causer_name = $inventory_relationship_log->causer->name;
 
+                if($inventory_relationship_log->log_name === 'Created Association'){
+                    $ticket = Ticket::with('type')->find($properties->ticket_id);
+                    $temp = (object) [
+                        'date' => $inventory_relationship_log->created_at,
+                        'description' => $inventory_relationship_log->log_name.' Inventory',
+                        'properties' => 'Terhubung dengan Ticket '.$ticket->type->code .'-'. $ticket->ticketable_id,
+                        'causer_name' => $causer_name
+                    ];
+                    array_push($logs, $temp);
+                    continue;
+                }
+
+                if($inventory_relationship_log->log_name === 'Deleted Association'){
+                    $ticket = Ticket::with('type')->find($properties->ticket_id);
+                    $temp = (object) [
+                        'date' => $inventory_relationship_log->created_at,
+                        'description' => $inventory_relationship_log->log_name.' Inventory',
+                        'properties' => 'Terlepas dari Ticket '.$ticket->type->code .'-'. $ticket->ticketable_id,
+                        'causer_name' => $causer_name
+                    ];
+                    array_push($logs, $temp);
+                    continue;
+                }
+
                 if(isset($properties->attributes->relationship_asset_id)){
                     $relationship_asset = RelationshipAsset::with('relationship')->withTrashed()->select('id','is_inverse','relationship_id')->find($properties->attributes->relationship_asset_id);
                     $is_inverse_inventory_relationship = $relationship_asset->is_inverse === $properties->attributes->is_inverse ? false : true;
@@ -461,6 +485,35 @@ class LogService
         $log->log_name = "Deleted";
         $log->created_at = $this->current_timestamp;
         $log->save();
+    }
+
+    private function createLogInventoryAssociation($subject_id, $causer_id, $ticket_id)
+    {
+        $log = new ActivityLogInventoryRelationship;
+        $log->subject_id = $subject_id;
+        $log->causer_id = $causer_id;
+        $log->properties = ['ticket_id' => $ticket_id];
+        $log->log_name = "Created Association";
+        $log->created_at = $this->current_timestamp;
+        $log->save();
+    }
+
+
+    private function deleteLogInventoryAssociation($subject_id, $causer_id, $ticket_id)
+    {
+        $log = new ActivityLogInventoryRelationship;
+        $log->subject_id = $subject_id;
+        $log->causer_id = $causer_id;
+        $log->properties = ['ticket_id' => $ticket_id];
+        $log->log_name = "Deleted Association";
+        $log->created_at = $this->current_timestamp;
+        $log->save();
+    }
+
+    public function associationLogInventory($subject_id, $causer_id, $old_inventory_id, $inventory_id)
+    {
+        if($old_inventory_id !== null) $this->deleteLogInventoryAssociation($old_inventory_id, $causer_id, $subject_id);
+        if($inventory_id !== null) $this->createLogInventoryAssociation($inventory_id, $causer_id, $subject_id);
     }
 
     // Ticket Log

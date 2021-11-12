@@ -22,7 +22,7 @@ class ActivityLogController extends Controller
 
     public function getActivityInventoryLogs(Request $request)
     {
-        $route_name = "LOG_INVENTORY_GET";   
+        $route_name = "INVENTORY_LOG_GET";   
         $id = $request->get('id', null);
         
         $response = $this->logService->getActivityInventoryLogs($id, $route_name);
@@ -32,7 +32,7 @@ class ActivityLogController extends Controller
     // Ticket
 
     public function getTicketLog(Request $request){
-        $route_name = "LOG_TICKET_GET";   
+        $route_name = "TICKET_LOG_GET";   
         $id = $request->get('id', null);
         
         $response = $this->logService->getTicketLog($id, $route_name);
@@ -40,7 +40,7 @@ class ActivityLogController extends Controller
     }
     
     public function getClientTicketLog(Request $request){
-        $route_name = "LOG_CLIENT_TICKET_GET";   
+        $route_name = "CLIENT_TICKET_LOG_GET";   
         $id = $request->get('id', null);
         
         $response = $this->logService->getClientTicketLog($id, $route_name);

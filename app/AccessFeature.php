@@ -3,11 +3,9 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AccessFeature extends Model
 {
-    use SoftDeletes;
     
     public $timestamps = false;
     protected $hidden = ['pivot', 'feature_id', 'feature_key', 'deleted_at'];

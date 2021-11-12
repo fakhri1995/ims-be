@@ -11,7 +11,7 @@ class Ticket extends Model
     protected $hidden = ['ticketable_type', 'requester_id', 'status_id', 'assignable_id', 'ticketable_id', 'assignable_type'];
     
     public function getRaisedAtAttribute($value){
-        $time_difference = Carbon::parse($value)->diffForHumans();
+        $time_difference = Carbon::parse($value)->diffForHumans(null, true, false, 3);
         $splits = explode(" ", $value); 
         return $splits[0]." ($time_difference)";
     }
@@ -48,7 +48,13 @@ class Ticket extends Model
     {
         return $this->belongsTo(User::class, 'requester_id')->withDefault([
             'id' => 0,
-            'name' => 'User Tidak Ditemukan'
-        ])->select('id', 'name','company_id')->with('company:id,name');
+            'name' => 'User Tidak Ditemukan',
+            'company_id'=> 0,
+            'company'=> (object) [
+                'id'=> 0,
+                'name'=> 'Perusahaan Tidak Ditemukan',
+                'full_name'=> 'Perusahaan Tidak Ditemukan'
+            ]
+        ])->select('id', 'name','company_id')->with(['company:id,name,top_parent_id', 'company.topParent']);
     }
 }

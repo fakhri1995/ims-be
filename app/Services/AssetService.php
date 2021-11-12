@@ -755,7 +755,7 @@ class AssetService{
         if($access["success"] === false) return $access;
 
         try{
-            $inventory = Inventory::with(['modelInventory.asset:id,name,deleted_at', 'locationInventory', 'additionalAttributes', 'inventoryParts'])->find($id);
+            $inventory = Inventory::with(['modelInventory.asset:id,name,deleted_at', 'locationInventory', 'additionalAttributes', 'inventoryParts', 'associations'])->find($id);
             if($inventory === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventory, "status" => 200];
         } catch(Exception $err){
@@ -999,6 +999,9 @@ class AssetService{
 
     public function addInventoryNotes($data, $route_name)
     {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         $logService = new LogService;
         $subject_id = $data['id'];
         $causer_id = auth()->user()->id;
@@ -1733,10 +1736,6 @@ class AssetService{
         try{
             $relationships = Relationship::withCount('relationshipAssets')->get();
             if($relationships->isEmpty()) return ["success" => false, "message" => "Relationship Belum dibuat", "status" => 400];
-            // $relationship_assets = RelationshipAsset::select('relationship_id')->get();
-            // foreach($relationships as $relationship){
-            //     $relationship->count = $relationship_assets->where('relationship_id', $relationship->id)->count();
-            // }
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $relationships, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -2029,14 +2028,18 @@ class AssetService{
     //     }
     // }
 
-    public function getRelationshipInventory($data, $route_name)
+    public function getRelationshipInventory($data, $route_names)
     {
+        $type_id = (int)$data['type_id'];
+        if($type_id === -1) $route_name = $route_names[1];
+        else if($type_id === -2) $route_name = $route_names[2];
+        else if($type_id === -3) $route_name = $route_names[3];
+        else $route_name = $route_names[0];
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
             $id = $data['id'];
-            $type_id = (int)$data['type_id'];
             $relationship_inventories_from_inverse = RelationshipInventory::with(['relationshipAsset.relationship', 'inventory'])->where('connected_id', $id)->whereHas('relationshipAsset', function($q) use ($type_id){
                 $q->where('relationship_assets.type_id', $type_id);
             })->get();

@@ -142,7 +142,7 @@ class TicketController extends Controller
     
     public function cancelClientTicket(Request $request)
     {
-        $route_name = "TICKET_SET_ITEM";
+        $route_name = "CLIENT_CANCEL_TICKET";
         
         $data_request = [
             'id' => $request->get('id', null),
@@ -176,13 +176,39 @@ class TicketController extends Controller
         
     }
 
-    public function downloadTickets(Request $request)
+    public function clientAddNoteTicket(Request $request)
     {
-        return $this->ticketService->TicketsExport($request);
+        $route_name = "CLIENT_TICKET_NOTE_ADD";
+
+        $response = $this->ticketService->clientAddNoteTicket($request, $route_name);
+        return response()->json($response, $response['status']);
+        
     }
 
-    public function downloadTicket(Request $request)
+    public function ticketsExport(Request $request)
     {
-        return $this->ticketService->TicketExport($request);
+        $route_name = "TICKETS_EXPORT";
+
+        $response = $this->ticketService->TicketsExport($request, $route_name);
+        if($response['success'] === false) return response()->json($response, $response['status']);
+        return $response['data'];
+    }
+
+    public function ticketExport(Request $request)
+    {
+        $route_name = "TICKET_EXPORT";
+
+        $response = $this->ticketService->ticketExport($request, $route_name);
+        if($response['success'] === false) return response()->json($response, $response['status']);
+        return $response['data'];
+    }
+
+    public function clientTicketExport(Request $request)
+    {
+        $route_name = "CLIENT_TICKET_EXPORT";
+
+        $response = $this->ticketService->clientTicketExport($request, $route_name);
+        if($response['success'] === false) return response()->json($response, $response['status']);
+        return $response['data'];
     }
 }

@@ -85,4 +85,9 @@ class Inventory extends Model
     {
         return $this->hasMany(RelationshipInventory::class, 'subject_id')->with(['relationshipAsset']);
     }
+
+    public function associations()
+    {
+        return $this->hasMany(Incident::class, 'inventory_id')->with(['ticket'])->select('id','inventory_id');
+    }
 }

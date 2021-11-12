@@ -239,10 +239,11 @@ class TicketService
         try{
             $id = $request->get('id');
             $ticket = Ticket::with(['type','status', 'requester', 'ticketable.location','assignable'])->find($id);
+            if($ticket === null) return ["success" => false, "message" => "Ticket Tidak Ditemukan", "status" => 400];
+            if($ticket->ticketable_type === 'App\Incident') $ticket->ticketable->inventory;
             $ticket->original_raised_at = $ticket->getRawOriginal('raised_at');
             if(!$ticket->closed_at) $ticket->resolved_time = "-";
             else $ticket->resolved_time = Carbon::parse($ticket->original_raised_at)->diffForHumans($ticket->closed_at, true);
-            if($ticket === null) return ["success" => false, "message" => "Ticket Tidak Ditemukan", "status" => 400];
             if(!$admin){
                 $company_user_login_id = auth()->user()->company_id;
                 if($ticket->requester->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
@@ -251,6 +252,10 @@ class TicketService
                 $ticket->ticketable->location->full_name = $ticket->ticketable->location->topParent ? $ticket->ticketable->location->topParent->name.' - '.$ticket->ticketable->location->name : $ticket->ticketable->location->name;
             }
             $ticket->ticketable->location->makeHidden('topParent');
+            if($ticket->requester->id !== 0 && $ticket->requester->company->id !== 0){
+                $ticket->requester->company->full_name = $ticket->requester->company->topParent ? $ticket->requester->company->topParent->name.' - '.$ticket->requester->company->name : $ticket->requester->company->name;
+                $ticket->requester->company->makeHidden('topParent');
+            }
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => ["ticket" => $ticket], "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -402,9 +407,12 @@ class TicketService
             $incident->inventory_id = $inventory_id;
             $incident->save();
 
-            $causer_id = auth()->user()->id;
-            $logService = new LogService;
-            $logService->setItemLogTicket($id, $causer_id, $old_inventory_id, $inventory_id);
+            if($old_inventory_id !== $inventory_id){
+                $causer_id = auth()->user()->id;
+                $logService = new LogService;
+                $logService->setItemLogTicket($id, $causer_id, $old_inventory_id, $inventory_id);
+                $logService->associationLogInventory($id, $causer_id, $old_inventory_id, $inventory_id);
+            }
             return ["success" => true, "message" => "Inventory Berhasil Ditambahkan pada Ticket", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -550,7 +558,7 @@ class TicketService
         }
     }
 
-    public function addNoteTicket(Request $request, $route_name)
+    public function addNote($request, $route_name, $admin)
     {
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
@@ -559,8 +567,12 @@ class TicketService
             $id = $request->get('id');
             $notes = $request->get('notes', null);
             if($notes === null) return ["success" => false, "message" => "Notes Masih Kosong", "status" => 400];
-            $ticket = Ticket::find($id);
-            if($id === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
+            $ticket = Ticket::with('requester')->find($id);
+            if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
+            if(!$admin){
+                $company_user_login_id = auth()->user()->company_id;
+                if($ticket->requester->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
+            }
             $logService = new LogService;
             $causer_id = auth()->user()->id;
             $logService->addNoteLogTicket($id, $causer_id, $notes);
@@ -569,6 +581,16 @@ class TicketService
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
+    }
+
+    public function addNoteTicket($request, $route_name)
+    {
+        return $this->addNote($request, $route_name, true);
+    }
+
+    public function clientAddNoteTicket($request, $route_name)
+    {
+        return $this->addNote($request, $route_name, false);
     }
     
     // type
@@ -594,8 +616,11 @@ class TicketService
     // Waktu Kejadian
     // Deskripsi Kerusakan
     
-    public function TicketsExport($request)
+    public function ticketsExport($request, $route_name)
     {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+    
         $generalService = new GeneralService;
         $current_timestamp = $generalService->getTimeNow();
         $from = $request->get('from', null);
@@ -605,13 +630,22 @@ class TicketService
         $type = $request->get('type', null);
         $core_attributes = json_decode($request->get('core_attributes','[1,0,0,0,0,0,0,0,0]'));
         $secondary_attributes = json_decode($request->get('secondary_attributes','[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]'));
-        return Excel::download(new TicketsExport($from, $to, $group, $engineer, $type, $core_attributes, $secondary_attributes), 'tickets.xlsx');
+        $excel = Excel::download(new TicketsExport($from, $to, $group, $engineer, $type, $core_attributes, $secondary_attributes), 'tickets.xlsx');
+        return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $excel, "status" => 200];
     }
-
-    public function TicketExport($request)
+    
+    public function TicketExportPdf($request, $route_name, $admin)
     {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         $id = $request->get('id');
         $ticket = Ticket::with(['type','status', 'requester', 'ticketable.location','assignable'])->find($id);
+        if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
+        if(!$admin){
+            $company_user_login_id = auth()->user()->company_id;
+            if($ticket->requester->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
+        }
         $ticket->original_raised_at = $ticket->getRawOriginal('raised_at');
         if($ticket->ticketable->id !== 0 || $ticket->ticketable->location->id !== 0){
             $ticket->ticketable->location->full_name = $ticket->ticketable->location->topParent ? $ticket->ticketable->location->topParent->name.' - '.$ticket->ticketable->location->name : $ticket->ticketable->location->name;
@@ -621,6 +655,16 @@ class TicketService
         $ticket->makeVisible($visible);
         $data = ['ticket' => $ticket];
         $pdf = PDF::loadView('pdf.ticket', $data);
-        return $pdf->download('ticket.pdf');
+        return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $pdf->download('ticket.pdf'), "status" => 200];
+    }
+
+    public function ticketExport($request, $route_name)
+    {
+        return $this->TicketExportPdf($request, $route_name, true);
+    }
+
+    public function clientTicketExport($request, $route_name)
+    {
+        return $this->TicketExportPdf($request, $route_name, false);
     }
 }

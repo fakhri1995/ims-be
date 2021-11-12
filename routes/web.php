@@ -217,10 +217,12 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getTicket', 'TicketController@getTicket');
     $router->get('/getClientTicket', 'TicketController@getClientTicket');
     $router->get('/getAssignToList', 'GroupController@getAssignToList');
-    $router->get('/downloadTickets', 'TicketController@downloadTickets');
-    $router->get('/downloadTicket', 'TicketController@downloadTicket');
+    $router->get('/ticketsExport', 'TicketController@ticketsExport');
+    $router->get('/ticketExport', 'TicketController@ticketExport');
+    $router->get('/clientTicketExport', 'TicketController@clientTicketExport');
     $router->post('/addTicket', 'TicketController@addTicket');
     $router->post('/addNoteTicket', 'TicketController@addNoteTicket');
+    $router->post('/clientAddNoteTicket', 'TicketController@clientAddNoteTicket');
     $router->put('/updateTicket', 'TicketController@updateTicket');
     $router->put('/setItemTicket', 'TicketController@setItemTicket');
     $router->put('/changeStatusTicket', 'TicketController@changeStatusTicket');
