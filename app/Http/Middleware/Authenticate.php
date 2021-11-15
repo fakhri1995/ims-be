@@ -48,6 +48,30 @@ class Authenticate
             ]];
             return response()->json($response, 401);
         }
+        
+        if(!$this->auth->user()->company->is_enabled){
+             $response = ["success" => false, "message" => [
+                "errorInfo" => [
+                    "status" => 401, 
+                    "reason" => "Unauthorized", 
+                    "server_code" => 401, 
+                    "status_detail" => "User's Company Is Not Active"
+                ]
+            ]];
+            return response()->json($response, 401);
+        }
+
+        if(!$this->auth->user()->is_enabled){
+             $response = ["success" => false, "message" => [
+                "errorInfo" => [
+                    "status" => 401, 
+                    "reason" => "Unauthorized", 
+                    "server_code" => 401, 
+                    "status_detail" => "User Is Not Active"
+                ]
+            ]];
+            return response()->json($response, 401);
+        }
 
         return $next($request);
     }
