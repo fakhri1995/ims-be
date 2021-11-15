@@ -31,9 +31,12 @@ class UserService
     }
 
     public function getFilterUsers($request, $route_name){
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
         $name = $request->get('name', null);
         $users = User::with(['company:id,name,top_parent_id', 'company.topParent'])->select('id', 'name', 'company_id');
-        if($name) $users = $users->where('name', 'like', "%".$name."%");
+        if($name) $users = $users->where('name', 'ilike', "%".$name."%");
         $users = $users->limit(50)->get();
         foreach($users as $user){
             if($user->company->id !== 0){
