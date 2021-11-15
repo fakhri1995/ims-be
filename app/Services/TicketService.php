@@ -15,7 +15,6 @@ use App\Services\LogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use App\Services\CompanyService;
-use App\Services\GeneralService;
 use App\Services\CheckRouteService;
 use App\Exports\TicketsExport;
 use Excel;
@@ -37,14 +36,13 @@ class TicketService
 
         $companyService = new CompanyService;
         $companies = $companyService->getCompanyTreeSelect(1, true);
-        $users = User::select('id', 'name','company_id')->with('company:id,name')->get();
 
         $status_ticket = TicketStatus::all();
 
         $ticket_types = TicketType::all();
         $product_types = IncidentProductType::all();
 
-        $data = ["status_ticket" => $status_ticket, "ticket_types" => $ticket_types, "requesters" => $users, "companies" => $companies, "product_types" => $product_types];
+        $data = ["status_ticket" => $status_ticket, "ticket_types" => $ticket_types, "companies" => $companies, "product_types" => $product_types];
         return ["success" => true, "data" => $data, "status" => 200];
     }
 
@@ -52,7 +50,6 @@ class TicketService
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
-        $users = User::select('id', 'name', 'company_id')->where('company_id', $company_id)->get();
         
         $companyService = new CompanyService;
         $companies = $companyService->getLocations();
@@ -62,7 +59,7 @@ class TicketService
         $ticket_types = TicketType::all();
         $product_types = IncidentProductType::all();
 
-        $data = ["status_ticket" => $status_ticket, "ticket_types" => $ticket_types, "requesters" => $users, "companies" => $companies, "product_types" => $product_types];
+        $data = ["status_ticket" => $status_ticket, "ticket_types" => $ticket_types, "companies" => $companies, "product_types" => $product_types];
         return ["success" => true, "data" => $data, "status" => 200];
     }
 
@@ -317,8 +314,7 @@ class TicketService
             }
             
             $causer_id = auth()->user()->id;
-            $generalService = new GeneralService;
-            $current_timestamp = $generalService->getTimeNow();
+            $current_timestamp = date("Y-m-d H:i:s");
             
             $ticket = new Ticket;
             $ticket->ticketable_id = $ticketable_id;
@@ -436,8 +432,7 @@ class TicketService
             if(strlen($notes) > 1000) return ["success" => false, "message" => "Notes Melebihi 1000 Karakter", "status" => 400];
             if($ticket->status_id === 4 && $status_id !== 5) return ["success" => false, "message" => "Status Canceled Tidak Dapat Diubah Selain Menjadi Closed", "status" => 400];
             if($status_id === 4 && $notes === null) return ["success" => false, "message" => "Untuk Status Canceled Diperlukan Keterangan (Notes)", "status" => 400];
-            $generalService = new GeneralService;
-            $current_timestamp = $generalService->getTimeNow();
+            $current_timestamp = date("Y-m-d H:i:s");
             $old_status = $ticket->status_id;
             $ticket->status_id = $status_id;
             
@@ -621,8 +616,7 @@ class TicketService
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
     
-        $generalService = new GeneralService;
-        $current_timestamp = $generalService->getTimeNow();
+        $current_timestamp = date("Y-m-d H:i:s");
         $from = $request->get('from', null);
         $to = $request->get('to', null);
         $engineer = $request->get('engineer', null);
