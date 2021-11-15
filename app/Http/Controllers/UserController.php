@@ -18,7 +18,14 @@ class UserController extends Controller
     public function __construct()
     {
         $this->userService = new UserService;
-        // $this->client = new Client(['base_uri' => 'https://go.cgx.co.id/']);
+    }
+
+    public function getFilterUsers(Request $request)
+    {
+        $route_name = "USERS_GET";
+        
+        $response = $this->userService->getFilterUsers($request, $route_name);
+        return response()->json($response, $response['status']);
     }
 
     public function getAgentDetail(Request $request)

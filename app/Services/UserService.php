@@ -17,10 +17,31 @@ class UserService
         $this->requester_role_id = 2;
     }
 
-    public function getUserListRoles($role){
-        $users = User::with('roles:id,name')->select('id', 'name', 'company_id', 'role')->where('role', $role)->get();
-        
+    public function getUserListRoles($role, $name = null){
+        $users = User::with(['roles:id,name', 'company:id,name,top_parent_id', 'company.topParent'])->select('id', 'name', 'company_id', 'role')->where('role', $role);
+        if($name) $users = $users->where('name', 'like', "%".$name."%");
+        $users = $users->limit(50)->get();
+        foreach($users as $user){
+            if($user->company->id !== 0){
+                $user->company->full_name = $user->company->topParent ? $user->company->topParent->name.' - '.$user->company->name : $user->company->name;
+                $user->company->makeHidden('topParent');
+            }
+        }
         return $users;
+    }
+
+    public function getFilterUsers($request, $route_name){
+        $name = $request->get('name', null);
+        $users = User::with(['company:id,name,top_parent_id', 'company.topParent'])->select('id', 'name', 'company_id');
+        if($name) $users = $users->where('name', 'like', "%".$name."%");
+        $users = $users->limit(50)->get();
+        foreach($users as $user){
+            if($user->company->id !== 0){
+                $user->company->full_name = $user->company->topParent ? $user->company->topParent->name.' - '.$user->company->name : $user->company->name;
+                $user->company->makeHidden('topParent');
+            }
+        }
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $users, "status" => 200];
     }
 
     public function getUserDetail($account_id, $role_id){

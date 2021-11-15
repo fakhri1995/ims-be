@@ -44,6 +44,8 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteCareer', 'CompanyProfileController@deleteCareer');
 
     //Account Routes
+    $router->get('/getFilterUsers', 'UserController@getFilterUsers');
+
     //Agent Routes
     $router->get('/getAgentDetail', 'UserController@getAgentDetail');
     $router->get('/getAgentList', 'UserController@getAgentList');
