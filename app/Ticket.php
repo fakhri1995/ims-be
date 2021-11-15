@@ -11,7 +11,7 @@ class Ticket extends Model
     protected $hidden = ['ticketable_type', 'requester_id', 'status_id', 'assignable_id', 'ticketable_id', 'assignable_type'];
     
     public function getRaisedAtAttribute($value){
-        $time_difference = Carbon::parse($value)->diffForHumans(null, true, false, 3);
+        $time_difference = Carbon::parse($value)->diffForHumans(null, false, false, 2);
         $splits = explode(" ", $value); 
         return $splits[0]." ($time_difference)";
     }
