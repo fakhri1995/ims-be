@@ -85,7 +85,7 @@ class UserController extends Controller
         
         $data_request = [
             "id" => $request->get('id'),
-            "password" => $request->get('password')
+            "password" => $request->get('new_password')
         ];
 
         $response = $this->userService->changeAgentPassword($data_request, $route_name);
@@ -186,7 +186,7 @@ class UserController extends Controller
         
         $data_request = [
             "id" => $request->get('id'),
-            "password" => $request->get('password')
+            "password" => $request->get('new_password')
         ];
 
         $response = $this->userService->changeRequesterPassword($data_request, $route_name);
