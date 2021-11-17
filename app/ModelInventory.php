@@ -17,8 +17,9 @@ class ModelInventory extends Model
         return $this->belongsTo(Asset::class)->withDefault([
             'id' => 0,
             'name' => 'Asset Tidak Ditemukan',
+            'code' => '000',
             'deleted_at' => null
-        ])->withTrashed()->select('id', 'name', 'deleted_at');
+        ])->withTrashed()->select('id', 'name', 'code', 'deleted_at');
     }
 
     public function inventories()

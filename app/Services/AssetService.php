@@ -481,6 +481,8 @@ class AssetService{
         $asset_id = $request->get('asset_id', null);
         $name = $request->get('name', null);
         $rows = $request->get('rows', 10);
+        $sort_by = $request->get('sort_by', null);
+        $sort_type = $request->get('sort_type', 'desc');
 
         if($rows > 100) $rows = 100;
         if($rows < 1) $rows = 10;
@@ -489,16 +491,21 @@ class AssetService{
 
         if($asset_id) $models = $models->where('asset_id', $asset_id);
         if($name) $models = $models->where('name', 'like', "%".$name."%");
+        if($sort_by){
+            if($sort_by === 'name') $models = $models->orderBy('name', $sort_type);
+            else if($sort_by === 'count') $models = $models->orderBy('inventories_count', $sort_type);
+        }
         
         $models = $models->paginate($rows);
         if($models->isEmpty()) return ["success" => true, "message" => "Model Belum Terisi", "data" => [], "status" => 400];
-        $assets = Asset::select('id', 'name', 'code')->where('code', 'like', '___')->get();
+        
+        
+
         foreach($models as $model){
             $model->asset_name = $model->asset->name;
             if(strlen($model->asset->code) > 3){
-                // return ["success" => true, "message" => "Data Berhasil Diambil", "data" => "MASUKKK", "status" => 200];
                 $parent_model = substr($model->asset->code, 0, 3);
-                $parent_name = $assets->where('code', $parent_model)->first();
+                $parent_name = Asset::where('code', $parent_model)->first();
                 $parent_name = $parent_name === null ? "Asset Not Found" : $parent_name->name;
                 $model->asset_name = $parent_name . " / ". $model->asset_name;
             }
@@ -685,6 +692,24 @@ class AssetService{
         }
     }
 
+    public function getInventoryPartsAssetParent($inventory_parts, $name_attribute)
+    {
+        foreach($inventory_parts as $inventory_part){
+            if(count($inventory_part->$name_attribute)){
+                $inventory_part->makeHidden($name_attribute);
+                $inventory_part->inventory_parts = $this->getInventoryPartsAssetParent($inventory_part->$name_attribute, $name_attribute);
+            }
+            $inventory_part->modelInventory->asset->asset_name = $inventory_part->modelInventory->asset->name;
+            if(strlen($inventory_part->modelInventory->asset->code) > 3){
+                $parent_model = substr($inventory_part->modelInventory->asset->code, 0, 3);
+                $parent = Asset::where('code', $parent_model)->first();
+                $parent_name = $parent === null ? "Asset Not Found" : $parent->name;
+                $inventory_part->modelInventory->asset->asset_name = $parent_name . " / ". $inventory_part->modelInventory->asset->name;
+            }
+        }
+        return $inventory_parts;
+    }
+
     public function getInventoryRelations($route_name)
     {
         $access = $this->checkRouteService->checkRoute($route_name);
@@ -713,21 +738,34 @@ class AssetService{
 
         try{
             $asset_id = $request->get('asset_id', null);
+            $location_id = $request->get('location_id', null);
             $model_id = $request->get('model_id', null);
+            $mig_id = $request->get('mig_id', null);
             $status_condition = $request->get('status_condition', null);
             $status_usage = $request->get('status_usage', null);
             $name = $request->get('name', null);
             $rows = $request->get('rows', 10);
+            $sort_by = $request->get('sort_by', null);
+            $sort_type = $request->get('sort_type', 'desc');
+
 
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
             
-            $inventories = Inventory::with(['statusCondition', 'statusUsage', 'locationInventory', 'modelInventory.asset:id,name,deleted_at'])->select('id', 'model_id', 'inventory_name', 'mig_id', 'status_condition', 'status_usage', 'location');
+            $inventories = Inventory::with(['statusCondition', 'statusUsage', 'locationInventory', 'modelInventory.asset:id,name,code,deleted_at'])->select('id', 'model_id', 'inventory_name', 'mig_id', 'status_condition', 'status_usage', 'location');
 
             if($asset_id){
                 $inventories = $inventories->whereHas('modelInventory', function($q) use ($asset_id){
                     $q->where('model_inventories.asset_id', $asset_id);
                 });
+            }
+            if($location_id){
+                $inventories = $inventories->whereHas('locationInventory', function($q) use ($location_id){
+                    $q->where('companies.id', $location_id);
+                });
+            }
+            if($mig_id){
+                $inventories = $inventories->where('mig_id', 'like', "%".$mig_id."%");
             }
             if($model_id){
                 $inventories = $inventories->where('model_id', $model_id);
@@ -741,8 +779,24 @@ class AssetService{
             if($name){
                 $inventories = $inventories->where('inventory_name', 'like', "%".$name."%");
             }
+
+            if($sort_by){
+                if($sort_by === 'name') $inventories = $inventories->orderBy('inventory_name', $sort_type);
+                else if($sort_by === 'status_usage') $inventories = $inventories->orderBy('status_usage', $sort_type);
+                else if($sort_by === 'status_condition') $inventories = $inventories->orderBy('status_condition', $sort_type);
+                else if($sort_by === 'mig_id') $inventories = $inventories->orderBy('mig_id', $sort_type);
+            }
             
             $inventories = $inventories->paginate($rows);
+            foreach($inventories as $inventory){
+                $inventory->modelInventory->asset->asset_name = $inventory->modelInventory->asset->name;
+                if(strlen($inventory->modelInventory->asset->code) > 3){
+                    $parent_model = substr($inventory->modelInventory->asset->code, 0, 3);
+                    $parent = Asset::where('code', $parent_model)->first();
+                    $parent_name = $parent === null ? "Asset Not Found" : $parent->name;
+                    $inventory->modelInventory->asset->asset_name = $parent_name . " / " . $inventory->modelInventory->asset->name;
+                }
+            }
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventories, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -755,7 +809,16 @@ class AssetService{
         if($access["success"] === false) return $access;
 
         try{
-            $inventory = Inventory::with(['modelInventory.asset:id,name,deleted_at', 'locationInventory', 'additionalAttributes', 'inventoryParts', 'associations'])->find($id);
+            $inventory = Inventory::with(['modelInventory.asset', 'locationInventory', 'additionalAttributes', 'inventoryParts', 'associations'])->find($id);
+            $inventory->modelInventory->asset->asset_name = $inventory->modelInventory->asset->name;
+            if(strlen($inventory->modelInventory->asset->code) > 3){
+                $parent_model = substr($inventory->modelInventory->asset->code, 0, 3);
+                $parent = Asset::where('code', $parent_model)->first();
+                $parent_name = $parent === null ? "Asset Not Found" : $parent->name;
+                $inventory->modelInventory->asset->asset_name = $parent_name . " / " . $inventory->modelInventory->asset->name;
+            }
+            $inventory->makeHidden('inventoryParts');
+            $inventory->inventory_parts = $this->getInventoryPartsAssetParent($inventory->inventoryParts, 'inventoryParts');
             if($inventory === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventory, "status" => 200];
         } catch(Exception $err){
@@ -791,6 +854,17 @@ class AssetService{
             }
             
             $inventories = $inventories->paginate($rows);
+            foreach($inventories as $inventory){
+                $inventory->modelInventory->asset->asset_name = $inventory->modelInventory->asset->name;
+                if(strlen($inventory->modelInventory->asset->code) > 3){
+                    $parent_model = substr($inventory->modelInventory->asset->code, 0, 3);
+                    $parent_name = Asset::where('code', $parent_model)->first();
+                    $parent_name = $parent_name === null ? "Asset Not Found" : $parent_name->name;
+                    $inventory->modelInventory->asset->asset_name = $parent_name . " / ". $inventory->modelInventory->asset->name;
+                }
+                $inventory->makeHidden('inventoryAddableParts');
+                $inventory->inventory_parts = $this->getInventoryPartsAssetParent($inventory->inventoryAddableParts, 'inventoryAddableParts');
+            }
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventories, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -1380,7 +1454,7 @@ class AssetService{
                 $properties = [];
                 $properties['old']['list_parts'] = $old_inventory_parent_list;
                 $properties['attributes']['list_parts'] = $inventory_parent_list;
-                $notes = "Parts Added";
+                // $notes = "Parts Added";
                 $logService->updateLogInventoryPivotParts($id, $causer_id, $properties, $notes);
                 
                 return ["success" => true, "message" => "Berhasil Menambah Part Inventory", "status" => 200];
@@ -1911,18 +1985,19 @@ class AssetService{
         }
     }
 
-    public function getRelationshipAssetDetailList($type_id, $route_name)
+    public function getRelationshipAssetDetailList($request, $route_name)
     {
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
-            $type = (int)$type_id;
+            $type = (int)$request->get('type_id');
             if($type > -1 || $type < -4) return ["success" => false, "message" => "Tipe Id Tidak Tepat", "status" => 400];
             if($type === -1 || $type === -2){     
+                $name = $request->get('name', null);
                 $role_checker = $type * -1 ;       
                 $userService = new UserService;
-                $users = $userService->getUserListRoles($role_checker);
+                $users = $userService->getUserListRoles($role_checker, $name);
                 return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $users, "status" => 200];
             } else if($type === -3){
                 $this->companyService = new CompanyService;
@@ -2152,10 +2227,11 @@ class AssetService{
         try{
             $relationship_asset = RelationshipAsset::find($relationship_asset_id);
             if($relationship_asset === null) return ["success" => false, "message" => "Relationship Asset Tidak Ditemukan", "status" => 400];
-            if($relationship_asset->type_id === -1 || $relationship_asset->type_id === -2){     
+            if($relationship_asset->type_id === -1 || $relationship_asset->type_id === -2){  
+                $name = $request->get('name', null);   
                 $role_checker = $relationship_asset->type_id * -1;       
                 $userService = new UserService;
-                $users = $userService->getUserListRoles($role_checker);
+                $users = $userService->getUserListRoles($role_checker, $name);
                 return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $users, "status" => 200];
             } else if($relationship_asset->type_id === -3){
                 $this->companyService = new CompanyService;

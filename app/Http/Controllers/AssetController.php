@@ -553,9 +553,8 @@ class AssetController extends Controller
     public function getRelationshipAssetDetailList(Request $request)
     {
         $route_name = "RELATIONSHIP_ASSET_ADD";
-        $type_id = $request->get('type_id', null);
 
-        $response = $this->assetService->getRelationshipAssetDetailList($type_id, $route_name);
+        $response = $this->assetService->getRelationshipAssetDetailList($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
