@@ -1262,8 +1262,8 @@ class AssetService{
                 $properties = [];
                 $properties['old']['list_parts'] = $old_replacement_parent_list;
                 $properties['attributes']['list_parts'] = $replacement_parent_list;
-                $notes = "Part Used as Replacement";
-                $logService->updateLogInventoryPivotParts($parent_inventory_replacement->id, $causer_id, $properties, $notes);
+                $inverse_notes = "Part Used as Replacement";
+                $logService->updateLogInventoryPivotParts($parent_inventory_replacement->id, $causer_id, $properties, $inverse_notes);
             }
             
             if(count($inventory_replacement->inventoryPart)){
@@ -1278,7 +1278,7 @@ class AssetService{
             $properties = [];
             $properties['old']['list_parts'] = $old_inventory_parent_list;
             $properties['attributes']['list_parts'] = $inventory_parent_list;
-            $notes = "Part Replaced";
+            // $notes = "Part Replaced";
             $logService->updateLogInventoryPivotParts($parent_inventory->id, $causer_id, $properties, $notes);
             
             return ["success" => true, "message" => "Berhasil Melakukan Replacement Part Inventory", "status" => 200];
@@ -1367,7 +1367,7 @@ class AssetService{
             $properties = [];
             $properties['old']['list_parts'] = $old_inventory_parent_list;
             $properties['attributes']['list_parts'] = $inventory_parent_list;
-            $notes = "Part Removed";
+            // $notes = "Part Removed";
             $logService->updateLogInventoryPivotParts($id, $causer_id, $properties, $notes);
             
             return ["success" => true, "message" => "Berhasil Menghapus Part Inventory", "status" => 200];
