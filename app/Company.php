@@ -51,4 +51,14 @@ class Company extends Model
         if($top_company->parent_id === 1) return $top_company;
         else return $top_company->getTopParent();
     }
+
+    public function fullName()
+    {
+        if($this->topParent){
+            $name = $this->topParent->name.' - '.$this->name;
+        } else {
+            $name = $this->name;
+        }
+        return $name;
+    }
 }

@@ -41,7 +41,7 @@ class Inventory extends Model
         return $this->belongsTo(Company::class, 'location')->withDefault([
             'id' => 0,
             'name' => 'Perusahaan Tidak Ditemukan'
-        ])->withTrashed()->select('id', 'name');
+        ])->withTrashed()->select('id', 'name', 'top_parent_id');
     }
 
     public function additionalAttributes()

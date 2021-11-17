@@ -237,7 +237,16 @@ class TicketService
             $id = $request->get('id');
             $ticket = Ticket::with(['type','status', 'requester', 'ticketable.location','assignable'])->find($id);
             if($ticket === null) return ["success" => false, "message" => "Ticket Tidak Ditemukan", "status" => 400];
-            if($ticket->ticketable_type === 'App\Incident') $ticket->ticketable->inventory;
+            if($ticket->ticketable_type === 'App\Incident'){
+                $ticket->ticketable->inventory;
+                if($ticket->ticketable->inventory->modelInventory->id !== 0 || $ticket->ticketable->inventory->modelInventory->asset->id !== 0){
+                    $ticket->ticketable->inventory->modelInventory->asset->full_name = $ticket->ticketable->inventory->modelInventory->asset->fullName();
+                }
+                if($ticket->ticketable->inventory->locationInventory->id !== 0 ){
+                    $ticket->ticketable->inventory->locationInventory->full_name = $ticket->ticketable->inventory->locationInventory->fullName();
+                    $ticket->ticketable->inventory->locationInventory->makeHidden('topParent');
+                }
+            } 
             $ticket->original_raised_at = $ticket->getRawOriginal('raised_at');
             if(!$ticket->closed_at) $ticket->resolved_time = "-";
             else $ticket->resolved_time = Carbon::parse($ticket->original_raised_at)->diffForHumans($ticket->closed_at, true);
