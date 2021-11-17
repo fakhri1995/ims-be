@@ -631,9 +631,10 @@ class TicketService
         $engineer = $request->get('engineer', null);
         $group = $request->get('group', null);
         $type = $request->get('type', null);
+        $is_history = $request->get('is_history', false);
         $core_attributes = json_decode($request->get('core_attributes','[1,0,0,0,0,0,0,0,0]'));
         $secondary_attributes = json_decode($request->get('secondary_attributes','[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]'));
-        $excel = Excel::download(new TicketsExport($from, $to, $group, $engineer, $type, $core_attributes, $secondary_attributes), 'tickets.xlsx');
+        $excel = Excel::download(new TicketsExport($from, $to, $group, $engineer, $type, $is_history, $core_attributes, $secondary_attributes), 'tickets.xlsx');
         return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $excel, "status" => 200];
     }
     

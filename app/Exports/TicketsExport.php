@@ -10,7 +10,7 @@ use Illuminate\Contracts\View\View;
 class TicketsExport implements FromView
 {
 
-    public function __construct($from = null, $to = null, $group = null, $engineer = null, $type = null, $core_attributes, $secondary_attributes)
+    public function __construct($from = null, $to = null, $group = null, $engineer = null, $type = null, $is_history = false, $core_attributes, $secondary_attributes)
     {
         $generalService = new GeneralService;
         $current_timestamp = $generalService->getTimeNow();
@@ -27,6 +27,8 @@ class TicketsExport implements FromView
             if($engineer) $this->tickets = $this->tickets->where('assignable_id', $engineer)->where('assignable_type', 'App\User');
             else $this->tickets->where('assignable_id', $group)->where('assignable_type', 'App\Group');
         }
+
+        if($is_history) $this->tickets = $this->tickets->where('status_id', 5);
 
         if(!$from){
             $last_month_timestamp_times = strtotime($current_timestamp) - 2592000;
