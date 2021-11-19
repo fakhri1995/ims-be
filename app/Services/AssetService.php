@@ -722,7 +722,7 @@ class AssetService{
             $status_usage = StatusUsageInventory::get();
             
             $this->companyService = new CompanyService;
-            $tree_companies = $this->companyService->getCompanyTreeSelect(auth()->user()->company_id)['data'];
+            $tree_companies = $this->companyService->getCompanyTreeSelect(auth()->user()->id, 'noSubChild', true)['data'];
             
             $data = (object)['vendors' => $vendors, 'manufacturers' => $manufacturers, 'status_condition' => $status_condition, 'status_usage' => $status_usage, 'tree_companies' => $tree_companies];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
@@ -912,7 +912,8 @@ class AssetService{
                 return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $users, "status" => 200];
             } else if($id === -3){
                 $this->companyService = new CompanyService;
-                $client_company_list = $this->companyService->getCompanyTree(auth()->user()->company_id, 2)['data'];
+                $client_company_list = $this->companyService->getCompanyTreeSelect(1, 'clientWithSubChild')['data'];
+                
                 return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $client_company_list, "status" => 200];
             } else {
                 $this->companyService = new CompanyService;
@@ -2001,7 +2002,7 @@ class AssetService{
                 return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $users, "status" => 200];
             } else if($type === -3){
                 $this->companyService = new CompanyService;
-                $companies = $this->companyService->getCompanyTreeSelect(auth()->user()->company_id, true, false)['data'];
+                $companies = $this->companyService->getCompanyTreeSelect(1, 'clientWithSubChild')['data'];
                 return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $companies, "status" => 200];
             } else {
                 $assets[] = [
@@ -2235,7 +2236,7 @@ class AssetService{
                 return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $users, "status" => 200];
             } else if($relationship_asset->type_id === -3){
                 $this->companyService = new CompanyService;
-                $companies = $this->companyService->getCompanyTreeSelect(auth()->user()->company_id, true, false)['data'];
+                $companies = $this->companyService->getCompanyTreeSelect(1, 'clientWithSubChild')['data'];
                 return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $companies, "status" => 200];
             } else {
                 $rows = $request->get('rows', 10);

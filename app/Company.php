@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -16,9 +17,40 @@ class Company extends Model
 
     public $timestamps = false;
 
-    public function children()
+
+    public function child()
     {
         return $this->hasMany(self::class, 'parent_id')->select('id', 'name', 'parent_id');
+    }
+
+    public function allChild()
+    {
+        return $this->hasMany(self::class, 'parent_id')->select('id', 'name as title', 'id as key', 'id as value', 'parent_id');
+    }
+
+    public function subChild()
+    {
+        return $this->hasMany(self::class, 'parent_id')->select('id', 'name as title', 'id as key', 'id as value', 'parent_id')->where('role', 4);
+    }
+
+    public function noSubChild()
+    {
+        return $this->hasMany(self::class, 'parent_id')->select('id', 'name as title', 'id as key', 'id as value', 'parent_id')->where('role', '<>', 4);
+    }
+
+    public function branchChild()
+    {
+        return $this->hasMany(self::class, 'parent_id')->select('id', 'name as title', 'id as key', 'id as value', 'parent_id')->where('role', 3);
+    }
+
+    public function clientChild()
+    {
+        return $this->hasMany(self::class, 'parent_id')->select('id', 'name as title', 'id as key', 'id as value', 'parent_id')->where('role', 2);
+    }
+
+    public function clientWithSubChild()
+    {
+        return $this->hasMany(self::class, 'parent_id')->select('id', 'name as title', 'id as key', 'id as value', 'parent_id')->where('role', '<>', 3);
     }
 
     public function parent()
@@ -26,18 +58,64 @@ class Company extends Model
         return $this->belongsTo(self::class, 'parent_id')->select('id', 'name', 'parent_id');
     }
 
+    public function subParent()
+    {
+        return $this->belongsTo(self::class, 'parent_id')->select('id', 'name', 'parent_id', 'role')->where('role', 4);
+    }
+
     public function topParent()
     {
         return $this->belongsTo(self::class, 'top_parent_id')->select('id', 'name', 'parent_id');
     }
 
-    public function getAllChildren()
+    public function allChildren()
+    {
+        return $this->allChild()->withCount('allChild')->with('allChildren');
+    }
+    
+    public function noSubChildren()
+    {
+        return $this->noSubChild()->withCount('noSubChild')->with('noSubChildren');
+    }
+
+    public function branchChildren()
+    {
+        return $this->branchChild()->withCount('branchChild')->with('branchChildren');
+    }
+
+    public function clientChildren()
+    {
+        return $this->clientChild()->with('clientChildren');
+    }
+
+    public function clientWithSubChildren()
+    {
+        return $this->clientWithSubChild()->with('clientWithSubChildren');
+    }
+
+    public function relation()
+    {
+        return $this->hasMany(RelationshipInventory::class, 'connected_id')->with('relationshipAsset')->select('relationship_asset_id', 'connected_id', 'is_inverse', DB::raw('count(*) as total'))->whereHas('relationshipAsset', function($q){
+            $q->where('relationship_assets.type_id', -3);
+        })->groupBy('relationship_asset_id');
+    }
+
+    public function relationDirect()
+    {
+        return $this->hasMany(RelationshipInventory::class, 'detail_connected_id')->with('relationshipAsset')->select('relationship_asset_id', 'connected_id', 'is_inverse', DB::raw('count(*) as total'))->whereHas('relationshipAsset', function($q){
+            $q->where('relationship_assets.type_id', -3);
+        })->groupBy('relationship_asset_id');
+    }
+
+    // ->groupBy('relationship_assets.relationship_id', 'relationship_assets.is_inverse')
+    // ->select('relationship_asset_id', DB::raw('count(*) as total'))
+    public function getAllChildrenList()
     {
         $companies = new Collection();
 
-        foreach ($this->children as $company) {
+        foreach ($this->child as $company) {
             $companies->push($company);
-            $companies = $companies->merge($company->getAllChildren());
+            $companies = $companies->merge($company->getAllChildrenList());
         }
 
         return $companies;

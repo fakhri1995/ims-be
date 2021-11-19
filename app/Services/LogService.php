@@ -16,18 +16,17 @@ use App\RelationshipAsset;
 use App\ActivityLogInventory;
 use App\ModelInventoryColumn;
 use App\StatusUsageInventory;
-use App\Services\GeneralService;
 use App\StatusConditionInventory;
 use App\ActivityLogInventoryPivot;
 use App\Services\CheckRouteService;
 use App\ActivityLogInventoryRelationship;
+use App\ActivityLogCompany;
 
 class LogService
 {
     public function __construct()
     {
-        $generalService = new GeneralService;
-        $this->current_timestamp = $generalService->getTimeNow();
+
     }
 
     // Get Inventory Log
@@ -56,7 +55,7 @@ class LogService
         $week_logs = [];
         $else_logs = [];
         $not_else = true;
-        $current_timestamp_times = strtotime($this->current_timestamp);
+        $current_timestamp_times = strtotime(date("Y-m-d H:i:s"));
         foreach($logs as $log){
             if($not_else){
                 $timestamp_check = $current_timestamp_times - strtotime($log->date);
@@ -88,6 +87,18 @@ class LogService
             $inventory_pivot_logs = ActivityLogInventoryPivot::where('subject_id', $id)->get();
             foreach($inventory_pivot_logs as $inventory_pivot_log){
                 $properties = $inventory_pivot_log->properties;
+                if(isset($properties->attributes->list_parts)){
+                    $attribute_inventories = Inventory::with('modelInventory:id,name')->select('id','mig_id','model_id')->whereIn('id', $properties->attributes->list_parts)->get();
+                    $properties->attributes->list_parts = $attribute_inventories;
+                } 
+                if(isset($properties->old->list_parts)){
+                    $attribute_inventories = Inventory::with('modelInventory:id,name')->select('id','mig_id','model_id')->whereIn('id', $properties->old->list_parts)->get();
+                    $properties->old->list_parts = $attribute_inventories;
+                } 
+                if(isset($properties->attributes->parent_id)) $properties->attributes->parent_id = Inventory::with('modelInventory:id,name')->select('id','mig_id','model_id')->find($properties->attributes->parent_id);
+                if(isset($properties->old->parent_id)) $properties->old->parent_id = Inventory::with('modelInventory:id,name')->select('id','mig_id','model_id')->find($properties->old->parent_id);
+                if(isset($properties->attributes->child_id)) $properties->attributes->child_id = Inventory::with('modelInventory:id,name')->select('id','mig_id','model_id')->find($properties->attributes->child_id);
+                if(isset($properties->old->child_id)) $properties->old->child_id = Inventory::with('modelInventory:id,name')->select('id','mig_id','model_id')->find($properties->old->child_id);
                 $causer_name = $inventory_pivot_log->causer->name;
                 $temp = (object) [
                     'date' => $inventory_pivot_log->created_at,
@@ -335,7 +346,18 @@ class LogService
         return ["success" => true, "data" => ["ticket_logs" => $ticket_logs], "status" => 200];
     }
 
-    //
+    // Get Company Log
+
+    public function getCompanyLog($request)
+    {
+        $company_id = $request->get('id', null);
+        $rows = $request->get('rows', 10);
+        if($rows < 1) $rows = 10;
+        if($rows > 100) $rows = 10;
+        if($company_id === null) return ["success" => false, "message" => "ID Company Kosong", "status" => 400];
+        $company_logs = ActivityLogCompany::where('company_id', $company_id)->orderBy('created_at', 'desc')->paginate($rows);
+        return ["success" => true, "data" => $company_logs, "status" => 200];
+    }
 
     // Inventory Log
 
@@ -347,7 +369,7 @@ class LogService
         $log->properties = $properties;
         $log->description = $notes;
         $log->log_name = "Created";
-        $log->created_at = $this->current_timestamp;
+        $log->created_at = date("Y-m-d H:i:s");
         $log->save();
     }
 
@@ -359,7 +381,7 @@ class LogService
         $log->properties = $properties;
         $log->description = $notes;
         $log->log_name = "Updated";
-        $log->created_at = $this->current_timestamp;
+        $log->created_at = date("Y-m-d H:i:s");
         $log->save();
     }
 
@@ -371,7 +393,7 @@ class LogService
         $log->properties = $properties;
         $log->description = $notes;
         $log->log_name = "Deleted";
-        $log->created_at = $this->current_timestamp;
+        $log->created_at = date("Y-m-d H:i:s");
         $log->save();
     }
 
@@ -383,7 +405,7 @@ class LogService
         $log->properties = null;
         $log->description = $notes;
         $log->log_name = "Notes";
-        $log->created_at = $this->current_timestamp;
+        $log->created_at = date("Y-m-d H:i:s");
         $log->save();
     }
 
@@ -397,7 +419,7 @@ class LogService
         $log->properties = $properties;
         $log->description = "List Parts of Inventory";
         $log->log_name = "Created";
-        $log->created_at = $this->current_timestamp;
+        $log->created_at = date("Y-m-d H:i:s");
         $log->save();
     }
 
@@ -409,7 +431,7 @@ class LogService
         $log->properties = $properties;
         $log->description = $notes;
         $log->log_name = "Updated";
-        $log->created_at = $this->current_timestamp;
+        $log->created_at = date("Y-m-d H:i:s");
         $log->save();
     }
 
@@ -421,7 +443,7 @@ class LogService
         $log->properties = $properties;
         $log->description = $notes;
         $log->log_name = "Created";
-        $log->created_at = $this->current_timestamp;
+        $log->created_at = date("Y-m-d H:i:s");
         $log->save();
     }
 
@@ -433,7 +455,7 @@ class LogService
         $log->properties = $properties;
         $log->description = $notes;
         $log->log_name = "Updated";
-        $log->created_at = $this->current_timestamp;
+        $log->created_at = date("Y-m-d H:i:s");
         $log->save();
     }
 
@@ -445,7 +467,7 @@ class LogService
         $log->properties = $properties;
         $log->description = $notes;
         $log->log_name = "Deleted";
-        $log->created_at = $this->current_timestamp;
+        $log->created_at = date("Y-m-d H:i:s");
         $log->save();
     }
 
@@ -459,7 +481,7 @@ class LogService
         $log->properties = $properties;
         $log->description = $notes;
         $log->log_name = "Created";
-        $log->created_at = $this->current_timestamp;
+        $log->created_at = date("Y-m-d H:i:s");
         $log->save();
     }
 
@@ -471,7 +493,7 @@ class LogService
         $log->properties = $properties;
         $log->description = $notes;
         $log->log_name = "Updated";
-        $log->created_at = $this->current_timestamp;
+        $log->created_at = date("Y-m-d H:i:s");
         $log->save();
     }
 
@@ -483,7 +505,7 @@ class LogService
         $log->properties = $properties;
         $log->description = $notes;
         $log->log_name = "Deleted";
-        $log->created_at = $this->current_timestamp;
+        $log->created_at = date("Y-m-d H:i:s");
         $log->save();
     }
 
@@ -494,7 +516,7 @@ class LogService
         $log->causer_id = $causer_id;
         $log->properties = ['ticket_id' => $ticket_id];
         $log->log_name = "Created Association";
-        $log->created_at = $this->current_timestamp;
+        $log->created_at = date("Y-m-d H:i:s");
         $log->save();
     }
 
@@ -506,7 +528,7 @@ class LogService
         $log->causer_id = $causer_id;
         $log->properties = ['ticket_id' => $ticket_id];
         $log->log_name = "Deleted Association";
-        $log->created_at = $this->current_timestamp;
+        $log->created_at = date("Y-m-d H:i:s");
         $log->save();
     }
 
@@ -545,14 +567,14 @@ class LogService
     public function createLogTicket($subject_id, $causer_id)
     {
         $log_name = "Raised Ticket";
-        $created_at = $this->current_timestamp;
+        $created_at = date("Y-m-d H:i:s");
         $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at);
     }
 
     public function updateLogTicket($subject_id, $causer_id)
     {
         $log_name = "Ticket Telah Diperbarui";
-        $created_at = $this->current_timestamp;
+        $created_at = date("Y-m-d H:i:s");
         $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at);
     }
 
@@ -562,7 +584,7 @@ class LogService
         if(!$type_status) $type_detail = "Status Tidak Ditemukan";
         else $type_detail = $type_status->name;
         $log_name = "Status Berubah Menjadi $type_detail";
-        $created_at = $this->current_timestamp;
+        $created_at = date("Y-m-d H:i:s");
         $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, $notes);
     }
 
@@ -579,14 +601,14 @@ class LogService
             else $name = $group->name;
         }
         $log_name = "Assigned to $name";
-        $created_at = $this->current_timestamp;
+        $created_at = date("Y-m-d H:i:s");
         $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at);
     }
 
     public function addNoteLogTicket($subject_id, $causer_id, $notes)
     {
         $log_name = "Note Khusus";
-        $created_at = $this->current_timestamp;
+        $created_at = date("Y-m-d H:i:s");
         $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, $notes);
     }
 
@@ -594,9 +616,66 @@ class LogService
     {
         if($old_inventory_id !== null) $properties['old'] = ['inventory' => $old_inventory_id];
         $properties['attributes'] = ['inventory' => $inventory_id];
-        $created_at = $this->current_timestamp;
+        $created_at = date("Y-m-d H:i:s");
         $log_name = json_encode($properties);
         $notes = "SeT IteM";
         $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, $notes);
+    }
+
+    private function addLogCompany($log_name, $company_id, $subjectable_type, $subjectable_id)
+    {
+        $log = new ActivityLogCompany;
+        $log->log_name = $log_name;
+        $log->company_id = $company_id;
+        $log->subjectable_type = $subjectable_type;
+        $log->subjectable_id = $subjectable_id;
+        $log->causer_id = auth()->user()->id;
+        $log->created_at = date("Y-m-d H:i:s");
+        $log->save();
+    }
+
+    public function createCompany($company_id, $subjectable_id, $is_sub = false)
+    {
+        if($is_sub) $log_name = 'Created Sub';
+        else $log_name = 'Created';
+        $subjectable_type = 'App\Company';
+        $this->addLogCompany($log_name, $company_id, $subjectable_type, $subjectable_id);
+    }
+
+    public function updateCompany($company_id, $subjectable_id, $is_sub = false)
+    {
+        if($is_sub) $log_name = 'Updated Sub';
+        else $log_name = 'Updated';
+        $subjectable_type = 'App\Company';
+        $this->addLogCompany($log_name, $company_id, $subjectable_type, $subjectable_id);
+    }
+
+    public function deleteCompany($company_id, $subjectable_id, $is_sub = false)
+    {
+        if($is_sub) $log_name = 'Deleted Sub';
+        else  $log_name = 'Deleted';
+        $subjectable_type = 'App\Company';
+        $this->addLogCompany($log_name, $company_id, $subjectable_type, $subjectable_id);
+    }
+
+    public function createBank($company_id, $subjectable_id)
+    {
+        $log_name = 'Created';
+        $subjectable_type = 'App\Bank';
+        $this->addLogCompany($log_name, $company_id, $subjectable_type, $subjectable_id);
+    }
+
+    public function updateBank($company_id, $subjectable_id)
+    {
+        $log_name = 'Updated';
+        $subjectable_type = 'App\Bank';
+        $this->addLogCompany($log_name, $company_id, $subjectable_type, $subjectable_id);
+    }
+
+    public function deleteBank($company_id, $subjectable_id)
+    {
+        $log_name = 'Deleted';
+        $subjectable_type = 'App\Bank';
+        $this->addLogCompany($log_name, $company_id, $subjectable_type, $subjectable_id);
     }
 }

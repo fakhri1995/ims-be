@@ -28,6 +28,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getClientTicketLog', 'ActivityLogController@getClientTicketLog');
     $router->get('/getTicketLog', 'ActivityLogController@getTicketLog');
     $router->get('/getCloseTicketLog', 'ActivityLogController@getCloseTicketLog');
+    $router->get('/getCompanyLog', 'ActivityLogController@getCompanyLog');
 
     //User Routes
     $router->post('/logout', 'LoginController@logout');
@@ -79,14 +80,17 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteRequesterGroup', 'GroupController@deleteRequesterGroup');
 
     //Company Routes
-    $router->get('/getCompanyClientList', 'CompanyController@getCompanyClientList');
+    // $router->get('/getCompanyClientList', 'CompanyController@getCompanyClientList');
     $router->get('/getLocations', 'CompanyController@getLocations');
+    $router->post('/addCompanySub', 'CompanyController@addCompanySub');
+    $router->put('/updateCompanySub', 'CompanyController@updateCompanySub');
+    $router->delete('/deleteCompanySub', 'CompanyController@deleteCompanySub');
 
-    //MIG Company Routes
+    //My Company Routes
     $router->get('/getMainCompanyDetail', 'CompanyController@getMainCompanyDetail');
     $router->put('/updateMainCompany', 'CompanyController@updateMainCompany');
 
-    //MIG Branch Company Routes
+    //Branch Company Routes
     $router->get('/getBranchCompanyList', 'CompanyController@getBranchCompanyList');
     $router->get('/getCompanyBranchDetail', 'CompanyController@getCompanyBranchDetail');
     $router->post('/addCompanyBranch', 'CompanyController@addCompanyBranch');
@@ -94,7 +98,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/companyBranchActivation', 'CompanyController@companyBranchActivation');
     $router->delete('/deleteCompanyBranch', 'CompanyController@deleteCompanyBranch');
 
-    //MIG Client Company Routes
+    //Client Company Routes
     $router->get('/getClientCompanyList', 'CompanyController@getClientCompanyList');
     $router->get('/getCompanyClientDetail', 'CompanyController@getCompanyClientDetail');
     $router->post('/addCompanyClient', 'CompanyController@addCompanyClient');

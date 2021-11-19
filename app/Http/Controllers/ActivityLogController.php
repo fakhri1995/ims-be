@@ -54,4 +54,13 @@ class ActivityLogController extends Controller
         $response = $this->logService->getCloseTicketLog($id, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    // Company
+
+    public function getCompanyLog(Request $request){
+        $route_name = "LOG_COMPANY_GET";   
+        
+        $response = $this->logService->getCompanyLog($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }

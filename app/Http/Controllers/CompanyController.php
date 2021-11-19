@@ -42,23 +42,8 @@ class CompanyController extends Controller
     public function updateMainCompany(Request $request)
     {
         $route_name = "MAIN_COMPANY_UPDATE";
-        
-        $data_request = [
-            'id' => auth()->user()->company_id,
-            'name' => $request->get('name'),
-            'address' => $request->get('address'),
-            'phone_number' => $request->get('phone_number'),
-            'image_logo' => $request->get('image_logo'),
-            'singkatan' => $request->get('singkatan'),
-            'tanggal_pkp' => $request->get('tanggal_pkp'),
-            'penanggung_jawab' => $request->get('penanggung_jawab'),
-            'npwp' => $request->get('npwp'),
-            'fax' => $request->get('fax'),
-            'email' => $request->get('email'),
-            'website' => $request->get('website')
-        ];
 
-        $response = $this->companyService->updateMainCompany($data_request, $route_name);
+        $response = $this->companyService->updateMainCompany($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -85,38 +70,15 @@ class CompanyController extends Controller
     {
         $route_name = "COMPANY_BRANCH_ADD";
         
-        $data_request = [
-            'name' => $request->get('name'),
-            'address' => $request->get('address'),
-            'phone_number' => $request->get('phone_number'),
-            'image_logo' => $request->get('image_logo', null),
-            'parent_id' => $request->get('parent_id', auth()->user()->company->parent_id)
-        ];
-        
-        $response = $this->companyService->addCompanyBranch($data_request, $route_name);
+        $response = $this->companyService->addCompanyBranch($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function updateCompanyBranch(Request $request)
     {
         $route_name = "COMPANY_BRANCH_UPDATE";
-        
-        $data_request = [
-            'id' => $request->get('id'),
-            'name' => $request->get('name'),
-            'address' => $request->get('address'),
-            'phone_number' => $request->get('phone_number'),
-            'image_logo' => $request->get('image_logo'),
-            'singkatan' => $request->get('singkatan'),
-            'tanggal_pkp' => $request->get('tanggal_pkp'),
-            'penanggung_jawab' => $request->get('penanggung_jawab'),
-            'npwp' => $request->get('npwp'),
-            'fax' => $request->get('fax'),
-            'email' => $request->get('email'),
-            'website' => $request->get('website')
-        ];
 
-        $response = $this->companyService->updateCompanyBranch($data_request, $route_name);
+        $response = $this->companyService->updateCompanyBranch($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -137,8 +99,7 @@ class CompanyController extends Controller
     {
         $route_name = "COMPANY_BRANCH_DELETE";
 
-        $id = $request->get('id', null);
-        $response = $this->companyService->deleteCompanyBranch($id, $route_name);
+        $response = $this->companyService->deleteCompanyBranch($request, $route_name);
         return response()->json($response, $response['status']);
     }
     
@@ -173,38 +134,15 @@ class CompanyController extends Controller
     {
         $route_name = "COMPANY_CLIENT_ADD";
         
-        $data_request = [
-            'name' => $request->get('name'),
-            'address' => $request->get('address'),
-            'phone_number' => $request->get('phone_number'),
-            'image_logo' => $request->get('image_logo', null),
-            'parent_id' => $request->get('parent_id', auth()->user()->company->parent_id)
-        ];
-        
-        $response = $this->companyService->addCompanyClient($data_request, $route_name);
+        $response = $this->companyService->addCompanyClient($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function updateCompanyClient(Request $request)
     {
         $route_name = "COMPANY_CLIENT_UPDATE";
-        
-        $data_request = [
-            'id' => $request->get('id'),
-            'name' => $request->get('name'),
-            'address' => $request->get('address'),
-            'phone_number' => $request->get('phone_number'),
-            'image_logo' => $request->get('image_logo'),
-            'singkatan' => $request->get('singkatan'),
-            'tanggal_pkp' => $request->get('tanggal_pkp'),
-            'penanggung_jawab' => $request->get('penanggung_jawab'),
-            'npwp' => $request->get('npwp'),
-            'fax' => $request->get('fax'),
-            'email' => $request->get('email'),
-            'website' => $request->get('website')
-        ];
 
-        $response = $this->companyService->updateCompanyClient($data_request, $route_name);
+        $response = $this->companyService->updateCompanyClient($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -225,8 +163,31 @@ class CompanyController extends Controller
     {
         $route_name = "COMPANY_CLIENT_DELETE";
 
-        $id = $request->get('id', null);
-        $response = $this->companyService->deleteCompanyClient($id, $route_name);
+        $response = $this->companyService->deleteCompanyClient($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function addCompanySub(Request $request)
+    {
+        $route_name = "COMPANY_SUB_ADD";
+        
+        $response = $this->companyService->addCompanySub($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateCompanySub(Request $request)
+    {
+        $route_name = "COMPANY_SUB_UPDATE";
+        
+        $response = $this->companyService->updateCompanySub($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteCompanySub(Request $request)
+    {
+        $route_name = "COMPANY_SUB_DELETE";
+        
+        $response = $this->companyService->deleteCompanySub($request, $route_name);
         return response()->json($response, $response['status']);
     }
 

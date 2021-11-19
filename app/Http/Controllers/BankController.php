@@ -30,29 +30,16 @@ class BankController extends Controller
     public function addMainBank(Request $request)
     {
         $route_name = "MAIN_BANK_ADD";
-        $data_request = [
-            'name' => $request->get('name'),
-            'account_number' => $request->get('account_number'),
-            'owner' => $request->get('owner'),
-            'currency' => $request->get('currency')
-        ];
         
-        $response = $this->bankService->addMainBank($data_request, $route_name);
+        $response = $this->bankService->addMainBank($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function updateMainBank(Request $request)
     {
         $route_name = "MAIN_BANK_UPDATE";
-        $data_request = [
-            'id' => $request->get('id', null),
-            'name' => $request->get('name'),
-            'account_number' => $request->get('account_number'),
-            'owner' => $request->get('owner'),
-            'currency' => $request->get('currency')
-        ];
         
-        $response = $this->bankService->updateMainBank($data_request, $route_name);
+        $response = $this->bankService->updateMainBank($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -78,30 +65,16 @@ class BankController extends Controller
     public function addClientBank(Request $request)
     {
         $route_name = "CLIENT_BANK_ADD";
-        $data_request = [
-            'company_id' => $request->get('company_id'),
-            'name' => $request->get('name'),
-            'account_number' => $request->get('account_number'),
-            'owner' => $request->get('owner'),
-            'currency' => $request->get('currency')
-        ];
         
-        $response = $this->bankService->addClientBank($data_request, $route_name);
+        $response = $this->bankService->addClientBank($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function updateClientBank(Request $request)
     {
         $route_name = "CLIENT_BANK_UPDATE";
-        $data_request = [
-            'id' => $request->get('id', null),
-            'name' => $request->get('name'),
-            'account_number' => $request->get('account_number'),
-            'owner' => $request->get('owner'),
-            'currency' => $request->get('currency')
-        ];
         
-        $response = $this->bankService->updateClientBank($data_request, $route_name);
+        $response = $this->bankService->updateClientBank($request, $route_name);
         return response()->json($response, $response['status']);
     }
 

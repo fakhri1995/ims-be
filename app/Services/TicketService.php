@@ -35,7 +35,7 @@ class TicketService
         if($access["success"] === false) return $access;
 
         $companyService = new CompanyService;
-        $companies = $companyService->getCompanyTreeSelect(1, true);
+        $companies = $companyService->getCompanyTreeSelect(1, 'clientChild');
 
         $status_ticket = TicketStatus::all();
 
@@ -237,6 +237,10 @@ class TicketService
             $id = $request->get('id');
             $ticket = Ticket::with(['type','status', 'requester', 'ticketable.location','assignable'])->find($id);
             if($ticket === null) return ["success" => false, "message" => "Ticket Tidak Ditemukan", "status" => 400];
+            if(!$admin){
+                $company_user_login_id = auth()->user()->company_id;
+                if($ticket->requester->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
+            }
             if($ticket->ticketable_type === 'App\Incident'){
                 $ticket->ticketable->inventory;
                 if($ticket->ticketable->inventory !== null){
@@ -252,10 +256,6 @@ class TicketService
             $ticket->original_raised_at = $ticket->getRawOriginal('raised_at');
             if(!$ticket->closed_at) $ticket->resolved_time = "-";
             else $ticket->resolved_time = Carbon::parse($ticket->original_raised_at)->diffForHumans($ticket->closed_at, true);
-            if(!$admin){
-                $company_user_login_id = auth()->user()->company_id;
-                if($ticket->requester->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
-            }
             if($ticket->ticketable->id !== 0 || $ticket->ticketable->location->id !== 0){
                 $ticket->ticketable->location->full_name = $ticket->ticketable->location->topParent ? $ticket->ticketable->location->topParent->name.' - '.$ticket->ticketable->location->name : $ticket->ticketable->location->name;
             }

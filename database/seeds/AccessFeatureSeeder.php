@@ -663,6 +663,22 @@ class AccessFeatureSeeder extends Seeder
             [
                 "name" => "MESSAGES_GET",
                 "description" => "Fitur untuk mengambil list message dari company profile"
+            ],
+            [
+                "name" => "COMPANY_SUB_ADD",
+                "description" => "Fitur untuk COMPANY_SUB_ADD"
+            ],
+            [
+                "name" => "COMPANY_SUB_UPDATE",
+                "description" => "Fitur untuk COMPANY_SUB_UPDATE"
+            ],
+            [
+                "name" => "COMPANY_SUB_DELETE",
+                "description" => "Fitur untuk COMPANY_SUB_DELETE"
+            ],
+            [
+                "name" => "LOG_COMPANY_GET",
+                "description" => "Fitur untuk LOG_COMPANY_GET"
             ]
         ];
         return $data;
@@ -763,7 +779,7 @@ class AccessFeatureSeeder extends Seeder
             ],
             [
                 "name" => "Main Company",
-                "description" => "Modul yang berisi fitur-fitur MIG company",
+                "description" => "Modul yang berisi fitur-fitur My company",
                 "features" => [
                     [
                         "name" => "MAIN_COMPANY_GET"
@@ -785,6 +801,24 @@ class AccessFeatureSeeder extends Seeder
                     ],
                     [
                         "name" => "COMPANY_RELATIONSHIP_INVENTORY_GET"
+                    ],
+                    [
+                        "name" => "LOG_COMPANY_GET"
+                    ]
+                ]
+            ],
+            [
+                "name" => "Sub Company",
+                "description" => "Modul yang berisi fitur-fitur Sub company",
+                "features" => [
+                    [
+                        "name" => "COMPANY_SUB_ADD"
+                    ],
+                    [
+                        "name" => "COMPANY_SUB_UPDATE"
+                    ],
+                    [
+                        "name" => "COMPANY_SUB_DELETE"
                     ]
                 ]
             ],
