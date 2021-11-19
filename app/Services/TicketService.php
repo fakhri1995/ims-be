@@ -636,7 +636,8 @@ class TicketService
         $is_history = $request->get('is_history', false);
         $core_attributes = json_decode($request->get('core_attributes','[1,0,0,0,0,0,0,0,0]'));
         $secondary_attributes = json_decode($request->get('secondary_attributes','[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]'));
-        $excel = Excel::download(new TicketsExport($from, $to, $group, $engineer, $type, $is_history, $core_attributes, $secondary_attributes), 'tickets.xlsx');
+        $name_date = date("d-m-Y H:i");
+        $excel = Excel::download(new TicketsExport($from, $to, $group, $engineer, $type, $is_history, $core_attributes, $secondary_attributes), 'Ticket-'.$name_date.'.xlsx');
         return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $excel, "status" => 200];
     }
     
@@ -661,7 +662,7 @@ class TicketService
         $ticket->makeVisible($visible);
         $data = ['ticket' => $ticket];
         $pdf = PDF::loadView('pdf.ticket', $data);
-        return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $pdf->download('ticket.pdf'), "status" => 200];
+        return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $pdf->download('Ticket '.$ticket->type->code.'-'.$ticket->ticketable_id.'.pdf'), "status" => 200];
     }
 
     public function ticketExport($request, $route_name)
