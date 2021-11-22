@@ -8,9 +8,9 @@ class ActivityLogCompany extends Model
 {
     public $timestamps = false;
 
-    protected $with = ['ticketable', 'causer'];
+    protected $with = ['subjectable', 'causer'];
 
-    public function ticketable(){
+    public function subjectable(){
         return $this->morphTo()->withDefault([
             'id' => 0,
             'name' => '-'
