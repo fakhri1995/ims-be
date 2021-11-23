@@ -30,7 +30,7 @@ class Company extends Model
 
     public function subChild()
     {
-        return $this->hasMany(self::class, 'parent_id')->select('id', 'name as title', 'id as key', 'id as value', 'parent_id','role')->where('role', 4);
+        return $this->hasMany(self::class, 'parent_id')->select('id', 'name as title', 'id as key', 'id as value', 'parent_id', 'role', 'image_logo')->where('role', 4);
     }
 
     public function noSubChild()
@@ -95,7 +95,12 @@ class Company extends Model
 
     public function subChildren()
     {
-        return $this->subChild()->withCount('inventories')->with('subChildren');
+        return $this->subChild()->withCount('inventories', 'subChild')->with('subChildren');
+    }
+
+    public function banks()
+    {
+        return $this->hasMany(Bank::class);
     }
 
     public function relation()

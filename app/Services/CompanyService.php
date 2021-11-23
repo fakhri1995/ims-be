@@ -157,7 +157,7 @@ class CompanyService
 
             $id = $request->get('id', null);
             if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
-            $company = Company::with(['noSubChild.noSubChild.noSubChild'])->find($id);
+            $company = Company::with(['noSubChild.noSubChild.noSubChild', 'banks'])->find($id);
             if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
             $company->induk_level_1_count = $company->noSubChild->count();
             $company->induk_level_2_count = 0;
