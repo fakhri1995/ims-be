@@ -356,6 +356,12 @@ class LogService
         if($rows > 100) $rows = 10;
         if($company_id === null) return ["success" => false, "message" => "ID Company Kosong", "status" => 400];
         $company_logs = ActivityLogCompany::where('company_id', $company_id)->orderBy('created_at', 'desc')->paginate($rows);
+        foreach($company_logs as $company_log){
+            if(str_contains($company_log->log_name, 'Sub')){
+                $company = Company::with('parent')->find($company_log->subjectable_id);
+                $company_log->subjectable->parent_name = $company->parent->name;
+            } 
+        }
         return ["success" => true, "data" => $company_logs, "status" => 200];
     }
 

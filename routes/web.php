@@ -79,32 +79,26 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/updateRequesterGroup', 'GroupController@updateRequesterGroup');
     $router->delete('/deleteRequesterGroup', 'GroupController@deleteRequesterGroup');
 
-    //Company Routes
-    // $router->get('/getCompanyClientList', 'CompanyController@getCompanyClientList');
+    //General Company Routes
+    $router->get('/getCompanyInventories', 'AssetController@getCompanyInventories');
+    $router->get('/getCompanyClientList', 'CompanyController@getCompanyClientList');
+    $router->get('/getMainLocations', 'CompanyController@getMainLocations');
     $router->get('/getLocations', 'CompanyController@getLocations');
-    $router->post('/addCompanySub', 'CompanyController@addCompanySub');
-    $router->put('/updateCompanySub', 'CompanyController@updateCompanySub');
-    $router->delete('/deleteCompanySub', 'CompanyController@deleteCompanySub');
+    $router->get('/getCompanyDetail', 'CompanyController@getCompanyDetail');
+    $router->get('/getSubCompanyDetail', 'CompanyController@getSubCompanyDetail');
+    $router->get('/getSubCompanyProfile', 'CompanyController@getSubCompanyProfile');
+    $router->put('/updateCompany', 'CompanyController@updateCompany');
+    $router->put('/companyActivation', 'CompanyController@companyActivation');
+    $router->delete('/deleteCompany', 'CompanyController@deleteCompany');
 
-    //My Company Routes
-    $router->get('/getMainCompanyDetail', 'CompanyController@getMainCompanyDetail');
-    $router->put('/updateMainCompany', 'CompanyController@updateMainCompany');
-
-    //Branch Company Routes
-    $router->get('/getBranchCompanyList', 'CompanyController@getBranchCompanyList');
-    $router->get('/getCompanyBranchDetail', 'CompanyController@getCompanyBranchDetail');
+    // Add Route Company
     $router->post('/addCompanyBranch', 'CompanyController@addCompanyBranch');
-    $router->put('/updateCompanyBranch', 'CompanyController@updateCompanyBranch');
-    $router->put('/companyBranchActivation', 'CompanyController@companyBranchActivation');
-    $router->delete('/deleteCompanyBranch', 'CompanyController@deleteCompanyBranch');
-
-    //Client Company Routes
-    $router->get('/getClientCompanyList', 'CompanyController@getClientCompanyList');
-    $router->get('/getCompanyClientDetail', 'CompanyController@getCompanyClientDetail');
     $router->post('/addCompanyClient', 'CompanyController@addCompanyClient');
-    $router->put('/updateCompanyClient', 'CompanyController@updateCompanyClient');
-    $router->put('/companyClientActivation', 'CompanyController@companyClientActivation');
-    $router->delete('/deleteCompanyClient', 'CompanyController@deleteCompanyClient');
+    $router->post('/addCompanySub', 'CompanyController@addCompanySub');
+
+    // Tree Company List
+    $router->get('/getBranchCompanyList', 'CompanyController@getBranchCompanyList');
+    $router->get('/getClientCompanyList', 'CompanyController@getClientCompanyList');
     
     //Main Bank Account Routes
     $router->get('/getMainBanks', 'BankController@getMainBanks');

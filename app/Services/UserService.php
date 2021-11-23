@@ -4,7 +4,6 @@ namespace App\Services;
 use App\User;
 use Exception;
 use App\Services\CompanyService;
-use App\Services\GeneralService;
 use App\Services\CheckRouteService;
 use Illuminate\Support\Facades\Hash;
 
@@ -109,7 +108,7 @@ class UserService
         ->where('users.role', $role_id);
         if($company_id !== 1){
             $company_service = new CompanyService;
-            $company_list = $company_service->checkCompanyList($company_id);
+            $company_list = $company_service->checkNoSubCompanyList($company_id);
             $users = $users->whereIn('users.company_id', $company_list);
         }
         
@@ -152,7 +151,6 @@ class UserService
         $check_email_user = User::where('email', $data['email'])->first();
         if($check_email_user) return ["success" => false, "message" => "Email Telah Digunakan", "status" => 400];
         if($data['password'] !== $data['confirm_password']) return ["success" => false, "message" => "Password Tidak Sama", "status" => 400];
-        $generalService = new GeneralService;
         try{
             $user = new User;
             $user->name = $data['fullname'];
@@ -163,7 +161,7 @@ class UserService
             $user->phone_number = $data['phone_number'];
             $user->profile_image = $data['profile_image'];
             $user->is_enabled = false;
-            $user->created_time = $generalService->getTimeNow();
+            $user->created_time = date("Y-m-d H:i:s");
             $user->save();
             $data_request = [
                 "id" => $user->id,

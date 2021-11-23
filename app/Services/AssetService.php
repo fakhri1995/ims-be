@@ -722,7 +722,7 @@ class AssetService{
             $status_usage = StatusUsageInventory::get();
             
             $this->companyService = new CompanyService;
-            $tree_companies = $this->companyService->getCompanyTreeSelect(auth()->user()->id, 'noSubChild', true)['data'];
+            $tree_companies = $this->companyService->getCompanyTreeSelect(auth()->user()->id, 'noSubChild');
             
             $data = (object)['vendors' => $vendors, 'manufacturers' => $manufacturers, 'status_condition' => $status_condition, 'status_usage' => $status_usage, 'tree_companies' => $tree_companies];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
@@ -797,6 +797,57 @@ class AssetService{
                     $inventory->modelInventory->asset->asset_name = $parent_name . " / " . $inventory->modelInventory->asset->name;
                 }
             }
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventories, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getCompanyInventories($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $id = $request->get('id', null);
+            $keyword = $request->get('keyword', null);
+            $name = $request->get('name', null);
+            $rows = $request->get('rows', 10);
+
+            $company = Company::find($id);
+            if(!$company) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
+
+            if($rows > 100) $rows = 100;
+            if($rows < 1) $rows = 10;
+            
+            $companyService = new CompanyService;
+            $company_list = $companyService->checkSubCompanyList($id);
+            $inventories = Inventory::with(['modelInventory:id,asset_id,name','modelInventory.asset:id,name,code', 'locationInventory:id,name,parent_id,role'])->select('id', 'model_id', 'mig_id','location')->whereIn('location', $company_list);
+
+            if($keyword){
+                $inventories = $inventories->where(function($query) use ($keyword) {
+                    $query->orWhere('mig_id', 'like', "%".$keyword."%");
+                    $query->orWhereHas('modelInventory', function($q) use ($keyword){
+                        $q->where('model_inventories.name', 'like', "%".$keyword."%");
+                    });
+                    $query->orWhereHas('modelInventory.asset', function($q) use ($keyword){
+                        $q->where('assets.name', 'like', "%".$keyword."%");
+                    });
+                });
+            }
+            
+            $inventories = $inventories->paginate($rows);
+            foreach($inventories as $inventory){
+                $inventory->modelInventory->asset->asset_name = $inventory->modelInventory->asset->name;
+                if(strlen($inventory->modelInventory->asset->code) > 3){
+                    $parent_model = substr($inventory->modelInventory->asset->code, 0, 3);
+                    $parent = Asset::where('code', $parent_model)->first();
+                    $parent_name = $parent === null ? "Asset Not Found" : $parent->name;
+                    $inventory->modelInventory->asset->asset_name = $parent_name . " / " . $inventory->modelInventory->asset->name;
+                }
+                $inventory->full_location = $inventory->locationInventory->fullSubName();
+            }
+            $inventories->makeHidden('locationInventory');
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventories, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -912,12 +963,12 @@ class AssetService{
                 return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $users, "status" => 200];
             } else if($id === -3){
                 $this->companyService = new CompanyService;
-                $client_company_list = $this->companyService->getCompanyTreeSelect(1, 'clientWithSubChild')['data'];
+                $client_company_list = $this->companyService->getCompanyTreeSelect(1, 'clientWithSubChild');
                 
                 return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $client_company_list, "status" => 200];
             } else {
                 $this->companyService = new CompanyService;
-                $client_company_list = $this->companyService->getLocations($id, true)['data'];
+                $client_company_list = $this->companyService->getCompanyTreeSelect($id, 'clientWithSubChild');
                 
                 $front_end_data = [$client_company_list];
                 return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $front_end_data, "status" => 200];
@@ -2002,7 +2053,7 @@ class AssetService{
                 return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $users, "status" => 200];
             } else if($type === -3){
                 $this->companyService = new CompanyService;
-                $companies = $this->companyService->getCompanyTreeSelect(1, 'clientWithSubChild')['data'];
+                $companies = $this->companyService->getCompanyTreeSelect(1, 'clientWithSubChild');
                 return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $companies, "status" => 200];
             } else {
                 $assets[] = [
@@ -2236,7 +2287,7 @@ class AssetService{
                 return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $users, "status" => 200];
             } else if($relationship_asset->type_id === -3){
                 $this->companyService = new CompanyService;
-                $companies = $this->companyService->getCompanyTreeSelect(1, 'clientWithSubChild')['data'];
+                $companies = $this->companyService->getCompanyTreeSelect(1, 'clientWithSubChild');
                 return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $companies, "status" => 200];
             } else {
                 $rows = $request->get('rows', 10);

@@ -30,7 +30,7 @@ class Company extends Model
 
     public function subChild()
     {
-        return $this->hasMany(self::class, 'parent_id')->select('id', 'name as title', 'id as key', 'id as value', 'parent_id')->where('role', 4);
+        return $this->hasMany(self::class, 'parent_id')->select('id', 'name as title', 'id as key', 'id as value', 'parent_id','role')->where('role', 4);
     }
 
     public function noSubChild()
@@ -55,7 +55,7 @@ class Company extends Model
 
     public function parent()
     {
-        return $this->belongsTo(self::class, 'parent_id')->select('id', 'name', 'parent_id');
+        return $this->belongsTo(self::class, 'parent_id')->select('id', 'name', 'parent_id','role');
     }
 
     public function subParent()
@@ -93,6 +93,11 @@ class Company extends Model
         return $this->clientWithSubChild()->with('clientWithSubChildren');
     }
 
+    public function subChildren()
+    {
+        return $this->subChild()->withCount('inventories')->with('subChildren');
+    }
+
     public function relation()
     {
         return $this->hasMany(RelationshipInventory::class, 'connected_id')->with('relationshipAsset')->select('relationship_asset_id', 'connected_id', 'is_inverse', DB::raw('count(*) as total'))->whereHas('relationshipAsset', function($q){
@@ -107,8 +112,34 @@ class Company extends Model
         })->groupBy('relationship_asset_id');
     }
 
-    // ->groupBy('relationship_assets.relationship_id', 'relationship_assets.is_inverse')
-    // ->select('relationship_asset_id', DB::raw('count(*) as total'))
+    public function inventories()
+    {
+        return $this->hasMany(Inventory::class, 'location');
+    }
+
+    public function getAllNoSubChildrenList()
+    {
+        $companies = new Collection();
+
+        foreach ($this->noSubChild as $company) {
+            $companies->push($company);
+            $companies = $companies->merge($company->getAllNoSubChildrenList());
+        }
+
+        return $companies;
+    }
+
+    public function getAllSubChildrenList()
+    {
+        $companies = new Collection();
+
+        foreach ($this->subChild as $company) {
+            $companies->push($company);
+            $companies = $companies->merge($company->getAllSubChildrenList());
+        }
+
+        return $companies;
+    }
     public function getAllChildrenList()
     {
         $companies = new Collection();
@@ -132,11 +163,30 @@ class Company extends Model
 
     public function fullName()
     {
-        if($this->topParent){
-            $name = $this->topParent->name.' - '.$this->name;
-        } else {
-            $name = $this->name;
-        }
+        if($this->topParent) $name = $this->topParent->name.' - '.$this->name;
+        else $name = $this->name;
         return $name;
+    }
+
+    public function fullSubName()
+    {
+        if($this->role !== 4) $name = '-';
+        else if($this->parent->role === 4) $name = $this->parent->fullSubName().' / '.$this->name;
+        else $name = $this->name; 
+        return $name;
+    }
+
+    public function fullSubNameWParent()
+    {
+        if($this->role !== 4) $name = $this->name;
+        else $name = $this->parent->fullSubNameWParent().' / '.$this->name;
+        return $name;
+    }
+
+    public function level($level)
+    {
+        $level = $level + 1;
+        if($this->role !== 4) return $level;
+        return $this->parent->level($level);
     }
 }
