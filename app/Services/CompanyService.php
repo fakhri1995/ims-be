@@ -186,7 +186,7 @@ class CompanyService
             if($access["success"] === false) return $access;
             $id = $request->get('id', null);
             if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
-            $company = Company::with(['parent:id,name', 'subChildren', 'subChild.subChild', 'noSubChild.noSubChild.noSubChild'])->find($id);
+            $company = Company::with(['parent:id,name,parent_id,role', 'subChildren', 'subChild.subChild', 'noSubChild.noSubChild.noSubChild'])->find($id);
             if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
             $company->sub_location_level_1_count = count($company->subChild);
             $company->sub_location_level_2_count = 0;
@@ -210,8 +210,10 @@ class CompanyService
                     }
                 }
             }
+            $company->level = $company->level(0);
             $company->makeHidden('deleted_at','parent_id', 'subChild', 'noSubChild');
             $company = $this->leveling($company);
+            $company->parent->makeHidden(['parent', 'role']);
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $company, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -224,7 +226,7 @@ class CompanyService
             if($access["success"] === false) return $access;
             $id = $request->get('id', null);
             if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
-            $company = Company::select('id', 'name', 'parent_id', 'phone_number', 'role', 'image_logo')->find($id);
+            $company = Company::select('id', 'name', 'phone_number', 'image_logo')->find($id);
             if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
             $company_list = $this->checkSubCompanyList($id);
             $inventory_count = Inventory::whereIn('location', $company_list)->count();
@@ -235,8 +237,6 @@ class CompanyService
             $company->used_inventory_count = $used_inventory_count;
             $company->good_inventory_percentage = $inventory_count ? floor($good_inventory_count/$inventory_count * 100) : 0;
             $company->used_inventory_percentage = $inventory_count ? floor($used_inventory_count/$inventory_count * 100) : 0;
-            $company->level = $company->level(0);
-            $company->parent->makeHidden('role','parent');
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $company, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
