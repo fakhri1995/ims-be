@@ -54,7 +54,7 @@ class TicketService
         $companyService = new CompanyService;
         $companies = $companyService->getLocations();
 
-        $status_ticket = TicketStatus::all()->whereNotIn('id', [2,3]);
+        $status_ticket = TicketStatus::whereNotIn('id', [2,3])->get();
 
         $ticket_types = TicketType::all();
         $product_types = IncidentProductType::all();
