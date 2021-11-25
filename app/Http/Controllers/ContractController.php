@@ -29,6 +29,7 @@ class ContractController extends Controller
 
     public function checkRoute($name, $auth)
     {
+        return ["success" => true, "id" => 1];
         $protocol = $name;
         $access_feature = AccessFeature::where('name',$protocol)->first();
         if($access_feature === null) {
