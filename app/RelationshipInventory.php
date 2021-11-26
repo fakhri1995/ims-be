@@ -3,32 +3,20 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RelationshipInventory extends Model
 {
-    use SoftDeletes;
-
     public $timestamps = false;
 
-    public function relationshipAsset()
+    public function relationship()
     {
-        return $this->belongsTo(RelationshipAsset::class)->withDefault([
+        return $this->belongsTo(Relationship::class, 'relationship_id')->withDefault([
             'id' => 0,
-            'subject_id' => 0,
-            'relationship_id' => 0,
-            'is_inverse' => false,
-            'type_id' => 0,
-            'connected_id' => 0,
-            'deleted_at' => null,
-            'relationship' => (object)[
-                'id' => 0,
-                'relationship_type' => 'Relationship Asset Tidak Ditemukan',
-                'inverse_relationship_type' => 'Relationship Asset Tidak Ditemukan',
-                'description' => '-',
-                'deleted_at' => null
-            ]
-        ])->with('relationship');
+            'relationship_type' => 'Relationship Tidak Ditemukan',
+            'inverse_relationship_type' => 'Relationship Tidak Ditemukan',
+            'description' => '-',
+            'deleted_at' => null
+        ]);
     }
 
     public function inventory()
@@ -37,7 +25,7 @@ class RelationshipInventory extends Model
             'id' => 0,
             'inventory_name' => 'Inventory Tidak Ditemukan',
             'deleted_at' => null
-        ])->withTrashed()->select('id', 'inventory_name', 'deleted_at');
+        ])->with('modelInventory:id,name','locationInventory:id,name,parent_id,role')->withTrashed()->select('id', 'model_id', 'location','deleted_at');
     }
 
     public function inventoryConnected()

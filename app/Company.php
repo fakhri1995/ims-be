@@ -103,20 +103,6 @@ class Company extends Model
         return $this->hasMany(Bank::class);
     }
 
-    public function relation()
-    {
-        return $this->hasMany(RelationshipInventory::class, 'connected_id')->with('relationshipAsset')->select('relationship_asset_id', 'connected_id', 'is_inverse', DB::raw('count(*) as total'))->whereHas('relationshipAsset', function($q){
-            $q->where('relationship_assets.type_id', -3);
-        })->groupBy('relationship_asset_id');
-    }
-
-    public function relationDirect()
-    {
-        return $this->hasMany(RelationshipInventory::class, 'detail_connected_id')->with('relationshipAsset')->select('relationship_asset_id', 'connected_id', 'is_inverse', DB::raw('count(*) as total'))->whereHas('relationshipAsset', function($q){
-            $q->where('relationship_assets.type_id', -3);
-        })->groupBy('relationship_asset_id');
-    }
-
     public function inventories()
     {
         return $this->hasMany(Inventory::class, 'location');

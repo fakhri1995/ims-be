@@ -44,6 +44,13 @@ class CompanyController extends Controller
         $response = $this->companyService->getLocations($company_id);
         return response()->json($response, $response['status']);
     }
+    
+    public function getSubLocations(Request $request)
+    {
+        $company_id = $request->get('company_id');
+        $response = $this->companyService->getSubLocations($company_id);
+        return response()->json($response, $response['status']);
+    }
 
     public function getCompanyDetail(Request $request)
     {

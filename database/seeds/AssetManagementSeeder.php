@@ -5,7 +5,6 @@ use App\Inventory;
 use App\AssetColumn;
 use App\Relationship;
 use App\ModelInventory;
-use App\RelationshipAsset;
 use App\ModelInventoryColumn;
 use App\StatusUsageInventory;
 use App\RelationshipInventory;
@@ -267,34 +266,17 @@ class AssetManagementSeeder extends Seeder
         }
     }
 
-    private function makeRelationshipAssets()
-    {
-        for($y = 1; $y < 6; $y++){
-            for($i = 1; $i < 6; $i++){
-                $relationship_asset = new RelationshipAsset;
-                $relationship_asset->relationship_id = $i;
-                $relationship_asset->subject_id = $y;
-                $relationship_asset->is_inverse = random_int(0, 1) ? true : false;
-                $relationship_asset->type_id = random_int(-4, -1);
-                $relationship_asset->connected_id = random_int(2, 16);
-                $relationship_asset->save();
-            }
-        }
-    }
-
     private function makeRelationshipInventories()
     {
         $subject_id = 1;
         for($y = 0; $y < 4; $y++){
-            $index = 1;
-            for($i = 1; $i < 7; $i++){
+            for($i = 1; $i < 6; $i++){
                 $relationship_inventory = new RelationshipInventory;
-                $relationship_inventory->relationship_asset_id = (($y * 5) + random_int(1, 5)) ;
+                $relationship_inventory->relationship_id = $i;
                 $relationship_inventory->subject_id = $subject_id;
                 $relationship_inventory->is_inverse = random_int(0, 1) ? true : false;
                 $relationship_inventory->connected_id = random_int(2, 16);
                 $relationship_inventory->save();
-                $index++;
             }
             $subject_id++;
         }
@@ -310,7 +292,6 @@ class AssetManagementSeeder extends Seeder
         $this->makeStatusConditions();
         $this->makeStatusUsages();
         $this->makeRelationships();
-        $this->makeRelationshipAssets();
         $this->makeRelationshipInventories();
     }
 

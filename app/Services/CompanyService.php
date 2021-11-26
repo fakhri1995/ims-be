@@ -5,8 +5,9 @@ use Exception;
 use App\Company;
 use App\Inventory;
 use App\Services\LogService;
-use App\Services\CheckRouteService;
+use App\RelationshipInventory;
 use Illuminate\Support\Facades\DB;
+use App\Services\CheckRouteService;
 
 class CompanyService
 {
@@ -26,17 +27,15 @@ class CompanyService
         return $list_company;
     }
 
-    public function checkSubCompanyList($id)
+    public function checkSubCompanyList($company)
     {
-        $company = Company::find($id);
         $list_company = $company->getAllSubChildrenList()->pluck('id');
         $list_company[] = $company->id;
         return $list_company;
     }
 
-    public function checkCompanyList($id)
+    public function checkCompanyList($company)
     {
-        $company = Company::find($id);
         $list_company = $company->getAllChildrenList()->pluck('id');
         $list_company[] = $company->id;
         return $list_company;
@@ -105,6 +104,13 @@ class CompanyService
         return $company;
     }
 
+    public function getSubLocations($id = null){
+        if($id === null) $id = auth()->user()->company_id;
+        if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
+        $company =  $this->getCompanyTreeSelect($id, 'subChild');
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $company, "status" => 200];
+    }
+
     public function getLocations($id = null, $bypass = false){
         if($bypass) $company = $this->getCompanyTreeSelect($id, 'noSubChild', true);
         else {
@@ -160,6 +166,17 @@ class CompanyService
             if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
             $company = Company::with(['noSubChild.noSubChild.noSubChild', 'banks'])->find($id);
             if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
+            $list_company = $this->checkCompanyList($company);
+
+            $company->relationship_inventories = RelationshipInventory::with('relationship:id,relationship_type,inverse_relationship_type')
+            ->whereIn('connected_id', $list_company)->where('type_id',-3)->select('relationship_id', 'connected_id', 'is_inverse', DB::raw('count(*) as relationship_total'))
+            ->groupBy('relationship_id', 'is_inverse')->get();
+
+            foreach($company->relationship_inventories as $relationship_inventory){
+                $relationship_inventory->relationship_name = $relationship_inventory->is_inverse ? $relationship_inventory->relationship->inverse_relationship_type : $relationship_inventory->relationship->relationship_type;
+                $relationship_inventory->makeHidden('relationship', 'relationship_id', 'connected_id', 'is_inverse');
+            }
+
             $company->induk_level_1_count = $company->noSubChild->count();
             $company->induk_level_2_count = 0;
             $company->induk_level_3_count = 0;
@@ -174,7 +191,7 @@ class CompanyService
                     }
                 }
             }
-            $company->makeHidden('deleted_at','parent_id', 'noSubChild');
+            $company->makeHidden('deleted_at','parent_id', 'noSubChild', 'child');
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $company, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -189,6 +206,7 @@ class CompanyService
             if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
             $company = Company::with(['parent:id,name,parent_id,role', 'subChildren', 'subChild.subChild', 'noSubChild.noSubChild.noSubChild'])->find($id);
             if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
+            $company->makeVisible('top_parent_id');
             $company->sub_location_level_1_count = count($company->subChild);
             $company->sub_location_level_2_count = 0;
             if($company->sub_location_level_1_count){
@@ -229,7 +247,7 @@ class CompanyService
             if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
             $company = Company::with('parent')->select('id', 'name', 'phone_number', 'image_logo', 'parent_id')->find($id);
             if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
-            $company_list = $this->checkSubCompanyList($id);
+            $company_list = $this->checkSubCompanyList($company);
             $inventory_count = Inventory::whereIn('location', $company_list)->count();
             $good_inventory_count = Inventory::whereIn('location', $company_list)->where('status_condition', 1)->count();
             $company->inventory_count = $inventory_count;
@@ -384,27 +402,43 @@ class CompanyService
             $company_id = auth()->user()->company_id;
             if($id == $company_id) return ["success" => false, "message" => "Tidak Dapat Menghapus Perusahaan User", "status" => 401];
             if(!$this->checkPermission($id, $company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
-            $company = Company::find($id);
+            $company = Company::withCount('noSubChild', 'subChild')->find($id);
             if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
-            
             $new_parent = $request->get('new_parent', null);
-            if($new_parent !== null){
-                $companies = Company::with('child')->where('parent_id', $company->id)->where('role', 4)->get();
-                $this->deleteChildLocations($companies);
-                $list_company = $companies->pluck('id');
-                $list_company[] = $company->id;
-                $companies = Company::where('parent_id', $company->id)->where('role', '<>', 4)->update(['parent_id' => $new_parent]);
-                $inventories = Inventory::whereIn('location', $list_company)->update(['location' => $new_parent]);
-            } else {
-                $list_company = $this->checkCompanyList($id);
-                $inventories = Inventory::with('modelInventory:id,name','locationInventory:id,name,parent_id,role')->select('id', 'model_id', 'location')->whereIn('location', $list_company)->get();
-                if(count($inventories)){
-                    foreach($inventories as $inventory) $inventory->full_name = $inventory->locationInventory->fullSubNameWParent();
-                    $inventories->makeHidden('locationInventory');
-                    return ["success" => false, "message" => 'Masih terdapat inventori yang terhubung ke lokasi :', "inventories" => $inventories, "status" => 200];
+            $list_company = $this->checkSubCompanyList($company);
+            if($company->role !== 4){
+                if($company->no_sub_child_count > 0) return ["success" => false, "message" => "Masih Teradapat Lokasi Pada Perusahaan Ini, Proses Delete Perusahaan Tidak Dapat Dilakukan", "status" => 400];
+                
+                if($new_parent !== null){
+                    $companies = Company::with('child')->where('parent_id', $id)->where('role', 4)->get();
+                    $this->deleteChildLocations($companies);
+                    $inventories = Inventory::whereIn('location', $list_company)->update(['location' => $new_parent]);
+                    // $companies = Company::where('parent_id', $company->id)->where('role', '<>', 4)->update(['parent_id' => $new_parent]);
+                } else {
+                    // $list_company = $this->checkCompanyList($company);
+                    $inventories = Inventory::with('modelInventory:id,name','locationInventory:id,name,parent_id,role')->select('id', 'model_id', 'location')->whereIn('location', $list_company)->get();
+                    if(count($inventories)){
+                        foreach($inventories as $inventory) $inventory->full_name = $inventory->locationInventory->fullSubNameWParent();
+                        $inventories->makeHidden('locationInventory');
+                        return ["success" => false, "message" => 'Masih terdapat inventori yang terhubung ke lokasi :', "inventories" => $inventories, "status" => 200];
+                    }
+                    $companies = Company::with('child')->where('parent_id', $company->id)->get();
+                    if(count($companies)) $this->deleteChildLocations($companies);
                 }
-                $companies = Company::with('child')->where('parent_id', $company->id)->get();
-                if(count($companies)) $this->deleteChildLocations($companies);
+            } else {
+                if($company->sub_child_count > 0) {
+                    if($new_parent !== null){
+                        $companies = Company::where('parent_id', $id)->where('role', 4)->update(['parent_id' => $new_parent]);
+                        $inventories = Inventory::whereIn('location', $list_company)->update(['location' => $new_parent]);
+                    } else {
+                        $companies = Company::with('child')->where('parent_id', $id)->where('role', 4)->get();
+                        $this->deleteChildLocations($companies);
+                        $inventories = Inventory::whereIn('location', $list_company)->update(['location' => $company->parent_id]);
+                    }
+                } else {
+                    if($new_parent !== null) $inventories = Inventory::where('location', $id)->update(['location' => $new_parent]);
+                    else $inventories = Inventory::where('location', $id)->update(['location' => $company->parent_id]);
+                }
             }
             $company->delete();
 

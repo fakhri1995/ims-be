@@ -76,14 +76,12 @@ class Inventory extends Model
 
     public function inventoryRelationshipsWithoutInventory()
     {
-        return $this->hasMany(RelationshipInventory::class, 'subject_id')->with(['relationshipAsset'])->whereHas('relationshipAsset', function($q){
-            $q->where('relationship_assets.type_id', '<>', -4);
-        });
+        return $this->hasMany(RelationshipInventory::class, 'subject_id')->where('type_id', '<>', -4);
     }
 
     public function inventoryRelationships()
     {
-        return $this->hasMany(RelationshipInventory::class, 'subject_id')->with(['relationshipAsset']);
+        return $this->hasMany(RelationshipInventory::class, 'subject_id')->with(['relationship']);
     }
 
     public function associations()

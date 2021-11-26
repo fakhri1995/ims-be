@@ -12,8 +12,8 @@ class Relationship extends Model
     protected $fillable = ['relationship_type', 'inverse_relationship_type', 'description'];
     public $timestamps = false;
 
-    public function relationshipAssets()
+    public function relationshipInventories()
     {
-        return $this->hasMany(RelationshipAsset::class);
+        return $this->hasMany(RelationshipInventory::class);
     }
 }

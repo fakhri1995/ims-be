@@ -528,93 +528,22 @@ class AssetController extends Controller
         return response()->json($response, $response['status']);
     }
 
-    // Relationship Asset
-
-    public function getRelationshipAssets(Request $request)
-    {
-        $route_name = "RELATIONSHIP_ASSETS_GET";
-
-        $response = $this->assetService->getRelationshipAssets($route_name);
-        return response()->json($response, $response['status']);
-    }
-
-    public function getRelationshipAsset(Request $request)
-    {
-        $route_name = "RELATIONSHIP_ASSET_GET";
-        $data_request = [
-            'id' => $request->get('id', null),
-            'type_id' => $request->get('type_id')
-        ];
-
-        $response = $this->assetService->getRelationshipAsset($data_request, $route_name);
-        return response()->json($response, $response['status']);
-    }
-
-    public function getRelationshipAssetRelation(Request $request)
-    {
-        $route_name = "RELATIONSHIP_ASSET_ADD";
-
-        $response = $this->assetService->getRelationshipAssetRelation($route_name);
-        return response()->json($response, $response['status']);
-    }
-
-    public function getRelationshipAssetDetailList(Request $request)
-    {
-        $route_name = "RELATIONSHIP_ASSET_ADD";
-
-        $response = $this->assetService->getRelationshipAssetDetailList($request, $route_name);
-        return response()->json($response, $response['status']);
-    }
-
-    public function addRelationshipAsset(Request $request)
-    {
-        $route_name = "RELATIONSHIP_ASSET_ADD";
-        $data_request = [
-            'subject_id' => $request->get('subject_id'),
-            'type_id' => $request->get('type_id'),
-            'relationship_id' => $request->get('relationship_id'),
-            'is_inverse' => $request->get('is_inverse'),
-            'connected_id' => $request->get('connected_id')
-        ];
-
-        $response = $this->assetService->addRelationshipAsset($data_request, $route_name);
-        return response()->json($response, $response['status']);
-    }
-
-    public function updateRelationshipAsset(Request $request)
-    {
-        $route_name = "RELATIONSHIP_ASSET_UPDATE";
-        $data_request = [
-            'id' => $request->get('id', null),
-            // 'type_id' => $request->get('type_id'),
-            'relationship_id' => $request->get('relationship_id'),
-            'is_inverse' => $request->get('is_inverse'),
-            'from_inverse' => $request->get('from_inverse'),
-            'connected_id' => $request->get('connected_id')
-        ];
-
-        $response = $this->assetService->updateRelationshipAsset($data_request, $route_name);
-        return response()->json($response, $response['status']);
-    }
-
-    public function deleteRelationshipAsset(Request $request)
-    {
-        $route_name = "RELATIONSHIP_ASSET_DELETE";
-        $id = $request->get('id', null);
-
-        $response = $this->assetService->deleteRelationshipAsset($id, $route_name);
-        return response()->json($response, $response['status']);
-    }
-
     // Relationship Inventory
 
     // public function getRelationshipInventories(Request $request)
     // {
     //     $route_name = "RELATIONSHIP_INVENTORIES_GET";
 
-    //     $response = $this->assetService->addRelationshipAsset($route_name);
+    //     $response = $this->assetService->getRelationshipInventories($route_name);
     //     return response()->json($response, $response['status']);
     // }
+    public function getCompanyRelationshipInventory(Request $request)
+    {
+        $route_name = "COMPANY_RELATIONSHIP_INVENTORIES_GET";
+        
+        $response = $this->assetService->getCompanyRelationshipInventory($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 
     public function getRelationshipInventory(Request $request)
     {
@@ -631,9 +560,8 @@ class AssetController extends Controller
     public function getRelationshipInventoryRelation(Request $request)
     {
         $route_name = "RELATIONSHIP_INVENTORY_ADD";
-        $id = $request->get('asset_id', null);
 
-        $response = $this->assetService->getRelationshipInventoryRelation($id, $route_name);
+        $response = $this->assetService->getRelationshipInventoryRelation($route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -648,32 +576,16 @@ class AssetController extends Controller
     public function addRelationshipInventories(Request $request)
     {
         $route_name = "RELATIONSHIP_INVENTORY_ADD";
-        $data_request = [
-            'subject_id' => $request->get('subject_id'),
-            'relationship_asset_id' => $request->get('relationship_asset_id'),
-            'is_inverse' => $request->get('is_inverse'),
-            'connected_ids' => $request->get('connected_ids', []),
-            'notes' => $request->get('notes', null)
-        ];
 
-        $response = $this->assetService->addRelationshipInventories($data_request, $route_name);
+        $response = $this->assetService->addRelationshipInventories($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function updateRelationshipInventory(Request $request)
     {
         $route_name = "RELATIONSHIP_INVENTORY_UPDATE";
-        $data_request = [
-            'id' => $request->get('id'),
-            'subject_id' => $request->get('subject_id'),
-            'relationship_asset_id' => $request->get('relationship_asset_id'),
-            'is_inverse' => $request->get('is_inverse'),
-            'connected_id' => $request->get('connected_id'),
-            'from_inverse' => $request->get('from_inverse'),
-            'notes' => $request->get('notes', null)
-        ];
 
-        $response = $this->assetService->updateRelationshipInventory($data_request, $route_name);
+        $response = $this->assetService->updateRelationshipInventory($request, $route_name);
         return response()->json($response, $response['status']);
     }
 

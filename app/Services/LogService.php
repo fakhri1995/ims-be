@@ -12,7 +12,6 @@ use App\Relationship;
 use App\TicketStatus;
 use App\ModelInventory;
 use App\ActivityLogTicket;
-use App\RelationshipAsset;
 use App\ActivityLogInventory;
 use App\ModelInventoryColumn;
 use App\StatusUsageInventory;
@@ -202,16 +201,14 @@ class LogService
                     continue;
                 }
 
-                if(isset($properties->attributes->relationship_asset_id)){
-                    $relationship_asset = RelationshipAsset::with('relationship')->withTrashed()->select('id','is_inverse','relationship_id')->find($properties->attributes->relationship_asset_id);
-                    $is_inverse_inventory_relationship = $relationship_asset->is_inverse === $properties->attributes->is_inverse ? false : true;
-                    $properties->attributes->relationship = $is_inverse_inventory_relationship ? $relationship_asset->relationship->inverse_relationship_type : $relationship_asset->relationship->relationship_type;
+                if(isset($properties->attributes->relationship_id)){
+                    $relationship = Relationship::withTrashed()->find($properties->attributes->relationship_id);
+                    $properties->attributes->relationship = $properties->attributes->is_inverse ? $relationship->inverse_relationship_type : $relationship->relationship_type;
                 }
 
-                if(isset($properties->old->relationship_asset_id)){
-                    $relationship_asset = RelationshipAsset::with('relationship')->withTrashed()->select('id','is_inverse','relationship_id')->find($properties->old->relationship_asset_id);
-                    $is_inverse_inventory_relationship = $relationship_asset->is_inverse === $properties->old->is_inverse ? false : true;
-                    $properties->old->relationship = $is_inverse_inventory_relationship ? $relationship_asset->relationship->inverse_relationship_type : $relationship_asset->relationship->relationship_type;
+                if(isset($properties->old->relationship_id)){
+                    $relationship = Relationship::withTrashed()->find($properties->old->relationship_id);
+                    $properties->old->relationship = $properties->old->is_inverse ? $relationship->inverse_relationship_type : $relationship->relationship_type;
                 }
 
                 $temp = (object) [
@@ -233,44 +230,6 @@ class LogService
         catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
-    }
-
-    public function relationshipInventoryLog($id)
-    {
-        $relationship_assets = RelationshipAsset::withTrashed()->select('id','relationship_id','is_inverse')->get();
-        $relationship_logs = [];
-        $inventory_relationship_logs = ActivityLogInventoryRelationship::where('subject_id', $id)->get();
-        foreach($inventory_relationship_logs as $inventory_relationship_log){
-            $properties = $inventory_relationship_log->properties;
-            $causer_name = $inventory_relationship_log->causer->name;
-
-            if(isset($properties->attributes->relationship_asset_id)){
-                $relationship_asset = $relationship_assets->find($properties->attributes->relationship_asset_id);
-                $is_inverse_inventory_relationship = $relationship_asset->is_inverse === $properties->attributes->is_inverse ? false : true;
-                $properties->attributes->relationship = $is_inverse_inventory_relationship ? $relationship_asset->relationship->inverse_relationship_type : $relationship_asset->relationship->relationship_type;
-            }
-
-            if(isset($properties->old->relationship_asset_id)){
-                $relationship_asset = $relationship_assets->find($properties->old->relationship_asset_id);
-                $is_inverse_inventory_relationship = $relationship_asset->is_inverse === $properties->old->is_inverse ? false : true;
-                $properties->old->relationship = $is_inverse_inventory_relationship ? $relationship_asset->relationship->inverse_relationship_type : $relationship_asset->relationship->relationship_type;
-            }
-
-            $temp = (object) [
-                'date' => $inventory_relationship_log->created_at,
-                'description' => $inventory_relationship_log->log_name.' Inventory Relationship',
-                'properties' => $properties,
-                'causer_name' => $causer_name,
-                'notes' => $inventory_relationship_log->description ? $inventory_relationship_log->description : "-"
-            ];
-            array_push($relationship_logs, $temp);
-        }
-
-        usort($relationship_logs, function($a, $b) {
-            return strtotime($b->date) - strtotime($a->date);
-        });
-
-        return $relationship_logs;
     }
 
     // Get Ticket Log

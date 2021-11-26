@@ -80,10 +80,12 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteRequesterGroup', 'GroupController@deleteRequesterGroup');
 
     //General Company Routes
+    $router->get('/getCompanyRelationshipInventory', 'AssetController@getCompanyRelationshipInventory');
     $router->get('/getCompanyInventories', 'AssetController@getCompanyInventories');
     $router->get('/getCompanyClientList', 'CompanyController@getCompanyClientList');
     $router->get('/getMainLocations', 'CompanyController@getMainLocations');
     $router->get('/getLocations', 'CompanyController@getLocations');
+    $router->get('/getSubLocations', 'CompanyController@getSubLocations');
     $router->get('/getCompanyDetail', 'CompanyController@getCompanyDetail');
     $router->get('/getSubCompanyDetail', 'CompanyController@getSubCompanyDetail');
     $router->get('/getSubCompanyProfile', 'CompanyController@getSubCompanyProfile');
@@ -188,15 +190,6 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addRelationship', 'AssetController@addRelationship');
     $router->put('/updateRelationship', 'AssetController@updateRelationship');
     $router->delete('/deleteRelationship', 'AssetController@deleteRelationship');
-
-    //Relationship Asset
-    $router->get('/getRelationshipAssets', 'AssetController@getRelationshipAssets');
-    $router->get('/getRelationshipAsset', 'AssetController@getRelationshipAsset');
-    $router->get('/getRelationshipAssetRelation', 'AssetController@getRelationshipAssetRelation');
-    $router->get('/getRelationshipAssetDetailList', 'AssetController@getRelationshipAssetDetailList');
-    $router->post('/addRelationshipAsset', 'AssetController@addRelationshipAsset');
-    $router->put('/updateRelationshipAsset', 'AssetController@updateRelationshipAsset');
-    $router->delete('/deleteRelationshipAsset', 'AssetController@deleteRelationshipAsset');
 
     //Relationship Inventory
     // $router->get('/getRelationshipInventories', 'AssetController@getRelationshipInventories');
