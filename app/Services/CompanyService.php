@@ -6,6 +6,7 @@ use App\Company;
 use App\Inventory;
 use App\Services\LogService;
 use App\Services\CheckRouteService;
+use Illuminate\Support\Facades\DB;
 
 class CompanyService
 {
@@ -231,12 +232,16 @@ class CompanyService
             $company_list = $this->checkSubCompanyList($id);
             $inventory_count = Inventory::whereIn('location', $company_list)->count();
             $good_inventory_count = Inventory::whereIn('location', $company_list)->where('status_condition', 1)->count();
-            $used_inventory_count = Inventory::whereIn('location', $company_list)->where('status_usage', 1)->count();
             $company->inventory_count = $inventory_count;
             $company->good_inventory_count = $good_inventory_count;
-            $company->used_inventory_count = $used_inventory_count;
             $company->good_inventory_percentage = $inventory_count ? floor($good_inventory_count/$inventory_count * 100) : 0;
-            $company->used_inventory_percentage = $inventory_count ? floor($used_inventory_count/$inventory_count * 100) : 0;
+            $company->asset_cluster = DB::table('inventories')
+            ->select(DB::raw('count(*) as asset_count, assets.name'))
+            ->whereIn('location', $company_list)
+            ->join('model_inventories', 'inventories.model_id', '=', 'model_inventories.id')
+            ->join('assets', 'model_inventories.asset_id', '=', 'assets.id')
+            ->groupBy('assets.id')
+            ->get();
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $company, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
