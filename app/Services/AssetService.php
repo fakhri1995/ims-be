@@ -464,7 +464,7 @@ class AssetService{
         try{
             $name = $request->get('name', null);
             $models = ModelInventory::with('asset')->select('id','name', 'asset_id', 'required_sn');
-            if($name) $models->where('name', 'like', "%".$name."%");
+            if($name) $models->where('name', 'ilike', "%".$name."%");
             $models = $models->limit(50)->get();
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $models, "status" => 200];
         } catch(Exception $err){
@@ -489,7 +489,7 @@ class AssetService{
         $models = ModelInventory::withCount('inventories')->with('asset:id,name,code,deleted_at');
 
         if($asset_id) $models = $models->where('asset_id', $asset_id);
-        if($name) $models = $models->where('name', 'like', "%".$name."%");
+        if($name) $models = $models->where('name', 'ilike', "%".$name."%");
         if($sort_by){
             if($sort_by === 'name') $models = $models->orderBy('name', $sort_type);
             else if($sort_by === 'count') $models = $models->orderBy('inventories_count', $sort_type);
@@ -764,7 +764,7 @@ class AssetService{
                 });
             }
             if($mig_id){
-                $inventories = $inventories->where('mig_id', 'like', "%".$mig_id."%");
+                $inventories = $inventories->where('mig_id', 'ilike', "%".$mig_id."%");
             }
             if($model_id){
                 $inventories = $inventories->where('model_id', $model_id);
@@ -776,7 +776,7 @@ class AssetService{
                 $inventories = $inventories->where('status_usage', $status_usage);
             }
             if($name){
-                $inventories = $inventories->where('inventory_name', 'like', "%".$name."%");
+                $inventories = $inventories->where('inventory_name', 'ilike', "%".$name."%");
             }
 
             if($sort_by){
@@ -825,12 +825,12 @@ class AssetService{
 
             if($keyword){
                 $inventories = $inventories->where(function($query) use ($keyword) {
-                    $query->orWhere('mig_id', 'like', "%".$keyword."%");
+                    $query->orWhere('mig_id', 'ilike', "%".$keyword."%");
                     $query->orWhereHas('modelInventory', function($q) use ($keyword){
-                        $q->where('model_inventories.name', 'like', "%".$keyword."%");
+                        $q->where('model_inventories.name', 'ilike', "%".$keyword."%");
                     });
                     $query->orWhereHas('modelInventory.asset', function($q) use ($keyword){
-                        $q->where('assets.name', 'like', "%".$keyword."%");
+                        $q->where('assets.name', 'ilike', "%".$keyword."%");
                     });
                 });
             }
@@ -900,7 +900,7 @@ class AssetService{
                 $inventories = $inventories->where('model_id', $model_id);
             }
             if($name){
-                $inventories = $inventories->where('inventory_name', 'like', "%".$name."%");
+                $inventories = $inventories->where('inventory_name', 'ilike', "%".$name."%");
             }
             
             $inventories = $inventories->paginate($rows);
@@ -936,7 +936,7 @@ class AssetService{
                     });
 
             if($name){
-                $inventories = $inventories->where('inventory_name', 'like', "%".$name."%");
+                $inventories = $inventories->where('inventory_name', 'ilike', "%".$name."%");
             }
             
             $inventories = $inventories->limit(50)->get();

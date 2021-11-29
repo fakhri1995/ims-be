@@ -276,6 +276,7 @@ class AssetManagementSeeder extends Seeder
                 $relationship_inventory->subject_id = $subject_id;
                 $relationship_inventory->is_inverse = random_int(0, 1) ? true : false;
                 $relationship_inventory->connected_id = random_int(2, 16);
+                $relationship_inventory->type_id = random_int(-4, -1);
                 $relationship_inventory->save();
             }
             $subject_id++;

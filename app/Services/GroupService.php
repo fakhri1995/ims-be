@@ -22,11 +22,11 @@ class GroupService{
             $users = User::select('id','name')->whereHas('groups', function($q){
                 $q->where('groups.id', 1);
             });
-            if($name) $users = $users->where('users.name', 'like', "%".$name."%");
+            if($name) $users = $users->where('users.name', 'ilike', "%".$name."%");
             $data = $users->limit(50)->get();
         } else {
             $groups = Group::select('id', 'name');
-            if($name) $groups = $groups->where('groups.name', 'like', "%".$name."%");
+            if($name) $groups = $groups->where('groups.name', 'ilike', "%".$name."%");
             $data = $groups->limit(50)->get();
         }
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
