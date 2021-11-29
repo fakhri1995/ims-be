@@ -721,7 +721,7 @@ class AssetService{
             $status_usage = StatusUsageInventory::get();
             
             $this->companyService = new CompanyService;
-            $tree_companies = $this->companyService->getCompanyTreeSelect(auth()->user()->id, 'noSubChild');
+            $tree_companies = $this->companyService->getCompanyTreeSelect(auth()->user()->company_id, 'noSubChild');
             
             $data = (object)['vendors' => $vendors, 'manufacturers' => $manufacturers, 'status_condition' => $status_condition, 'status_usage' => $status_usage, 'tree_companies' => $tree_companies];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
