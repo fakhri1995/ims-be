@@ -169,12 +169,12 @@ class CompanyService
             $list_company = $this->checkCompanyList($company);
 
             $company->relationship_inventories = RelationshipInventory::with('relationship:id,relationship_type,inverse_relationship_type')
-            ->whereIn('connected_id', $list_company)->where('type_id',-3)->select('relationship_id', 'connected_id', 'is_inverse', DB::raw('count(*) as relationship_total'))
+            ->whereIn('connected_id', $list_company)->where('type_id',-3)->select('relationship_id', 'is_inverse', DB::raw('count(*) as relationship_total'))
             ->groupBy('relationship_id', 'is_inverse')->get();
 
             foreach($company->relationship_inventories as $relationship_inventory){
                 $relationship_inventory->relationship_name = $relationship_inventory->is_inverse ? $relationship_inventory->relationship->inverse_relationship_type : $relationship_inventory->relationship->relationship_type;
-                $relationship_inventory->makeHidden('relationship', 'relationship_id', 'connected_id', 'is_inverse');
+                $relationship_inventory->makeHidden('relationship', 'relationship_id', 'is_inverse');
             }
 
             $company->induk_level_1_count = $company->noSubChild->count();
