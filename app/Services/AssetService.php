@@ -1965,7 +1965,7 @@ class AssetService{
         $companyService = new CompanyService;
         $list_company = $companyService->checkCompanyList($company);
         $relationship_inventories = RelationshipInventory::with('relationship:id,relationship_type,inverse_relationship_type', 'inventory')
-            ->whereIn('connected_id', $list_company)->where('type_id',-3)->select('subject_id','relationship_id', 'connected_id', 'is_inverse')->paginate($rows);
+            ->whereIn('connected_id', $list_company)->where('type_id',-3)->select('id', 'subject_id','relationship_id', 'connected_id', 'is_inverse')->paginate($rows);
 
         foreach($relationship_inventories as $relationship_inventory){
             $relationship_inventory->inventory->full_name = $relationship_inventory->inventory->locationInventory->fullSubNameWParent();
