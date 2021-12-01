@@ -2001,7 +2001,10 @@ class AssetService{
                                 $relationship_inventory->connected_detail_name = $relationship_inventory->user->id && ($relationship_inventory->user->role === $relationship_inventory->type_id * -1) ? $relationship_inventory->user->name : "User Not Found";
                                 $relationship_inventory->makeHidden('user');
                             } else if($relationship_inventory->type_id === -3){
-                                $relationship_inventory->connected_detail_name = $relationship_inventory->company->id && ($relationship_inventory->company->role === 2) ? $relationship_inventory->company->name : "Company Not Found";
+                                if($relationship_inventory->company->id){
+                                    if($relationship_inventory->company->role === 4) $relationship_inventory->connected_detail_name = $relationship_inventory->company->fullSubNameWParent();
+                                    else $relationship_inventory->connected_detail_name = $relationship_inventory->company->fullName(); 
+                                } else $relationship_inventory->connected_detail_name = "Company Not Found";
                                 $relationship_inventory->makeHidden('company');
                             } else {
                                 $relationship_inventory->connected_detail_name = $relationship_inventory->inventoryConnected->modelInventory->name;
@@ -2030,7 +2033,10 @@ class AssetService{
                             $relationship_inventory->subject_detail_name = $relationship_inventory->user->id && ($relationship_inventory->user->role === $relationship_inventory->type_id * -1) ? $relationship_inventory->user->name : "User Not Found";
                             $relationship_inventory->makeHidden('user');
                         } else if($relationship_inventory->type_id === -3){
-                            $relationship_inventory->subject_detail_name = $relationship_inventory->company->id && ($relationship_inventory->company->role === 2) ? $relationship_inventory->company->name : "Company Not Found";
+                            if($relationship_inventory->company->id){
+                                if($relationship_inventory->company->role === 4) $relationship_inventory->subject_detail_name = $relationship_inventory->company->fullSubNameWParent();
+                                else $relationship_inventory->subject_detail_name = $relationship_inventory->company->fullName(); 
+                            } else $relationship_inventory->subject_detail_name = "Company Not Found";
                             $relationship_inventory->makeHidden('company');
                         } else {
                             $relationship_inventory->subject_detail_name = $relationship_inventory->inventoryConnected->modelInventory->name;

@@ -74,6 +74,6 @@ class RelationshipInventory extends Model
             'id' => 0,
             'name' => 'Perusahaan Tidak Ditemukan',
             'role' => 0,
-        ])->withTrashed()->select('id', 'name', 'role');
+        ])->withTrashed()->select('id', 'name', 'role','parent_id','top_parent_id');
     }
 }

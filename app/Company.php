@@ -154,7 +154,7 @@ class Company extends Model
 
     public function fullName()
     {
-        if($this->topParent) $name = $this->topParent->name.' - '.$this->name;
+        if($this->topParent) $name = $this->topParent->name.' / '.$this->name;
         else $name = $this->name;
         return $name;
     }
