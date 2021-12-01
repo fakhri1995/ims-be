@@ -410,6 +410,7 @@ class CompanyService
                 if($company->no_sub_child_count > 0) return ["success" => false, "message" => "Masih Teradapat Lokasi Pada Perusahaan Ini, Proses Delete Perusahaan Tidak Dapat Dilakukan", "status" => 400];
                 
                 if($new_parent !== null){
+                    if($this->checkPermission($new_parent, $id)) return ["success" => false, "message" => "New Parent Tidak Bisa Dari Lokasi Bawahannya", "status" => 400];
                     $companies = Company::with('child')->where('parent_id', $id)->where('role', 4)->get();
                     $this->deleteChildLocations($companies);
                     $inventories = Inventory::whereIn('location', $list_company)->update(['location' => $new_parent]);
@@ -428,6 +429,7 @@ class CompanyService
             } else {
                 if($company->sub_child_count > 0) {
                     if($new_parent !== null){
+                        if($this->checkPermission($new_parent, $id)) return ["success" => false, "message" => "New Parent Tidak Bisa Dari Sublokasi Bawahannya", "status" => 400];
                         $companies = Company::where('parent_id', $id)->where('role', 4)->update(['parent_id' => $new_parent]);
                         $inventories = Inventory::whereIn('location', $list_company)->update(['location' => $new_parent]);
                     } else {
