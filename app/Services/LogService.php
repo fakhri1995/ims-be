@@ -245,12 +245,12 @@ class LogService
             if($log->description === 'SeT IteM'){
                 $old_exist = false;
                 $properties = json_decode($log->log_name, false);
-                $inventory = Inventory::find($properties->attributes->inventory);
-                if($inventory) $inventory_name = $inventory->inventory_name;
-                else $inventory_name = "Inventory Not Found";
+                $inventory = Inventory::with('modelInventory:id,name')->find($properties->attributes->inventory);
+                if($inventory) $name = $inventory->modelInventory->name;
+                else $name = "Inventory Not Found";
                 if(isset($properties->old->inventory))$old_exist = true;
-                if($old_exist) $log->log_name = "Pengubahan Association menjadi $inventory_name";
-                else $log->log_name = "Penambahan Association $inventory_name";
+                if($old_exist) $log->log_name = "Pengubahan Association menjadi $name";
+                else $log->log_name = "Penambahan Association $name";
             }
         }
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $logs, "status" => 200];
@@ -271,12 +271,12 @@ class LogService
             if($log->description === 'SeT IteM'){
                 $old_exist = false;
                 $properties = json_decode($log->log_name, false);
-                $inventory = Inventory::find($properties->attributes->inventory);
-                if($inventory) $inventory_name = $inventory->inventory_name;
-                else $inventory_name = "Inventory Not Found";
+                $inventory = Inventory::with('modelInventory:id,name')->find($properties->attributes->inventory);
+                if($inventory) $name = $inventory->modelInventory->name;
+                else $name = "Inventory Not Found";
                 if(isset($properties->old->inventory))$old_exist = true;
-                if($old_exist) $log->log_name = "Pengubahan Association menjadi $inventory_name";
-                else $log->log_name = "Penambahan Association $inventory_name";
+                if($old_exist) $log->log_name = "Pengubahan Association menjadi $name";
+                else $log->log_name = "Penambahan Association $name";
             }
         }
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $logs, "status" => 200];

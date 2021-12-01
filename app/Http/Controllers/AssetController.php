@@ -243,12 +243,10 @@ class AssetController extends Controller
         $data_request = [
             'model_id' => $request->get('model_id'),
             'vendor_id' => $request->get('vendor_id'),
-            'inventory_name' => $request->get('inventory_name'),
             'status_condition' => $request->get('status_condition'),
             'status_usage' => $request->get('status_usage'),
             'serial_number' => $request->get('serial_number'),
             'location' => $request->get('location'),
-            'is_exist' => $request->get('is_exist'),
             'deskripsi' => $request->get('deskripsi'),
             'manufacturer_id' => $request->get('manufacturer_id'),
             'mig_id' => $request->get('mig_id'),
@@ -268,9 +266,7 @@ class AssetController extends Controller
         $data_request = [
             'id' => $request->get('id'),
             'vendor_id' => $request->get('vendor_id'),
-            'inventory_name' => $request->get('inventory_name'),
             'location' => $request->get('location'),
-            'is_exist' => $request->get('is_exist', true),
             'deskripsi' => $request->get('deskripsi'),
             'manufacturer_id' => $request->get('manufacturer_id'),
             'mig_id' => $request->get('mig_id'),
@@ -380,6 +376,13 @@ class AssetController extends Controller
         ];
         
         $response = $this->assetService->addInventoryNotes($data_request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function importInventories(Request $request){
+        $route_name = "INVENTORY_IMPORT";
+        
+        $response = $this->assetService->importInventories($request, $route_name);
         return response()->json($response, $response['status']);
     }
 

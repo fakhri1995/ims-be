@@ -163,6 +163,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addInventory', 'AssetController@addInventory');
     $router->post('/addInventoryNotes', 'AssetController@addInventoryNotes');
     $router->post('/addInventoryParts', 'AssetController@addInventoryParts');
+    $router->post('/importInventories', 'AssetController@importInventories');
     $router->put('/updateInventory', 'AssetController@updateInventory');
     $router->put('/updateInventoryParts', 'AssetController@updateInventoryParts');
     $router->put('/replaceInventoryPart', 'AssetController@replaceInventoryPart');

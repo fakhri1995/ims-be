@@ -23,8 +23,19 @@ class RelationshipInventory extends Model
     {
         return $this->belongsTo(Inventory::class, 'subject_id')->withDefault([
             'id' => 0,
-            'inventory_name' => 'Inventory Tidak Ditemukan',
-            'deleted_at' => null
+            'mig_id' => 'MIG ID Tidak Ditemukan',
+            'deleted_at' => null,
+            'model_inventory' => (object)[
+                'id' => 0,
+                'name' => 'Model Tidak Ditemukan',
+                'asset_id' => 0,
+                'required_sn' => false,
+                'deleted_at' => null
+            ],
+            'location_inventory' => (object)[
+                'id' => 0,
+                'name' => 'Lokasi Tidak Ditemukan'
+            ]
         ])->with('modelInventory:id,name','locationInventory:id,name,parent_id,role')->withTrashed()->select('id', 'model_id', 'location','deleted_at');
     }
 
@@ -32,9 +43,20 @@ class RelationshipInventory extends Model
     {
         return $this->belongsTo(Inventory::class, 'connected_id')->withDefault([
             'id' => 0,
-            'name' => 'Inventory Tidak Ditemukan',
-            'deleted_at' => null
-        ])->withTrashed()->select('id', 'inventory_name', 'deleted_at');
+            'mig_id' => 'MIG ID Tidak Ditemukan',
+            'deleted_at' => null,
+            'model_inventory' => (object)[
+                'id' => 0,
+                'name' => 'Model Tidak Ditemukan',
+                'asset_id' => 0,
+                'required_sn' => false,
+                'deleted_at' => null
+            ],
+            'location_inventory' => (object)[
+                'id' => 0,
+                'name' => 'Lokasi Tidak Ditemukan'
+            ]
+        ])->with('modelInventory:id,name','locationInventory:id,name,parent_id,role')->withTrashed()->select('id', 'model_id', 'location','deleted_at');
     }
 
     public function user()

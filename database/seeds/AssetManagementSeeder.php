@@ -149,7 +149,6 @@ class AssetManagementSeeder extends Seeder
 
     private function makeBulkInventories()
     {   
-        $name_inventory = "Inventories ";
         $index = 1;
         for($v = 1; $v < 3; $v++){
             $model_id = 1;
@@ -161,10 +160,9 @@ class AssetManagementSeeder extends Seeder
                     $code = "$code_int";  
                     $inventory = new Inventory;
                     $inventory->model_id = $model_id;
-                    $inventory->inventory_name = $name_inventory."$v $x ".$code;
                     $inventory->status_condition = 1;
                     $inventory->status_usage = random_int(1, 3);
-                    $inventory->mig_id = $index;
+                    $inventory->mig_id = "MIG-$index";
                     $inventory->save();
                     $index+=1;
                     $model_id +=1;
@@ -176,10 +174,9 @@ class AssetManagementSeeder extends Seeder
                     $code_a = $code.".1";  
                     $inventory_a = new Inventory;
                     $inventory_a->model_id = $model_id;
-                    $inventory_a->inventory_name = $name_inventory."$v $x ".$code_a;
                     $inventory_a->status_condition = 2;
                     $inventory_a->status_usage = 2;
-                    $inventory_a->mig_id = $index;
+                    $inventory_a->mig_id = "MIG-$index";
                     $inventory_a->save();
                     $index+=1;
                     $model_id +=1;
@@ -193,10 +190,9 @@ class AssetManagementSeeder extends Seeder
                         $code_b = $code_a.".$k";  
                         $inventory_b = new Inventory;
                         $inventory_b->model_id = $model_id;
-                        $inventory_b->inventory_name = $name_inventory."$v $x ".$code_b;
                         $inventory_b->status_condition = 3;
                         $inventory_b->status_usage = 3;
-                        $inventory_b->mig_id = $index;   
+                        $inventory_b->mig_id = "MIG-$index";   
                         $inventory_b->save();
                         $index+=1;
                         $model_id +=1;
@@ -210,10 +206,9 @@ class AssetManagementSeeder extends Seeder
                     $code_a = $code.".2";  
                     $inventory_a = new Inventory;
                     $inventory_a->model_id = $model_id;
-                    $inventory_a->inventory_name = $name_inventory."$v $x ".$code_a;
                     $inventory_a->status_condition = 2;
                     $inventory_a->status_usage = 2;
-                    $inventory_a->mig_id = $index;
+                    $inventory_a->mig_id = "MIG-$index";
                     $inventory_a->save();
                     $index+=1;
                     $model_id +=1;
@@ -285,15 +280,15 @@ class AssetManagementSeeder extends Seeder
 
     public function run()
     {
-        $this->makeBulkAssets();
-        $this->makeBulkAssetColumns();
-        $this->makeBulkModels();
-        $this->makeBulkModelInventoryColumns();
+        // $this->makeBulkAssets();
+        // $this->makeBulkAssetColumns();
+        // $this->makeBulkModels();
+        // $this->makeBulkModelInventoryColumns();
         $this->makeBulkInventories();
-        $this->makeStatusConditions();
-        $this->makeStatusUsages();
-        $this->makeRelationships();
-        $this->makeRelationshipInventories();
+        // $this->makeStatusConditions();
+        // $this->makeStatusUsages();
+        // $this->makeRelationships();
+        // $this->makeRelationshipInventories();
     }
 
 }

@@ -22,6 +22,8 @@ use App\RelationshipInventory;
 use App\Services\CompanyService;
 use App\StatusConditionInventory;
 use App\Services\CheckRouteService;
+use App\Imports\InventoriesImport;
+use Excel;
 
 class AssetService{
     public function __construct()
@@ -751,7 +753,7 @@ class AssetService{
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
             
-            $inventories = Inventory::with(['statusCondition', 'statusUsage', 'locationInventory', 'modelInventory.asset:id,name,code,deleted_at'])->select('id', 'model_id', 'inventory_name', 'mig_id', 'status_condition', 'status_usage', 'location');
+            $inventories = Inventory::with(['statusCondition', 'statusUsage', 'locationInventory', 'modelInventory.asset:id,name,code,deleted_at'])->select('id', 'model_id', 'mig_id', 'status_condition', 'status_usage', 'location');
 
             if($asset_id){
                 $inventories = $inventories->whereHas('modelInventory', function($q) use ($asset_id){
@@ -775,13 +777,9 @@ class AssetService{
             if($status_usage){
                 $inventories = $inventories->where('status_usage', $status_usage);
             }
-            if($name){
-                $inventories = $inventories->where('inventory_name', 'ilike', "%".$name."%");
-            }
 
             if($sort_by){
-                if($sort_by === 'name') $inventories = $inventories->orderBy('inventory_name', $sort_type);
-                else if($sort_by === 'status_usage') $inventories = $inventories->orderBy('status_usage', $sort_type);
+                if($sort_by === 'status_usage') $inventories = $inventories->orderBy('status_usage', $sort_type);
                 else if($sort_by === 'status_condition') $inventories = $inventories->orderBy('status_condition', $sort_type);
                 else if($sort_by === 'mig_id') $inventories = $inventories->orderBy('mig_id', $sort_type);
             }
@@ -889,7 +887,7 @@ class AssetService{
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
             
-            $inventories = Inventory::with(['modelInventory.asset:id,name,deleted_at', 'inventoryAddableParts'])->select('id', 'model_id', 'inventory_name', 'mig_id')->where('status_usage', 2);
+            $inventories = Inventory::with(['modelInventory.asset:id,name,deleted_at', 'inventoryAddableParts'])->select('id', 'model_id', 'mig_id')->where('status_usage', 2);
 
             if($asset_id){
                 $inventories = $inventories->whereHas('modelInventory', function($q) use ($asset_id){
@@ -898,9 +896,6 @@ class AssetService{
             }
             if($model_id){
                 $inventories = $inventories->where('model_id', $model_id);
-            }
-            if($name){
-                $inventories = $inventories->where('inventory_name', 'ilike', "%".$name."%");
             }
             
             $inventories = $inventories->paginate($rows);
@@ -930,13 +925,13 @@ class AssetService{
             $id = $request->get('id', null);
             $name = $request->get('name', null);
             if(!$id) return ["success" => false, "message" => "Id Asset Kosong", "status" => 400];
-            $inventories = Inventory::with(['modelInventory.asset:id,name,deleted_at', 'inventoryReplacementParts'])->select('id', 'model_id', 'inventory_name', 'mig_id')
+            $inventories = Inventory::with(['modelInventory.asset:id,name,deleted_at', 'inventoryReplacementParts'])->select('id', 'model_id', 'mig_id')
                     ->whereHas('modelInventory', function($q) use ($id){
                         $q->where('model_inventories.asset_id', $id);
                     });
 
-            if($name){
-                $inventories = $inventories->where('inventory_name', 'ilike', "%".$name."%");
+            if($mig_id){
+                $inventories = $inventories->where('mig_id', 'ilike', "%".$mig_id."%");
             }
             
             $inventories = $inventories->limit(50)->get();
@@ -982,11 +977,9 @@ class AssetService{
         $new_inventory = new Inventory;
         $new_inventory->model_id = $inventory['model_id'];
         $new_inventory->vendor_id = $inventory['vendor_id'];
-        $new_inventory->inventory_name = $inventory['inventory_name'];
         $new_inventory->status_condition = $inventory['status_condition'];
         $new_inventory->status_usage = 1;
         $new_inventory->location = $location;
-        $new_inventory->is_exist = $inventory['is_exist'];
         $new_inventory->deskripsi = $inventory['deskripsi'];
         $new_inventory->manufacturer_id = $inventory['manufacturer_id'];
         $new_inventory->mig_id = $inventory['mig_id'];
@@ -1064,7 +1057,7 @@ class AssetService{
             }
         }
         $mig_ids[] = $mig_id;
-        $inventory = Inventory::select('id', 'inventory_name', 'mig_id')->whereIn('mig_id', $mig_ids)->first();
+        $inventory = Inventory::select('id', 'mig_id')->whereIn('mig_id', $mig_ids)->first();
         if($inventory !== null) return ["success" => false, "message" => "MIG ID ".$inventory->mig_id." Sudah Terdaftar", "status" => 400];
         
         $inventory_values = $data['inventory_values'];
@@ -1082,11 +1075,9 @@ class AssetService{
         $inventory = new Inventory;
         $inventory->model_id = $data['model_id'];
         $inventory->vendor_id = $data['vendor_id'];
-        $inventory->inventory_name = $data['inventory_name'];
         $inventory->status_condition = $data['status_condition'];
         $inventory->status_usage = $data['status_condition'];
         $inventory->location = $data['location'];
-        $inventory->is_exist = $data['is_exist'];
         $inventory->deskripsi = $data['deskripsi'];
         $inventory->manufacturer_id = $data['manufacturer_id'];
         $inventory->mig_id = $mig_id;
@@ -1166,9 +1157,7 @@ class AssetService{
             foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
 
             $inventory->vendor_id = $data['vendor_id'];
-            $inventory->inventory_name = $data['inventory_name'];
             $inventory->location = $data['location'];
-            $inventory->is_exist = $data['is_exist'];
             $inventory->deskripsi = $data['deskripsi'];
             $inventory->manufacturer_id = $data['manufacturer_id'];
             $inventory->mig_id = $mig_id;
@@ -1672,6 +1661,27 @@ class AssetService{
         }
     }
 
+    public function importInventories($request, $route_name)
+    {
+        // $excel = Excel::import(new InventoriesImport, $request->file('file'));
+        try {
+            Excel::import(new InventoriesImport, $request->file('file'));
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $raw_failures = $e->failures();
+            
+            $failures = [];
+            foreach ($raw_failures as $failure) {
+                $temp['no'] = $failure->row()-1; // row that went wrong
+                // $temp['attribute'] = $failure->attribute(); // either heading key (if using heading row concern) or column index
+                $temp['errors'] = $failure->errors(); // Actual error messages from Laravel validator
+                // $temp['values'] = $failure->values(); // The values of the row that has failed.
+                $failures[] = $temp;
+            }
+            return ["success" => true, "message" => "Import Gagal", "failures" => $failures, "status" => 200];
+        }
+        return ["success" => true, "message" => "Inventory Berhasil Diimport", "status" => 200];
+    }
+
     // Manufacturers
 
     public function getManufacturers($route_name)
@@ -1982,7 +1992,7 @@ class AssetService{
                     foreach($relationship_inventories_not_from_inverse as $relationship_inventory){
                         $relationship_inventory->relationship_name = $relationship_inventory->is_inverse ? $relationship_inventory->relationship->inverse_relationship_type : $relationship_inventory->relationship->relationship_type;
                         $relationship_inventory->type = $relationship_inventory->type_id === -1 ? "Agent" : ($relationship_inventory->type_id === -2 ? "Requester" : ($relationship_inventory->type_id === -3 ? "Company" : "Inventory Type"));
-                        $relationship_inventory->subject_detail_name = $relationship_inventory->inventory->inventory_name;
+                        $relationship_inventory->subject_detail_name = $relationship_inventory->inventory->modelInventory->name;
 
                         if($relationship_inventory->connected_id === null){
                             $relationship_inventory->connected_detail_name = "Detail ID Kosong";
@@ -1994,7 +2004,7 @@ class AssetService{
                                 $relationship_inventory->connected_detail_name = $relationship_inventory->company->id && ($relationship_inventory->company->role === 2) ? $relationship_inventory->company->name : "Company Not Found";
                                 $relationship_inventory->makeHidden('company');
                             } else {
-                                $relationship_inventory->connected_detail_name = $relationship_inventory->inventoryConnected->inventory_name;
+                                $relationship_inventory->connected_detail_name = $relationship_inventory->inventoryConnected->modelInventory->name;
                                 $relationship_inventory->makeHidden('inventoryConnected');
                             }
                         }
@@ -2011,7 +2021,7 @@ class AssetService{
                 foreach($relationship_inventories_from_inverse as $relationship_inventory){
                     $relationship_inventory->relationship_name = $relationship_inventory->is_inverse ? $relationship_inventory->relationship->inverse_relationship_type : $relationship_inventory->relationship->relationship_type;
                     $relationship_inventory->type = $relationship_inventory->type_id === -1 ? "Agent" : ($relationship_inventory->type_id === -2 ? "Requester" : ($relationship_inventory->type_id === -3 ? "Company" : "Inventory Type"));
-                    $relationship_inventory->connected_detail_name = $relationship_inventory->inventory->inventory_name;
+                    $relationship_inventory->connected_detail_name = $relationship_inventory->inventory->modelInventory->name;
                     
                     if($relationship_inventory->connected_id === null){
                         $relationship_inventory->subject_detail_name = "Detail ID Kosong";
@@ -2023,7 +2033,7 @@ class AssetService{
                             $relationship_inventory->subject_detail_name = $relationship_inventory->company->id && ($relationship_inventory->company->role === 2) ? $relationship_inventory->company->name : "Company Not Found";
                             $relationship_inventory->makeHidden('company');
                         } else {
-                            $relationship_inventory->subject_detail_name = $relationship_inventory->inventoryConnected->inventory_name;
+                            $relationship_inventory->subject_detail_name = $relationship_inventory->inventoryConnected->modelInventory->name;
                             $relationship_inventory->makeHidden('inventoryConnected');
                         }
                     }
@@ -2078,7 +2088,7 @@ class AssetService{
                 if($rows < 1) $rows = 10;
                 if($rows > 100) $rows = 10;
                 
-                $inventories = Inventory::with('modelInventory.asset:id,name,code,deleted_at')->select('id','inventory_name','mig_id','serial_number','status_usage','model_id')->where('status_usage', 2);
+                $inventories = Inventory::with('modelInventory.asset:id,name,code,deleted_at')->select('id','mig_id','serial_number','status_usage','model_id')->where('status_usage', 2);
 
                 if($model_id){
                     $inventories = $inventories->where('model_id', $model_id);

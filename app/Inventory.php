@@ -9,6 +9,7 @@ class Inventory extends Model
 {
     use SoftDeletes;
     protected $hidden = ['pivot'];
+    protected $fillable = ['model_id', 'vendor_id', 'status_condition', 'status_usage', 'location', 'deskripsi', 'manufacturer_id', 'mig_id', 'serial_number'];
     
     public function modelInventory()
     {
@@ -51,7 +52,7 @@ class Inventory extends Model
 
     public function inventoryPart()
     {
-        return $this->belongsToMany(Inventory::class, 'inventory_inventory_pivots', 'parent_id', 'child_id')->select('inventories.id', 'inventories.model_id', 'inventories.inventory_name', 'inventories.mig_id', 'inventories.status_condition', 'inventories.status_usage', 'inventories.serial_number', 'inventories.deleted_at')->with('statusCondition', 'statusUsage', 'modelInventory.asset');
+        return $this->belongsToMany(Inventory::class, 'inventory_inventory_pivots', 'parent_id', 'child_id')->select('inventories.id', 'inventories.model_id', 'inventories.mig_id', 'inventories.status_condition', 'inventories.status_usage', 'inventories.serial_number', 'inventories.deleted_at')->with('statusCondition', 'statusUsage', 'modelInventory.asset');
     }
 
     public function inventoryParts()
@@ -61,17 +62,17 @@ class Inventory extends Model
 
     public function inventoryAddableParts()
     {
-        return $this->belongsToMany(Inventory::class, 'inventory_inventory_pivots', 'parent_id', 'child_id')->select('inventories.id', 'inventories.model_id', 'inventories.inventory_name', 'inventories.mig_id', 'inventories.deleted_at')->with('modelInventory.asset', 'inventoryAddableParts');
+        return $this->belongsToMany(Inventory::class, 'inventory_inventory_pivots', 'parent_id', 'child_id')->select('inventories.id', 'inventories.model_id', 'inventories.mig_id', 'inventories.deleted_at')->with('modelInventory.asset', 'inventoryAddableParts');
     }
 
     public function inventoryReplacementParts()
     {
-        return $this->belongsToMany(Inventory::class, 'inventory_inventory_pivots', 'parent_id', 'child_id')->select('inventories.id', 'inventories.inventory_name')->with('inventoryReplacementParts');
+        return $this->belongsToMany(Inventory::class, 'inventory_inventory_pivots', 'parent_id', 'child_id')->select('inventories.id')->with('inventoryReplacementParts');
     }
 
     public function inventoryParent()
     {
-        return $this->belongsToMany(Inventory::class, 'inventory_inventory_pivots', 'child_id', 'parent_id')->select('inventories.id', 'inventories.model_id', 'inventories.inventory_name', 'inventories.mig_id', 'inventories.status_condition', 'inventories.status_usage');
+        return $this->belongsToMany(Inventory::class, 'inventory_inventory_pivots', 'child_id', 'parent_id')->select('inventories.id', 'inventories.model_id', 'inventories.mig_id', 'inventories.status_condition', 'inventories.status_usage');
     }
 
     public function inventoryRelationshipsWithoutInventory()

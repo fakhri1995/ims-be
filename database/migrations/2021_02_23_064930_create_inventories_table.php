@@ -17,11 +17,9 @@ class CreateInventoriesTable extends Migration
             $table->id();
             $table->unsignedBigInteger('model_id');
             $table->unsignedBigInteger('vendor_id')->nullable();
-            $table->string('inventory_name');
             $table->integer('status_condition');
             $table->integer('status_usage');
             $table->integer('location')->nullable();
-            $table->boolean('is_exist')->nullable();
             $table->string('deskripsi')->nullable();
             $table->integer('manufacturer_id')->nullable();
             $table->string('mig_id');
