@@ -1968,17 +1968,11 @@ class AssetService{
             ->whereIn('connected_id', $list_company)->where('type_id',-3)->select('id', 'subject_id','relationship_id', 'connected_id', 'is_inverse')->paginate($rows);
 
         foreach($relationship_inventories as $relationship_inventory){
-            $relationship_inventory->inventory->full_name = $relationship_inventory->inventory->locationInventory->fullSubNameWParent();
+            $relationship_inventory->location_name = $relationship_inventory->inventory->locationInventory->fullSubNameWParent();
             $relationship_inventory->inventory->makeHidden('locationInventory');
-            $relationship_inventory->relationship_name = !$relationship_inventory->is_inverse ? $relationship_inventory->relationship->inverse_relationship_type : $relationship_inventory->relationship->relationship_type;
             $relationship_inventory->connected_detail_name = $relationship_inventory->inventory->modelInventory->name;
+            $relationship_inventory->model_name = !$relationship_inventory->is_inverse ? $relationship_inventory->relationship->inverse_relationship_type : $relationship_inventory->relationship->relationship_type;
             
-            if($relationship_inventory->connected_id === null){
-                $relationship_inventory->subject_detail_name = "Detail ID Kosong";
-            } else {
-                $relationship_inventory->subject_detail_name = $relationship_inventory->company->fullSubNameWParent();
-                $relationship_inventory->makeHidden('company');
-            }
             $temp_subject_id = $relationship_inventory->subject_id;
             $relationship_inventory->subject_id = $relationship_inventory->connected_id;
             $relationship_inventory->connected_id = $temp_subject_id;
