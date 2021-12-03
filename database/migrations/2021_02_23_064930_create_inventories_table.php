@@ -26,6 +26,9 @@ class CreateInventoriesTable extends Migration
             $table->string('serial_number')->nullable();
             $table->timestamps();
             $table->softDeletes();
+
+            $table->index('model_id');
+            $table->index('location');
         });
     }
 
