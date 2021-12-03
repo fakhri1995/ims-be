@@ -1970,8 +1970,8 @@ class AssetService{
         foreach($relationship_inventories as $relationship_inventory){
             $relationship_inventory->location_name = $relationship_inventory->inventory->locationInventory->fullSubNameWParent();
             $relationship_inventory->inventory->makeHidden('locationInventory');
-            $relationship_inventory->connected_detail_name = $relationship_inventory->inventory->modelInventory->name;
-            $relationship_inventory->model_name = !$relationship_inventory->is_inverse ? $relationship_inventory->relationship->inverse_relationship_type : $relationship_inventory->relationship->relationship_type;
+            $relationship_inventory->model_name = $relationship_inventory->inventory->modelInventory->name;
+            $relationship_inventory->relationship_name = !$relationship_inventory->is_inverse ? $relationship_inventory->relationship->inverse_relationship_type : $relationship_inventory->relationship->relationship_type;
             
             $temp_subject_id = $relationship_inventory->subject_id;
             $relationship_inventory->subject_id = $relationship_inventory->connected_id;
