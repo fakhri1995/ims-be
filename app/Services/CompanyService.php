@@ -254,12 +254,21 @@ class CompanyService
             $company->good_inventory_count = $good_inventory_count;
             $company->good_inventory_percentage = $inventory_count ? floor($good_inventory_count/$inventory_count * 100) : 0;
             $company->asset_cluster = DB::table('inventories')
-            ->select(DB::raw('count(*) as asset_count, assets.name'))
+            ->select(DB::raw('count(*) as asset_count, assets.name, assets.code'))
             ->whereIn('location', $company_list)
             ->join('model_inventories', 'inventories.model_id', '=', 'model_inventories.id')
             ->join('assets', 'model_inventories.asset_id', '=', 'assets.id')
             ->groupBy('assets.id')
             ->get();
+
+            foreach($company->asset_cluster as $inventory){
+                if(strlen($inventory->code) > 3){
+                    $parent_model = substr($inventory->code, 0, 3);
+                    $parent = DB::table('assets')->where('code', $parent_model)->first();
+                    $parent_name = $parent === null ? "Asset Not Found" : $parent->name;
+                    $inventory->name = $parent_name . " / " . $inventory->name;
+                }
+            }
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $company, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
