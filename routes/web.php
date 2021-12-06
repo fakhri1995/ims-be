@@ -222,6 +222,20 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/changeStatusTicket', 'TicketController@changeStatusTicket');
     $router->put('/cancelClientTicket', 'TicketController@cancelClientTicket');
     $router->put('/assignTicket', 'TicketController@assignTicket');
+    
+    //Task Routes
+    // $router->get('/getTasks', 'TaskController@getTasks');
+    // $router->get('/getTask', 'TaskController@getTask');
+    // $router->post('/addTask', 'TaskController@addTask');
+    // $router->put('/updateTask', 'TaskController@updateTask');
+    // $router->delete('/deleteTask', 'TaskController@deleteTask');
+
+    //Type Task Routes
+    $router->get('/getTaskTypes', 'TaskController@getTaskTypes');
+    $router->get('/getTaskType', 'TaskController@getTaskType');
+    $router->post('/addTaskType', 'TaskController@addTaskType');
+    $router->put('/updateTaskType', 'TaskController@updateTaskType');
+    $router->delete('/deleteTaskType', 'TaskController@deleteTaskType');
 });
 
 //Group Routes
