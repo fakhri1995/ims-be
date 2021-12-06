@@ -21,7 +21,23 @@ class TaskService{
         if($access["success"] === false) return $access;
 
         try{
-            $tasks = TaskType::all();
+            $name = $request->get('name', null);
+            $rows = $request->get('rows', 10);
+            $sort_by = $request->get('sort_by', null);
+            $sort_type = $request->get('sort_type', 'desc');
+
+            if($rows > 100) $rows = 100;
+            if($rows < 1) $rows = 10;
+            
+            $tasks = TaskType::select('*');
+
+            if($name) $tasks = $tasks->where('name', 'ilike', "%".$name."%");
+            if($sort_by){
+                if($sort_by === 'name') $tasks = $tasks->orderBy('name', $sort_type);
+                // else if($sort_by === 'count') $tasks = $tasks->orderBy('inventories_count', $sort_type);
+            }
+            
+            $tasks = $tasks->paginate($rows);
             if($tasks->isEmpty()) return ["success" => false, "message" => "Tipe Task Belum Terdaftar", "status" => 200];
             return ["success" => true, "message" => "Tipe Task Berhasil Diambil", "data" => $tasks, "status" => 200];
             
@@ -96,7 +112,7 @@ class TaskService{
             }
             $details = (object)["lists" => $lists];
         } else if($type === 6){
-            if(!isset($work['name'])) return ["success" => false, "message" => "$pekerjaan $index Dengan List Belum Memiliki Nama Dropdown", "status" => 400];
+            if(!isset($work['dropdown_name'])) return ["success" => false, "message" => "$pekerjaan $index Dengan List Belum Memiliki Nama Dropdown", "status" => 400];
             if(isset($work['lists'])) $lists = $work['lists'];
             else $lists = [];
             if(!count($lists)) return ["success" => false, "message" => "$pekerjaan $index Belum Memiliki List Dropdown", "status" => 400];
