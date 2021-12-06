@@ -28,29 +28,6 @@ class LoginController extends Controller
 
         $response = $this->loginService->login($email, $password);
         return response()->json($response, $response['status']);
-        
-        // $body = [
-        //     'email' => $request->get('email'),
-        //     'password' => $request->get('password')
-        // ];
-        // try{
-        //     $response = $this->client->request('POST', '/auth/v1/login', [
-        //             'headers'  => ['content-type' => 'application/x-www-form-urlencoded'],
-        //             'form_params' => $body
-        //         ]);      
-        //     return response(json_decode((string) $response->getBody(), true));
-        // }catch(ClientException $err){
-        //     $error_response = $err->getResponse();
-        //     $detail = json_decode($error_response->getBody());
-        //     return response()->json(["success" => false, "message" => (object)[
-        //         "errorInfo" => [
-        //             "status" => $error_response->getStatusCode(),
-        //             "reason" => $error_response->getReasonPhrase(),
-        //             "server_code" => json_decode($error_response->getBody())->error->code,
-        //             "status_detail" => json_decode($error_response->getBody())->error->detail
-        //         ]
-        //     ]], $error_response->getStatusCode());
-        // }
     }
 
     public function logout(Request $request)
@@ -92,6 +69,22 @@ class LoginController extends Controller
     public function detailProfile(Request $request)
     {
         $response = $this->loginService->detailProfile();
+        return response()->json($response, $response['status']);
+    }
+
+    public function mailForgetPassword(Request $request)
+    {
+        $email = $request->input("email");
+        $response = $this->loginService->mailForgetPassword($email);
+        return response()->json($response, $response['status']);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $token = $request->input("token");
+        $password = $request->input("password");
+        $confirm_password = $request->input("confirm_password");
+        $response = $this->loginService->resetPassword($password, $confirm_password, $token);
         return response()->json($response, $response['status']);
     }
 }

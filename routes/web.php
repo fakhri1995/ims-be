@@ -20,6 +20,8 @@ $router->get('/getCareers', 'CompanyProfileController@getCareers');
 // ----------------------------------------- //
 
 $router->post('/login', 'LoginController@login');
+$router->post('/mailForgetPassword', 'LoginController@mailForgetPassword');
+$router->post('/resetPassword', 'LoginController@resetPassword');
 
 $router->group(['middleware' => 'auth'], function($router){
     

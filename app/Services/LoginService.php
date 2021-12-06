@@ -2,9 +2,13 @@
 
 namespace App\Services;
 use App\User;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Hash;
 use Exception;
+use App\Mail\ForgetPasswordMail;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 
 class LoginService
 {
@@ -90,5 +94,40 @@ class LoginService
                 "data" => auth()->user(),
                 "status" => 200
             ];
+    }
+
+    public function mailForgetPassword($email){
+        if(!$email) return ["success" => false, "data" => "Email Belum Diisi", "status" => 400];
+        $user = User::where('email', $email)->first();
+        if(!$user) return ["success" => false, "data" => "Email Belum Terdaftar", "status" => 400];
+        
+        $token_reset = Str::random(100);
+        DB::table('password_resets')->insert(['email' => $email, 'token' => $token_reset, 'created_at' => date("Y-m-d H:i:s")]);
+
+        $data = [
+            'token' => $token_reset,
+            'subject' => 'Reset Password MIG Token'
+        ];
+        Mail::to($email)->send(new ForgetPasswordMail($data));
+        return ["success" => true, "data" => "Email Token Lupa Password Telah Dikirim Ke Email Anda", "status" => 200];
+    }
+
+    public function resetPassword($password, $confirm_password, $token_reset){
+        $token = DB::table('password_resets')->where('token', $token_reset)->first();
+        if(!$token) return ["success" => false, "data" => "Invalid Token", "status" => 400];
+        if(!$password) return ["success" => false, "data" => "Password Belum Terisi", "status" => 400];
+        if($password !== $confirm_password) return ["success" => false, "data" => "Password Tidak Sama", "status" => 400];
+        
+        $user = User::where('email', $token->email)->first();
+        if(!$user) return ["success" => false, "message" => "Id Dengan Email Tersebut Tidak Ditemukan", "status" => 400];
+        try{
+            $user->password = Hash::make($password);
+            $user->save();
+            DB::table('password_resets')->where('token', $token_reset)->delete();
+            return ["success" => true, "data" => "Berhasil Merubah Password Akun", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+        
     }
 }

@@ -28,6 +28,7 @@ $app->withFacades();
 
 $app->withEloquent();
 
+$app->make('queue');
 /*
 |--------------------------------------------------------------------------
 | Register Container Bindings
@@ -64,8 +65,10 @@ $app->configure('app');
 $app->configure('cors');
 $app->configure('auth');
 $app->configure('service');
-$app->configure('activitylog');
 $app->configure('dompdf');
+$app->configure('mail');
+
+$app->alias('mail.manager', Illuminate\Contracts\Mail\Factory::class);
 
 /*
 |--------------------------------------------------------------------------
@@ -107,6 +110,7 @@ $app->register(Laravel\Passport\PassportServiceProvider::class);
 $app->register(Dusterio\LumenPassport\PassportServiceProvider::class);
 $app->register(Maatwebsite\Excel\ExcelServiceProvider::class);
 $app->register(Barryvdh\DomPDF\ServiceProvider::class);
+$app->register(Illuminate\Mail\MailServiceProvider::class);
 
 /*
 |--------------------------------------------------------------------------
