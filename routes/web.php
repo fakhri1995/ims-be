@@ -226,11 +226,17 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/assignTicket', 'TicketController@assignTicket');
     
     //Task Routes
-    // $router->get('/getTasks', 'TaskController@getTasks');
-    // $router->get('/getTask', 'TaskController@getTask');
-    // $router->post('/addTask', 'TaskController@addTask');
-    // $router->put('/updateTask', 'TaskController@updateTask');
-    // $router->delete('/deleteTask', 'TaskController@deleteTask');
+    // $router->get('/getStaffTaskStatuses', 'UserController@getStaffTaskStatuses');
+    $router->get('/getTasks', 'TaskController@getTasks');
+    $router->get('/getTask', 'TaskController@getTask');
+    $router->post('/addTask', 'TaskController@addTask');
+    $router->put('/updateTask', 'TaskController@updateTask');
+    $router->delete('/deleteTask', 'TaskController@deleteTask');
+
+    //Task Detail
+    $router->post('/addTaskDetail', 'TaskController@addTaskDetail');
+    $router->put('/updateTaskDetail', 'TaskController@updateTaskDetail');
+    $router->delete('/deleteTaskDetail', 'TaskController@deleteTaskDetail');
 
     //Type Task Routes
     $router->get('/getTaskTypes', 'TaskController@getTaskTypes');

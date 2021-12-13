@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Ticket extends Model
 {
     public $timestamps = false;
-    protected $hidden = ['ticketable_type', 'requester_id', 'status_id', 'assignable_id', 'ticketable_id', 'assignable_type'];
+    protected $hidden = ['ticketable_type', 'requester_id', 'status_id', 'assignable_id', 'assignable_type'];
     
     public function getRaisedAtAttribute($value){
         $time_difference = Carbon::parse($value)->diffForHumans(null, false, false, 2);
