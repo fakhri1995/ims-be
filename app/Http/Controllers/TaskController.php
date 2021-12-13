@@ -87,6 +87,14 @@ class TaskController extends Controller
 
     // Type Task
 
+    public function getFilterTaskTypes(Request $request)
+    {
+        $route_name = "TASKS_ADD";
+
+        $response = $this->taskService->getFilterTaskTypes($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getTaskTypes(Request $request)
     {
         $route_name = "TASKS_GET";

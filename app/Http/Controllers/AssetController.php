@@ -179,6 +179,14 @@ class AssetController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getFilterInventories(Request $request)
+    {
+        $route_name = "INVENTORY_ADD";
+
+        $response = $this->assetService->getFilterInventories($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getInventories(Request $request)
     {
         $route_name = "INVENTORIES_GET";

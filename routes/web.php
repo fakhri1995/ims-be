@@ -157,6 +157,7 @@ $router->group(['middleware' => 'auth'], function($router){
 
     //Inventory Routes
     $router->get('/getInventories', 'AssetController@getInventories');
+    $router->get('/getFilterInventories', 'AssetController@getFilterInventories');
     $router->get('/getInventory', 'AssetController@getInventory');
     $router->get('/getInventoryAddable', 'AssetController@getInventoryAddable');
     $router->get('/getInventoryRelations', 'AssetController@getInventoryRelations');
@@ -239,6 +240,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteTaskDetail', 'TaskController@deleteTaskDetail');
 
     //Type Task Routes
+    $router->get('/getFilterTaskTypes', 'TaskController@getFilterTaskTypes');
     $router->get('/getTaskTypes', 'TaskController@getTaskTypes');
     $router->get('/getTaskType', 'TaskController@getTaskType');
     $router->post('/addTaskType', 'TaskController@addTaskType');

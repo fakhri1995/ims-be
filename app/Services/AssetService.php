@@ -850,6 +850,22 @@ class AssetService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
+    
+    public function getFilterInventories($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $mig_id = $request->get('mig_id', null);
+            $inventories = Inventory::with('modelInventory.asset')->select('id','mig_id', 'model_id');
+            if($mig_id) $inventories->where('mig_id', 'ilike', "%".$mig_id."%");
+            $inventories = $inventories->limit(50)->get();
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventories, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
 
     public function getInventory($id, $route_name)
     {
