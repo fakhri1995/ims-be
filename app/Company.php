@@ -174,6 +174,13 @@ class Company extends Model
         return $name;
     }
 
+    public function fullSubNameWParentTopParent()
+    {
+        if($this->top_parent_id !== null) $name = $this->getTopParent()->name.' / '.$this->fullSubNameWParent();
+        else $name = $this->name;
+        return $name;
+    }
+
     public function level($level)
     {
         $level = $level + 1;

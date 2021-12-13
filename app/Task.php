@@ -10,6 +10,11 @@ class Task extends Model
     use SoftDeletes;
     public $timestamps = false;
 
+    public function taskType()
+    {
+        return $this->belongsTo(TaskType::class);
+    }
+
     public function reference()
     {
         return $this->belongsTo(Ticket::class, 'reference_id');

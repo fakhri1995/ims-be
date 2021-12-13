@@ -83,23 +83,29 @@ class TaskService{
         if($access["success"] === false) return $access;
 
         try{
-            // $name = $request->get('name', null);
             $rows = $request->get('rows', 10);
+            $keyword = $request->get('keyword', null);
             $sort_by = $request->get('sort_by', null);
             $sort_type = $request->get('sort_type', 'desc');
 
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
             
-            $tasks = Task::select('*');
+            $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role', 'users'])->select('*');
 
-            // if($name) $tasks = $tasks->where('name', 'ilike', "%".$name."%");
-            // if($sort_by){
-            //     if($sort_by === 'name') $tasks = $tasks->orderBy('name', $sort_type);
-            //     // else if($sort_by === 'count') $tasks = $tasks->orderBy('inventories_count', $sort_type);
-            // }
+            if($keyword) $tasks = $tasks->where('name', 'ilike', "%".$keyword."%");
+            if($sort_by){
+                if($sort_by === 'name') $tasks = $tasks->orderBy('name', $sort_type);
+                else if($sort_by === 'deadline') $tasks = $tasks->orderBy('deadline', $sort_type);
+                else if($sort_by === 'id') $tasks = $tasks->orderBy('id', $sort_type);
+                else if($sort_by === 'status') $tasks = $tasks->orderBy('status', $sort_type);
+            }
             
             $tasks = $tasks->paginate($rows);
+            foreach($tasks as $task){
+                $task->location->full_location = $task->location->fullSubNameWParentTopParent();
+                $task->location->makeHidden(['parent', 'parent_id', 'role']);
+            }
             if($tasks->isEmpty()) return ["success" => true, "message" => "Task Masih Kosong", "data" => $tasks, "status" => 200];
             return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $tasks, "status" => 200];
 
@@ -117,7 +123,7 @@ class TaskService{
             $id = $request->get('id', null);
             $task = Task::with(['reference.type', 'location:id,name,parent_id,top_parent_id,role','users', 'group:id,name','inventories.modelInventory.asset', 'taskDetails'])->find($id);
             if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-            $task->location->full_location = $task->location->fullSubNameWParent();
+            $task->location->full_location = $task->location->fullSubNameWParentTopParent();
             $task->location->makeHidden(['parent', 'parent_id', 'role']);
             if(count($task->inventories)){
                 foreach($task->inventories as $inventory){
