@@ -2163,30 +2163,51 @@ class AssetService{
         $type_id = $request->get('type_id', null);
         $subject_id = $request->get('subject_id', null);
         $is_inverse = $request->get('is_inverse', null);
+        $from_inverse = $request->get('from_inverse', false);
         $notes = $request->get('notes', null);
         try{
-            foreach($connected_ids as $connected_id){
-                $relationship_inventory = new RelationshipInventory;
-                $relationship_inventory->relationship_id = $relationship_id;
-                $relationship_inventory->type_id = $type_id;
-                $relationship_inventory->subject_id = $subject_id;
-                $relationship_inventory->is_inverse = $is_inverse;
-                $relationship_inventory->connected_id = $connected_id;
-                $relationship_inventory->save();
+            if($from_inverse){
+                foreach($connected_ids as $connected_id){
+                    $relationship_inventory = new RelationshipInventory;
+                    $relationship_inventory->relationship_id = $relationship_id;
+                    $relationship_inventory->type_id = $type_id;
+                    $relationship_inventory->subject_id = $connected_id;
+                    $relationship_inventory->is_inverse = $is_inverse;
+                    $relationship_inventory->connected_id = $subject_id;
+                    $relationship_inventory->save();
 
-                $causer_id = auth()->user()->id; 
-                $logService = new LogService;
-                $properties['attributes'] = $relationship_inventory;
-                $logService->createLogInventoryRelationship($subject_id, $causer_id, $properties, $notes);
-
-                if($type_id === -4){
-                    $inverse_notes = "Created from Inverse";
-                    $temp_subject_id = $relationship_inventory->subject_id;
-                    $relationship_inventory->subject_id = $relationship_inventory->connected_id;
-                    $relationship_inventory->connected_id = $temp_subject_id;
-                    $relationship_inventory->is_inverse = !$relationship_inventory->is_inverse;
+                    if($type_id === -3) $notes = "Created From Company Management";
+                    else $notes = "Created From User Management";
+                    
+                    $causer_id = auth()->user()->id; 
+                    $logService = new LogService;
                     $properties['attributes'] = $relationship_inventory;
-                    $logService->createLogInventoryRelationship($connected_id, $causer_id, $properties, $inverse_notes);
+                    $logService->createLogInventoryRelationship($connected_id, $causer_id, $properties, $notes);
+                }
+            } else {
+                foreach($connected_ids as $connected_id){
+                    $relationship_inventory = new RelationshipInventory;
+                    $relationship_inventory->relationship_id = $relationship_id;
+                    $relationship_inventory->type_id = $type_id;
+                    $relationship_inventory->subject_id = $subject_id;
+                    $relationship_inventory->is_inverse = $is_inverse;
+                    $relationship_inventory->connected_id = $connected_id;
+                    $relationship_inventory->save();
+
+                    $causer_id = auth()->user()->id; 
+                    $logService = new LogService;
+                    $properties['attributes'] = $relationship_inventory;
+                    $logService->createLogInventoryRelationship($subject_id, $causer_id, $properties, $notes);
+
+                    if($type_id === -4){
+                        $inverse_notes = "Created from Inverse";
+                        $temp_subject_id = $relationship_inventory->subject_id;
+                        $relationship_inventory->subject_id = $relationship_inventory->connected_id;
+                        $relationship_inventory->connected_id = $temp_subject_id;
+                        $relationship_inventory->is_inverse = !$relationship_inventory->is_inverse;
+                        $properties['attributes'] = $relationship_inventory;
+                        $logService->createLogInventoryRelationship($connected_id, $causer_id, $properties, $inverse_notes);
+                    }
                 }
             }
             return ["success" => true, "message" => "Relationship Inventory berhasil dibuat", "status" => 200];
