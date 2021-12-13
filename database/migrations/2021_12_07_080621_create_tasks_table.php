@@ -23,8 +23,10 @@ class CreateTasksTable extends Migration
             $table->integer('created_by');
             $table->integer('group_id')->nullable();
             $table->dateTime('created_at');
+            $table->dateTime('on_hold_at')->nullable();
             $table->dateTime('deadline');
-            $table->tinyInteger("status");
+            $table->tinyInteger('status');
+            $table->boolean('is_replaceable');
             $table->index('task_type_id');
             $table->index('status');
             $table->softDeletes();

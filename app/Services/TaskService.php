@@ -134,6 +134,10 @@ class TaskService{
                     $inventory->is_in = $inventory->pivot->is_in;
                 }
             }
+            
+            if($task->status === 4) $task->time_left = date_diff(date_create($task->deadline), date_create($task->on_hold_at)); 
+            else $task->time_left = date_diff(date_create($task->deadline), date_create(date("Y-m-d H:i:s"))); 
+            
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $task, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -170,6 +174,7 @@ class TaskService{
             $task->created_by = auth()->user()->id;
             $task->deadline = $request->get('deadline');
             $task->created_at = $request->get('created_at');
+            $task->is_replaceable = $request->get('is_replaceable', false);
             $task->status = 2;
             
             
@@ -227,6 +232,7 @@ class TaskService{
             $task->reference_id = $request->get('reference_id');
             $task->deadline = $request->get('deadline');
             $task->created_at = $request->get('created_at');
+            $task->is_replaceable = $request->get('is_replaceable');
             $task->save();
             
             if(count($assign_ids)){
