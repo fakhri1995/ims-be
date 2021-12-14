@@ -34,7 +34,9 @@ class UserService
         if($access["success"] === false) return $access;
 
         $name = $request->get('name', null);
+        $type = $request->get('type', null);
         $users = User::with(['company:id,name,top_parent_id', 'company.topParent'])->select('id', 'name', 'company_id', 'profile_image');
+        if($type) $users = $users->where('role', $type);
         if($name) $users = $users->where('name', 'ilike', "%".$name."%");
         $users = $users->limit(50)->get();
         foreach($users as $user){
