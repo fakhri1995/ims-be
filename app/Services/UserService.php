@@ -34,12 +34,12 @@ class UserService
         if($access["success"] === false) return $access;
 
         $name = $request->get('name', null);
-        $users = User::with(['company:id,name,top_parent_id', 'company.topParent'])->select('id', 'name', 'company_id');
+        $users = User::with(['company:id,name,top_parent_id', 'company.topParent'])->select('id', 'name', 'company_id', 'profile_image');
         if($name) $users = $users->where('name', 'ilike', "%".$name."%");
         $users = $users->limit(50)->get();
         foreach($users as $user){
             if($user->company->id !== 0){
-                $user->company->full_name = $user->company->topParent ? $user->company->topParent->name.' - '.$user->company->name : $user->company->name;
+                $user->company->full_name = $user->company->topParent ? $user->company->topParent->name.' / '.$user->company->name : $user->company->name;
                 $user->company->makeHidden('topParent');
             }
         }

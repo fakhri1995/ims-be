@@ -67,6 +67,8 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/requesterActivation', 'UserController@requesterActivation');
     $router->delete('/deleteRequester', 'UserController@deleteRequester');
 
+    $router->get('/getFilterGroups', 'GroupController@getFilterGroups');
+    
     //Agent Group Routes
     $router->get('/getAgentGroups', 'GroupController@getAgentGroups');
     $router->get('/getAgentGroup', 'GroupController@getAgentGroup');

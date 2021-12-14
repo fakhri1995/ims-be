@@ -23,6 +23,14 @@ class GroupController extends Controller
         $response = $this->groupService->getAssignToList($request);
         return response()->json($response, $response['status']);
     }
+
+    public function getFilterGroups(Request $request)
+    {
+        $route_name = "FILTER_GROUPS_GET";
+        
+        $response = $this->groupService->getFilterGroups($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
     
     public function getAgentGroups(Request $request)
     {
