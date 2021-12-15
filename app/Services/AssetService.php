@@ -1,6 +1,7 @@
 <?php 
 
 namespace App\Services;
+use Excel;
 use App\Role;
 use App\User;
 use App\Asset;
@@ -21,9 +22,9 @@ use App\StatusUsageInventory;
 use App\RelationshipInventory;
 use App\Services\CompanyService;
 use App\StatusConditionInventory;
-use App\Services\CheckRouteService;
 use App\Imports\InventoriesImport;
-use Excel;
+use Illuminate\Support\Facades\DB;
+use App\Services\CheckRouteService;
 
 class AssetService{
     public function __construct()
@@ -857,9 +858,16 @@ class AssetService{
         if($access["success"] === false) return $access;
         
         try{
-            $mig_id = $request->get('mig_id', null);
-            $inventories = Inventory::with('modelInventory.asset')->select('id','mig_id', 'model_id');
-            if($mig_id) $inventories->where('mig_id', 'ilike', "%".$mig_id."%");
+            $keyword = $request->get('keyword', null);
+            // $inventories = Inventory::with('modelInventory.asset')->select('id','mig_id', 'model_id');
+            $inventories = DB::table('inventories')->select('inventories.id', 'inventories.model_id', 'inventories.mig_id', 'model_inventories.name as model_name', 'assets.name as asset_name')
+            ->join('model_inventories', 'inventories.model_id', '=', 'model_inventories.id')
+            ->join('assets', 'model_inventories.asset_id', '=', 'assets.id');
+            if($keyword){
+                $inventories = $inventories->where('inventories.mig_id', 'ilike', "%".$keyword."%")
+                ->orWhere('model_inventories.name', 'ilike', "%".$keyword."%")
+                ->orWhere('assets.name', 'ilike', "%".$keyword."%");
+            }
             $inventories = $inventories->limit(50)->get();
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventories, "status" => 200];
         } catch(Exception $err){
