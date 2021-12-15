@@ -55,9 +55,13 @@ class UserService
         $name = $request->get('name', null);
         $from = $request->get('from', null);
         $to = $request->get('to', null);
+        $rows = $request->get('rows', 10);
+
         $users = User::select('id', 'name', 'profile_image')->where('role', 1);
         if($name) $users = $users->where('name', 'ilike', "%$name%");
-        $users = $users->paginate(25);
+        if($rows > 100) $rows = 100;
+        if($rows < 1) $rows = 10;
+        $users = $users->paginate($rows);
         // $from = "2021-10-30 20:49:53";
         // $to = "2021-12-20 20:49:53";
         $user_ids = $users->pluck('id');
