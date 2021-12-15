@@ -187,11 +187,12 @@ class TaskService{
         if($access["success"] === false) return $access;
 
         try{
-            $total_staff = User::where('role', 1)->has('tasks')->count();
-            $total_staff_without_task = User::where('role', 1)->count();
+            $total_staff = User::where('role', 1)->count();
+            $total_staff_with_task = User::where('role', 1)->has('tasks')->count();
             $data = (object)[
                 "total_staff" => $total_staff,
-                "total_staff_without_task" => $total_staff_without_task
+                "total_staff_with_task" => $total_staff_with_task,
+                "percentage" => round($total_staff_with_task / $total_staff * 100, 2)
             ];
             return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $data, "status" => 200];
 
