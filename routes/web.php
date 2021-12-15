@@ -229,19 +229,24 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/assignTicket', 'TicketController@assignTicket');
     
     //Task Routes
-    // $router->get('/getStaffTaskStatuses', 'UserController@getStaffTaskStatuses');
+    // $router->get('/getAdminTaskData', 'TaskController@getAdminTaskData');
+    $router->get('/getStatusTaskList', 'TaskController@getStatusTaskList');
+    $router->get('/getDeadlineTasks', 'TaskController@getDeadlineTasks');
+    $router->get('/getTaskStaffCounts', 'TaskController@getTaskStaffCounts');
+    $router->get('/getStaffTaskStatuses', 'UserController@getStaffTaskStatuses');
     $router->get('/getTasks', 'TaskController@getTasks');
     $router->get('/getTask', 'TaskController@getTask');
     $router->post('/addTask', 'TaskController@addTask');
     $router->put('/updateTask', 'TaskController@updateTask');
     $router->delete('/deleteTask', 'TaskController@deleteTask');
 
-    //Task Detail
+    //Task Detail Routes
     $router->post('/addTaskDetail', 'TaskController@addTaskDetail');
     $router->put('/updateTaskDetail', 'TaskController@updateTaskDetail');
     $router->delete('/deleteTaskDetail', 'TaskController@deleteTaskDetail');
 
     //Type Task Routes
+    $router->get('/getTaskTypeCounts', 'TaskController@getTaskTypeCounts');
     $router->get('/getFilterTaskTypes', 'TaskController@getFilterTaskTypes');
     $router->get('/getTaskTypes', 'TaskController@getTaskTypes');
     $router->get('/getTaskType', 'TaskController@getTaskType');

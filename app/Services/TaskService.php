@@ -79,15 +79,20 @@ class TaskService{
         return $new_works;
     }
 
-    public function getAdminTaskData($request, $route_name)
+    public function getStatusTaskList($request, $route_name)
     {
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $status_list_name = ["-", "Overdue", "Open", "On progress", "On hold", "Completed", "Closed"];
         try{
-            $status_tasks = Task::select(DB::raw('status, count(*) as status_count'))
-            ->groupBy('tasks.status')->get();
+            $location = $request->get('location', null);
+            $from = $request->get('from', null);
+            $to = $request->get('to', null);
+            $status_tasks = Task::select(DB::raw('status, count(*) as status_count'));
+            if($location) $status_tasks = $status_tasks->where('location_id', $location);
+            if($from && $to) $status_tasks = $status_tasks->whereBetween('deadline', [$from, $to]);
+            $status_tasks = $status_tasks->groupBy('tasks.status')->get();
             $sum_task = $status_tasks->sum('status_count');
             $list = [];
             for($i = 1; $i < 7; $i++){
@@ -103,8 +108,41 @@ class TaskService{
                     $list[] = (object)["status" => $i, "status_count" => 0, "status_name" => $status_list_name[$i], "percentage" => 0]; 
                 }
             }
-            $status_tasks = $list;
-            $task_type_counts = TaskType::select('id', 'name')->withCount('tasks')->orderBy('tasks_count', 'desc')->limit(4)->get();
+            return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $list, "status" => 200];
+
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    
+    public function getTaskTypeCounts($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $location = $request->get('location', null);
+            $task_type_counts = TaskType::select('id', 'name');
+            if($location){
+                $task_type_counts = $task_type_counts->withCount(['tasks' => function($query) use($location){
+                    $query->where('location_id', $location);
+                }]);
+            } else $task_type_counts = $task_type_counts->withCount('tasks');
+            $task_type_counts = $task_type_counts->orderBy('tasks_count', 'desc')->limit(4)->get();
+            return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $task_type_counts, "status" => 200];
+
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getDeadlineTasks($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $location = $request->get('location', null);
 
             $today = date('Y-m-d');
             $tomorrow = date("Y-m-d", strtotime('+1 day'));
@@ -115,37 +153,120 @@ class TaskService{
             $twenty_first_date = date("Y-m-21");
             $last_date = date("Y-m-t");
 
-            $today_deadline = Task::whereDate('deadline', $today)->count();
-            $tomorrow_deadline = Task::whereDate('deadline', $tomorrow)->count();
-            $first_to_tenth_deadline = Task::whereBetween('deadline', [$first_date, $tenth_date])->count();
-            $eleventh_to_twentieth_deadline = Task::whereBetween('deadline', [$eleventh_date, $twentieth_date])->count();
-            $twenty_first_to_last_deadline = Task::whereBetween('deadline', [$twenty_first_date, $last_date])->count();
-            
-            $total_staff = User::where('role', 1)->has('tasks')->count();
-            $total_staff_without_task = User::where('role', 1)->count();
+            if($location){
+                $today_deadline = Task::where('location_id', $location)->whereDate('deadline', $today)->count();
+                $tomorrow_deadline = Task::where('location_id', $location)->whereDate('deadline', $tomorrow)->count();
+                $first_to_tenth_deadline = Task::where('location_id', $location)->whereBetween('deadline', [$first_date, $tenth_date])->count();
+                $eleventh_to_twentieth_deadline = Task::where('location_id', $location)->whereBetween('deadline', [$eleventh_date, $twentieth_date])->count();
+                $twenty_first_to_last_deadline = Task::where('location_id', $location)->whereBetween('deadline', [$twenty_first_date, $last_date])->count();
+            } else {
+                $today_deadline = Task::whereDate('deadline', $today)->count();
+                $tomorrow_deadline = Task::whereDate('deadline', $tomorrow)->count();
+                $first_to_tenth_deadline = Task::whereBetween('deadline', [$first_date, $tenth_date])->count();
+                $eleventh_to_twentieth_deadline = Task::whereBetween('deadline', [$eleventh_date, $twentieth_date])->count();
+                $twenty_first_to_last_deadline = Task::whereBetween('deadline', [$twenty_first_date, $last_date])->count();
+            }
             
             $data = (object)[
-                "status_tasks" => $status_tasks,
-                "task_type_counts" => $task_type_counts,
-                "deadline" => (object)[
-                    "today_deadline" => $today_deadline,
-                    "tomorrow_deadline" => $tomorrow_deadline,
-                    "first_to_tenth_deadline" => $first_to_tenth_deadline,
-                    "eleventh_to_twentieth_deadline" => $eleventh_to_twentieth_deadline,
-                    "twenty_first_to_last_deadline" => $twenty_first_to_last_deadline,
-                ],
-                "staff" => (object)[
-                    "total_staff" => $total_staff,
-                    "total_staff_without_task" => $total_staff_without_task
-                ]
+                "today_deadline" => $today_deadline,
+                "tomorrow_deadline" => $tomorrow_deadline,
+                "first_to_tenth_deadline" => $first_to_tenth_deadline,
+                "eleventh_to_twentieth_deadline" => $eleventh_to_twentieth_deadline,
+                "twenty_first_to_last_deadline" => $twenty_first_to_last_deadline,
             ];
-            
             return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $data, "status" => 200];
 
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
+
+    public function getTaskStaffCounts($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $total_staff = User::where('role', 1)->has('tasks')->count();
+            $total_staff_without_task = User::where('role', 1)->count();
+            $data = (object)[
+                "total_staff" => $total_staff,
+                "total_staff_without_task" => $total_staff_without_task
+            ];
+            return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $data, "status" => 200];
+
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    // public function getAdminTaskData($request, $route_name)
+    // {
+    //     $access = $this->checkRouteService->checkRoute($route_name);
+    //     if($access["success"] === false) return $access;
+
+    //     $status_list_name = ["-", "Overdue", "Open", "On progress", "On hold", "Completed", "Closed"];
+    //     try{
+    //         $status_tasks = Task::select(DB::raw('status, count(*) as status_count'))
+    //         ->groupBy('tasks.status')->get();
+    //         $sum_task = $status_tasks->sum('status_count');
+    //         $list = [];
+    //         for($i = 1; $i < 7; $i++){
+    //             $search = $status_tasks->search(function($query) use($i){
+    //                 return $query->status == $i;
+    //             });
+    //             if($search !== false){
+    //                 $temp_list = $status_tasks[$search]; 
+    //                 $temp_list->status_name = $status_list_name[$i];
+    //                 $temp_list->percentage = $sum_task !== 0 ? round(($status_tasks[$search]->status_count / $sum_task * 100), 2) : 0;
+    //                 $list[] = $temp_list;
+    //             } else {
+    //                 $list[] = (object)["status" => $i, "status_count" => 0, "status_name" => $status_list_name[$i], "percentage" => 0]; 
+    //             }
+    //         }
+    //         $status_tasks = $list;
+    //         $task_type_counts = TaskType::select('id', 'name')->withCount('tasks')->orderBy('tasks_count', 'desc')->limit(4)->get();
+
+    //         $today = date('Y-m-d');
+    //         $tomorrow = date("Y-m-d", strtotime('+1 day'));
+    //         $first_date = date("Y-m-01");
+    //         $tenth_date = date("Y-m-10");
+    //         $eleventh_date = date("Y-m-11");
+    //         $twentieth_date = date("Y-m-20");
+    //         $twenty_first_date = date("Y-m-21");
+    //         $last_date = date("Y-m-t");
+
+    //         $today_deadline = Task::whereDate('deadline', $today)->count();
+    //         $tomorrow_deadline = Task::whereDate('deadline', $tomorrow)->count();
+    //         $first_to_tenth_deadline = Task::whereBetween('deadline', [$first_date, $tenth_date])->count();
+    //         $eleventh_to_twentieth_deadline = Task::whereBetween('deadline', [$eleventh_date, $twentieth_date])->count();
+    //         $twenty_first_to_last_deadline = Task::whereBetween('deadline', [$twenty_first_date, $last_date])->count();
+            
+    //         $total_staff = User::where('role', 1)->has('tasks')->count();
+    //         $total_staff_without_task = User::where('role', 1)->count();
+            
+    //         $data = (object)[
+    //             "status_tasks" => $status_tasks,
+    //             "task_type_counts" => $task_type_counts,
+    //             "deadline" => (object)[
+    //                 "today_deadline" => $today_deadline,
+    //                 "tomorrow_deadline" => $tomorrow_deadline,
+    //                 "first_to_tenth_deadline" => $first_to_tenth_deadline,
+    //                 "eleventh_to_twentieth_deadline" => $eleventh_to_twentieth_deadline,
+    //                 "twenty_first_to_last_deadline" => $twenty_first_to_last_deadline,
+    //             ],
+    //             "staff" => (object)[
+    //                 "total_staff" => $total_staff,
+    //                 "total_staff_without_task" => $total_staff_without_task
+    //             ]
+    //         ];
+            
+    //         return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $data, "status" => 200];
+
+    //     } catch(Exception $err){
+    //         return ["success" => false, "message" => $err, "status" => 400];
+    //     }
+    // }
     
     public function getTasks($request, $route_name)
     {

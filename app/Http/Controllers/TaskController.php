@@ -20,6 +20,38 @@ class TaskController extends Controller
 
     // Task
 
+    // public function getAdminTaskData(Request $request)
+    // {
+    //     $route_name = "TASK_ADMIN_DATA_GET";
+
+    //     $response = $this->taskService->getAdminTaskData($request, $route_name);
+    //     return response()->json($response, $response['status']);
+    // }
+    
+    public function getStatusTaskList(Request $request)
+    {
+        $route_name = "TASK_STATUS_LIST_GET";
+
+        $response = $this->taskService->getStatusTaskList($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getDeadlineTasks(Request $request)
+    {
+        $route_name = "TASK_DEADLINE_GET";
+
+        $response = $this->taskService->getDeadlineTasks($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getTaskStaffCounts(Request $request)
+    {
+        $route_name = "TASK_STAFF_COUNTS_GET";
+
+        $response = $this->taskService->getTaskStaffCounts($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    
     public function getTasks(Request $request)
     {
         $route_name = "TASKS_GET";
@@ -87,9 +119,17 @@ class TaskController extends Controller
 
     // Type Task
 
+    public function getTaskTypeCounts(Request $request)
+    {
+        $route_name = "TASK_TYPE_COUNTS_GET";
+
+        $response = $this->taskService->getTaskTypeCounts($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getFilterTaskTypes(Request $request)
     {
-        $route_name = "TASKS_ADD";
+        $route_name = "TASK_ADD";
 
         $response = $this->taskService->getFilterTaskTypes($request, $route_name);
         return response()->json($response, $response['status']);

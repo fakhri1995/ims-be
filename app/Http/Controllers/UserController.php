@@ -28,6 +28,14 @@ class UserController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getStaffTaskStatuses(Request $request)
+    {
+        $route_name = "TASK_STAFF_STATUSES_GET";
+        
+        $response = $this->userService->getStaffTaskStatuses($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getAgentDetail(Request $request)
     {
         $route_name = "AGENT_GET";
