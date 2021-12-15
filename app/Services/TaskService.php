@@ -3,12 +3,14 @@
 namespace App\Services;
 
 use App\Task;
+use App\User;
 use App\Group;
 use Exception;
 use App\TaskType;
 use App\Inventory;
 use App\TaskDetail;
 use App\TaskTypeWork;
+use Illuminate\Support\Facades\DB;
 use App\Services\CheckRouteService;
 
 class TaskService{
@@ -77,6 +79,74 @@ class TaskService{
         return $new_works;
     }
 
+    public function getAdminTaskData($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $status_list_name = ["-", "Overdue", "Open", "On progress", "On hold", "Completed", "Closed"];
+        try{
+            $status_tasks = Task::select(DB::raw('status, count(*) as status_count'))
+            ->groupBy('tasks.status')->get();
+            $sum_task = $status_tasks->sum('status_count');
+            $list = [];
+            for($i = 1; $i < 7; $i++){
+                $search = $status_tasks->search(function($query) use($i){
+                    return $query->status == $i;
+                });
+                if($search !== false){
+                    $temp_list = $status_tasks[$search]; 
+                    $temp_list->status_name = $status_list_name[$i];
+                    $temp_list->percentage = $sum_task !== 0 ? round(($status_tasks[$search]->status_count / $sum_task * 100), 2) : 0;
+                    $list[] = $temp_list;
+                } else {
+                    $list[] = (object)["status" => $i, "status_count" => 0, "status_name" => $status_list_name[$i], "percentage" => 0]; 
+                }
+            }
+            $status_tasks = $list;
+            $task_type_counts = TaskType::select('id', 'name')->withCount('tasks')->orderBy('tasks_count', 'desc')->limit(4)->get();
+
+            $today = date('Y-m-d');
+            $tomorrow = date("Y-m-d", strtotime('+1 day'));
+            $first_date = date("Y-m-01");
+            $tenth_date = date("Y-m-10");
+            $eleventh_date = date("Y-m-11");
+            $twentieth_date = date("Y-m-20");
+            $twenty_first_date = date("Y-m-21");
+            $last_date = date("Y-m-t");
+
+            $today_deadline = Task::whereDate('deadline', $today)->count();
+            $tomorrow_deadline = Task::whereDate('deadline', $tomorrow)->count();
+            $first_to_tenth_deadline = Task::whereBetween('deadline', [$first_date, $tenth_date])->count();
+            $eleventh_to_twentieth_deadline = Task::whereBetween('deadline', [$eleventh_date, $twentieth_date])->count();
+            $twenty_first_to_last_deadline = Task::whereBetween('deadline', [$twenty_first_date, $last_date])->count();
+            
+            $total_staff = User::where('role', 1)->has('tasks')->count();
+            $total_staff_without_task = User::where('role', 1)->count();
+            
+            $data = (object)[
+                "status_tasks" => $status_tasks,
+                "task_type_counts" => $task_type_counts,
+                "deadline" => (object)[
+                    "today_deadline" => $today_deadline,
+                    "tomorrow_deadline" => $tomorrow_deadline,
+                    "first_to_tenth_deadline" => $first_to_tenth_deadline,
+                    "eleventh_to_twentieth_deadline" => $eleventh_to_twentieth_deadline,
+                    "twenty_first_to_last_deadline" => $twenty_first_to_last_deadline,
+                ],
+                "staff" => (object)[
+                    "total_staff" => $total_staff,
+                    "total_staff_without_task" => $total_staff_without_task
+                ]
+            ];
+            
+            return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $data, "status" => 200];
+
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    
     public function getTasks($request, $route_name)
     {
         $access = $this->checkRouteService->checkRoute($route_name);
@@ -87,13 +157,19 @@ class TaskService{
             $keyword = $request->get('keyword', null);
             $sort_by = $request->get('sort_by', null);
             $sort_type = $request->get('sort_type', 'desc');
+            $status = $request->get('status', -1);
 
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
             
             $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role', 'users'])->select('*');
 
-            if($keyword) $tasks = $tasks->where('name', 'ilike', "%".$keyword."%");
+            if($status > 0 && $status < 7) $tasks = $tasks->where('status', $status);
+            if($keyword){
+                if(is_numeric($keyword)) $tasks = $tasks->where('name', 'ilike', "%".$keyword."%")->orWhere('id', $keyword);
+                else $tasks = $tasks->where('name', 'ilike', "%".$keyword."%");
+            } 
+            
             if($sort_by){
                 if($sort_by === 'name') $tasks = $tasks->orderBy('name', $sort_type);
                 else if($sort_by === 'deadline') $tasks = $tasks->orderBy('deadline', $sort_type);
