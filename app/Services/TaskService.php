@@ -144,37 +144,65 @@ class TaskService{
         try{
             $location = $request->get('location', null);
 
+            $from = $request->get('from', date('Y-m-01'));
+            $to = $request->get('to', date("Y-m-t"));
+            $from_strtotime = strtotime($from);
+            $check = strtotime($to) - $from_strtotime;
+            if($check < 518400) return ["success" => false, "message" => "Range Minimal Filter Deadline 6 Hari!", "status" => 400];
+            $total = $check / 86400;
+            $range = $total / 3;
+            $mod = $total % 3;
+            
+            if($mod === 2) $second_addition = 1;
+            else if($mod === 1) $second_addition = 0;
+            else $second_addition = 0;
+            
+            $each = floor($range);
+            $first_interval = $each;
+            $second_interval = $each * 2 + $second_addition;
+            
             $today = date('Y-m-d');
             $tomorrow = date("Y-m-d", strtotime('+1 day'));
-            $first_date = date("Y-m-01");
-            $tenth_date = date("Y-m-10");
-            $eleventh_date = date("Y-m-11");
-            $twentieth_date = date("Y-m-20");
-            $twenty_first_date = date("Y-m-21");
-            $last_date = date("Y-m-t");
+            
+            $first_start_date = $from;
+            $first_end_date = date("Y-m-d", $from_strtotime + $first_interval * 86400);
+            $second_start_date = date("Y-m-d", $from_strtotime + ($first_interval + 1) * 86400);
+            $second_end_date = date("Y-m-d", $from_strtotime + $second_interval * 86400);
+            $third_start_date = date("Y-m-d", $from_strtotime + ($second_interval + 1) * 86400);
+            $third_end_date = $to;
 
             if($location){
                 $today_deadline = Task::where('location_id', $location)->whereDate('deadline', $today)->count();
                 $tomorrow_deadline = Task::where('location_id', $location)->whereDate('deadline', $tomorrow)->count();
-                $first_to_tenth_deadline = Task::where('location_id', $location)->whereBetween('deadline', [$first_date, $tenth_date])->count();
-                $eleventh_to_twentieth_deadline = Task::where('location_id', $location)->whereBetween('deadline', [$eleventh_date, $twentieth_date])->count();
-                $twenty_first_to_last_deadline = Task::where('location_id', $location)->whereBetween('deadline', [$twenty_first_date, $last_date])->count();
+                $first_range_deadline = Task::where('location_id', $location)->whereBetween('deadline', [$first_start_date, $second_start_date])->count();
+                $second_range_deadline = Task::where('location_id', $location)->whereBetween('deadline', [$second_start_date, $third_start_date])->count();
+                $third_range_deadline = Task::where('location_id', $location)->whereBetween('deadline', [$third_start_date, $third_end_date])->count();
             } else {
                 $today_deadline = Task::whereDate('deadline', $today)->count();
                 $tomorrow_deadline = Task::whereDate('deadline', $tomorrow)->count();
-                $first_to_tenth_deadline = Task::whereBetween('deadline', [$first_date, $tenth_date])->count();
-                $eleventh_to_twentieth_deadline = Task::whereBetween('deadline', [$eleventh_date, $twentieth_date])->count();
-                $twenty_first_to_last_deadline = Task::whereBetween('deadline', [$twenty_first_date, $last_date])->count();
+                $first_range_deadline = Task::whereBetween('deadline', [$first_start_date, $second_start_date])->count();
+                $second_range_deadline = Task::whereBetween('deadline', [$second_start_date, $third_start_date])->count();
+                $third_range_deadline = Task::whereBetween('deadline', [$third_start_date, $third_end_date])->count();
             }
             
             $data = (object)[
-                "today_deadline" => $today_deadline,
-                "tomorrow_deadline" => $tomorrow_deadline,
-                "first_to_tenth_deadline" => $first_to_tenth_deadline,
-                "eleventh_to_twentieth_deadline" => $eleventh_to_twentieth_deadline,
-                "twenty_first_to_last_deadline" => $twenty_first_to_last_deadline,
+                "deadline" => (object)[
+                    "today_deadline" => $today_deadline,
+                    "tomorrow_deadline" => $tomorrow_deadline,
+                    "first_range_deadline" => $first_range_deadline,
+                    "second_range_deadline" => $second_range_deadline,
+                    "third_range_deadline" => $third_range_deadline,
+                ],
+                "date" => (object)[
+                    "first_start_date" => $first_start_date,
+                    "first_end_date" => $first_end_date,
+                    "second_start_date" => $second_start_date,
+                    "second_end_date" => $second_end_date,
+                    "third_start_date" => $third_start_date,
+                    "third_end_date" => $third_end_date,
+                ]
             ];
-            return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $data, "status" => 200];
+            return ["success" => true, "message" => "Data Deadline Task Berhasil Diambil", "data" => $data, "status" => 200];
 
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -319,7 +347,7 @@ class TaskService{
 
         try{
             $id = $request->get('id', null);
-            $task = Task::with(['reference.type', 'location:id,name,parent_id,top_parent_id,role','users', 'group:id,name','inventories.modelInventory.asset', 'taskDetails'])->find($id);
+            $task = Task::with(['reference.type', 'taskType:id,name', 'creator:id,name,profile_image', 'location:id,name,parent_id,top_parent_id,role','users', 'group:id,name','inventories.modelInventory.asset', 'taskDetails'])->find($id);
             if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
             $task->location->full_location = $task->location->fullSubNameWParentTopParent();
             $task->location->makeHidden(['parent', 'parent_id', 'role']);
@@ -363,7 +391,6 @@ class TaskService{
                 } 
                 else $task->group_id = null;
             }
-
             $task->name = $request->get('name');
             $task->description = $request->get('description');
             $task->task_type_id = $task_type_id;
@@ -382,10 +409,17 @@ class TaskService{
                 $new_works = $this->clusteringNewTaskWorks($task_type->works, $inventory_ids);
                 $task->taskDetails()->saveMany($new_works);
             }
-            
-            if(count($assign_ids)){
+            $assign_id_count = count($assign_ids);
+            if($assign_id_count){
                 if($is_group) $task->users()->attach($group->users->pluck('id'));
-                else $task->users()->attach($assign_ids);
+                else{
+                    $task->users()->attach($assign_ids);
+                    if($assign_id_count === 1){
+                        foreach($task->taskDetails as $taskDetail){
+                            $taskDetail->users()->attach($assign_ids);
+                        }
+                    }
+                } 
             }
             if(count($inventory_ids)){
                 $attach_inventories = [];
@@ -461,11 +495,82 @@ class TaskService{
         $task = Task::find($id);
         if($task === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         try{
+            $task->status = 7;
+            $task->save();
             $task->delete();
             $task->taskDetails()->delete();
             $task->users()->detach();
             $task->inventories()->detach();
             return ["success" => true, "message" => "Data Berhasil Dihapus", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function changeStatusToggle($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $id = $request->get('id', null);
+        $task = Task::with('users')->find($id);
+        if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
+        try{
+            if($task->status < 4){
+                $task->status = 4;
+                $task->on_hold_at = date('Y-m-d H:i:s');
+            } 
+            else if($task->status === 4){
+                $new_deadline_times = strtotime($task->deadline) + strtotime(date('Y-m-d H:i:s')) - strtotime($task->on_hold_at);
+                $task->deadline = date("Y-m-d H:i:s", $new_deadline_times);
+                if($task->deadline < date("Y-m-d H:i:s")) $task->status = 1;
+                else {
+                    $check_in = false;
+                    foreach($task->users as $user){
+                        if($user->check_in !== null){
+                            $check_in = true;
+                            break;
+                        }
+                    }
+                    if($check_in) $task->status = 3;
+                    else $task->status = 2;
+                }
+            }
+            $task->save();
+            return ["success" => true, "message" => "Berhasil Merubah Status Task", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function changeAttendanceToggle($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $id = $request->get('id', null);
+        $task = Task::with('users')->find($id);
+        if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
+        try{
+            $login_id = auth()->user()->id;
+            $search = $task->users->search(function ($item) use ($login_id) {
+                return $item->id === $login_id;
+            });
+
+            if($search !== false){
+                if($task->users[$search]->check_in === null){
+                    $task->users()->updateExistingPivot($login_id, ['check_in' => date("Y-m-d H:i:s")]);
+                    if($task->status === 2){
+                        $task->status = 3;
+                        $task->save();
+                    }
+                    return ["success" => true, "message" => "Berhasil Melakukan Check In", "status" => 200];
+                } else if($task->users[$search]->check_out === null){
+                    $task->users()->updateExistingPivot($login_id, ['check_out' => date("Y-m-d H:i:s")]);
+                    return ["success" => true, "message" => "Berhasil Melakukan Check Out", "status" => 200];
+                } 
+                return ["success" => false, "message" => "Anda Sudah Melakukan Check Out", "status" => 400];
+            } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Task Ini.", "status" => 400];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -764,6 +869,23 @@ class TaskService{
             $task_detail->delete();
             $task_detail->users()->detach();
             return ["success" => true, "message" => "Task Detail Berhasil Dihapus", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function assignTaskDetail($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $id = $request->get('id', null);
+        $assign_ids = $request->get('assign_ids', []);
+        $task_detail = TaskDetail::find($id);
+        if($task_detail === null) return ["success" => false, "message" => "Id Pekerjaan Tidak Ditemukan", "status" => 400];
+        try{
+            $task_detail->users()->sync($assign_ids);
+            return ["success" => true, "message" => "Berhasil Merubah Petugas Pekerjaan", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }

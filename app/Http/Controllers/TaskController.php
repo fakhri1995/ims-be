@@ -92,6 +92,22 @@ class TaskController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function changeStatusToggle(Request $request)
+    {
+        $route_name = "TASK_STATUS_TOGGLE";
+
+        $response = $this->taskService->changeStatusToggle($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function changeAttendanceToggle(Request $request)
+    {
+        $route_name = "TASK_ATTENDANCE_TOGGLE";
+
+        $response = $this->taskService->changeAttendanceToggle($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     // Task Detail
     public function addTaskDetail(Request $request)
     {
@@ -114,6 +130,14 @@ class TaskController extends Controller
         $route_name = "TASK_DETAIL_DELETE";
 
         $response = $this->taskService->deleteTaskDetail($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function assignTaskDetail(Request $request)
+    {
+        $route_name = "TASK_DETAIL_ASSIGN";
+
+        $response = $this->taskService->assignTaskDetail($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
