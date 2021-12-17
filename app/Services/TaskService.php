@@ -216,11 +216,11 @@ class TaskService{
 
         try{
             $total_staff = User::where('role', 1)->count();
-            $total_staff_with_task = User::where('role', 1)->has('tasks')->count();
+            $total_staff_without_task = User::where('role', 1)->doesntHave('tasks')->count();
             $data = (object)[
                 "total_staff" => $total_staff,
-                "total_staff_with_task" => $total_staff_with_task,
-                "percentage" => round($total_staff_with_task / $total_staff * 100, 2)
+                "total_staff_without_task" => $total_staff_without_task,
+                "percentage" => round($total_staff_without_task / $total_staff * 100, 2)
             ];
             return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $data, "status" => 200];
 
@@ -576,6 +576,60 @@ class TaskService{
         }
     }
 
+    public function submitTask($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $id = $request->get('id', null);
+        $task = Task::with('users')->find($id);
+        if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
+        try{
+            $login_id = auth()->user()->id;
+            $search = $task->users->search(function ($item) use ($login_id) {
+                return $item->id === $login_id;
+            });
+
+            if($search !== false){
+                if($task->status !== 3) return ["success" => false, "message" => "Status Bukan On Progress, Tidak Dapat Melakukan Submit", "status" => 400];
+                else {
+                    $task->status = 5;
+                    $task->save();
+                } 
+                return ["success" => false, "message" => "Anda Sudah Melakukan Check Out", "status" => 400];
+            } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Task Ini.", "status" => 400];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function declineTask($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $id = $request->get('id', null);
+        $task = Task::with('users')->find($id);
+        if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
+        try{
+            $login_id = auth()->user()->id;
+            $search = $task->users->search(function ($item) use ($login_id) {
+                return $item->id === $login_id;
+            });
+
+            if($search !== false){
+                if($task->status !== 3) return ["success" => false, "message" => "Status Bukan On Progress, Tidak Dapat Melakukan Submit", "status" => 400];
+                else {
+                    $task->status = 5;
+                    $task->save();
+                } 
+                return ["success" => false, "message" => "Anda Sudah Melakukan Check Out", "status" => 400];
+            } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Task Ini.", "status" => 400];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     // Task Detail
 
     private function checkAddTaskDetail($work, $task_id){
@@ -886,6 +940,65 @@ class TaskService{
         try{
             $task_detail->users()->sync($assign_ids);
             return ["success" => true, "message" => "Berhasil Merubah Petugas Pekerjaan", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function fillTaskDetail($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $id = $request->get('id', null);
+        $values = $request->get('values', null);
+        if($values === null) return ["success" => false, "message" => "Values Tidak Boleh Kosong!", "status" => 400];
+        $task_detail = TaskDetail::with('users')->find($id);
+        if($task_detail === null) return ["success" => false, "message" => "Id Pekerjaan Tidak Ditemukan", "status" => 400];
+        try{
+            $login_id = auth()->user()->id;
+            $search = $task_detail->users->search(function ($item) use ($login_id) {
+                return $item->id === $login_id;
+            });
+
+            if($search !== false){
+                $type = $task_detail->component->type;
+                $component  = $task_detail->component;
+                if($type !== 5){
+                    if($type === 3){
+                        if(!is_array($values)) return ["success" => false, "message" => "Values Harus Bertipe Data Array of Boolean", "status" => 400];
+                        if(count($component->lists) !== count($values)) return ["success" => false, "message" => "Jumlah List Check Box dan Values Check Box Tidak Cocok", "status" => 400];
+                        foreach($values as $value){
+                            if(!is_bool($value)) return ["success" => false, "message" => "Isi Values Pada Array Terdapat Bukan Boolean", "status" => 400];
+                        }
+                    } else if($type === 4) {
+                        if(!is_array($values)) return ["success" => false, "message" => "Values Harus Bertipe Data Array of Boolean", "status" => 400];
+                        if(!count($values)) return ["success" => false, "message" => "Array Tidak Boleh Kosong", "status" => 400];
+                        $row_count = count($component->rows);
+                        $column_count = count($component->columns);
+                        $row_edge = $row_count - 1;
+                        $column_edge = $column_count - 1;
+                        if(!isset($values[0][$row_edge])) return ["success" => false, "message" => "Jumlah Values Array Pada Rownya Masih Kurang", "status" => 400];
+                        if(!isset($values[$column_edge][0])) return ["success" => false, "message" => "Jumlah Values Array Pada Columnnya Masih Kurang", "status" => 400];
+                        if(isset($values[0][$row_count])) return ["success" => false, "message" => "Terdapat Values Array Pada Row Yang Berlebih", "status" => 400];
+                        if(isset($values[$column_count][0])) return ["success" => false, "message" => "Terdapat Values Array Pada Column Yang Berlebih", "status" => 400];
+                    } else {
+                        if(!is_string($values)) return ["success" => false, "message" => "Values Harus Bertipe Data String", "status" => 400];
+                    }
+                    $component->values = $values;
+                } else {
+                    if(!is_array($values)) return ["success" => false, "message" => "Values Harus Bertipe Data Array of String", "status" => 400];
+                    $count_list = count($component->lists);
+                    if($count_list !== count($values)) return ["success" => false, "message" => "Jumlah List Numeral dan Values Numeral Harus Sama", "status" => 400];
+                    for($index = 0; $index < $count_list; $index++){
+                        if(!is_string($values[$index])) return ["success" => false, "message" => "Isi Values Pada Array Terdapat Bukan String", "status" => 400];
+                        $component->lists[$index]->values = $values[$index];
+                    }
+                }
+                $task_detail->component = $component;
+                $task_detail->save();
+                return ["success" => false, "message" => "Berhasil Merubah Isi Pekerjaan", "data" => $task_detail->component, "status" => 400];
+            } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Pekerjaan Ini", "status" => 400];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
