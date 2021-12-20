@@ -60,6 +60,30 @@ class TaskController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getUserTasks(Request $request)
+    {
+        $route_name = "TASKS_USER_GET";
+
+        $response = $this->taskService->getUserTasks($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getStaffTaskStatuses(Request $request)
+    {
+        $route_name = "TASK_STAFF_STATUSES_GET";
+        
+        $response = $this->taskService->getStaffTaskStatuses($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getUserTaskStatusList(Request $request)
+    {
+        $route_name = "TASK_USER_STATUSES_GET";
+        
+        $response = $this->taskService->getUserTaskStatusList($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getTask(Request $request)
     {
         $route_name = "TASK_GET";

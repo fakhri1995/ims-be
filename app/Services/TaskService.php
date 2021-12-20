@@ -11,6 +11,7 @@ use App\Inventory;
 use App\TaskDetail;
 use App\TaskTypeWork;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Collection;
 use App\Services\CheckRouteService;
 
 class TaskService{
@@ -308,17 +309,19 @@ class TaskService{
             $sort_by = $request->get('sort_by', null);
             $sort_type = $request->get('sort_type', 'desc');
             $status = $request->get('status', -1);
+            $task_type = $request->get('task_type', -1);
 
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
             
-            $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role', 'users'])->select('*');
+            $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role', 'users']);
 
             if($status > 0 && $status < 7) $tasks = $tasks->where('status', $status);
             if($keyword){
                 if(is_numeric($keyword)) $tasks = $tasks->where('name', 'ilike', "%".$keyword."%")->orWhere('id', $keyword);
                 else $tasks = $tasks->where('name', 'ilike', "%".$keyword."%");
             } 
+            if($task_type > 0) $tasks = $tasks->where('task_type_id', $task_type);
             
             if($sort_by){
                 if($sort_by === 'name') $tasks = $tasks->orderBy('name', $sort_type);
@@ -338,6 +341,134 @@ class TaskService{
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
+    }
+
+    public function getUserTasks($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $login_id = auth()->user()->id;
+            $rows = $request->get('rows', 10);
+            $keyword = $request->get('keyword', null);
+            $sort_by = $request->get('sort_by', null);
+            $sort_type = $request->get('sort_type', 'desc');
+            $status = $request->get('status', -1);
+            $task_type = $request->get('task_type', -1);
+
+            if($rows > 100) $rows = 100;
+            if($rows < 1) $rows = 10;
+            
+            $task_ids = DB::table('task_user')->where('user_id', $login_id)->pluck('task_id');
+            $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role', 'users'])
+            ->where(function ($query) use($login_id, $task_ids){
+                $query->where('created_by', $login_id)
+                ->orWhereIn('id', $task_ids);
+            });
+
+
+            if($status > 0 && $status < 7) $tasks = $tasks->where('status', $status);
+            if($keyword){
+                if(is_numeric($keyword)) $tasks = $tasks->where('name', 'ilike', "%".$keyword."%")->orWhere('id', $keyword);
+                else $tasks = $tasks->where('name', 'ilike', "%".$keyword."%");
+            } 
+            if($task_type > 0) $tasks = $tasks->where('task_type_id', $task_type);
+            
+            if($sort_by){
+                if($sort_by === 'name') $tasks = $tasks->orderBy('name', $sort_type);
+                else if($sort_by === 'deadline') $tasks = $tasks->orderBy('deadline', $sort_type);
+                else if($sort_by === 'id') $tasks = $tasks->orderBy('id', $sort_type);
+                else if($sort_by === 'status') $tasks = $tasks->orderBy('status', $sort_type);
+            }
+            
+            $tasks = $tasks->paginate($rows);
+            foreach($tasks as $task){
+                $task->location->full_location = $task->location->fullSubNameWParentTopParent();
+                $task->location->makeHidden(['parent', 'parent_id', 'role']);
+            }
+            if($tasks->isEmpty()) return ["success" => true, "message" => "Task Masih Kosong", "data" => $tasks, "status" => 200];
+            return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $tasks, "status" => 200];
+
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getStaffTaskStatuses($request, $route_name)
+    {
+        $name = $request->get('name', null);
+        $from = $request->get('from', null);
+        $to = $request->get('to', null);
+        $rows = $request->get('rows', 10);
+
+        $users = DB::table('users')->select('id', 'name', 'profile_image')->where('role', 1);
+        if($name) $users = $users->where('name', 'ilike', "%$name%");
+        if($rows > 100) $rows = 100;
+        if($rows < 1) $rows = 10;
+        $users = $users->paginate($rows);
+        // $from = "2021-10-30 20:49:53";
+        // $to = "2021-12-20 20:49:53";
+        $user_ids = $users->pluck('id');
+        $user_tasks = DB::table('users')->whereIn('users.id', $user_ids)
+        ->select(DB::raw('users.id, tasks.status, count(*) as status_count'))
+        ->join('task_user', 'users.id', '=', 'task_user.user_id')
+        ->join('tasks', 'task_user.task_id', '=', 'tasks.id');
+        if($from && $to) $user_tasks = $user_tasks->whereBetween('tasks.created_at', [$from, $to]);
+        $user_tasks = $user_tasks->groupBy('users.id','tasks.status')->get()->groupBy('id');
+        $status_list_name = ["-", "Overdue", "Open", "On progress", "On hold", "Completed", "Closed"];
+        foreach($users as $user){
+            $status_list = $user_tasks[$user->id] ?? collect([(object)["id" => $user->id, "status" => 1, "status_count" => 0]]); 
+            $list = new Collection();
+            for($i = 1; $i < 7; $i++){
+                $search = $status_list->search(function($query) use($i){
+                    return $query->status == $i;
+                });
+                if($search !== false){
+                    $temp_list = $status_list[$search]; 
+                    $temp_list->status_name = $status_list_name[$i];
+                    $list->push($temp_list);
+                } else {
+                    $list->push((object)["id" => $user->id, "status" => $i, "status_count" => 0, "status_name" => $status_list_name[$i]]); 
+                }
+            }
+            $user->status_list = $list;
+            $user->sum_task = $status_list->sum('status_count');
+        }
+        return ["success" => true, "data" => $users, "status" => 200];
+    }
+
+    public function getUserTaskStatusList($request, $route_name)
+    {
+        $from = $request->get('from', null);
+        $to = $request->get('to', null);
+        
+        $task_ids = DB::table('task_user')->where('user_id', 3)->pluck('task_id');
+        $status_list = DB::table('tasks')->whereIn('id', $task_ids)->orWhere('created_by', 3)
+        ->select(DB::raw('status, count(*) as status_count'))
+        ->groupBy('status')
+        ->get();
+        $status_list_name = ["-", "Overdue", "Open", "On progress", "On hold", "Completed", "Closed"];
+        
+        $list = new Collection();
+        for($i = 1; $i < 7; $i++){
+            $search = $status_list->search(function($query) use($i){
+                return $query->status == $i;
+            });
+            if($search !== false){
+                $temp_list = $status_list[$search]; 
+                $temp_list->status_name = $status_list_name[$i];
+                $list->push($temp_list);
+            } else {
+                $list->push((object)["status" => $i, "status_count" => 0, "status_name" => $status_list_name[$i]]); 
+            }
+        }
+        $data = (object)[
+            "status_list" => $list,
+            "sum_task" => $status_list->sum('status_count')
+        ];
+        
+        return ["success" => true, "data" => $data, "status" => 200];
     }
 
     public function getTask($request, $route_name)
@@ -456,7 +587,7 @@ class TaskService{
                     $group = Group::with('users')->find($assign_ids[0]);
                     if($group === null) return ["success" => false, "message" => "Id Group Tidak Ditemukan", "status" => 400];
                 } 
-            }
+            } else $task->group_id = null;
 
             $task->name = $request->get('name');
             $task->description = $request->get('description');

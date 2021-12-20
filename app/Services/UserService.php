@@ -7,7 +7,6 @@ use App\Services\CompanyService;
 use Illuminate\Support\Facades\DB;
 use App\Services\CheckRouteService;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Database\Eloquent\Collection;
 
 class UserService
 {
@@ -48,49 +47,6 @@ class UserService
             }
         }
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $users, "status" => 200];
-    }
-
-    public function getStaffTaskStatuses($request, $route_name)
-    {
-        $name = $request->get('name', null);
-        $from = $request->get('from', null);
-        $to = $request->get('to', null);
-        $rows = $request->get('rows', 10);
-
-        $users = User::select('id', 'name', 'profile_image')->where('role', 1);
-        if($name) $users = $users->where('name', 'ilike', "%$name%");
-        if($rows > 100) $rows = 100;
-        if($rows < 1) $rows = 10;
-        $users = $users->paginate($rows);
-        // $from = "2021-10-30 20:49:53";
-        // $to = "2021-12-20 20:49:53";
-        $user_ids = $users->pluck('id');
-        $user_tasks = DB::table('users')->whereIn('users.id', $user_ids)
-        ->select(DB::raw('users.id, tasks.status, count(*) as status_count'))
-        ->join('task_user', 'users.id', '=', 'task_user.user_id')
-        ->join('tasks', 'task_user.task_id', '=', 'tasks.id');
-        if($from && $to) $user_tasks = $user_tasks->whereBetween('tasks.created_at', [$from, $to]);
-        $user_tasks = $user_tasks->groupBy('users.id','tasks.status')->get()->groupBy('id');
-        $status_list_name = ["-", "Overdue", "Open", "On progress", "On hold", "Completed", "Closed"];
-        foreach($users as $user){
-            $status_list = $user_tasks[$user->id] ?? collect([(object)["id" => $user->id, "status" => 1, "status_count" => 0]]); 
-            $list = new Collection();
-            for($i = 1; $i < 7; $i++){
-                $search = $status_list->search(function($query) use($i){
-                    return $query->status == $i;
-                });
-                if($search !== false){
-                    $temp_list = $status_list[$search]; 
-                    $temp_list->status_name = $status_list_name[$i];
-                    $list->push($temp_list);
-                } else {
-                    $list->push((object)["id" => $user->id, "status" => $i, "status_count" => 0, "status_name" => $status_list_name[$i]]); 
-                }
-            }
-            $user->status_list = $list;
-            $user->sum_task = $status_list->sum('status_count');
-        }
-        return ["success" => true, "data" => $users, "status" => 200];
     }
 
     public function getUserDetail($account_id, $role_id){
