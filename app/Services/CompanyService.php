@@ -132,6 +132,15 @@ class CompanyService
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $company, "status" => 200];
     }
 
+    public function getAllCompanyList($route_name){
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        if(auth()->user()->role == 2) $companies = $this->getCompanyTreeSelect(auth()->user()->company_id, 'noSubChild');
+        else $companies = $this->getCompanyTreeSelect(1, 'noSubChild');
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $companies, "status" => 200];
+    }
+
     public function getBranchCompanyList($route_name){
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
