@@ -240,12 +240,16 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/updateTask', 'TaskController@updateTask');
     $router->put('/changeStatusToggle', 'TaskController@changeStatusToggle');
     $router->put('/changeAttendanceToggle', 'TaskController@changeAttendanceToggle');
+    $router->put('/approveTask', 'TaskController@approveTask');
+    $router->put('/submitTask', 'TaskController@submitTask');
+    $router->put('/declineTask', 'TaskController@declineTask');
     $router->delete('/deleteTask', 'TaskController@deleteTask');
 
     //Task Detail Routes
     $router->post('/addTaskDetail', 'TaskController@addTaskDetail');
     $router->put('/updateTaskDetail', 'TaskController@updateTaskDetail');
     $router->put('/assignTaskDetail', 'TaskController@assignTaskDetail');
+    $router->put('/fillTaskDetail', 'TaskController@fillTaskDetail');
     $router->delete('/deleteTaskDetail', 'TaskController@deleteTaskDetail');
 
     //Type Task Routes

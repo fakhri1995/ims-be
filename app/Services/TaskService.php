@@ -513,6 +513,7 @@ class TaskService{
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
+        $notes = $request->get('notes', null);
         $task = Task::with('users')->find($id);
         if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
         try{
@@ -536,6 +537,7 @@ class TaskService{
                     else $task->status = 2;
                 }
             }
+            $task->notes = $notes;
             $task->save();
             return ["success" => true, "message" => "Berhasil Merubah Status Task", "status" => 200];
         } catch(Exception $err){
@@ -592,11 +594,11 @@ class TaskService{
 
             if($search !== false){
                 if($task->status !== 3) return ["success" => false, "message" => "Status Bukan On Progress, Tidak Dapat Melakukan Submit", "status" => 400];
-                else {
+                else { 
                     $task->status = 5;
                     $task->save();
-                } 
-                return ["success" => false, "message" => "Anda Sudah Melakukan Check Out", "status" => 400];
+                }
+                return ["success" => true, "message" => "Berhasil Melakukan Submit Pada Task", "status" => 200];
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Task Ini.", "status" => 400];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -609,22 +611,45 @@ class TaskService{
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
+        $notes = $request->get('notes', null);
         $task = Task::with('users')->find($id);
         if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
         try{
             $login_id = auth()->user()->id;
-            $search = $task->users->search(function ($item) use ($login_id) {
-                return $item->id === $login_id;
-            });
 
-            if($search !== false){
-                if($task->status !== 3) return ["success" => false, "message" => "Status Bukan On Progress, Tidak Dapat Melakukan Submit", "status" => 400];
+            if($task->created_by === $login_id){
+                if($task->status !== 5) return ["success" => false, "message" => "Status Bukan Completed, Tidak Dapat Dilakukan Penolakan", "status" => 400];
                 else {
-                    $task->status = 5;
+                    $task->status = 3;
+                    $task->notes = $notes;
                     $task->save();
                 } 
-                return ["success" => false, "message" => "Anda Sudah Melakukan Check Out", "status" => 400];
-            } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Task Ini.", "status" => 400];
+                return ["success" => false, "message" => "Berhasil Melakukan Penolakan Pada Task", "status" => 400];
+            } else return ["success" => false, "message" => "Anda Tidak Memiliki Izin Pada Task Ini", "status" => 400];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function approveTask($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $id = $request->get('id', null);
+        $task = Task::with('users')->find($id);
+        if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
+        try{
+            $login_id = auth()->user()->id;
+
+            if($task->created_by === $login_id){
+                if($task->status !== 5) return ["success" => false, "message" => "Status Bukan Completed, Tidak Dapat Dilakukan Persetujuan", "status" => 400];
+                else {
+                    $task->status = 6;
+                    $task->save();
+                } 
+                return ["success" => false, "message" => "Berhasil Melakukan Persetujuan Pada Task", "status" => 400];
+            } else return ["success" => false, "message" => "Anda Tidak Memiliki Izin Pada Task Ini", "status" => 400];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -997,7 +1022,7 @@ class TaskService{
                 }
                 $task_detail->component = $component;
                 $task_detail->save();
-                return ["success" => false, "message" => "Berhasil Merubah Isi Pekerjaan", "data" => $task_detail->component, "status" => 400];
+                return ["success" => false, "message" => "Berhasil Merubah Isi Pekerjaan", "status" => 400];
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Pekerjaan Ini", "status" => 400];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];

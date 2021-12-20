@@ -108,6 +108,30 @@ class TaskController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function approveTask(Request $request)
+    {
+        $route_name = "TASK_APPROVE";
+
+        $response = $this->taskService->approveTask($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function submitTask(Request $request)
+    {
+        $route_name = "TASK_SUBMIT";
+
+        $response = $this->taskService->submitTask($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function declineTask(Request $request)
+    {
+        $route_name = "TASK_DECLINE";
+
+        $response = $this->taskService->declineTask($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     // Task Detail
     public function addTaskDetail(Request $request)
     {
@@ -138,6 +162,14 @@ class TaskController extends Controller
         $route_name = "TASK_DETAIL_ASSIGN";
 
         $response = $this->taskService->assignTaskDetail($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function fillTaskDetail(Request $request)
+    {
+        $route_name = "TASK_DETAIL_FILL";
+
+        $response = $this->taskService->fillTaskDetail($request, $route_name);
         return response()->json($response, $response['status']);
     }
 

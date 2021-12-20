@@ -26,6 +26,8 @@ class CreateTasksTable extends Migration
             $table->dateTime('on_hold_at')->nullable();
             $table->dateTime('deadline');
             $table->tinyInteger('status');
+            $table->tinyInteger('repeat')->nullable();
+            $table->text('notes')->nullable();
             $table->boolean('is_replaceable');
             $table->index('task_type_id');
             $table->index('status');
