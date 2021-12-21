@@ -92,6 +92,14 @@ class TaskController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getTaskPickList(Request $request)
+    {
+        $route_name = "TASKS_PICK_LIST_GET";
+        
+        $response = $this->taskService->getTaskPickList($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getTask(Request $request)
     {
         $route_name = "TASK_GET";

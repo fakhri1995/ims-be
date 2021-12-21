@@ -358,11 +358,7 @@ class TaskService{
                 ->orWhereIn('id', $task_ids);
             })->where('status', '<', 4)->orderBy('deadline', 'asc')->limit(2)->get();
 
-            foreach($tasks as $task){
-                // $time_difference = Carbon::parse($task->deadline)->diffForHumans(null, true, false, 2);
-                $task->time_left = ucwords(Carbon::parse($task->deadline)->diffForHumans(null, true, false, 2));
-            } 
-            // $task->time_left = date_diff(date_create($task->deadline), date_create(date("Y-m-d H:i:s"))); 
+            foreach($tasks as $task) $task->time_left = ucwords(Carbon::parse($task->deadline)->diffForHumans(null, true, false, 2));
             return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $tasks, "status" => 200];
 
         } catch(Exception $err){
@@ -496,6 +492,38 @@ class TaskService{
         ];
         
         return ["success" => true, "data" => $data, "status" => 200];
+    }
+
+    public function getTaskPickList($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $rows = $request->get('rows', 10);
+            $keyword = $request->get('keyword', null);
+            
+            if($rows > 100) $rows = 100;
+            if($rows < 1) $rows = 10;
+            
+            $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role'])->where('status', 2);
+            
+            if($keyword){
+                if(is_numeric($keyword)) $tasks = $tasks->where('name', 'ilike', "%".$keyword."%")->orWhere('id', $keyword);
+                else $tasks = $tasks->where('name', 'ilike', "%".$keyword."%");
+            } 
+
+            $tasks = $tasks->paginate($rows);
+            foreach($tasks as $task){
+                $task->location->full_location = $task->location->fullSubNameWParentTopParent();
+                $task->location->makeHidden(['parent', 'parent_id', 'role']);
+            }
+            if($tasks->isEmpty()) return ["success" => true, "message" => "Task Masih Kosong", "data" => $tasks, "status" => 200];
+            return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $tasks, "status" => 200];
+
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
     }
 
     public function getTask($request, $route_name)
