@@ -248,6 +248,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/approveTask', 'TaskController@approveTask');
     $router->put('/submitTask', 'TaskController@submitTask');
     $router->put('/declineTask', 'TaskController@declineTask');
+    $router->put('/assignSelfTask', 'TaskController@assignSelfTask');
     $router->delete('/deleteTask', 'TaskController@deleteTask');
 
     //Task Detail Routes

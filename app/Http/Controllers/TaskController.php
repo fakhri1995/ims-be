@@ -172,6 +172,14 @@ class TaskController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function assignSelfTask(Request $request)
+    {
+        $route_name = "TASK_ASSIGN_SELF";
+
+        $response = $this->taskService->assignSelfTask($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     // Task Detail
     public function addTaskDetail(Request $request)
     {

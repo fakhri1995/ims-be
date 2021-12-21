@@ -1,0 +1,56 @@
+<?php
+
+use App\Task;
+use App\TaskType;
+use Illuminate\Database\Seeder;
+
+class TaskSeeder extends Seeder
+{
+    /**
+     * Seed the application's database.
+     *
+     * @return void
+     */
+
+    private function makeBulkTaskTypes()
+    {
+        $name_task = "Task Type";
+        for($i = 1; $i < 20; $i++){
+            $task = new TaskType;
+            $task->name = "$name_task $i";
+            $task->description = "Lorem ipsum dolor sit amet consectetur adipisicing elit!";
+            $task->save();
+        }
+    }
+
+    private function makeBulkTasks()
+    {
+        $name_task = "Task";
+        for($i = 1; $i < 100; $i++){
+            $user_ids = [15,16,17,18,19,20,21,22,23];
+            $task = new Task;
+            $task->name = "$name_task $i";
+            $task->description = "Lorem ipsum dolor sit amet consectetur adipisicing elit. Nemo eligendi dolore aspernatur nihil at voluptates tempora neque, fuga laudantium corporis dolorum velit facilis deserunt, nobis maiores optio illum magnam cum!";
+            $task->task_type_id = random_int(13,32);
+            $random_int = random_int(1,30);
+            $task->location_id = $random_int;
+            $task->created_by = random_int(15, 23);
+            $task->created_at = date("Y-m-d H:i:s");
+            $task->deadline = date("Y-m-d H:i:s", strtotime("+$random_int month"));
+            $task->status = random_int(2,6);
+            $task->is_replaceable = random_int(0, 1);
+            $task->is_uploadable = random_int(0, 1);
+            $task->save();
+            if($task->is_replaceable){
+                $task->users()->attach(random_int(15, 23));
+                $task->users()->attach(random_int(15, 23));
+            }
+        }
+    }
+
+    public function run()
+    {
+        $this->makeBulkTasks();
+        $this->makeBulkTaskTypes();
+    }
+}

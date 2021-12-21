@@ -506,7 +506,7 @@ class TaskService{
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
             
-            $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role'])->where('status', 2);
+            $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role'])->where('status', 2)->doesntHave('users');
             
             if($keyword){
                 if(is_numeric($keyword)) $tasks = $tasks->where('name', 'ilike', "%".$keyword."%")->orWhere('id', $keyword);
@@ -586,6 +586,10 @@ class TaskService{
             $task->deadline = $request->get('deadline');
             $task->created_at = $request->get('created_at');
             $task->is_replaceable = $request->get('is_replaceable', false);
+            $task->is_uploadable = $request->get('is_uploadable', false);
+            $task->files = $request->get('files', []);
+            $task->end_repeat_at = $request->get('end_repeat_at');
+            $task->repeat = $request->get('repeat', 0);
             $task->status = 2;
             
             
@@ -651,6 +655,10 @@ class TaskService{
             $task->deadline = $request->get('deadline');
             $task->created_at = $request->get('created_at');
             $task->is_replaceable = $request->get('is_replaceable');
+            $task->is_uploadable = $request->get('is_uploadable', false);
+            $task->files = $request->get('files', []);
+            $task->end_repeat_at = $request->get('end_repeat_at');
+            $task->repeat = $request->get('repeat', 0);
             $task->save();
             
             if(count($assign_ids)){
@@ -836,6 +844,29 @@ class TaskService{
                 } 
                 return ["success" => false, "message" => "Berhasil Melakukan Persetujuan Pada Task", "status" => 400];
             } else return ["success" => false, "message" => "Anda Tidak Memiliki Izin Pada Task Ini", "status" => 400];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function assignSelfTask($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $login_id = auth()->user()->id;
+        $id = $request->get('id', null);
+        $task = Task::with('users', 'taskDetails')->find($id);
+        if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
+        if(count($task->users)) return ["success" => false, "message" => "Task Sudah Ditugaskan Pada User Lain", "status" => 400];
+        try{
+            $task->users()->attach($login_id);
+            if(count($task->taskDetails)){
+                foreach($task->taskDetails as $taskDetail){
+                    $taskDetail->users()->attach($login_id);
+                }
+            }
+            return ["success" => true, "message" => "Berhasil Mengambil Tugas Task", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }

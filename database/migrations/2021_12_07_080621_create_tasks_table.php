@@ -25,10 +25,14 @@ class CreateTasksTable extends Migration
             $table->dateTime('created_at');
             $table->dateTime('on_hold_at')->nullable();
             $table->dateTime('deadline');
+            $table->dateTime('end_repeat_at')->nullable();
             $table->tinyInteger('status');
             $table->tinyInteger('repeat')->nullable();
             $table->text('notes')->nullable();
             $table->boolean('is_replaceable');
+            $table->boolean('is_uploadable');
+            $table->text('files')->nullable();
+            $table->index('location_id');
             $table->index('task_type_id');
             $table->index('status');
             $table->softDeletes();

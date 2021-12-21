@@ -9,6 +9,7 @@ class Task extends Model
 {
     use SoftDeletes;
     public $timestamps = false;
+    protected $casts = ['files' => 'array'];
 
     public function taskType()
     {
