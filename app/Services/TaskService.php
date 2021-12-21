@@ -1280,7 +1280,7 @@ class TaskService{
             
             $tasks = TaskType::select('id', 'name', 'description')->withCount('tasks');
 
-            if($name) $tasks = $tasks->where('name', 'ilike', "%".$name."%");
+            if($name !== null) $tasks = $tasks->where('name', 'ilike', "%".$name."%");
             if($sort_by){
                 if($sort_by === 'name') $tasks = $tasks->orderBy('name', $sort_type);
                 else if($sort_by === 'count') $tasks = $tasks->orderBy('tasks_count', $sort_type);
