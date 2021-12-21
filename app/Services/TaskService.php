@@ -1280,7 +1280,7 @@ class TaskService{
             
             $tasks = TaskType::select('id', 'name', 'description')->withCount('tasks');
 
-            if($name != null) $tasks = $tasks->where('name', 'ilike', "%".$name."%");
+            if($name) $tasks = $tasks->where('name', 'ilike', "%".$name."%");
             if($sort_by){
                 if($sort_by === 'name') $tasks = $tasks->orderBy('name', $sort_type);
                 else if($sort_by === 'count') $tasks = $tasks->orderBy('tasks_count', $sort_type);
@@ -1288,7 +1288,7 @@ class TaskService{
             
             $tasks = $tasks->paginate($rows);
             if($tasks->isEmpty()) return ["success" => true, "message" => "Tipe Task Masih Kosong", "data" => $tasks, "status" => 200];
-            return ["success" => true, "message" => "Tipe Task Berhasil Diambil", "data" => [$tasks, $name], "status" => 200];
+            return ["success" => true, "message" => "Tipe Task Berhasil Diambil", "data" => $tasks, "status" => 200];
             
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
