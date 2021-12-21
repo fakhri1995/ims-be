@@ -23,7 +23,7 @@ class Task extends Model
 
     public function location()
     {
-        return $this->belongsTo(Company::class, 'location_id');
+        return $this->belongsTo(Company::class, 'location_id')->withTrashed();
     }
 
     public function group()
