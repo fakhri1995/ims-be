@@ -236,6 +236,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getTaskStaffCounts', 'TaskController@getTaskStaffCounts');
     $router->get('/getStaffTaskStatuses', 'TaskController@getStaffTaskStatuses');
     $router->get('/getUserTaskStatusList', 'TaskController@getUserTaskStatusList');
+    $router->get('/getUserLastTwoTasks', 'TaskController@getUserLastTwoTasks');
     $router->get('/getTasks', 'TaskController@getTasks');
     $router->get('/getUserTasks', 'TaskController@getUserTasks');
     $router->get('/getTask', 'TaskController@getTask');

@@ -24,7 +24,7 @@ class CompanyController extends Controller
 
     public function getAllCompanyList(Request $request)
     {
-        $route_name = "COMPANY_BRANCHS_GET";
+        $route_name = "COMPANY_LISTS_GET";
         $response = $this->companyService->getAllCompanyList($request, $route_name);
         return response()->json($response, $response['status']);
     }

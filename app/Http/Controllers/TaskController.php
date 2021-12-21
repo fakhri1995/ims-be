@@ -84,6 +84,14 @@ class TaskController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getUserLastTwoTasks(Request $request)
+    {
+        $route_name = "TASKS_USER_LAST_TWO_GET";
+        
+        $response = $this->taskService->getUserLastTwoTasks($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getTask(Request $request)
     {
         $route_name = "TASK_GET";

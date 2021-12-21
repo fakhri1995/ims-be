@@ -8,11 +8,12 @@ use App\Group;
 use Exception;
 use App\TaskType;
 use App\Inventory;
+use Carbon\Carbon;
 use App\TaskDetail;
 use App\TaskTypeWork;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Collection;
 use App\Services\CheckRouteService;
+use Illuminate\Database\Eloquent\Collection;
 
 class TaskService{
 
@@ -336,6 +337,32 @@ class TaskService{
                 $task->location->makeHidden(['parent', 'parent_id', 'role']);
             }
             if($tasks->isEmpty()) return ["success" => true, "message" => "Task Masih Kosong", "data" => $tasks, "status" => 200];
+            return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $tasks, "status" => 200];
+
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getUserLastTwoTasks($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $login_id = auth()->user()->id;
+
+            $task_ids = DB::table('task_user')->where('user_id', $login_id)->pluck('task_id');
+            $tasks = Task::where(function ($query) use($login_id, $task_ids){
+                $query->where('created_by', $login_id)
+                ->orWhereIn('id', $task_ids);
+            })->where('status', '<', 4)->orderBy('deadline', 'asc')->limit(2)->get();
+
+            foreach($tasks as $task){
+                // $time_difference = Carbon::parse($task->deadline)->diffForHumans(null, true, false, 2);
+                $task->time_left = ucwords(Carbon::parse($task->deadline)->diffForHumans(null, true, false, 2));
+            } 
+            // $task->time_left = date_diff(date_create($task->deadline), date_create(date("Y-m-d H:i:s"))); 
             return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $tasks, "status" => 200];
 
         } catch(Exception $err){
