@@ -55,7 +55,7 @@ class Company extends Model
 
     public function parent()
     {
-        return $this->belongsTo(self::class, 'parent_id')->select('id', 'name', 'parent_id','role');
+        return $this->belongsTo(self::class, 'parent_id')->select('id', 'name', 'parent_id','role')->withTrashed();
     }
 
     public function subParent()
