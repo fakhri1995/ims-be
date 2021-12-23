@@ -1527,7 +1527,7 @@ class TaskService{
                 }
                 $task_detail->component = $component;
                 $task_detail->save();
-                return ["success" => false, "message" => "Berhasil Merubah Isi Pekerjaan", "status" => 400];
+                return ["success" => true, "message" => "Berhasil Merubah Isi Pekerjaan", "status" => 200];
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Pekerjaan Ini", "status" => 400];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
