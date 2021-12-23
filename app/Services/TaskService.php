@@ -587,7 +587,6 @@ class TaskService{
             $task->created_at = $request->get('created_at');
             $task->is_replaceable = $request->get('is_replaceable', false);
             $task->is_uploadable = $request->get('is_uploadable', false);
-            $task->files = $request->get('files', []);
             $task->end_repeat_at = $request->get('end_repeat_at');
             $task->repeat = $request->get('repeat', 0);
             $task->status = 2;
@@ -657,7 +656,6 @@ class TaskService{
             $task->created_at = $request->get('created_at');
             $task->is_replaceable = $request->get('is_replaceable');
             $task->is_uploadable = $request->get('is_uploadable', false);
-            $task->files = $request->get('files', []);
             $task->end_repeat_at = $request->get('end_repeat_at');
             $task->repeat = $request->get('repeat', 0);
             $task->save();
@@ -676,6 +674,24 @@ class TaskService{
                 $task->inventories()->sync($attach_inventories);
             }
             return ["success" => true, "message" => "Task Berhasil Diperbarui", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function saveFilesTask($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $id = $request->get('id', null);
+        $files = $request->get('files', []);
+        $task = Task::find($id);
+        if($task === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        try{
+            $task->files = $files;
+            $task->save();
+            return ["success" => true, "message" => "Files Berhasil Diperbarui", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }

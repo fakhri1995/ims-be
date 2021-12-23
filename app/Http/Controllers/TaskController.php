@@ -132,6 +132,14 @@ class TaskController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function saveFilesTask(Request $request)
+    {
+        $route_name = "TASK_FILES_SAVE";
+
+        $response = $this->taskService->saveFilesTask($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function deleteTask(Request $request)
     {
         $route_name = "TASK_DELETE";
