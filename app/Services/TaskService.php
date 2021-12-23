@@ -1658,7 +1658,10 @@ class TaskService{
         if($access["success"] === false) return $access;
         
         $task = new TaskType;
-        $task->name = $request->get('name');
+        $name = $request->get('name');
+        $check_task_type = TaskType::where('name', $name)->first();
+        if($check_task_type) return ["success" => false, "message" => "Nama Task Type Sudah Digunakan", "status" => 400];
+        $task->name = $name;
         $task->description = $request->get('description');
         $works = $request->get('works', []);
         if(!count($works)) return ["success" => false, "message" => "Pekerjaan Belum Diisi", "status" => 400];
@@ -1694,7 +1697,11 @@ class TaskService{
         $id = $request->get('id', null);
         $task = TaskType::find($id);
         if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];$task->name = $request->get('name');
-        $task->name = $request->get('name');
+        $name = $request->get('name');
+        $check_task_type = TaskType::where('name', $name)->first();
+        if($check_task_type && $check_task_type->id !== $id) return ["success" => false, "message" => "Nama Task Type Sudah Digunakan", "status" => 400];
+        
+        $task->name = $name;
         $task->description = $request->get('description');
         $add_works = $request->get('add_works', []);
         $update_works = $request->get('update_works', []);
