@@ -6,6 +6,7 @@ use App\Task;
 use App\User;
 use App\Group;
 use Exception;
+use App\Company;
 use App\TaskType;
 use App\Inventory;
 use Carbon\Carbon;
@@ -279,7 +280,13 @@ class TaskService{
             
             $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role', 'users']);
 
-            if($location > 0) $tasks = $tasks->where('location_id', $location);
+            if($location > 0){
+                $company = Company::find($location);
+                if(!$company) return ["success" => false, "message" => "Lokasi Tidak Ditemukan", "status" => 400];
+                $companyService = new CompanyService;
+                $company_list = $companyService->checkSubCompanyList($company);
+                $tasks = $tasks->whereIn('location_id', $company_list);
+            } 
             if($status > 0 && $status < 7) $tasks = $tasks->where('status', $status);
             if($from && $to) $tasks = $tasks->whereBetween('deadline', [$from, $to]);
             if($keyword){
@@ -298,7 +305,7 @@ class TaskService{
             $tasks = $tasks->paginate($rows);
             foreach($tasks as $task){
                 $task->location->full_location = $task->location->fullSubNameWParentTopParent();
-                $task->location->makeHidden(['parent', 'parent_id', 'role']);
+                $task->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
             }
             if($tasks->isEmpty()) return ["success" => true, "message" => "Task Masih Kosong", "data" => $tasks, "status" => 200];
             return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $tasks, "status" => 200];
@@ -358,7 +365,13 @@ class TaskService{
             });
 
 
-            if($location > 0) $tasks = $tasks->where('location_id', $location);
+            if($location > 0){
+                $company = Company::find($location);
+                if(!$company) return ["success" => false, "message" => "Lokasi Tidak Ditemukan", "status" => 400];
+                $companyService = new CompanyService;
+                $company_list = $companyService->checkSubCompanyList($company);
+                $tasks = $tasks->whereIn('location_id', $company_list);
+            } 
             if($status > 0 && $status < 7) $tasks = $tasks->where('status', $status);
             if($from && $to) $tasks = $tasks->whereBetween('deadline', [$from, $to]);
             if($keyword){
@@ -377,7 +390,7 @@ class TaskService{
             $tasks = $tasks->paginate($rows);
             foreach($tasks as $task){
                 $task->location->full_location = $task->location->fullSubNameWParentTopParent();
-                $task->location->makeHidden(['parent', 'parent_id', 'role']);
+                $task->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
             }
             if($tasks->isEmpty()) return ["success" => true, "message" => "Task Masih Kosong", "data" => $tasks, "status" => 200];
             return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $tasks, "status" => 200];

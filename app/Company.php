@@ -65,7 +65,7 @@ class Company extends Model
 
     public function topParent()
     {
-        return $this->belongsTo(self::class, 'top_parent_id')->select('id', 'name', 'parent_id');
+        return $this->belongsTo(self::class, 'top_parent_id')->select('id', 'name', 'parent_id', 'top_parent_id');
     }
 
     public function allChildren()
@@ -176,8 +176,12 @@ class Company extends Model
 
     public function fullSubNameWParentTopParent()
     {
-        if($this->top_parent_id !== null) $name = $this->getTopParent()->name.' / '.$this->fullSubNameWParent();
-        else $name = $this->name;
+        if($this->top_parent_id !== null){
+            if($this->role === 4 && $this->top_parent_id !== 1 && $this->topParent->topParent !== null){
+                $name = $this->topParent->topParent->name.' / '.$this->fullSubNameWParent();  
+            } 
+            else $name = $this->fullSubNameWParent();
+        } else $name = $this->name;
         return $name;
     }
 
