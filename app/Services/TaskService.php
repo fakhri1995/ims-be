@@ -269,14 +269,19 @@ class TaskService{
             $sort_by = $request->get('sort_by', null);
             $sort_type = $request->get('sort_type', 'desc');
             $status = $request->get('status', -1);
+            $location = $request->get('location', -1);
             $task_type = $request->get('task_type', -1);
+            $from = $request->get('from', null);
+            $to = $request->get('to', null);
 
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
             
             $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role', 'users']);
 
+            if($location > 0) $tasks = $tasks->where('location_id', $location);
             if($status > 0 && $status < 7) $tasks = $tasks->where('status', $status);
+            if($from && $to) $tasks = $tasks->whereBetween('deadline', [$from, $to]);
             if($keyword){
                 if(is_numeric($keyword)) $tasks = $tasks->where('name', 'ilike', "%".$keyword."%")->orWhere('id', $keyword);
                 else $tasks = $tasks->where('name', 'ilike', "%".$keyword."%");
@@ -337,7 +342,10 @@ class TaskService{
             $sort_by = $request->get('sort_by', null);
             $sort_type = $request->get('sort_type', 'desc');
             $status = $request->get('status', -1);
+            $location = $request->get('location', -1);
             $task_type = $request->get('task_type', -1);
+            $from = $request->get('from', null);
+            $to = $request->get('to', null);
 
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
@@ -350,7 +358,9 @@ class TaskService{
             });
 
 
+            if($location > 0) $tasks = $tasks->where('location_id', $location);
             if($status > 0 && $status < 7) $tasks = $tasks->where('status', $status);
+            if($from && $to) $tasks = $tasks->whereBetween('deadline', [$from, $to]);
             if($keyword){
                 if(is_numeric($keyword)) $tasks = $tasks->where('name', 'ilike', "%".$keyword."%")->orWhere('id', $keyword);
                 else $tasks = $tasks->where('name', 'ilike', "%".$keyword."%");
