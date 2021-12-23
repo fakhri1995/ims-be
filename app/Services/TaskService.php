@@ -636,7 +636,8 @@ class TaskService{
         $is_group = $request->get('is_group', null);
         if($is_group === null) return ["success" => false, "message" => "Kolom Is Group Belum Diisi", "status" => 400];
         
-        $assign_ids = $request->get('assign_ids', []);
+        if($task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Update Tidak Dimiliki", "status" => 401];
+
         $inventory_ids = $request->get('inventory_ids', []);
         try{
             if($is_group){
@@ -1271,7 +1272,7 @@ class TaskService{
             $work = $request->get('work', []);
             $task = Task::find($task_id);
             if(!$task) return ["success" => false, "message" => "Task Id Tidak Ditemukan", "status" => 400];
-            
+            if($task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Tambah Task Detail Tidak Dimiliki", "status" => 401];
             $check = $this->checkAddTaskDetail($work, $task_id);
             if(!$check['success']) return $check;
             $task_detail = new TaskDetail;
@@ -1294,6 +1295,7 @@ class TaskService{
         $work = $request->get('work', []);
         $task_detail = TaskDetail::find($id);
         if($task_detail === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        if($task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Update Task Detail Tidak Dimiliki", "status" => 401];
         if($task_detail->task_id !== $task_id) return ["success" => false, "message" => "Task Detail Bukan Milik Task", "status" => 400];
         if(!isset($work['name'])) return ["success" => false, "message" => "Nama Pekerjaan Masih Kosong", "status" => 400];
         if(!isset($work['type'])) return ["success" => false, "message" => "Tipe Pekerjaan Masih Kosong", "status" => 400];
@@ -1473,6 +1475,7 @@ class TaskService{
         $task_id = $request->get('task_id', null);
         $task_detail = TaskDetail::find($id);
         if($task_detail === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        if($task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Delete Task Detail Tidak Dimiliki", "status" => 401];
         if($task_detail->task_id !== $task_id) return ["success" => false, "message" => "Task Detail Bukan Milik Task", "status" => 400];
         try{
             $task_detail->delete();
@@ -1492,6 +1495,7 @@ class TaskService{
         $assign_ids = $request->get('assign_ids', []);
         $task_detail = TaskDetail::find($id);
         if($task_detail === null) return ["success" => false, "message" => "Id Pekerjaan Tidak Ditemukan", "status" => 400];
+        if($task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Assign Task Detail Tidak Dimiliki", "status" => 401];
         try{
             $task_detail->users()->sync($assign_ids);
             return ["success" => true, "message" => "Berhasil Merubah Petugas Pekerjaan", "status" => 200];
