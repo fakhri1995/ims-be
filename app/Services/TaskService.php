@@ -241,15 +241,27 @@ class TaskService{
 
         try{
             $type = $request->get('type', 'keluar');
-            $id = $request->get('id', null);
             if($type == 'keluar'){
+                $id = $request->get('id', null);
                 $task = Task::with(['inventories.inventoryParts', 'inventories' => function ($query) {
                     $query->wherePivot('is_from_task', true);
                 }])->find($id);
                 if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
                 $data = $task->inventories;
             } else {
-                $data = Inventory::where('location', auth()->user()->company_id)->get();
+                $keyword = $request->get('keyword', null);
+                $data = Inventory::where('location', auth()->user()->company_id)->select('inventories.id', 'inventories.mig_id', 'inventories.model_id', 'inventories.location', 'model_inventories.name as model_name', 'assets.name as asset_name')
+                ->join('model_inventories', 'inventories.model_id', '=', 'model_inventories.id')
+                ->join('assets', 'model_inventories.asset_id', '=', 'assets.id');
+                if($keyword !== null){
+                    $data = $data->where(function ($query) use($keyword){
+                        $query->where('mig_id', 'ilike', "%$keyword%")
+                        ->orWhere('model_inventories.name', 'ilike', "%$keyword%")
+                        ->orWhere('assets.name', 'ilike', "%$keyword%");
+                    });
+                } 
+                
+                $data = $data->limit(50)->get();
             }
             
             return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $data, "status" => 200];
