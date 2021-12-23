@@ -281,7 +281,7 @@ class TaskService{
             $keyword = $request->get('keyword', null);
             $sort_by = $request->get('sort_by', null);
             $sort_type = $request->get('sort_type', 'desc');
-            $status = $request->get('status', -1);
+            $status = json_decode($request->get('status', "[]"));
             $location = $request->get('location', -1);
             $task_type = $request->get('task_type', -1);
             $from = $request->get('from', null);
@@ -299,7 +299,7 @@ class TaskService{
                 $company_list = $companyService->checkSubCompanyList($company);
                 $tasks = $tasks->whereIn('location_id', $company_list);
             } 
-            if($status > 0 && $status < 7) $tasks = $tasks->where('status', $status);
+            if(count($status)) $tasks = $tasks->whereIn('status', $status);
             if($from && $to) $tasks = $tasks->whereBetween('deadline', [$from, $to]);
             if($keyword){
                 if(is_numeric($keyword)) $tasks = $tasks->where('name', 'ilike', "%".$keyword."%")->orWhere('id', $keyword);
@@ -360,7 +360,7 @@ class TaskService{
             $keyword = $request->get('keyword', null);
             $sort_by = $request->get('sort_by', null);
             $sort_type = $request->get('sort_type', 'desc');
-            $status = $request->get('status', -1);
+            $status = json_decode($request->get('status', "[]"));
             $location = $request->get('location', -1);
             $task_type = $request->get('task_type', -1);
             $from = $request->get('from', null);
@@ -384,7 +384,7 @@ class TaskService{
                 $company_list = $companyService->checkSubCompanyList($company);
                 $tasks = $tasks->whereIn('location_id', $company_list);
             } 
-            if($status > 0 && $status < 7) $tasks = $tasks->where('status', $status);
+            if(count($status)) $tasks = $tasks->whereIn('status', $status);
             if($from && $to) $tasks = $tasks->whereBetween('deadline', [$from, $to]);
             if($keyword){
                 if(is_numeric($keyword)) $tasks = $tasks->where('name', 'ilike', "%".$keyword."%")->orWhere('id', $keyword);
