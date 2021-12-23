@@ -237,11 +237,15 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getStaffTaskStatuses', 'TaskController@getStaffTaskStatuses');
     $router->get('/getUserTaskStatusList', 'TaskController@getUserTaskStatusList');
     $router->get('/getUserLastTwoTasks', 'TaskController@getUserLastTwoTasks');
+    $router->get('/getTaskSparePartList', 'TaskController@getTaskSparePartList');
     $router->get('/getTaskPickList', 'TaskController@getTaskPickList');
     $router->get('/getTasks', 'TaskController@getTasks');
     $router->get('/getUserTasks', 'TaskController@getUserTasks');
     $router->get('/getTask', 'TaskController@getTask');
     $router->post('/addTask', 'TaskController@addTask');
+    $router->post('/sendInventoriesTask', 'TaskController@sendInventoriesTask');
+    $router->post('/sendInInventoryTask', 'TaskController@sendInInventoryTask');
+    $router->post('/sendOutInventoryTask', 'TaskController@sendOutInventoryTask');
     $router->put('/updateTask', 'TaskController@updateTask');
     $router->put('/changeStatusToggle', 'TaskController@changeStatusToggle');
     $router->put('/changeAttendanceToggle', 'TaskController@changeAttendanceToggle');
@@ -250,6 +254,8 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/declineTask', 'TaskController@declineTask');
     $router->put('/assignSelfTask', 'TaskController@assignSelfTask');
     $router->delete('/deleteTask', 'TaskController@deleteTask');
+    $router->delete('/cancelSendOutInventoryTask', 'TaskController@cancelSendOutInventoryTask');
+    $router->delete('/cancelSendInInventoryTask', 'TaskController@cancelSendInInventoryTask');
 
     //Task Detail Routes
     $router->post('/addTaskDetail', 'TaskController@addTaskDetail');

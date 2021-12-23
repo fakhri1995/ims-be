@@ -43,7 +43,7 @@ class Task extends Model
 
     public function inventories()
     {
-        return $this->belongsToMany(Inventory::class)->select('inventories.id', 'inventories.model_id', 'inventories.mig_id')->withPivot('is_from_task', 'is_in');
+        return $this->belongsToMany(Inventory::class)->withPivot('is_from_task', 'is_in');
     }
 
     public function taskDetails()

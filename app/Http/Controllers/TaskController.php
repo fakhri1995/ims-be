@@ -92,9 +92,17 @@ class TaskController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getTaskSparePartList(Request $request)
+    {
+        $route_name = "TASK_SPARE_PART_LIST_GET";
+        
+        $response = $this->taskService->getTaskSparePartList($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getTaskPickList(Request $request)
     {
-        $route_name = "TASKS_PICK_LIST_GET";
+        $route_name = "TASK_PICK_LIST_GET";
         
         $response = $this->taskService->getTaskPickList($request, $route_name);
         return response()->json($response, $response['status']);
@@ -177,6 +185,46 @@ class TaskController extends Controller
         $route_name = "TASK_ASSIGN_SELF";
 
         $response = $this->taskService->assignSelfTask($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function sendInventoriesTask(Request $request)
+    {
+        $route_name = "TASK_SEND_INVENTORIES";
+
+        $response = $this->taskService->sendInventoriesTask($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function sendInInventoryTask(Request $request)
+    {
+        $route_name = "TASK_SEND_IN_INVENTORY";
+
+        $response = $this->taskService->sendInInventoryTask($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function sendOutInventoryTask(Request $request)
+    {
+        $route_name = "TASK_SEND_OUT_INVENTORY";
+
+        $response = $this->taskService->sendOutInventoryTask($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function cancelSendInInventoryTask(Request $request)
+    {
+        $route_name = "TASK_CANCEL_SEND_IN_INVENTORY";
+
+        $response = $this->taskService->cancelSendInInventoryTask($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function cancelSendOutInventoryTask(Request $request)
+    {
+        $route_name = "TASK_CANCEL_SEND_OUT_INVENTORY";
+
+        $response = $this->taskService->cancelSendOutInventoryTask($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
