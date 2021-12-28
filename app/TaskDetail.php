@@ -15,4 +15,9 @@ class TaskDetail extends Model
     {
         return $this->belongsToMany(User::class)->select('users.id','users.name','users.profile_image');
     }
+
+    public function task()
+    {
+        return $this->belongsTo(Task::class)->withTrashed();
+    }
 }
