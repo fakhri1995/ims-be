@@ -584,11 +584,13 @@ class TaskService{
             $task->reference_id = $request->get('reference_id');
             $task->created_by = auth()->user()->id;
             $task->deadline = $request->get('deadline');
+            // $task->first_deadline = $request->get('deadline');
             $task->created_at = $request->get('created_at');
             $task->is_replaceable = $request->get('is_replaceable', false);
             $task->is_uploadable = $request->get('is_uploadable', false);
             $task->end_repeat_at = $request->get('end_repeat_at');
             $task->repeat = $request->get('repeat', 0);
+            $task->files = [];
             $task->status = 2;
             
             
@@ -629,6 +631,7 @@ class TaskService{
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
+        $assign_ids = $request->get('assign_ids', []);
         $task = Task::find($id);
         if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
         
@@ -636,7 +639,6 @@ class TaskService{
         if($is_group === null) return ["success" => false, "message" => "Kolom Is Group Belum Diisi", "status" => 400];
         
         if($task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Update Tidak Dimiliki", "status" => 401];
-
         $inventory_ids = $request->get('inventory_ids', []);
         try{
             if($is_group){
@@ -647,7 +649,7 @@ class TaskService{
                     if($group === null) return ["success" => false, "message" => "Id Group Tidak Ditemukan", "status" => 400];
                 } 
             } else $task->group_id = null;
-
+            
             $task->name = $request->get('name');
             $task->description = $request->get('description');
             $task->location_id = $request->get('location_id');
@@ -778,11 +780,12 @@ class TaskService{
                         $task->save();
                     }
                     return ["success" => true, "message" => "Berhasil Melakukan Check In", "status" => 200];
-                } else if($task->users[$search]->check_out === null){
-                    $task->users()->updateExistingPivot($login_id, ['check_out' => date("Y-m-d H:i:s")]);
-                    return ["success" => true, "message" => "Berhasil Melakukan Check Out", "status" => 200];
                 } 
-                return ["success" => false, "message" => "Anda Sudah Melakukan Check Out", "status" => 400];
+                // else if($task->users[$search]->check_out === null){
+                //     $task->users()->updateExistingPivot($login_id, ['check_out' => date("Y-m-d H:i:s")]);
+                //     return ["success" => true, "message" => "Berhasil Melakukan Check Out", "status" => 200];
+                // } 
+                return ["success" => false, "message" => "Anda Sudah Melakukan Check In", "status" => 400];
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Task Ini.", "status" => 400];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -805,9 +808,22 @@ class TaskService{
 
             if($search !== false){
                 if($task->status !== 3) return ["success" => false, "message" => "Status Bukan On Progress, Tidak Dapat Melakukan Submit", "status" => 400];
+                else if($task->users[$search]->check_out !== null) return ["success" => false, "message" => "Anda Sudah Melakukan Submit", "status" => 400];
                 else { 
-                    $task->status = 5;
-                    $task->save();
+                    $task->users()->updateExistingPivot($login_id, ['check_out' => date("Y-m-d H:i:s")]);
+                    $task->load('users');
+                    $all_check_out = true;
+                    foreach($task->users as $user){
+                        if($user->check_out === null){
+                            $all_check_out = false;
+                            break;
+                        }
+                    }
+
+                    if($all_check_out){
+                        $task->status = 5;
+                        $task->save();
+                    }
                 }
                 return ["success" => true, "message" => "Berhasil Melakukan Submit Pada Task", "status" => 200];
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Task Ini.", "status" => 400];
@@ -835,7 +851,7 @@ class TaskService{
                     $task->notes = $notes;
                     $task->save();
                 } 
-                return ["success" => false, "message" => "Berhasil Melakukan Penolakan Pada Task", "status" => 400];
+                return ["success" => true, "message" => "Berhasil Melakukan Penolakan Pada Task", "status" => 200];
             } else return ["success" => false, "message" => "Anda Tidak Memiliki Izin Pada Task Ini", "status" => 400];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -859,7 +875,7 @@ class TaskService{
                     $task->status = 6;
                     $task->save();
                 } 
-                return ["success" => false, "message" => "Berhasil Melakukan Persetujuan Pada Task", "status" => 400];
+                return ["success" => true, "message" => "Berhasil Melakukan Persetujuan Pada Task", "status" => 200];
             } else return ["success" => false, "message" => "Anda Tidak Memiliki Izin Pada Task Ini", "status" => 400];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -1309,9 +1325,9 @@ class TaskService{
         $id = $request->get('id', null);
         $task_id = $request->get('task_id', null);
         $work = $request->get('work', []);
-        $task_detail = TaskDetail::find($id);
+        $task_detail = TaskDetail::with('task')->find($id);
         if($task_detail === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-        if($task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Update Task Detail Tidak Dimiliki", "status" => 401];
+        if($task_detail->task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Update Task Detail Tidak Dimiliki", "status" => 401];
         if($task_detail->task_id !== $task_id) return ["success" => false, "message" => "Task Detail Bukan Milik Task", "status" => 400];
         if(!isset($work['name'])) return ["success" => false, "message" => "Nama Pekerjaan Masih Kosong", "status" => 400];
         if(!isset($work['type'])) return ["success" => false, "message" => "Tipe Pekerjaan Masih Kosong", "status" => 400];
@@ -1489,9 +1505,9 @@ class TaskService{
         
         $id = $request->get('id', null);
         $task_id = $request->get('task_id', null);
-        $task_detail = TaskDetail::find($id);
+        $task_detail = TaskDetail::with('task')->find($id);
         if($task_detail === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-        if($task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Delete Task Detail Tidak Dimiliki", "status" => 401];
+        if($task_detail->task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Delete Task Detail Tidak Dimiliki", "status" => 401];
         if($task_detail->task_id !== $task_id) return ["success" => false, "message" => "Task Detail Bukan Milik Task", "status" => 400];
         try{
             $task_detail->delete();
@@ -1509,9 +1525,9 @@ class TaskService{
         
         $id = $request->get('id', null);
         $assign_ids = $request->get('assign_ids', []);
-        $task_detail = TaskDetail::find($id);
+        $task_detail = TaskDetail::with('task')->find($id);
         if($task_detail === null) return ["success" => false, "message" => "Id Pekerjaan Tidak Ditemukan", "status" => 400];
-        if($task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Assign Task Detail Tidak Dimiliki", "status" => 401];
+        if($task_detail->task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Assign Task Detail Tidak Dimiliki", "status" => 401];
         try{
             $task_detail->users()->sync($assign_ids);
             return ["success" => true, "message" => "Berhasil Merubah Petugas Pekerjaan", "status" => 200];
