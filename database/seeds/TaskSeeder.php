@@ -27,7 +27,6 @@ class TaskSeeder extends Seeder
     {
         $name_task = "Task";
         for($i = 1; $i < 100; $i++){
-            $user_ids = [15,16,17,18,19,20,21,22,23];
             $task = new Task;
             $task->name = "$name_task $i";
             $task->description = "Lorem ipsum dolor sit amet consectetur adipisicing elit. Nemo eligendi dolore aspernatur nihil at voluptates tempora neque, fuga laudantium corporis dolorum velit facilis deserunt, nobis maiores optio illum magnam cum!";
@@ -36,10 +35,12 @@ class TaskSeeder extends Seeder
             $task->location_id = $random_int;
             $task->created_by = random_int(15, 23);
             $task->created_at = date("Y-m-d H:i:s");
-            $task->deadline = date("Y-m-d H:i:s", strtotime("+$random_int month"));
+            $task->deadline = date("Y-m-d H:i:s", strtotime("+$random_int day"));
+            $task->first_deadline = $task->deadline;
             $task->status = random_int(2,6);
             $task->is_replaceable = random_int(0, 1);
             $task->is_uploadable = random_int(0, 1);
+            $task->files = [];
             $task->save();
             if($task->is_replaceable){
                 $task->users()->attach(random_int(15, 23));
@@ -51,6 +52,6 @@ class TaskSeeder extends Seeder
     public function run()
     {
         $this->makeBulkTasks();
-        $this->makeBulkTaskTypes();
+        // $this->makeBulkTaskTypes();
     }
 }
