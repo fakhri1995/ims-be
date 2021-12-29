@@ -22,6 +22,7 @@ class CreateUsersTable extends Migration
             $table->string("phone_number");
             $table->unsignedBigInteger("company_id");
             $table->tinyInteger("role");
+            $table->string("position")->nullable();
             $table->boolean("is_enabled");
             $table->dateTime('created_time');
             $table->softDeletes();

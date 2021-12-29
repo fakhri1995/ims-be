@@ -55,6 +55,7 @@ class UserController extends Controller
             "email" => $request->get('email'),
             "phone_number" => $request->get('phone_number'),
             "profile_image" => $request->get('profile_image', null),
+            "position" => $request->get('position', null),
             "password" => $request->get('password'),
             "confirm_password" => $request->get('confirm_password'),
             "role_ids" => $request->get('role_ids', [])
@@ -72,6 +73,7 @@ class UserController extends Controller
             "id" => $request->get('id'),
             "fullname" => $request->get('fullname'),
             "phone_number" => $request->get('phone_number'),
+            "position" => $request->get('position', null),
             "role_ids" => $request->get('role_ids', [])
         ];
 
@@ -156,6 +158,7 @@ class UserController extends Controller
             "email" => $request->get('email'),
             "phone_number" => $request->get('phone_number'),
             "profile_image" => $request->get('profile_image', null),
+            "position" => $request->get('position', null),
             "password" => $request->get('password'),
             "confirm_password" => $request->get('confirm_password'),
             "role_ids" => $request->get('role_ids', [])
@@ -173,6 +176,7 @@ class UserController extends Controller
             "id" => $request->get('id'),
             "fullname" => $request->get('fullname'),
             "phone_number" => $request->get('phone_number'),
+            "position" => $request->get('position', null),
             "role_ids" => $request->get('role_ids', [])
         ];
 

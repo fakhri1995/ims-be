@@ -19,6 +19,7 @@ class DefaultSeeder extends Seeder
 
     public function addDefaultUsers()
     {
+        $positions = ['Permanent Employee', 'Contract Employee', 'Freelancer', 'Part-time Employee', 'Contingent Employee', 'Temporary Employee'];
         $super_admin_role = Role::where('name', 'Super Admin')->firstOrCreate([
             'name' => 'Super Admin',
             'description' => 'The Highest Role Access for Users'
@@ -34,6 +35,7 @@ class DefaultSeeder extends Seeder
             $user->role = 1;
             $user->phone_number = "-";
             $user->profile_image = "-";
+            $user->position = $data['position'];
             $user->is_enabled = true;
             $user->created_time = "2021-02-09 09:37:19";
             $user->save();
@@ -58,6 +60,7 @@ class DefaultSeeder extends Seeder
                 $user->role = 2;
                 $user->phone_number = "-";
                 $user->profile_image = "-";
+                $user->position = $positions[random_int(0, 5)];
                 $user->is_enabled = true;
                 $user->created_time = "2021-02-09 09:37:19";
                 $user->save();
@@ -83,6 +86,7 @@ class DefaultSeeder extends Seeder
                 $user->role = 1;
                 $user->phone_number = "-";
                 $user->profile_image = "-";
+                $user->position = $positions[random_int(0, 5)];
                 $user->is_enabled = true;
                 $user->created_time = "2021-02-09 09:37:19";
                 $user->save();
@@ -186,27 +190,38 @@ class DefaultSeeder extends Seeder
             [
                 "name" => "Narendra Hanif",
                 "email" => "hanif@mitramas.com",
-                "password" => "m1tramas"
-            ],
-            [
-                "name" => "Muhammad Faris Makarim",
-                "email" => "faris@mitramas.com",
-                "password" => "123456789"
+                "password" => "m1tramas",
+                "position" => "-"
             ],
             [
                 "name" => "Yues Tadrik Hafiyan",
                 "email" => "yues@mitramas.com",
-                "password" => "123456789"
+                "password" => "123456789",
+                "position" => "Frontend Developer"
+            ],
+            [
+                "name" => "Muhammad Faris Makarim",
+                "email" => "faris@mitramas.com",
+                "password" => "123456789",
+                "position" => "Backend Developer"
             ],
             [
                 "name" => "Bintang Agung Nusantara",
                 "email" => "bintang@mitramas.com",
-                "password" => "123456789"
+                "password" => "123456789",
+                "position" => "Product Manager"
             ],
             [
                 "name" => "Yusron Taufiq",
                 "email" => "yusron@mitramas.com",
-                "password" => "123456789"
+                "password" => "123456789",
+                "position" => "UI & UX Designer"
+            ],
+            [
+                "name" => "Nauval Adiyasa",
+                "email" => "nauval@mitramas.com",
+                "password" => "123456789",
+                "position" => "Android Developer"
             ],
         ];
         return $data;

@@ -82,6 +82,8 @@ class LoginService
         auth()->user()->company;
         auth()->user()->company->makeHidden(['parent_id','singkatan','tanggal_pkp','penanggung_jawab','npwp','fax','email','website','deleted_at']);
         auth()->user()->makeHidden(['deleted_at', 'is_enabled', 'company_id']);
+        auth()->user()->groups;
+        auth()->user()->groups->makeHidden(['pivot']);
         $list_feature = [];
         foreach(auth()->user()->roles as $role)
         {

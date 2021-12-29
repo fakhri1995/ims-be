@@ -18,7 +18,7 @@ class UserService
     }
 
     public function getUserListRoles($role, $name = null){
-        $users = User::with(['roles:id,name', 'company:id,name,top_parent_id', 'company.topParent'])->select('id', 'name', 'company_id', 'role')->where('role', $role);
+        $users = User::with(['roles:id,name', 'company:id,name,top_parent_id', 'company.topParent'])->select('id', 'name', 'company_id', 'role', 'position')->where('role', $role);
         if($name) $users = $users->where('name', 'ilike', "%".$name."%");
         $users = $users->limit(50)->get();
         foreach($users as $user){
@@ -36,7 +36,7 @@ class UserService
 
         $name = $request->get('name', null);
         $type = $request->get('type', null);
-        $users = User::with(['company:id,name,top_parent_id', 'company.topParent'])->select('id', 'name', 'company_id', 'profile_image');
+        $users = User::with(['company:id,name,top_parent_id', 'company.topParent'])->select('id', 'name', 'company_id', 'profile_image', 'position');
         if($type) $users = $users->where('role', $type);
         if($name) $users = $users->where('name', 'ilike', "%".$name."%");
         $users = $users->limit(50)->get();
@@ -92,7 +92,7 @@ class UserService
 
     public function getFullUserList($role_id = 0, $name = null)
     {
-        $users = User::select('id','name', 'company_id', 'role')->with(['company:id,parent_id,name,top_parent_id', 'company.topParent']);
+        $users = User::select('id','name', 'company_id', 'role', 'position')->with(['company:id,parent_id,name,top_parent_id', 'company.topParent']);
         if($role_id !== 0) $users = $users->where('users.role', $role_id);
         if($name) $users = $users->where('name', 'ilike', "%".$name."%");
         $users = $users->limit(50)->get();
@@ -107,7 +107,7 @@ class UserService
     public function getUserList($request, $role_id){
         $company_id = auth()->user()->company_id;
         $users = User::with(['company:id,parent_id,name,top_parent_id', 'company.topParent'])
-        ->select('id','name', 'email','role','company_id','profile_image','phone_number','created_time','is_enabled')
+        ->select('id','name', 'email','role','company_id', 'position','profile_image','phone_number','created_time','is_enabled')
         ->where('users.role', $role_id);
         if($company_id !== 1){
             $company_service = new CompanyService;
@@ -163,6 +163,7 @@ class UserService
             $user->role = $role_id;
             $user->phone_number = $data['phone_number'];
             $user->profile_image = $data['profile_image'];
+            $user->position = $data['position'];
             $user->is_enabled = false;
             $user->created_time = date("Y-m-d H:i:s");
             $user->save();
@@ -200,6 +201,7 @@ class UserService
         try{
             $user->name = $data['fullname'];
             $user->phone_number = $data['phone_number'];
+            $user->position = $data['position'];
             $user->save();
             $data_request = [
                 "id" => $data['id'],
