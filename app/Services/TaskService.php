@@ -891,8 +891,11 @@ class TaskService{
 
     private function addInventoryPart($parent_id, $inventory_id, $causer_id, $location){
         $notes = "Masuk Suku Cadang";
-        $parent_inventory = Inventory::with(['inventoryPart'])->select('id', 'status_usage')->find($parent_id);
-        $old_inventory_parent_list = $parent_inventory->inventoryPart->pluck('id');
+        if($parent_id !== 0){
+            $parent_inventory = Inventory::with(['inventoryPart'])->select('id', 'status_usage')->find($parent_id);
+            $old_inventory_parent_list = $parent_inventory->inventoryPart->pluck('id');
+            $parent_inventory->inventoryPart()->attach($inventory_id);
+        }
         
         $inventory = Inventory::with('inventoryParent', 'inventoryPart')->find($inventory_id);
         if($inventory === null) return ["success" => false, "message" => "Id Inventory Tidak Terdaftar", "status" => 400];
@@ -910,7 +913,6 @@ class TaskService{
             $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
         }
         
-        $parent_inventory->inventoryPart()->attach($inventory_id);
         $check_parent_inventory_part = $inventory->inventoryParent;
         $properties = [];
         if(count($check_parent_inventory_part)){
@@ -923,14 +925,16 @@ class TaskService{
             
             $properties = [];
             $properties['old'] = ['parent_id' => $parent_inventory_part->id];
-            $properties['attributes'] = ['parent_id' => $parent_id];
+            if($parent_id !== 0) $properties['attributes'] = ['parent_id' => $parent_id];
             $logService->updateLogInventoryPivot($inventory_id, $causer_id, $properties, $notes);
         } else {
-            $properties['attributes'] = [
-                'parent_id' => $parent_id,
-                'child_id' => $inventory_id
-            ];
-            $logService->createLogInventoryPivot($inventory_id, $causer_id, $properties, $notes);
+            if($parent_id !== 0){
+                $properties['attributes'] = [
+                    'parent_id' => $parent_id,
+                    'child_id' => $inventory_id
+                ];
+                $logService->createLogInventoryPivot($inventory_id, $causer_id, $properties, $notes);
+            }
         }
 
         if(count($inventory->inventoryPart)){
@@ -939,13 +943,15 @@ class TaskService{
             }
         }
 
-        $parent_inventory = Inventory::with('inventoryPart')->select('id')->find($parent_id);
-        $inventory_parent_list = $parent_inventory->inventoryPart->pluck('id');
-        
-        $properties = [];
-        $properties['old']['list_parts'] = $old_inventory_parent_list;
-        $properties['attributes']['list_parts'] = $inventory_parent_list;
-        $logService->updateLogInventoryPivotParts($parent_id, $causer_id, $properties, $notes);
+        if($parent_id !== 0){
+            $parent_inventory = Inventory::with('inventoryPart')->select('id')->find($parent_id);
+            $inventory_parent_list = $parent_inventory->inventoryPart->pluck('id');
+            
+            $properties = [];
+            $properties['old']['list_parts'] = $old_inventory_parent_list;
+            $properties['attributes']['list_parts'] = $inventory_parent_list;
+            $logService->updateLogInventoryPivotParts($parent_id, $causer_id, $properties, $notes);
+        }
     }
 
     private function removeChildInventoryPart($inventory, $causer_id, $location, $status = null){
