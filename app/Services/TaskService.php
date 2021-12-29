@@ -470,6 +470,7 @@ class TaskService{
         
         $list = new Collection();
         $active_task = 0;
+        $sum_task = $status_list->sum('status_count');
         for($i = 1; $i < 7; $i++){
             $search = $status_list->search(function($query) use($i){
                 return $query->status == $i;
@@ -478,16 +479,17 @@ class TaskService{
             if($search !== false){
                 $temp_list = $status_list[$search]; 
                 $temp_list->status_name = $status_list_name[$i];
+                $temp_list->percentage = $sum_task !== 0 ? round(($status_list[$search]->status_count / $sum_task * 100), 2) : 0;
                 $list->push($temp_list);
                 if($i < 5) $active_task += $temp_list->status_count;
             } else {
-                $list->push((object)["status" => $i, "status_count" => 0, "status_name" => $status_list_name[$i]]); 
+                $list->push((object)["status" => $i, "status_count" => 0, "status_name" => $status_list_name[$i], "percentage" => 0]); 
             }
 
         }
         $data = (object)[
             "status_list" => $list,
-            "sum_task" => $status_list->sum('status_count'),
+            "sum_task" => $sum_task,
             "active_task" => $active_task
         ];
         
@@ -584,12 +586,13 @@ class TaskService{
             $task->reference_id = $request->get('reference_id');
             $task->created_by = auth()->user()->id;
             $task->deadline = $request->get('deadline');
-            // $task->first_deadline = $request->get('deadline');
+            $task->first_deadline = $request->get('deadline');
             $task->created_at = $request->get('created_at');
             $task->is_replaceable = $request->get('is_replaceable', false);
             $task->is_uploadable = $request->get('is_uploadable', false);
             $task->end_repeat_at = $request->get('end_repeat_at');
             $task->repeat = $request->get('repeat', 0);
+            $task->is_from_ticket = false;
             $task->files = [];
             $task->status = 2;
             
@@ -781,10 +784,6 @@ class TaskService{
                     }
                     return ["success" => true, "message" => "Berhasil Melakukan Check In", "status" => 200];
                 } 
-                // else if($task->users[$search]->check_out === null){
-                //     $task->users()->updateExistingPivot($login_id, ['check_out' => date("Y-m-d H:i:s")]);
-                //     return ["success" => true, "message" => "Berhasil Melakukan Check Out", "status" => 200];
-                // } 
                 return ["success" => false, "message" => "Anda Sudah Melakukan Check In", "status" => 400];
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Task Ini.", "status" => 400];
         } catch(Exception $err){
@@ -798,7 +797,9 @@ class TaskService{
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
-        $task = Task::with('users')->find($id);
+        $task = Task::with(['users', 'inventories' => function ($query) {
+                $query->wherePivot('is_from_task', false);
+            }])->find($id);
         if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
         try{
             $login_id = auth()->user()->id;
@@ -821,7 +822,16 @@ class TaskService{
                     }
 
                     if($all_check_out){
-                        $task->status = 5;
+                        if($task->is_from_ticket){
+                            if(count($task->inventories)){
+                                foreach($task->inventories as $inventory_task){
+                                    $user = DB::table('users')->select('id', 'company_id')->where('id', $inventory_task->pivot->user_id)->first();
+                                    if($inventory_task->pivot->is_in) $this->addInventoryPart($inventory_task->pivot->connect_id, $inventory_task->pivot->inventory_id, $user->id, $task->location_id);
+                                    else $this->removeInventoryPart($inventory_task->pivot->inventory_id, $user->id, $user->company_id);
+                                }
+                            }
+                            $task->status = 6;
+                        } else $task->status = 5;
                         $task->save();
                     }
                 }
@@ -858,13 +868,167 @@ class TaskService{
         }
     }
 
+    private function addChildInventoryPart($inventory, $causer_id, $status_usage, $status_condition, $location){
+        $old_inventory = [];
+        foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
+        $inventory->status_usage = $status_usage;
+        $inventory->status_condition = $status_condition;
+        $inventory->location = $location;
+        $inventory->save();
+        $properties = $this->checkUpdateProperties($old_inventory, $inventory);
+        if($properties){
+            $logService = new LogService;
+            $notes = "Added as Parts with Its Parent";
+            $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
+        }
+
+        if(count($inventory->inventoryPart)){
+            foreach($inventory->inventoryPart as $temp_inventory){
+                $this->addChildInventoryPart($temp_inventory, $causer_id, $status_usage, $status_condition);
+            }
+        }
+    }
+
+    private function addInventoryPart($parent_id, $inventory_id, $causer_id, $location){
+        $notes = "Masuk Suku Cadang";
+        $parent_inventory = Inventory::with(['inventoryPart'])->select('id', 'status_usage')->find($parent_id);
+        $old_inventory_parent_list = $parent_inventory->inventoryPart->pluck('id');
+        
+        $inventory = Inventory::with('inventoryParent', 'inventoryPart')->find($inventory_id);
+        if($inventory === null) return ["success" => false, "message" => "Id Inventory Tidak Terdaftar", "status" => 400];
+        
+        $old_inventory = [];
+        foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
+        $inventory->status_condition = 1;
+        $inventory->status_usage = 1;
+        $inventory->location = $location;
+        $inventory->save();
+        
+        $logService = new LogService;
+        $properties = $this->checkUpdateProperties($old_inventory, $inventory);
+        if($properties){
+            $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
+        }
+        
+        $parent_inventory->inventoryPart()->attach($inventory_id);
+        $check_parent_inventory_part = $inventory->inventoryParent;
+        $properties = [];
+        if(count($check_parent_inventory_part)){
+            $parent_inventory_part = $check_parent_inventory_part[0];
+            $properties['old']['list_parts'] = $parent_inventory_part->inventoryPart->pluck('id');
+            $parent_inventory_part->inventoryPart()->detach($inventory_id);
+            $parent_inventory_part->load('inventoryPart');
+            $properties['attributes']['list_parts'] = $parent_inventory_part->inventoryPart->pluck('id');
+            $logService->updateLogInventoryPivotParts($parent_inventory_part->id, $causer_id, $properties, "Digunakan Untuk Proses Masuk Suku Cadang Lain");
+            
+            $properties = [];
+            $properties['old'] = ['parent_id' => $parent_inventory_part->id];
+            $properties['attributes'] = ['parent_id' => $parent_id];
+            $logService->updateLogInventoryPivot($inventory_id, $causer_id, $properties, $notes);
+        } else {
+            $properties['attributes'] = [
+                'parent_id' => $parent_id,
+                'child_id' => $inventory_id
+            ];
+            $logService->createLogInventoryPivot($inventory_id, $causer_id, $properties, $notes);
+        }
+
+        if(count($inventory->inventoryPart)){
+            foreach($inventory->inventoryPart as $temp_inventory){
+                $this->addChildInventoryPart($temp_inventory, $causer_id, 1, 1, $location);
+            }
+        }
+
+        $parent_inventory = Inventory::with('inventoryPart')->select('id')->find($parent_id);
+        $inventory_parent_list = $parent_inventory->inventoryPart->pluck('id');
+        
+        $properties = [];
+        $properties['old']['list_parts'] = $old_inventory_parent_list;
+        $properties['attributes']['list_parts'] = $inventory_parent_list;
+        $logService->updateLogInventoryPivotParts($parent_id, $causer_id, $properties, $notes);
+    }
+
+    private function removeChildInventoryPart($inventory, $causer_id, $location, $status = null){
+        $old_inventory = [];
+        foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
+
+        $inventory->status_condition = 2;
+        $inventory->status_usage = 3;
+        $inventory->location = $location;
+        $inventory->save();
+
+        $logService = new LogService;
+        $properties = $this->checkUpdateProperties($old_inventory, $inventory);
+        if($properties){
+            if($status === "delete inventory") $notes = "Parent Has Been Deleted";
+            else $notes = "Removed as Parts with Its Parent";
+            $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
+        }
+        
+        if(count($inventory->inventoryPart)){
+            foreach($inventory->inventoryPart as $temp_inventory){
+                $this->removeChildInventoryPart($temp_inventory, $causer_id, $location, $status);
+            }
+        }
+    }
+
+    private function removeInventoryPart($inventory_id, $causer_id, $location)
+    {
+        $notes = "Keluar Suku Cadang";        
+        $inventory = Inventory::with('inventoryPart', 'inventoryParent')->find($inventory_id);
+        $old_inventory = [];
+        foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
+        
+        $inventory->status_condition = 2;
+        $inventory->status_usage = 3;
+        $inventory->location = $location;
+        $inventory->save();
+        
+        $logService = new LogService;
+        if(count($inventory->inventoryParent)){
+            $parent_id = $inventory->inventoryParent[0]->id;
+            $parent_inventory = Inventory::with(['inventoryPart'])->select('id')->find($parent_id);
+            $old_inventory_parent_list = $parent_inventory->inventoryPart->pluck('id');
+            $parent_inventory->inventoryPart()->detach($inventory_id);
+            $properties['old'] = [
+                'parent_id' => $parent_id,
+                'child_id' => $inventory_id
+            ];
+            $logService->deleteLogInventoryPivot($inventory_id, $causer_id, $properties, $notes);
+        }
+        
+        $properties = $this->checkUpdateProperties($old_inventory, $inventory);
+        if($properties){
+            $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
+        }
+        
+        if(count($inventory->inventoryPart)){
+            foreach($inventory->inventoryPart as $temp_inventory){
+                $this->removeChildInventoryPart($temp_inventory, $causer_id, $location);
+            }
+        }
+        
+        if(count($inventory->inventoryParent)){
+            $parent_inventory = Inventory::with('inventoryPart')->select('id')->find($parent_id);
+            $inventory_parent_list = $parent_inventory->inventoryPart->pluck('id');
+            
+            $properties = [];
+            $properties['old']['list_parts'] = $old_inventory_parent_list;
+            $properties['attributes']['list_parts'] = $inventory_parent_list;
+            $logService->updateLogInventoryPivotParts($parent_id, $causer_id, $properties, $notes);
+        }
+        
+    }
+
     public function approveTask($request, $route_name)
     {
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
-        $task = Task::with('users')->find($id);
+        $task = Task::with(['inventories' => function ($query) {
+                $query->wherePivot('is_from_task', false);
+            }])->find($id);
         if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
         try{
             $login_id = auth()->user()->id;
@@ -873,6 +1037,13 @@ class TaskService{
                 if($task->status !== 5) return ["success" => false, "message" => "Status Bukan Completed, Tidak Dapat Dilakukan Persetujuan", "status" => 400];
                 else {
                     $task->status = 6;
+                    if(count($task->inventories)){
+                        foreach($task->inventories as $inventory_task){
+                            $user = DB::table('users')->select('id', 'company_id')->where('id', $inventory_task->pivot->user_id)->first();
+                            if($inventory_task->pivot->is_in) $this->addInventoryPart($inventory_task->pivot->connect_id, $inventory_task->pivot->inventory_id, $user->id, $task->location_id);
+                            else $this->removeInventoryPart($inventory_task->pivot->inventory_id, $user->id, $user->company_id);
+                        }
+                    }
                     $task->save();
                 } 
                 return ["success" => true, "message" => "Berhasil Melakukan Persetujuan Pada Task", "status" => 200];
@@ -934,13 +1105,24 @@ class TaskService{
         
         $login_id = auth()->user()->id;
         $id = $request->get('id', null);
-        $add_in_inventory_ids = $request->get('add_in_inventory_ids', []);
+        $add_in_inventories = $request->get('add_in_inventories', []);
         $remove_in_inventory_ids = $request->get('remove_in_inventory_ids', []);
         $add_out_inventory_ids = $request->get('add_out_inventory_ids', []);
         $remove_out_inventory_ids = $request->get('remove_out_inventory_ids', []);
         try{
-            $task = Task::with('inventories:id,model_id,mig_id')->find($id);
+            $task = Task::with(['users', 'inventories:id,model_id,mig_id'])->find($id);
             if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
+            if(!count($task->users)) return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
+
+            $search = $task->users->search(function ($item) use ($login_id) {
+                return $item->id === $login_id;
+            });
+
+            if($search !== false){
+                if($task->users[$search]->check_in === null) return ["success" => false, "message" => "Anda Perlu Melakukan Check In Terlebih Dahulu ", "status" => 400];
+            } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
+
+            if($task->status !== 3) return ["success" => false, "message" => "Status Bukan On Progress", "status" => 400];
             
             $inventory_from_task_ids = [];
             $inventory_not_from_task_ids = [];
@@ -957,12 +1139,31 @@ class TaskService{
             $companyService = new CompanyService;
             $company_list = $companyService->checkSubCompanyList(auth()->user()->company);
             
-            if(count($add_in_inventory_ids)){
-                foreach($add_in_inventory_ids as $add_in_inventory_id){
-                    $inventory = Inventory::find($add_in_inventory_id);
+            if(count($add_in_inventories)){
+                $company_list = $company_list->toArray();
+                foreach($add_in_inventories as $add_in_inventory){
+                    $connect_id = $add_in_inventory['connect_id'];
+                    if($connect_id === null) return ["success" => false, "message" => "Connect Id (Parent Id) Dengan Item Id $inventory_id Masih Kosong", "status" => 400];
+                    $inventory_id = $add_in_inventory['inventory_id'];
+                    $inventory = Inventory::find($inventory_id);
                     if($inventory === null) return ["success" => false, "message" => "Id Inventori Tidak Ditemukan", "status" => 400];
-                    $check_add_in_inventory_id = array_intersect([$inventory->location], $company_list->toArray());
-                    if(!count($check_add_in_inventory_id)) return ["success" => false, "message" => "Lokasi Item Tidak Di Perusahaan Anda", "status" => 400];
+                    $check_add_in_inventory = array_intersect([$inventory->location], $company_list);
+                    if(!count($check_add_in_inventory)) return ["success" => false, "message" => "Lokasi Item Dengan Item Id $inventory_id Tidak Di Perusahaan Anda", "status" => 400];
+                    if($connect_id !== 0){
+                        if(count($inventory_from_task_ids)){
+                            foreach($inventory_from_task_ids as $inventory_from_task_id){
+                                if($connect_id == $inventory_from_task_id){
+                                    $check_connect_id = true;
+                                    break;
+                                }
+                                $check_connect_id = $this->checkParent($connect_id, $inventory_from_task_id);
+                                if($check_connect_id) break;
+                            }
+                            if(!$check_connect_id){
+                                return ["success" => false, "message" => "Connect Id (Parent Id) Dengan Item Id $inventory_id Bukan Merupakan Part Dari Item Yang Terhubung Dengan Task", "status" => 400];
+                            } 
+                        }
+                    }
                 }
             }
 
@@ -1016,8 +1217,8 @@ class TaskService{
                 } 
             }
             foreach($remove_in_inventory_ids as $remove_in_inventory_id) $task->inventories()->detach($remove_in_inventory_id);
-            foreach($add_in_inventory_ids as $add_in_inventory_id) $task->inventories()->syncWithoutDetaching([$add_in_inventory_id => ['is_from_task' => false, 'is_in' => true]]);
-            foreach($add_out_inventory_ids as $add_out_inventory_id) $task->inventories()->attach($add_out_inventory_id, ['is_from_task' => false, 'is_in' => false]);
+            foreach($add_in_inventories as $add_in_inventory) $task->inventories()->syncWithoutDetaching([$add_in_inventory['inventory_id'] => ['is_from_task' => false, 'is_in' => true, 'user_id' => $login_id, 'connect_id' => $add_in_inventory['connect_id']]]);
+            foreach($add_out_inventory_ids as $add_out_inventory_id) $task->inventories()->attach($add_out_inventory_id, ['is_from_task' => false, 'is_in' => false, 'user_id' => $login_id]);
 
             return ["success" => true, "message" => "Berhasil Memperbarui Suku Cadang Task", "status" => 200];
         } catch(Exception $err){
@@ -1030,16 +1231,47 @@ class TaskService{
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
+        $login_id = auth()->user()->id;
         $id = $request->get('id', null);
         $inventory_id = $request->get('inventory_id', null);
+        $connect_id = $request->get('connect_id', null);
         try{
-            $task = Task::with(['location', 'inventories' => function ($query) {
+            if($connect_id === null) return ["success" => false, "message" => "Connect Id (Parent Id) Masih Kosong", "status" => 400];
+            $task = Task::with(['users','location', 'inventories' => function ($query) {
                 $query->wherePivot('is_from_task', true);
             }])->find($id);
             if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
+            if(!count($task->users)) return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
+            
+            $search = $task->users->search(function ($item) use ($login_id) {
+                return $item->id === $login_id;
+            });
+            
+            if($search !== false){
+                if($task->users[$search]->check_in === null) return ["success" => false, "message" => "Anda Perlu Melakukan Check In Terlebih Dahulu ", "status" => 400];
+            } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
+            
+            if($task->status !== 3) return ["success" => false, "message" => "Status Bukan On Progress", "status" => 400];
+            
             $inventory = Inventory::find($inventory_id);
             if($inventory === null) return ["success" => false, "message" => "Id Inventori Tidak Ditemukan", "status" => 400];
-            
+            $inventory_from_task_ids = $task->inventories->pluck('id');
+            if($connect_id !== 0){
+                if(count($inventory_from_task_ids)){
+                    foreach($inventory_from_task_ids as $inventory_from_task_id){
+                        if($connect_id == $inventory_from_task_id){
+                            $check_connect_id = true;
+                            break;
+                        }
+                        $check_connect_id = $this->checkParent($connect_id, $inventory_from_task_id);
+                        if($check_connect_id) break;
+                    }
+                    if(!$check_connect_id){
+                        return ["success" => false, "message" => "Connect Id (Parent Id) Bukan Merupakan Part Dari Item Yang Terhubung Dengan Task", "status" => 400];
+                    } 
+                }
+            }
+
             $inventory_ids = [];
             if(count($task->inventories)){
                 foreach($task->inventories as $inventory_task) $inventory_ids[] = $inventory_task->id;
@@ -1050,23 +1282,7 @@ class TaskService{
             $check_inventory_location = array_intersect([$inventory->location], $company_list->toArray());
             if(!count($check_inventory_location)) return ["success" => false, "message" => "Lokasi Item Tidak Di Perusahaan Anda", "status" => 400];
             
-            $task->inventories()->syncWithoutDetaching([$inventory_id => ['is_from_task' => false, 'is_in' => true]]);
-            
-            // $old_inventory = [];
-            // foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
-            
-            // $inventory->status_condition = 1;
-            // $inventory->status_usage = 1;
-            // $inventory->location = $task->location_id;
-            // $inventory->save();
-            
-            // $properties = $this->checkUpdateProperties($old_inventory, $inventory);
-            // if($properties){
-            //     $notes = "Diubah Melalui Ganti Suku Cadang Masuk Task";
-            //     $causer_id = auth()->user()->id; 
-            //     $logService = new LogService;
-            //     $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
-            // }
+            $task->inventories()->syncWithoutDetaching([$inventory_id => ['is_from_task' => false, 'is_in' => true, 'user_id' => auth()->user()->id, 'connect_id' => $connect_id]]);
             return ["success" => true, "message" => "Berhasil Menambah Item Pada Task", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -1082,13 +1298,23 @@ class TaskService{
         $id = $request->get('id', null);
         $inventory_id = $request->get('inventory_id', null);
         try{
-            $task = Task::with(['inventories' => function ($query) {
+            $task = Task::with(['users','inventories' => function ($query) {
                 $query->wherePivot('is_from_task', true);
             }])->find($id);
             if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
             $inventory = Inventory::find($inventory_id);
             if($inventory === null) return ["success" => false, "message" => "Id Inventori Tidak Ditemukan", "status" => 400];
-            
+            if(!count($task->users)) return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
+
+            $search = $task->users->search(function ($item) use ($login_id) {
+                return $item->id === $login_id;
+            });
+
+            if($search !== false){
+                if($task->users[$search]->check_in === null) return ["success" => false, "message" => "Anda Perlu Melakukan Check In Terlebih Dahulu ", "status" => 400];
+            } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
+
+            if($task->status !== 3) return ["success" => false, "message" => "Status Bukan On Progress", "status" => 400];
             $inventory_from_task_ids = [];
             if(count($task->inventories)){
                 foreach($task->inventories as $inventory_task) $inventory_from_task_ids[] = $inventory_task->id;
@@ -1104,24 +1330,7 @@ class TaskService{
             }
             
             if(!$check_parent) return ["success" => false, "message" => "Item Bukan Merupakan Part Dari Item Yang Terhubung Dengan Task", "status" => 400];
-            $task->inventories()->attach($inventory_id, ['is_from_task' => false, 'is_in' => false]);
-            
-            
-            // $old_inventory = [];
-            // foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
-            
-            // $inventory->status_condition = 2;
-            // $inventory->status_usage = 3;
-            // $inventory->location = auth()->user()->company_id;
-            // $inventory->save();
-            
-            // $properties = $this->checkUpdateProperties($old_inventory, $inventory);
-            // if($properties){
-            //     $notes = "Diubah Melalui Ganti Suku Cadang Keluar Task";
-            //     $causer_id = auth()->user()->id; 
-            //     $logService = new LogService;
-            //     $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
-            // }
+            $task->inventories()->attach($inventory_id, ['is_from_task' => false, 'is_in' => false, 'user_id' => auth()->user()->id]);
             return ["success" => true, "message" => "Berhasil Mengeluarkan Item Dari Task", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -1131,11 +1340,23 @@ class TaskService{
     private function cancelSendInventoryTask($id, $inventory_id, $status, $notes)
     {
         try{
-            $task = Task::with('inventories:id,model_id,mig_id')->find($id);
+            $login_id = auth()->user()->id;
+            $task = Task::with(['users','inventories:id,model_id,mig_id'])->find($id);
             if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
             $inventory = Inventory::find($inventory_id);
             if($inventory === null) return ["success" => false, "message" => "Id Inventori Tidak Ditemukan", "status" => 400];
-            
+            if(!count($task->users)) return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
+
+            $search = $task->users->search(function ($item) use ($login_id) {
+                return $item->id === $login_id;
+            });
+
+            if($search !== false){
+                if($task->users[$search]->check_in === null) return ["success" => false, "message" => "Anda Perlu Melakukan Check In Terlebih Dahulu ", "status" => 400];
+            } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
+
+            if($task->status !== 3) return ["success" => false, "message" => "Status Bukan On Progress", "status" => 400];
+
             $inventory_from_task_ids = [];
             $inventory_not_from_task_ids = [];
             $inventory_target_in_task = null;
@@ -1175,21 +1396,6 @@ class TaskService{
                 $location = auth()->user()->company_id;
                 $task->inventories()->detach($inventory_id);
             }
-            
-            // $old_inventory = [];
-            // foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
-            
-            // $inventory->status_condition = $status_condition;
-            // $inventory->status_usage = $status_usage;
-            // $inventory->location = $location;
-            // $inventory->save();
-            
-            // $properties = $this->checkUpdateProperties($old_inventory, $inventory);
-            // if($properties){
-            //     $causer_id = auth()->user()->id; 
-            //     $logService = new LogService;
-            //     $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
-            // }
             return ["success" => true, "message" => "Berhasil Mengeluarkan Item Dari Task", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -1544,15 +1750,25 @@ class TaskService{
         $id = $request->get('id', null);
         $values = $request->get('values', null);
         if($values === null) return ["success" => false, "message" => "Values Tidak Boleh Kosong!", "status" => 400];
-        $task_detail = TaskDetail::with('users')->find($id);
+        $task_detail = TaskDetail::with(['users', 'task.users'])->find($id);
         if($task_detail === null) return ["success" => false, "message" => "Id Pekerjaan Tidak Ditemukan", "status" => 400];
         try{
             $login_id = auth()->user()->id;
-            $search = $task_detail->users->search(function ($item) use ($login_id) {
+            if(!count($task_detail->task->users)) return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
+            $search_task = $task_detail->task->users->search(function ($item) use ($login_id) {
                 return $item->id === $login_id;
             });
-
-            if($search !== false){
+            if($search_task !== false){
+                if($task_detail->task->users[$search_task]->check_in === null) return ["success" => false, "message" => "Anda Perlu Melakukan Check In Terlebih Dahulu", "status" => 400];
+            } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
+            
+            if($task_detail->task->status !== 3) return ["success" => false, "message" => "Status Task Bukan On Progress", "status" => 400];
+            
+            if(!count($task_detail->users)) return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Pekerjaan Ini", "status" => 400];
+            $search_task_detail = $task_detail->users->search(function ($item) use ($login_id) {
+                return $item->id === $login_id;
+            });
+            if($search_task_detail !== false){
                 $type = $task_detail->component->type;
                 $component  = $task_detail->component;
                 if($type !== 5){

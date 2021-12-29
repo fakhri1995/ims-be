@@ -52,7 +52,7 @@ class Inventory extends Model
 
     public function inventoryPart()
     {
-        return $this->belongsToMany(Inventory::class, 'inventory_inventory_pivots', 'parent_id', 'child_id')->select('inventories.id', 'inventories.model_id', 'inventories.mig_id', 'inventories.status_condition', 'inventories.status_usage', 'inventories.serial_number', 'inventories.deleted_at')->with('statusCondition', 'statusUsage', 'modelInventory.asset');
+        return $this->belongsToMany(Inventory::class, 'inventory_inventory_pivots', 'parent_id', 'child_id')->select('inventories.id', 'inventories.model_id', 'inventories.mig_id', 'inventories.status_condition', 'inventories.status_usage', 'inventories.serial_number', 'inventories.location', 'inventories.deleted_at')->with('statusCondition', 'statusUsage', 'modelInventory.asset');
     }
 
     public function inventoryParts()

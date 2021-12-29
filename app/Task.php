@@ -14,7 +14,7 @@ class Task extends Model
 
     public function taskType()
     {
-        return $this->belongsTo(TaskType::class);
+        return $this->belongsTo(TaskType::class)->withTrashed();
     }
 
     public function reference()
@@ -44,7 +44,7 @@ class Task extends Model
 
     public function inventories()
     {
-        return $this->belongsToMany(Inventory::class)->withPivot('is_from_task', 'is_in');
+        return $this->belongsToMany(Inventory::class)->withPivot('is_from_task', 'is_in', 'user_id', 'connect_id');
     }
 
     public function taskDetails()
