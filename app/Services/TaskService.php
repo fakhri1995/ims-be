@@ -243,7 +243,7 @@ class TaskService{
             $type = $request->get('type', 'keluar');
             if($type == 'keluar'){
                 $id = $request->get('id', null);
-                $task = Task::with(['inventories.inventoryParts', 'inventories' => function ($query) {
+                $task = Task::with(['inventories.modelInventory.asset', 'inventories.inventoryParts', 'inventories' => function ($query) {
                     $query->wherePivot('is_from_task', true);
                 }])->find($id);
                 if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
