@@ -92,6 +92,14 @@ class TaskController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getUserTaskTypeCounts(Request $request)
+    {
+        $route_name = "TASK_TYPE_USER_COUNTS_GET";
+        
+        $response = $this->taskService->getUserTaskTypeCounts($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getTaskSparePartList(Request $request)
     {
         $route_name = "TASK_SPARE_PART_LIST_GET";

@@ -208,6 +208,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteRelationshipInventory', 'AssetController@deleteRelationshipInventory');
 
     //Ticket Routes
+    $router->get('/getFilterTickets', 'TicketController@getFilterTickets');
     $router->get('/getTicketRelation', 'TicketController@getTicketRelation');
     $router->get('/getClientTicketRelation', 'TicketController@getClientTicketRelation');
     $router->get('/getClosedTickets', 'TicketController@getClosedTickets');
@@ -237,6 +238,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getStaffTaskStatuses', 'TaskController@getStaffTaskStatuses');
     $router->get('/getUserTaskStatusList', 'TaskController@getUserTaskStatusList');
     $router->get('/getUserLastTwoTasks', 'TaskController@getUserLastTwoTasks');
+    $router->get('/getUserTaskTypeCounts', 'TaskController@getUserTaskTypeCounts');
     $router->get('/getTaskSparePartList', 'TaskController@getTaskSparePartList');
     $router->get('/getTaskPickList', 'TaskController@getTaskPickList');
     $router->get('/getTasks', 'TaskController@getTasks');

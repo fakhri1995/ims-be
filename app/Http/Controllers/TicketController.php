@@ -21,6 +21,13 @@ class TicketController extends Controller
     // Status Ticket
     // 1 = Open, 2 = On Progress, 3 = Pending, 4 = Resolved, 5 = Canceled, 6 = Closed
 
+    public function getFilterTickets(Request $request){
+        $route_name = "TICKET_FILTER_GET";
+        
+        $response = $this->ticketService->getFilterTickets($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getTicketRelation(Request $request){
         $route_name = "TICKET_GET";
         

@@ -341,7 +341,15 @@ class TaskService{
                 ->orWhereIn('id', $task_ids);
             })->where('status', '<', 4)->orderBy('deadline', 'asc')->limit(2)->get();
 
-            foreach($tasks as $task) $task->time_left = ucwords(Carbon::parse($task->deadline)->diffForHumans(null, true, false, 2));
+            foreach($tasks as $task){
+                $task->time_left = ucwords(Carbon::parse($task->deadline)->diffForHumans(null, true, false, 2));
+                $start_time = strtotime($task->created_at);
+                $deadline_time = strtotime($task->deadline);
+                $current_time = strtotime(date("Y-m-d H:i:s"));
+                $progress = $current_time - $start_time;
+                $limit = $deadline_time - $start_time;
+                $task->time_limit_percentage = $progress / $limit * 100;
+            } 
             return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $tasks, "status" => 200];
 
         } catch(Exception $err){
@@ -496,6 +504,39 @@ class TaskService{
         return ["success" => true, "data" => $data, "status" => 200];
     }
 
+    public function getUserTaskTypeCounts($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $login_id = auth()->user()->id;
+            $location = $request->get('location', null);
+            if($location){
+                $task_type_counts = TaskType::select('id', 'name')->withCount(['tasks' => function ($query) use($login_id){
+                    $query->where('location_id', $login_id)->where(function ($q) use($login_id){
+                        $q->where('created_by', $login_id)->orWhereHas('users', function ($q1) use($login_id){
+                            $q1->where('id', $login_id);
+                        });
+                    } );
+                }]);
+            } else {
+                $task_type_counts = TaskType::select('id', 'name')->withCount(['tasks' => function ($query) use($login_id){
+                    $query->where(function ($q) use($login_id){
+                        $q->where('created_by', $login_id)->orWhereHas('users', function ($q1) use($login_id){
+                            $q1->where('id', $login_id);
+                        });
+                    } );
+                }]);
+            }
+            $task_type_counts = $task_type_counts->orderBy('tasks_count', 'desc')->limit(4)->get();
+            return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $task_type_counts, "status" => 200];
+
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     public function getTaskPickList($request, $route_name)
     {
         $access = $this->checkRouteService->checkRoute($route_name);
@@ -535,7 +576,7 @@ class TaskService{
 
         try{
             $id = $request->get('id', null);
-            $task = Task::with(['reference.type', 'taskType:id,name', 'creator:id,name,profile_image', 'location:id,name,parent_id,top_parent_id,role','users', 'group:id,name', 'inventories:id,model_id,mig_id','inventories.modelInventory.asset', 'taskDetails'])->find($id);
+            $task = Task::with(['reference.type', 'taskType:id,name', 'creator:id,name,profile_image,position', 'location:id,name,parent_id,top_parent_id,role','users', 'group:id,name', 'inventories:id,model_id,mig_id','inventories.modelInventory.asset', 'taskDetails'])->find($id);
             if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
             $task->location->full_location = $task->location->fullSubNameWParentTopParent();
             $task->location->makeHidden(['parent', 'parent_id', 'role']);
@@ -546,6 +587,7 @@ class TaskService{
                     $inventory->makeHidden('modelInventory');
                     $inventory->is_from_task = $inventory->pivot->is_from_task;
                     $inventory->is_in = $inventory->pivot->is_in;
+                    $inventory->connect_id = $inventory->pivot->connect_id;
                 }
             }
             

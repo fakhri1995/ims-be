@@ -30,6 +30,20 @@ class TicketService
     // Status Ticket
     // 1 = Open, 2 = On Progress, 3 = On Hold, 4 = Canceled, 5 = Closed
 
+    public function getFilterTickets($request, $route_name){
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id', 0);
+        $tickets = Ticket::select('id', 'ticketable_id','ticketable_type')->with('type');
+        if($id) $tickets = $tickets->where('id', $id);
+        $tickets = $tickets->limit(50)->get();
+        foreach($tickets as $ticket){
+            $ticket->name = $ticket->type->code.'-'.sprintf('%03d', $ticket->id);
+        }
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $tickets, "status" => 200];
+    }
+
     public function getTicketRelation($route_name){
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;

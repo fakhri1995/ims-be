@@ -39,7 +39,7 @@ class Task extends Model
     
     public function users()
     {
-        return $this->belongsToMany(User::class)->select('users.id','users.name','users.profile_image', 'task_user.check_in', 'task_user.check_out')->withPivot('check_in', 'check_out');
+        return $this->belongsToMany(User::class)->select('users.id','users.name','users.profile_image','users.position', 'task_user.check_in', 'task_user.check_out')->withPivot('check_in', 'check_out');
     }
 
     public function inventories()
