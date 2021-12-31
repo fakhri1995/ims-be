@@ -545,16 +545,37 @@ class TaskService{
         try{
             $rows = $request->get('rows', 10);
             $keyword = $request->get('keyword', null);
-            
+            $sort_by = $request->get('sort_by', null);
+            $sort_type = $request->get('sort_type', 'desc');
+            $location = $request->get('location', -1);
+            $task_type = $request->get('task_type', -1);
+            $from = $request->get('from', null);
+            $to = $request->get('to', null);
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
             
             $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role'])->where('status', 2)->doesntHave('users');
             
+            if($location > 0){
+                $company = Company::find($location);
+                if(!$company) return ["success" => false, "message" => "Lokasi Tidak Ditemukan", "status" => 400];
+                $companyService = new CompanyService;
+                $company_list = $companyService->checkSubCompanyList($company);
+                $tasks = $tasks->whereIn('location_id', $company_list);
+            } 
+            if($from && $to) $tasks = $tasks->whereBetween('deadline', [$from, $to]);
             if($keyword){
                 if(is_numeric($keyword)) $tasks = $tasks->where('name', 'ilike', "%".$keyword."%")->orWhere('id', $keyword);
                 else $tasks = $tasks->where('name', 'ilike', "%".$keyword."%");
             } 
+            if($task_type > 0) $tasks = $tasks->where('task_type_id', $task_type);
+            
+            if($sort_by){
+                if($sort_by === 'name') $tasks = $tasks->orderBy('name', $sort_type);
+                else if($sort_by === 'deadline') $tasks = $tasks->orderBy('deadline', $sort_type);
+                else if($sort_by === 'id') $tasks = $tasks->orderBy('id', $sort_type);
+                else if($sort_by === 'description') $tasks = $tasks->orderBy('description', $sort_type);
+            }
 
             $tasks = $tasks->paginate($rows);
             foreach($tasks as $task){
