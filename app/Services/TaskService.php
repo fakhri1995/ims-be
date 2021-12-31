@@ -221,7 +221,9 @@ class TaskService{
 
         try{
             $total_staff = User::where('role', 1)->count();
-            $total_staff_without_task = User::where('role', 1)->doesntHave('tasks')->count();
+            $total_staff_without_task = User::where('role', 1)->whereDoesntHave('tasks', function($query){
+                $query->whereNotIn('status', [5,6]);
+            })->count();
             $data = (object)[
                 "total_staff" => $total_staff,
                 "total_staff_without_task" => $total_staff_without_task,
