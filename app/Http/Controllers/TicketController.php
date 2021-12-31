@@ -218,4 +218,36 @@ class TicketController extends Controller
         if($response['success'] === false) return response()->json($response, $response['status']);
         return $response['data'];
     }
+
+    public function getTicketTaskTypes(Request $request)
+    {
+        $route_name = "TICKET_TASK_TYPES_GET";
+
+        $response = $this->ticketService->getTicketTaskTypes($request, $route_name);
+        return response()->json($response, $response['status']);   
+    }
+
+    public function addTicketTaskType(Request $request)
+    {
+        $route_name = "TICKET_TASK_TYPE_ADD";
+
+        $response = $this->ticketService->addTicketTaskType($request, $route_name);
+        return response()->json($response, $response['status']);   
+    }
+
+    public function updateTicketTaskType(Request $request)
+    {
+        $route_name = "TICKET_TASK_TYPE_UPDATE";
+
+        $response = $this->ticketService->updateTicketTaskType($request, $route_name);
+        return response()->json($response, $response['status']);   
+    }
+
+    public function deleteTicketTaskType(Request $request)
+    {
+        $route_name = "TICKET_TASK_TYPE_DELETE";
+
+        $response = $this->ticketService->deleteTicketTaskType($request, $route_name);
+        return response()->json($response, $response['status']);   
+    }
 }

@@ -229,6 +229,11 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/changeStatusTicket', 'TicketController@changeStatusTicket');
     $router->put('/cancelClientTicket', 'TicketController@cancelClientTicket');
     $router->put('/assignTicket', 'TicketController@assignTicket');
+    $router->get('/getTicketTaskTypes', 'TicketController@getTicketTaskTypes');
+    $router->post('/addTicketTaskType', 'TicketController@addTicketTaskType');
+    $router->put('/updateTicketTaskType', 'TicketController@updateTicketTaskType');
+    $router->delete('/deleteTicketTaskType', 'TicketController@deleteTicketTaskType');
+    
     
     //Task Routes
     // $router->get('/getAdminTaskData', 'TaskController@getAdminTaskData');

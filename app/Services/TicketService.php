@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Services;
+use PDF;
+use Excel;
 use App\User;
 use App\Group;
 use Exception;
@@ -9,16 +11,16 @@ use App\Incident;
 use App\Inventory;
 use App\TicketType;
 use App\TicketStatus;
+use App\TicketTaskType;
 use App\TicketActivityLog;
 use App\IncidentProductType;
 use App\Services\LogService;
 use Illuminate\Http\Request;
+use App\Exports\TicketsExport;
 use Illuminate\Support\Carbon;
 use App\Services\CompanyService;
+use Illuminate\Support\Facades\DB;
 use App\Services\CheckRouteService;
-use App\Exports\TicketsExport;
-use Excel;
-use PDF;
 
 class TicketService
 {
@@ -687,5 +689,98 @@ class TicketService
     public function clientTicketExport($request, $route_name)
     {
         return $this->TicketExportPdf($request, $route_name, false);
+    }
+
+    // Ticket Task Types
+    public function getTicketTaskTypes($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $rows = $request->get('rows', 10);
+            $keyword = $request->get('keyword', null);
+            $sort_by = $request->get('sort_by', null);
+            $sort_type = $request->get('sort_type', 'desc');
+            
+            if($rows > 100) $rows = 100;
+            if($rows < 1) $rows = 10;
+
+            $ticket_task_types = DB::table('ticket_task_types')
+            ->select('ticket_task_types.id', 'ticket_types.name as ticket_type_name', 'task_types.name as task_type_name', 'ticket_task_types.name', 'ticket_task_types.description')
+            ->join('ticket_types', 'ticket_task_types.ticket_type_id', '=', 'ticket_types.id')
+            ->join('task_types', 'ticket_task_types.task_type_id', '=', 'task_types.id');
+
+            if($sort_by){
+                if($sort_by === 'name') $ticket_task_types = $ticket_task_types->orderBy('name', $sort_type);
+                else if($sort_by === 'ticket_type_name') $ticket_task_types = $ticket_task_types->orderBy('ticket_type_name', $sort_type);
+                else if($sort_by === 'task_type_name') $ticket_task_types = $ticket_task_types->orderBy('task_type_name', $sort_type);
+                else if($sort_by === 'id') $ticket_task_types = $ticket_task_types->orderBy('id', $sort_type);
+                else if($sort_by === 'description') $ticket_task_types = $ticket_task_types->orderBy('description', $sort_type);
+            }
+            
+            if($keyword) $ticket_task_types = $ticket_task_types->where('ticket_task_types.name', 'ilike', "%".$keyword."%")->orWhere('task_types.name', 'ilike', "%".$keyword."%")->orWhere('ticket_types.name', 'ilike', "%".$keyword."%")->orWhere('ticket_task_types.description', 'ilike', "%".$keyword."%");
+            $ticket_task_types = $ticket_task_types->paginate($rows);
+            if($ticket_task_types->isEmpty()) return ["success" => true, "message" => "Ticket Task Type Masih Kosong", "data" => $ticket_task_types, "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $ticket_task_types, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addTicketTaskType($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $ticket_task_type = new TicketTaskType;
+        $ticket_task_type->name = $request->get('name');
+        $ticket_task_type->description = $request->get('description');
+        $ticket_task_type->task_type_id = $request->get('task_type_id');
+        $ticket_task_type->ticket_type_id = $request->get('ticket_type_id');
+        try{
+            $ticket_task_type->save();
+            return ["success" => true, "message" => "Ticket Task Type berhasil ditambahkan", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateTicketTaskType($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $ticket_task_type = TicketTaskType::find($id);
+        if($ticket_task_type === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        
+        $ticket_task_type->name = $request->get('name');
+        $ticket_task_type->description = $request->get('description');
+        $ticket_task_type->task_type_id = $request->get('task_type_id');
+        $ticket_task_type->ticket_type_id = $request->get('ticket_type_id');
+        try{
+            $ticket_task_type->save();
+            return ["success" => true, "message" => "Ticket Task Type berhasil diubah", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteTicketTaskType($request, $route_name)
+    {
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $ticket_task_type = TicketTaskType::find($id);
+        if($ticket_task_type === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        
+        try{
+            $ticket_task_type->delete();
+            return ["success" => true, "message" => "Ticket Task Type berhasil dihapus", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
     }
 }
