@@ -36,7 +36,7 @@ class TicketService
 
         $id = $request->get('id', 0);
         $tickets = Ticket::select('id', 'ticketable_id','ticketable_type')->with('type');
-        if($id) $tickets = $tickets->where('id', $id);
+        if($id) $tickets = $tickets->where('ticketable_id', $id);
         $tickets = $tickets->limit(50)->get();
         foreach($tickets as $ticket){
             $ticket->name = $ticket->type->code.'-'.sprintf('%03d', $ticket->ticketable_id);
