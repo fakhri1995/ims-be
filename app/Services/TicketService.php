@@ -39,7 +39,7 @@ class TicketService
         if($id) $tickets = $tickets->where('id', $id);
         $tickets = $tickets->limit(50)->get();
         foreach($tickets as $ticket){
-            $ticket->name = $ticket->type->code.'-'.sprintf('%03d', $ticket->id);
+            $ticket->name = $ticket->type->code.'-'.sprintf('%03d', $ticket->ticketable_id);
         }
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $tickets, "status" => 200];
     }

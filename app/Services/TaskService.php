@@ -590,6 +590,7 @@ class TaskService{
                     $inventory->connect_id = $inventory->pivot->connect_id;
                 }
             }
+            if($task->reference !== null) $task->reference->name = $task->reference->type->code.'-'.sprintf('%03d', $task->reference->ticketable_id);
             
             if($task->status === 4) $task->time_left = date_diff(date_create($task->deadline), date_create($task->on_hold_at)); 
             else $task->time_left = date_diff(date_create($task->deadline), date_create(date("Y-m-d H:i:s"))); 
