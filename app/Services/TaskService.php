@@ -701,9 +701,12 @@ class TaskService{
         
         $id = $request->get('id', null);
         $assign_ids = $request->get('assign_ids', []);
-        $task = Task::find($id);
+        $task = Task::with(['taskDetails','inventories' => function ($query) {
+            $query->wherePivot('is_from_task', true);
+        }])->find($id);
         if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-        
+        $old_inventory_ids = [];
+        if(count($task->inventories)) $old_inventory_ids = $task->inventories->pluck('id')->toArray();
         $is_group = $request->get('is_group', null);
         if($is_group === null) return ["success" => false, "message" => "Kolom Is Group Belum Diisi", "status" => 400];
         
@@ -737,12 +740,58 @@ class TaskService{
                 } else $task->users()->sync($assign_ids);
             }
 
-            if(count($inventory_ids)){
-                $attach_inventories = [];
-                foreach($inventory_ids as $inventory_id){
-                    $attach_inventories[$inventory_id] = ['is_from_task' => true];
+            $attach_inventories = [];
+            foreach($inventory_ids as $inventory_id){
+                $attach_inventories[$inventory_id] = ['is_from_task' => true];
+            }
+            $task->inventories()->sync($attach_inventories);
+
+            if(count($task->taskDetails)){
+                foreach($task->taskDetails as $task_detail){
+                    if($task_detail->component->type === 4){
+                        $for_news = array_values(array_diff($inventory_ids, $old_inventory_ids));
+                        $for_deletes = array_values(array_diff($old_inventory_ids, $inventory_ids));
+                        
+                        $rows = $task_detail->component->rows;
+                        $values = $task_detail->component->values;
+                        $for_delete_indexes = [];
+                        foreach($for_deletes as $for_delete){
+                            $inventory = Inventory::with('modelInventory')->find($for_delete);
+                            $search = array_search($inventory->modelInventory->name, $rows);
+                            if($search !== false){
+                                $for_delete_indexes[] = $search;
+                                unset($rows[$search]);
+                            } 
+                        } 
+                        $rows = array_values($rows);
+                        if(count($for_delete_indexes)){
+                            foreach($for_delete_indexes as $for_delete_index){
+                                foreach ($values as &$value){
+                                    unset($value[$for_delete_index]);
+                                }
+                            } 
+                            foreach ($values as &$value) $value = array_values($value);
+                        }
+                        if(count($for_news)){
+                            foreach($for_news as $for_new){
+                                $inventory = Inventory::with('modelInventory')->find($for_new);
+                                $rows[] = $inventory->modelInventory->name;
+                                foreach($values as &$value) $value[] = false;
+                            }
+                        }
+                        $component = (object)[
+                            "name" => $task_detail->component->name,
+                            "description" => $task_detail->component->description,
+                            "type" => $task_detail->component->type,
+                            "rows" => $rows,
+                            "columns" => $task_detail->component->columns,
+                            "is_general" => $task_detail->component->is_general,
+                            "values" => $values,
+                        ];
+                        $task_detail->component = $component;
+                        $task_detail->save();
+                    }
                 }
-                $task->inventories()->sync($attach_inventories);
             }
             return ["success" => true, "message" => "Task Berhasil Diperbarui", "status" => 200];
         } catch(Exception $err){
