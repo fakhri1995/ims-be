@@ -748,7 +748,7 @@ class TaskService{
 
             if(count($task->taskDetails)){
                 foreach($task->taskDetails as $task_detail){
-                    if($task_detail->component->type === 4){
+                    if($task_detail->component->type === 4 && !$task_detail->component->is_general){
                         $for_news = array_values(array_diff($inventory_ids, $old_inventory_ids));
                         $for_deletes = array_values(array_diff($old_inventory_ids, $inventory_ids));
                         
