@@ -734,10 +734,18 @@ class TaskService{
             $task->repeat = $request->get('repeat', 0);
             $task->save();
             
-            if(count($assign_ids)){
+            $assign_id_count = count($assign_ids);
+            if($assign_id_count){
                 if($is_group){
                     if($old_group !== $task->group_id) $task->users()->sync($group->users->pluck('id'));
-                } else $task->users()->sync($assign_ids);
+                } else {
+                    $task->users()->sync($assign_ids);
+                    if($assign_id_count === 1){
+                        foreach($task->taskDetails as $taskDetail){
+                            $taskDetail->users()->sync($assign_ids);
+                        }
+                    }
+                } 
             }
 
             $attach_inventories = [];
