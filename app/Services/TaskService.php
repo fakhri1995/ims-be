@@ -375,16 +375,22 @@ class TaskService{
             $task_type = $request->get('task_type', -1);
             $from = $request->get('from', null);
             $to = $request->get('to', null);
+            $assigned_only = $request->get('assigned_only', null);
 
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
             
             $task_ids = DB::table('task_user')->where('user_id', $login_id)->pluck('task_id');
-            $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role', 'users'])
-            ->where(function ($query) use($login_id, $task_ids){
-                $query->where('created_by', $login_id)
-                ->orWhereIn('id', $task_ids);
-            });
+            $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role', 'users']);
+            if($assigned_only){
+                $tasks = $tasks->whereIn('id', $task_ids);
+            } else {
+                $tasks = $tasks->where(function ($query) use($login_id, $task_ids){
+                    $query->where('created_by', $login_id)
+                    ->orWhereIn('id', $task_ids);
+                });
+            }
+            
 
 
             if($location > 0){
