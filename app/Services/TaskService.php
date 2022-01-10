@@ -862,30 +862,44 @@ class TaskService{
         $notes = $request->get('notes', null);
         $task = Task::with('users')->find($id);
         if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
+        if($task->deadline === null) return ["success" => false, "message" => "Deadline Task Masih Kosong, Deadline Harus Ditentukan Terlebih Dahulu", "status" => 400];
         try{
-            if($task->status < 4){
-                $task->status = 4;
-                $task->on_hold_at = date('Y-m-d H:i:s');
-            } 
-            else if($task->status === 4){
-                $new_deadline_times = strtotime($task->deadline) + strtotime(date('Y-m-d H:i:s')) - strtotime($task->on_hold_at);
-                $task->deadline = date("Y-m-d H:i:s", $new_deadline_times);
-                if($task->deadline < date("Y-m-d H:i:s")) $task->status = 1;
-                else {
-                    $check_in = false;
-                    foreach($task->users as $user){
-                        if($user->check_in !== null){
-                            $check_in = true;
-                            break;
+            $login_id = auth()->user()->id;
+            $search = $task->users->search(function ($item) use ($login_id) {
+                return $item->id === $login_id;
+            });
+
+            if($search !== false){
+                $old_status = $task->status;
+                if($task->status < 4){
+                    $task->status = 4;
+                    $task->on_hold_at = date('Y-m-d H:i:s');
+                } 
+                else if($task->status === 4){
+                    $new_deadline_times = strtotime($task->deadline) + strtotime(date('Y-m-d H:i:s')) - strtotime($task->on_hold_at);
+                    $task->deadline = date("Y-m-d H:i:s", $new_deadline_times);
+                    if($task->deadline < date("Y-m-d H:i:s")) $task->status = 1;
+                    else {
+                        $check_in = false;
+                        foreach($task->users as $user){
+                            if($user->check_in !== null){
+                                $check_in = true;
+                                break;
+                            }
                         }
+                        if($check_in) $task->status = 3;
+                        else $task->status = 2;
                     }
-                    if($check_in) $task->status = 3;
-                    else $task->status = 2;
                 }
-            }
-            $task->notes = $notes;
-            $task->save();
-            return ["success" => true, "message" => "Berhasil Merubah Status Task", "status" => 200];
+                $task->notes = $notes;
+                $task->save();
+
+                if($task->is_from_ticket){
+                    $logService = new LogService;
+                    $logService->updateStatusLogTicket($task->reference_id, $login_id, $old_status, $task->status, $notes);
+                }
+                return ["success" => true, "message" => "Berhasil Merubah Status Task", "status" => 200];
+            } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Task Ini.", "status" => 400];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -911,6 +925,10 @@ class TaskService{
                     if($task->status === 2){
                         $task->status = 3;
                         $task->save();
+                        if($task->is_from_ticket){
+                            $logService = new LogService;
+                            $logService->updateStatusLogTicket($task->reference_id, $login_id, 2, 3);
+                        }
                     }
                     return ["success" => true, "message" => "Berhasil Melakukan Check In", "status" => 200];
                 } 
@@ -965,6 +983,9 @@ class TaskService{
                             $task->reference->resolved_times = strtotime($current_timestamp) - strtotime($task->created_at);
                             $task->reference->save();
                             $task->status = 6;
+
+                            $logService = new LogService;
+                            $logService->updateStatusLogTicket($task->reference_id, $login_id, 3, 6);
                         } else $task->status = 5;
                         $task->save();
                     }
@@ -1184,6 +1205,7 @@ class TaskService{
                             else $this->removeInventoryPart($inventory_task->pivot->inventory_id, $user->id, $user->company_id);
                         }
                     }
+                    $task->notes = null;
                     $task->save();
                 } 
                 return ["success" => true, "message" => "Berhasil Melakukan Persetujuan Pada Task", "status" => 200];

@@ -767,6 +767,8 @@ class TicketService
             $company_user_login_id = auth()->user()->company_id;
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
             if(!$admin && $ticket->task->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Tidak Memiliki Akses Tiket Ini", "status" => 401];
+            if($ticket->task->status === 7) return ["success" => false, "message" => "Ticket Sudah Dicancel", "status" => 400];
+            $old_status = $ticket->task->status;
             $ticket->task->status = 7;
             $ticket->task->save();
             $ticket->task->delete();
@@ -775,7 +777,7 @@ class TicketService
 
             $causer_id = auth()->user()->id;
             $logService = new LogService;
-            $logService->updateStatusLogTicket($ticket->id, $causer_id, 7, $notes);
+            $logService->updateStatusLogTicket($ticket->id, $causer_id, $old_status, 7, $notes);
             
             return ["success" => true, "message" => "Cancel Tiket Berhasil", "status" => 200];
         } catch(Exception $err){

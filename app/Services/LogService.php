@@ -248,6 +248,8 @@ class LogService
 
         $special_logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', 'Note Khusus')->orderBy('created_at','desc')->get();
         $logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', '<>', 'Note Khusus')->orderBy('created_at','desc')->get();
+        $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
+        $normal_logs = [];
         foreach($logs as $log){
             if($log->description === 'Set Association Item'){
                 $old_exist = false;
@@ -258,10 +260,15 @@ class LogService
                 if(isset($properties->old->inventory))$old_exist = true;
                 if($old_exist) $log->log_name = "Pengubahan Association menjadi $name";
                 else $log->log_name = "Penambahan Association $name";
+            } else if($log->description === 'Perubahan Status'){
+                $properties = json_decode($log->log_name, false);
+                $new_status = $statuses[$properties->new_status];
+                $log->log_name = "Perubahan status menjadi $new_status";
             }
+            $normal_logs[] = $log;
         }
         $data = (object)[
-            "normal_logs" => $logs,
+            "normal_logs" => $normal_logs,
             "special_logs" => $special_logs
         ];
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
@@ -279,6 +286,8 @@ class LogService
         if($ticket->task->creator->company_id !== $user_company_id) return ["success" => false, "message" => "Tidak Memiliki Access untuk Ticket Ini", "status" => 401];
         $special_logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', 'Note Khusus')->orderBy('created_at','desc')->get();
         $logs = ActivityLogTicket::where('subject_id', $id)->orderBy('created_at','desc')->get();
+        $statuses = ['-','Dalam Proses', 'Menunggu Staff', 'Dalam Proses', 'Dalam Proses', 'Completed', 'Selesai', 'Dibatalkan'];
+        $normal_logs = [];
         foreach($logs as $log){
             if($log->description === 'Set Association Item'){
                 $old_exist = false;
@@ -289,10 +298,18 @@ class LogService
                 if(isset($properties->old->inventory))$old_exist = true;
                 if($old_exist) $log->log_name = "Pengubahan Association menjadi $name";
                 else $log->log_name = "Penambahan Association $name";
+            } else if($log->description === 'Perubahan Status'){
+                $properties = json_decode($log->log_name, false);
+                if(in_array($properties->new_status, [1,4,5]) || $properties->old_status === 4) continue; 
+                $new_status = $statuses[$properties->new_status];
+                $log->log_name = "Perubahan status menjadi $new_status";
+                $log->description = $properties->notes;
             }
+            $normal_logs[] = $log;
         }
+
         $data = (object)[
-            "normal_logs" => $logs,
+            "normal_logs" => $normal_logs,
             "special_logs" => $special_logs
         ];
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
@@ -566,13 +583,19 @@ class LogService
         $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at);
     }
 
-    public function updateStatusLogTicket($subject_id, $causer_id, $type, $notes = null)
+    public function updateStatusLogTicket($subject_id, $causer_id, $old_status, $new_status, $notes = null)
     {
-        $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
-        if($type < 1 || $type > 7) $type_detail = "Status Tidak Ditemukan";
-        else $type_detail = $statuses[$type];
-        $log_name = "Status Berubah Menjadi $type_detail";
+        // $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
+        // if($type < 1 || $type > 7) $type_detail = "Status Tidak Ditemukan";
+        // else $type_detail = $statuses[$type];
+        // $log_name = "Status Berubah Menjadi $type_detail";
+        // $created_at = date("Y-m-d H:i:s");
+        // $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, $notes);
+        $log_notes = $notes ?? "Perubahan Status";
+        $properties = ['old_status' => $old_status, 'new_status' => $new_status, "notes" => $log_notes];
         $created_at = date("Y-m-d H:i:s");
+        $log_name = json_encode($properties);
+        $notes = "Perubahan Status";
         $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, $notes);
     }
 
