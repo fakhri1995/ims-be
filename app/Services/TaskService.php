@@ -666,6 +666,7 @@ class TaskService{
             $task->repeat = $request->get('repeat', 0);
             $task->is_from_ticket = false;
             $task->files = [];
+            $task->is_visible = true;
             $task->status = 2;
             
             
@@ -959,6 +960,10 @@ class TaskService{
                                     else $this->removeInventoryPart($inventory_task->pivot->inventory_id, $user->id, $user->company_id);
                                 }
                             }
+                            $current_timestamp = date("Y-m-d H:i:s");
+                            $task->reference->closed_at = $current_timestamp;
+                            $task->reference->resolved_times = strtotime($current_timestamp) - strtotime($task->created_at);
+                            $task->reference->save();
                             $task->status = 6;
                         } else $task->status = 5;
                         $task->save();

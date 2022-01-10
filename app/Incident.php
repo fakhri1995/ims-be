@@ -13,20 +13,25 @@ class Incident extends Model
     protected $casts = [
         'files' => 'array'
     ];
-    protected $with = ['location', 'productType'];
+    protected $with = ['location', 'assetType', 'inventory'];
 
     public function location()
     {
         return $this->belongsTo(Company::class, 'location_id')->withDefault([
             'id' => 0,
-            'name' => 'Perusahaan Tidak Ditemukan'
-        ])->select('id', 'name', 'top_parent_id')->with('topParent');
+            'name' => '-'
+        ])->select('id','name','parent_id','top_parent_id','role')->with('topParent')->withTrashed();
     }
 
-    public function productType()
+    public function assetType()
     {
-        return $this->belongsTo(IncidentProductType::class, 'product_type');
+        return $this->belongsTo(TicketTaskType::class, 'product_type')->withTrashed();
     }
+    
+    // public function productType()
+    // {
+    //     return $this->belongsTo(IncidentProductType::class, 'product_type');
+    // }
 
     public function ticket()
     {
@@ -35,6 +40,6 @@ class Incident extends Model
 
     public function inventory()
     {
-        return $this->belongsTo(Inventory::class)->with(['statusCondition', 'statusUsage', 'locationInventory', 'modelInventory.asset', 'additionalAttributes']);
+        return $this->belongsTo(Inventory::class)->with(['statusCondition', 'statusUsage', 'modelInventory.asset', 'additionalAttributes']);
     }
 }

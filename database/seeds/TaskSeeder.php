@@ -41,6 +41,7 @@ class TaskSeeder extends Seeder
             $task->is_replaceable = random_int(0, 1);
             $task->is_uploadable = random_int(0, 1);
             $task->is_from_ticket = false;
+            $task->is_visible = true;
             $task->files = [];
             $task->save();
             if($task->is_replaceable){

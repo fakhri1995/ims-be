@@ -73,15 +73,15 @@
                 <div class="box" style="margin-bottom: 1rem;">
                     <div class="diajukanOleh" style=" margin-bottom: 1rem;">
                         <h2>Diajukan Oleh</h2>
-                        <p>{{ $ticket->requester->name }}</p>
+                        <p>{{ $ticket->task->creator->name }}</p>
                     </div>
                     <div class="lokasi" style=" margin-bottom: 1rem;">
                         <h2>Lokasi</h2>
-                        <p style="text-transform: capitalize;">{{ $ticket->requester->company->name ?? '-'}}</p>
+                        <p style="text-transform: capitalize;">{{ $ticket->task->creator->company->name ?? '-'}}</p>
                     </div>
                     <div class="waktuKejadian" style=" margin-bottom: 1rem;">
                         <h2>Waktu Pengajuan</h2>
-                        <p style=" margin-bottom: 2rem;">{{ $ticket->original_raised_at }}</p>
+                        <p style=" margin-bottom: 2rem;">{{ $ticket->raised_at }}</p>
                     </div>
                 </div>
             </div>
@@ -93,14 +93,14 @@
                     </div>
                     <div style=" margin-bottom: 3rem;">
                         <h2 style="font-size: 18px;">Nomor Tiket</h2>
-                        <h1>{{ '#'. $ticket->type->code .'-'. $ticket->ticketable->id }}</h1>
+                        <h1>{{ '#'. $ticket->type->code .'-'. $ticket->ticketable_id }}</h1>
                     </div>
                     <div>
                         <h2 style="font-size: 18px;">Status</h2>
-                        @if($ticket->status->id === 4) <h1 style="color: red; margin-bottom: 3rem;">
+                        @if($ticket->task->status === 1) <h1 style="color: red; margin-bottom: 3rem;">
                         @else <h1 style="margin-bottom: 3rem;">
                         @endif
-                        {{ $ticket->status->name }}</h1>
+                        {{ $ticket->status }}</h1>
                     </div>
                 </div>
                 
@@ -109,11 +109,11 @@
                 <div class="box" style="">
                     <div class="tipeAset" style=" margin-bottom: 1rem;">
                         <h2>Tipe Aset</h2>
-                        <p>{{ $ticket->ticketable->productType->name }}</p>
+                        <p>{{ $ticket->ticketable->assetType->name }}</p>
                     </div>
                     <div class="lokasi" style=" margin-bottom: 1rem;">
                         <h2>Lokasi</h2>
-                        <p>{{ $ticket->ticketable->location->full_name }}</p>
+                        <p>{{ $ticket->task->location->full_location }}</p>
                     </div>
                     <div class="waktuKejadian" style=" margin-bottom: 1rem;">
                         <h2>Waktu Kejadian</h2>

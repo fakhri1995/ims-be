@@ -234,15 +234,22 @@ class LogService
 
     // Get Ticket Log
 
+    public function getTicketNotesLog($id)
+    {
+        $logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', 'Note Khusus')->orderBy('created_at','desc')->get();
+        return $logs;
+    }
+    
     public function getTicketLog($id, $route_name)
     {
         $checkRouteService = new CheckRouteService;
         $access = $checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $logs = ActivityLogTicket::where('subject_id', $id)->orderBy('created_at','desc')->get();
+        $special_logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', 'Note Khusus')->orderBy('created_at','desc')->get();
+        $logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', '<>', 'Note Khusus')->orderBy('created_at','desc')->get();
         foreach($logs as $log){
-            if($log->description === 'SeT IteM'){
+            if($log->description === 'Set Association Item'){
                 $old_exist = false;
                 $properties = json_decode($log->log_name, false);
                 $inventory = Inventory::with('modelInventory:id,name')->find($properties->attributes->inventory);
@@ -253,7 +260,11 @@ class LogService
                 else $log->log_name = "Penambahan Association $name";
             }
         }
-        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $logs, "status" => 200];
+        $data = (object)[
+            "normal_logs" => $logs,
+            "special_logs" => $special_logs
+        ];
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
     }
     
     public function getClientTicketLog($id, $route_name)
@@ -262,13 +273,14 @@ class LogService
         $access = $checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $ticket = Ticket::with('requester.company')->find($id);
+        $ticket = Ticket::with('task.creator')->find($id);
         if($ticket === null) return ["success" => false, "message" => "Ticket Tidak Ditemukan", "status" => 400];
         $user_company_id = auth()->user()->company_id;
-        if($ticket->requester->company_id !== $user_company_id) return ["success" => false, "message" => "Tidak Memiliki Access untuk Ticket Ini", "status" => 401];
+        if($ticket->task->creator->company_id !== $user_company_id) return ["success" => false, "message" => "Tidak Memiliki Access untuk Ticket Ini", "status" => 401];
+        $special_logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', 'Note Khusus')->orderBy('created_at','desc')->get();
         $logs = ActivityLogTicket::where('subject_id', $id)->orderBy('created_at','desc')->get();
         foreach($logs as $log){
-            if($log->description === 'SeT IteM'){
+            if($log->description === 'Set Association Item'){
                 $old_exist = false;
                 $properties = json_decode($log->log_name, false);
                 $inventory = Inventory::with('modelInventory:id,name')->find($properties->attributes->inventory);
@@ -279,7 +291,11 @@ class LogService
                 else $log->log_name = "Penambahan Association $name";
             }
         }
-        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $logs, "status" => 200];
+        $data = (object)[
+            "normal_logs" => $logs,
+            "special_logs" => $special_logs
+        ];
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
     }
 
     public function getCloseTicketLog($id, $route_name){
@@ -522,6 +538,13 @@ class LogService
         $log->created_at = $incident_time;
         $log->save();
     }
+    
+    public function updateRaisedAtLogTicket($subject_id, $created_at)
+    {
+        $log = ActivityLogTicket::where('subject_id', $subject_id)->where('log_name','Raised Ticket')->first();
+        $log->created_at = $created_at;
+        $log->save();
+    }
 
     public function createLogTicketIncident($subject_id, $causer_id, $created_at)
     {
@@ -545,9 +568,9 @@ class LogService
 
     public function updateStatusLogTicket($subject_id, $causer_id, $type, $notes = null)
     {
-        $type_status = TicketStatus::find($type);
-        if(!$type_status) $type_detail = "Status Tidak Ditemukan";
-        else $type_detail = $type_status->name;
+        $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
+        if($type < 1 || $type > 7) $type_detail = "Status Tidak Ditemukan";
+        else $type_detail = $statuses[$type];
         $log_name = "Status Berubah Menjadi $type_detail";
         $created_at = date("Y-m-d H:i:s");
         $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, $notes);
@@ -570,6 +593,13 @@ class LogService
         $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at);
     }
 
+    public function setDeadlineLogTicket($subject_id, $causer_id)
+    {
+        $log_name = "Set Deadline";
+        $created_at = date("Y-m-d H:i:s");
+        $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at);
+    }
+
     public function addNoteLogTicket($subject_id, $causer_id, $notes)
     {
         $log_name = "Note Khusus";
@@ -583,7 +613,7 @@ class LogService
         $properties['attributes'] = ['inventory' => $inventory_id];
         $created_at = date("Y-m-d H:i:s");
         $log_name = json_encode($properties);
-        $notes = "SeT IteM";
+        $notes = "Set Association Item";
         $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, $notes);
     }
 

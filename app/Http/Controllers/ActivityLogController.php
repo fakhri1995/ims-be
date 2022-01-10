@@ -31,6 +31,13 @@ class ActivityLogController extends Controller
 
     // Ticket
 
+    public function getTicketNotesLog(Request $request){
+        $route_name = "TICKET_NOTES_LOG_GET";   
+        
+        $response = $this->logService->getTicketNotesLog($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getTicketLog(Request $request){
         $route_name = "TICKET_LOG_GET";   
         $id = $request->get('id', null);
