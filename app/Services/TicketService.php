@@ -278,6 +278,8 @@ class TicketService
             $type_id = $request->get('type_id', null);
             $from = $request->get('from', null);
             $to = $request->get('to', null);
+            $sort_by = $request->get('sort_by', null);
+            $sort_type = $request->get('sort_type', 'desc');
             
             $rows = $request->get('rows', 10);
             if($rows < 0) $rows = 10;
@@ -332,6 +334,12 @@ class TicketService
                 //     }
                 // );
             }
+            if($sort_by){
+                if($sort_by === 'id') $tickets = $tickets->orderBy('ticketable_id', $sort_type);
+                else if($sort_by === 'type') $tickets = $tickets->orderBy('type_name', $sort_type);
+                else if($sort_by === 'raised_at') $tickets = $tickets->orderBy('tasks.created_at', $sort_type);
+                else if($sort_by === 'status') $tickets = $tickets->orderBy('status', $sort_type);
+            }
             $tickets = $tickets->paginate($rows);
 
             foreach($tickets as $ticket){
@@ -373,6 +381,8 @@ class TicketService
             $to = $request->get('to', null);
             $from_res = $request->get('from_res', null);
             $to_res = $request->get('to_res', null);
+            $sort_by = $request->get('sort_by', null);
+            $sort_type = $request->get('sort_type', 'desc');
             
             $rows = $request->get('rows', 10);
             if($rows < 0) $rows = 10;
@@ -414,6 +424,12 @@ class TicketService
                 $companyService = new CompanyService;
                 $company_list = $companyService->checkSubCompanyList($company)->toArray();
                 $tickets = $tickets->whereIn('location_id', $company_list);
+            }
+            if($sort_by){
+                if($sort_by === 'id') $tickets = $tickets->orderBy('ticketable_id', $sort_type);
+                else if($sort_by === 'type') $tickets = $tickets->orderBy('type_name', $sort_type);
+                else if($sort_by === 'raised_at') $tickets = $tickets->orderBy('tasks.created_at', $sort_type);
+                else if($sort_by === 'resolved_times') $tickets = $tickets->orderBy('resolved_times', $sort_type);
             }
             $tickets = $tickets->paginate($rows);
 
