@@ -1644,7 +1644,7 @@ class TaskService{
                         if(!isset($list['type'])) return ["success" => false, "message" => "Pekerjaan Dengan List $index_number Belum Memiliki Tipe", "status" => 400];
                         if(!isset($list['description'])) return ["success" => false, "message" => "Pekerjaan Dengan List $index_number Belum Memiliki Keterangan", "status" => 400];
                     }
-                    foreach($lists as $list){
+                    foreach($lists as &$list){
                         $list['values'] = "-";
                     }
                     $component = (object)["name" => $work['name'], "description" => $work['description'] ?? null, "type" => $work['type'], "lists" => $lists];
