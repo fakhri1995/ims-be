@@ -487,13 +487,16 @@ class TicketService
                 if(count($ticket->task->users)){
                     $ticket->assignment_type = "Engineer";
                     $ticket->assignment_operator = $ticket->task->users[0]->name;
+                    $ticket->assignment_profile_image = $ticket->task->users[0]->profile_image;
                 } else {
                     $ticket->assignment_type = "-";
                     $ticket->assignment_operator = "-";
+                    $ticket->assignment_profile_image = "-";
                 }
             } else {
                 $ticket->assignment_type = "Group";
                 $ticket->assignment_operator = $ticket->task->group->name;
+                $ticket->assignment_profile_image = "-";
             }
             
             if($admin){
