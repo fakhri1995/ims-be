@@ -307,7 +307,7 @@ class TicketService
                 $tickets = $tickets->where('ticketable_id', $ticket_id);
             }
             if($type_id){
-                $tickets = $tickets->where('type_id', $type_id);
+                $tickets = $tickets->where('ticket_types.id', $type_id);
             }
             if($status_id){
                 if(!$admin){
@@ -318,7 +318,7 @@ class TicketService
                 }
             }
             if($from && $to){
-                $tickets = $tickets->whereBetween('created_at', [$from, $to]);
+                $tickets = $tickets->whereBetween('tasks.created_at', [$from, $to]);
             }
             if($location_id){
                 $company = Company::withTrashed()->find($location_id);
@@ -336,7 +336,7 @@ class TicketService
             }
             if($sort_by){
                 if($sort_by === 'id') $tickets = $tickets->orderBy('ticketable_id', $sort_type);
-                else if($sort_by === 'type') $tickets = $tickets->orderBy('type_name', $sort_type);
+                else if($sort_by === 'type') $tickets = $tickets->orderBy('ticket_types.name', $sort_type);
                 else if($sort_by === 'raised_at') $tickets = $tickets->orderBy('tasks.created_at', $sort_type);
                 else if($sort_by === 'status') $tickets = $tickets->orderBy('status', $sort_type);
             }
@@ -407,7 +407,7 @@ class TicketService
                 $tickets = $tickets->where('ticketable_id', $ticket_id);
             }
             if($type_id){
-                $tickets = $tickets->where('type_id', $type_id);
+                $tickets = $tickets->where('ticket_types.id', $type_id);
             }
             if($from_res){
                 $tickets = $tickets->where('resolved_times', '>', $from_res);
@@ -416,7 +416,7 @@ class TicketService
                 $tickets = $tickets->where('resolved_times', '<', $to_res);
             }
             if($from && $to){
-                $tickets = $tickets->whereBetween('created_at', [$from, $to]);
+                $tickets = $tickets->whereBetween('tasks.created_at', [$from, $to]);
             }
             if($location_id){
                 $company = Company::withTrashed()->find($location_id);
@@ -427,7 +427,7 @@ class TicketService
             }
             if($sort_by){
                 if($sort_by === 'id') $tickets = $tickets->orderBy('ticketable_id', $sort_type);
-                else if($sort_by === 'type') $tickets = $tickets->orderBy('type_name', $sort_type);
+                else if($sort_by === 'type') $tickets = $tickets->orderBy('ticket_types.name', $sort_type);
                 else if($sort_by === 'raised_at') $tickets = $tickets->orderBy('tasks.created_at', $sort_type);
                 else if($sort_by === 'resolved_times') $tickets = $tickets->orderBy('resolved_times', $sort_type);
             }
