@@ -476,7 +476,8 @@ class TicketService
             $company_user_login_id = auth()->user()->company_id;
             if(!$admin && $ticket->task->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Tidak Memiliki Akses Tiket Ini", "status" => 401];
             $ticket->name = $ticket->type->code.'-'.$ticket->ticketable_id;
-            $ticket->creator = $ticket->task->creator->name;
+            $ticket->creator_id = $ticket->task->creator->id;
+            $ticket->creator_name = $ticket->task->creator->name;
             $ticket->creator_location = $ticket->task->creator->company->fullName();
             $ticket->raised_at = date("d F Y", strtotime($ticket->task->created_at));
             $ticket->resolved_times = $this->diffForHuman($ticket->resolved_times);
@@ -486,21 +487,24 @@ class TicketService
             if($ticket->task->group_id === null){
                 if(count($ticket->task->users)){
                     $ticket->assignment_type = "Engineer";
-                    $ticket->assignment_operator = $ticket->task->users[0]->name;
+                    $ticket->assignment_operator_id = $ticket->task->users[0]->id;
+                    $ticket->assignment_operator_name = $ticket->task->users[0]->name;
                     $ticket->assignment_profile_image = $ticket->task->users[0]->profile_image;
                 } else {
                     $ticket->assignment_type = "-";
-                    $ticket->assignment_operator = "-";
+                    $ticket->assignment_operator_id = 0;
+                    $ticket->assignment_operator_name = "-";
                     $ticket->assignment_profile_image = "-";
                 }
             } else {
                 $ticket->assignment_type = "Group";
-                $ticket->assignment_operator = $ticket->task->group->name;
+                $ticket->assignment_operator_id = $ticket->task->group->id;
+                $ticket->assignment_operator_name = $ticket->task->group->name;
                 $ticket->assignment_profile_image = "-";
             }
             
             if($admin){
-                $ticket->deadline = $ticket->task->deadline ? date("d F Y", strtotime($ticket->task->deadline)) : "-";
+                $ticket->deadline = $ticket->task->deadline ? date("d M Y, H:i", strtotime($ticket->task->deadline)) : "-";
                 $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
             } else {
                 $ticket->deadline = $this->approximate_deadline($ticket->task->deadline);

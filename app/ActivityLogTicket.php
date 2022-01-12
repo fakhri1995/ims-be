@@ -14,7 +14,8 @@ class ActivityLogTicket extends Model
     {
         return $this->belongsTo(User::class, 'causer_id')->withDefault([
             'id' => 0,
-            'name' => 'User Tidak Ditemukan'
-        ])->select('id', 'name');
+            'name' => 'User Tidak Ditemukan',
+            'profile_image' => 'User Tidak Ditemukan'
+        ])->select('id', 'name', 'profile_image');
     }
 }
