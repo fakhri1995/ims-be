@@ -17,7 +17,7 @@ class DefaultSeeder extends Seeder
      * @return void
      */
 
-    public function addDefaultUsers()
+    private function addDefaultUsers()
     {
         $positions = ['Permanent Employee', 'Contract Employee', 'Freelancer', 'Part-time Employee', 'Contingent Employee', 'Temporary Employee'];
         $super_admin_role = Role::where('name', 'Super Admin')->firstOrCreate([
@@ -96,7 +96,7 @@ class DefaultSeeder extends Seeder
         }
     }
 
-    public function addCompany($name, $role, $parent_id, $top_parent_id)
+    private function addCompany($name, $role, $parent_id, $top_parent_id)
     {
         $company = new Company;
         $company->name = $name;
@@ -107,7 +107,8 @@ class DefaultSeeder extends Seeder
         $company->image_logo = "-";
         $company->role = $role;
         $company->created_time = "2021-02-09 19:37:19";
-        $company->is_enabled = true;
+        if($role === 4) $company->is_enabled = false;
+        else $company->is_enabled = true;
         
         $company->singkatan = "-";
         $company->tanggal_pkp = "2021-05-03";
@@ -120,7 +121,7 @@ class DefaultSeeder extends Seeder
         return $company->id;
     }
 
-    public function addTreeCompanies($data, $role, $highest_parent_id, $top_parent_id){
+    private function addTreeCompanies($data, $role, $highest_parent_id, $top_parent_id){
         $parent_id = $this->addCompany($data['name'], 3, $highest_parent_id, $top_parent_id);
         if(isset($data['children'])){
             foreach($data['children'] as $child){
@@ -129,23 +130,20 @@ class DefaultSeeder extends Seeder
         }
     }
 
-    public function addDefaultClients($highest_parent_id)
+    private function addDefaultClients($highest_parent_id)
     {
-        for($i = 1; $i < 4; $i++){
-            $code = "Infosys Client $i";
-            $parent_id = $this->addCompany($code, 2, $highest_parent_id, null);
-            for($j = 1; $j < 4; $j++){
-                $code_a = "$code.$j";
-                $parent_id_a = $this->addCompany($code_a, 2, $parent_id, $parent_id);
-                for($k = 1; $k < 4; $k++){
-                    $code_b = "$code_a.$k";
-                    $parent_id_b = $this->addCompany($code_b, 2, $parent_id_a, $parent_id);
+        $datas = $this->defaultDataClients();
+        foreach($datas as $data){
+            $parent_id = $this->addCompany($data['name'], 2, $highest_parent_id, null);
+            if(isset($data['children'])){
+                foreach($data['children'] as $child){
+                    $this->addTreeCompanies($child, 2, $parent_id, $parent_id);
                 }
             }
         }
     }
 
-    public function addDefaultBranchs($highest_parent_id)
+    private function addDefaultBranchs($highest_parent_id)
     {
         $datas = $this->defaultDataBranchs();
         foreach($datas as $data){
@@ -158,12 +156,23 @@ class DefaultSeeder extends Seeder
         }
     }
 
+    private function addDefaultSubLocations()
+    {
+        $company_ids = [17, 77, 135];
+        $companies = Company::find($company_ids);
+        foreach($companies as $company){
+            $parent_id = $this->addCompany("Sub ".$company->name, 4, $company->id, $company->id);
+            for($i = 1; $i < 4; $i++) $this->addCompany("Sub Sub ".$company->name, 4, $parent_id, $company->id);
+        }
+    }
+
     public function addDefaultCompanies()
     {
         $name = "Mitramas Infosys Global";
         $parent_id = $this->addCompany($name, 1, null, null);
         $this->addDefaultBranchs($parent_id);
         $this->addDefaultClients($parent_id);
+        $this->addDefaultSubLocations();
     }
 
     private function addDefaultGroup()
@@ -179,8 +188,8 @@ class DefaultSeeder extends Seeder
 
     public function run()
     {
-        $this->addDefaultUsers();
-        // $this->addDefaultCompanies();
+        // $this->addDefaultUsers();
+        $this->addDefaultCompanies();
         // $this->addDefaultGroup();
     }
 
@@ -227,6 +236,214 @@ class DefaultSeeder extends Seeder
         return $data;
     }
 
+    public function defaultDataClients()
+    {
+        $data = [
+            [
+                'name' => 'BANK BUKOPIN',
+                'children' => [
+                    [
+                        'name' => 'PUSAT',
+                        'children' => [
+                            [
+                                'name' => 'HUB I',
+                                'children' => [
+                                    [
+                                        'name' => 'SAHARJO',
+                                        'children' => [
+                                            ['name' => 'KCP TEBET'],
+                                            ['name' => 'KCP BAKRIE TOWER'],
+                                            ['name' => 'KOTA KASABLANKA'],
+                                            ['name' => 'MENARA KARYA']
+                                        ],
+                                    ]
+                                ],
+                            ],
+                            [
+                                'name' => 'HUB II',
+                                'children' => [
+                                    [
+                                        'name' => 'S PARMAN',
+                                        'children' => [
+                                            ['name' => 'KCP TANAH ABANG'],
+                                            ['name' => 'KK UNIV ESA UNGGUL'],
+                                            ['name' => 'KCP S PARMAN']
+                                        ],
+                                    ]
+                                ],
+                            ],
+                            [
+                                'name' => 'HUB III',
+                                'children' => [
+                                    [
+                                        'name' => 'SENTRAYA',
+                                        'children' => [
+                                            ['name' => 'KCP MAMPANG'],
+                                            ['name' => 'KK PLN PUSAT'],
+                                            ['name' => 'KCP KEMANG']
+                                        ],
+                                    ]
+                                ],
+                            ],
+                        ]
+                    ],
+                    [
+                        'name' => 'DAERAH',
+                        'children' => [
+                            [
+                                'name' => 'SURABAYA',
+                                'children' => [
+                                    [
+                                        'name' => 'SURABAYA',
+                                        'children' => [
+                                            ['name' => 'INDOMARET SIMOTAMBAAN'],
+                                            ['name' => 'INDOMARET RAYA DUPAK'],
+                                            ['name' => 'KCP PERAK BARAT']
+                                        ],
+                                    ],
+                                    [
+                                        'name' => 'KEDIRI',
+                                        'children' => [
+                                            ['name' => 'KCU KEDIRI'],
+                                            ['name' => 'KCP NGANJUK'],
+                                            ['name' => 'KCP BLITAR']
+                                        ],
+                                    ],
+                                    [
+                                        'name' => 'MADIUN',
+                                        'children' => [
+                                            ['name' => 'KCU MADIUN'],
+                                            ['name' => 'KK PONOROGO'],
+                                            ['name' => 'KK NGAWI']
+                                        ],
+                                    ],
+                                ],
+                            ],
+                            [
+                                'name' => 'BANDUNG',
+                                'children' => [
+                                    [
+                                        'name' => 'BANDUNG',
+                                        'children' => [
+                                            ['name' => 'KCU BANDUNG'],
+                                            ['name' => 'KCP CIMAHI'],
+                                            ['name' => 'KK ITB']
+                                        ],
+                                    ],
+                                    [
+                                        'name' => 'TASIKMALAYA',
+                                        'children' => [
+                                            ['name' => 'KCU TASIKMALAYA'],
+                                            ['name' => 'KCP CIAMIS'],
+                                            ['name' => 'INDOMARET MARTADINATA']
+                                        ],
+                                    ],
+                                    [
+                                        'name' => 'CIREBON',
+                                        'children' => [
+                                            ['name' => 'KCU CIREBON'],
+                                            ['name' => 'KCP PLERED'],
+                                            ['name' => 'KCP KUNINGAN'],
+                                            ['name' => 'KCP INDRAMAYU']
+                                        ],
+                                    ],
+                                ],
+                            ],[
+                                'name' => 'MAKASSAR',
+                                'children' => [
+                                    [
+                                        'name' => 'MAKASSAR',
+                                        'children' => [
+                                            ['name' => 'KCU MAKASSAR'],
+                                            ['name' => 'KCP CENDRAWASIH'],
+                                            ['name' => 'MARI MALL']
+                                        ],
+                                    ],
+                                    [
+                                        'name' => 'PARE-PARE',
+                                        'children' => [
+                                            ['name' => 'KCP PINRANG'],
+                                            ['name' => 'KCP MAMUJU'],
+                                            ['name' => 'KK POLWEALI']
+                                        ],
+                                    ],
+                                    [
+                                        'name' => 'MANADO',
+                                        'children' => [
+                                            ['name' => 'KCU MANADO'],
+                                            ['name' => 'LIPPO MALL'],
+                                            ['name' => 'INDOMARET SAMRATULANGI']
+                                        ],
+                                    ],
+                                ],
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+            [
+                'name' => 'BANK BUKOPIN SYARIAH',
+                'children' => [
+                    [
+                        'name' => 'INDUK',
+                        'children' => [
+                            [
+                                'name' => 'BSB PUSAT',
+                                'children' => [
+                                    ['name' => 'KCU BSB KELAPA GADING'],
+                                    ['name' => 'KCU BSB BEKASI'],
+                                    ['name' => 'KCP BSB KRAMAT JATI'],
+                                    ['name' => 'BSB MENTENG']
+                                ],
+                            ],
+                            [
+                                'name' => 'BSB MELAWAI',
+                                'children' => [
+                                    ['name' => 'KCU BSB MELAWAI'],
+                                    ['name' => 'BSB RS JATISAMPURNA BEKASI'],
+                                    ['name' => 'MOBILE KAS BSB MELAWAI']
+                                ],
+                            ]
+                        ],
+                    ],
+                    [
+                        'name' => 'SOLO',
+                        'children' => [
+                            [
+                                'name' => 'BSB SOLO',
+                                'children' => [
+                                    ['name' => 'KCU SOLO'],
+                                    ['name' => 'MOBILE KAS BSB SOLO']
+                                ],
+                            ]
+                        ],
+                    ],[
+                        'name' => 'SURABAYA',
+                        'children' => [
+                            [
+                                'name' => 'BSB SURABAYA',
+                                'children' => [
+                                    ['name' => 'KCU SURABAYA'],
+                                    ['name' => 'RS DARMO'],
+                                    ['name' => 'RS MATA UNDAAN'],
+                                    ['name' => 'KCP MERR']
+                                ],
+                            ],
+                            [
+                                'name' => 'BSB SIDOARJO',
+                                'children' => [
+                                    ['name' => 'KCU SIDOARJO']
+                                ],
+                            ]
+                        ],
+                    ]
+                ]
+            ]
+
+        ];
+        return $data;
+    }
+
     public function defaultDataBranchs()
     {
         $data = [
@@ -236,33 +453,33 @@ class DefaultSeeder extends Seeder
                     [
                         'name' => 'BASE ACEH',
                         'children' => [
-                            ['name' => 'KCU ACEH']
+                            ['name' => 'ACEH']
                         ],
                     ],
                     [
                         'name' => 'BASE MEDAN',
                         'children' => [
-                            ['name' => 'KCU MEDAN']
+                            ['name' => 'MEDAN']
                         ],
                     ],
                     [
                         'name' => 'BASE PADANG',
                         'children' => [
-                            ['name' => 'KCU PADANG'],
-                            ['name' => 'KCU JAMBI'],
+                            ['name' => 'PADANG'],
+                            ['name' => 'JAMBI'],
                         ],
                     ],
                     [
                         'name' => 'BASE PEKANBARU',
                         'children' => [
-                            ['name' => 'KCU PEKANBARU']
+                            ['name' => 'PEKANBARU']
                         ],
                     ],
                     [
                         'name' => 'BASE BATAM',
                         'children' => [
-                            ['name' => 'KCU BATAM'],
-                            ['name' => 'KCU TANJUNG PINANG'],
+                            ['name' => 'BATAM'],
+                            ['name' => 'TANJUNG PINANG'],
                         ],
                     ],
                 ]
@@ -273,15 +490,20 @@ class DefaultSeeder extends Seeder
                     [
                         'name' => 'BASE PUSAT',
                         'children' => [
-                            ['name' => 'KCU JABODETABEK'],
-                            ['name' => 'KCU KARAWANG'],
-                            ['name' => 'KCU CILEGON'],
-                            ['name' => 'KCU SUKABUMI'],
-                            ['name' => 'KCU CIANJUR'],
-                            ['name' => 'KCU BANDAR LAMPUNG'],
-                            ['name' => 'KCU PALEMBANG']
+                            ['name' => 'JABODETABEK'],
+                            ['name' => 'KARAWANG'],
+                            ['name' => 'CILEGON'],
+                            ['name' => 'SUKABUMI'],
+                            ['name' => 'CIANJUR']
                         ],
-                    ]
+                    ],
+                    [
+                        'name' => 'BASE PALEMBANG',
+                        'children' => [
+                            ['name' => 'PALEMBANG'],
+                            ['name' => 'BANDAR LAMPUNG']
+                        ],
+                    ],
                 ]
             ],
             [
@@ -290,47 +512,47 @@ class DefaultSeeder extends Seeder
                     [
                         'name' => 'BASE BANDUNG',
                         'children' => [
-                            ['name' => 'KCU BANDUNG'],
-                            ['name' => 'KCU TASIK'],
-                            ['name' => 'KCU PENGALENGAN'],
-                            ['name' => 'KCU CIREBON']
+                            ['name' => 'BANDUNG'],
+                            ['name' => 'TASIK'],
+                            ['name' => 'PENGALENGAN'],
+                            ['name' => 'CIREBON']
                         ],
                     ],
                     [
                         'name' => 'BASE SEMARANG',
                         'children' => [
-                            ['name' => 'KCU SEMARANG'],
-                            ['name' => 'KCU PURWOKERTO'],
-                            ['name' => 'KCU TEGAL'],
-                            ['name' => 'KCU CILACAP'],
-                            ['name' => 'KCU KUDUS']
+                            ['name' => 'SEMARANG'],
+                            ['name' => 'PURWOKERTO'],
+                            ['name' => 'TEGAL'],
+                            ['name' => 'CILACAP'],
+                            ['name' => 'KUDUS']
                         ],
                     ],
                     [
                         'name' => 'BASE YOGYAKARTA',
                         'children' => [
-                            ['name' => 'KCU YOGYAKARTA'],
-                            ['name' => 'KCU MAGELANG']
+                            ['name' => 'YOGYAKARTA'],
+                            ['name' => 'MAGELANG']
                         ],
                     ],
                     [
                         'name' => 'BASE SOLO',
                         'children' => [
-                            ['name' => 'KCU SOLO'],
-                            ['name' => 'KCU BOYOLALI'],
-                            ['name' => 'KCU KLATEN']
+                            ['name' => 'SOLO'],
+                            ['name' => 'BOYOLALI'],
+                            ['name' => 'KLATEN']
                         ],
                     ],
                     [
                         'name' => 'BASE SURABAYA',
                         'children' => [
-                            ['name' => 'KCU SURABAYA'],
-                            ['name' => 'KCU MADIUN'],
-                            ['name' => 'KCU SIDOARJO'],
-                            ['name' => 'KCU MALANG'],
-                            ['name' => 'KCU KEDIRI'],
-                            ['name' => 'KCU PROBOLINGGO'],
-                            ['name' => 'KCU JEMBER']
+                            ['name' => 'SURABAYA'],
+                            ['name' => 'MADIUN'],
+                            ['name' => 'SIDOARJO'],
+                            ['name' => 'MALANG'],
+                            ['name' => 'KEDIRI'],
+                            ['name' => 'PROBOLINGGO'],
+                            ['name' => 'JEMBER']
                         ],
                     ],
                 ]
@@ -341,14 +563,14 @@ class DefaultSeeder extends Seeder
                     [
                         'name' => 'BASE DENPASAR',
                         'children' => [
-                            ['name' => 'KCU DENPASAR'],
-                            ['name' => 'KCU MATARAM']
+                            ['name' => 'DENPASAR'],
+                            ['name' => 'MATARAM']
                         ],
                     ],
                     [
                         'name' => 'BASE KUPANG',
                         'children' => [
-                            ['name' => 'KCU KUPANG']
+                            ['name' => 'KUPANG']
                         ],
                     ]
                 ]
@@ -359,20 +581,20 @@ class DefaultSeeder extends Seeder
                     [
                         'name' => 'BASE SAMARINDA',
                         'children' => [
-                            ['name' => 'KCU SAMARINDA'],
-                            ['name' => 'KCU BALIKPAPAN']
+                            ['name' => 'SAMARINDA'],
+                            ['name' => 'BALIKPAPAN']
                         ],
                     ],
                     [
                         'name' => 'BASE BANJARMASIN',
                         'children' => [
-                            ['name' => 'KCU BANJARMASIN']
+                            ['name' => 'BANJARMASIN']
                         ],
                     ],
                     [
                         'name' => 'BASE PONTIANAK',
                         'children' => [
-                            ['name' => 'KCU PONTIANAK']
+                            ['name' => 'PONTIANAK']
                         ],
                     ],
                 ]
@@ -383,11 +605,11 @@ class DefaultSeeder extends Seeder
                     [
                         'name' => 'BASE MAKASSAR',
                         'children' => [
-                            ['name' => 'KCU MAKASSAR'],
-                            ['name' => 'KCU MANADO'],
-                            ['name' => 'KCU PAPUA'],
-                            ['name' => 'KCU SORONG'],
-                            ['name' => 'KCU PALU']
+                            ['name' => 'MAKASSAR'],
+                            ['name' => 'MANADO'],
+                            ['name' => 'PAPUA'],
+                            ['name' => 'SORONG'],
+                            ['name' => 'PALU']
                         ],
                     ]
                 ]

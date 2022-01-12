@@ -390,7 +390,7 @@ class CompanyService
         $id = $request->get('company_id', null);
         if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
         $company = Company::find($id);
-        if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
+        if($company === null || $company->role === 4) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
         try{
             $company->is_enabled = $request->get('is_enabled', null);
             $company->save();
