@@ -251,15 +251,28 @@ class LogService
         $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
         $normal_logs = [];
         foreach($logs as $log){
-            if($log->description === 'Set Association Item'){
+            if($log->description === 'Association Item'){
                 $old_exist = false;
+                $new_exist = false;
                 $properties = json_decode($log->log_name, false);
-                $inventory = Inventory::with('modelInventory:id,name')->find($properties->attributes->inventory);
+                // $inventory = Inventory::with('modelInventory:id,name')->find($properties->attributes->inventory);
+                if(isset($properties->old->inventory))$old_exist = true;
+                if(isset($properties->attributes->inventory))$new_exist = true;
+                if($old_exist){
+                    if($new_exist) {
+                        $inventory = Inventory::with('modelInventory:id,name')->find($properties->attributes->inventory);
+                        $log_name = "Pengubahan Association menjadi ";
+                    } else {
+                        $inventory = Inventory::with('modelInventory:id,name')->find($properties->old->inventory);
+                        $log_name = "Pengeluaran Association ";
+                    }
+                } else {
+                    $inventory = Inventory::with('modelInventory:id,name')->find($properties->attributes->inventory);
+                    $log_name = "Penambahan Association ";
+                } 
                 if($inventory) $name = $inventory->modelInventory->name;
                 else $name = "Inventory Not Found";
-                if(isset($properties->old->inventory))$old_exist = true;
-                if($old_exist) $log->log_name = "Pengubahan Association menjadi $name";
-                else $log->log_name = "Penambahan Association $name";
+                $log->log_name = $log_name.$name;
             } else if($log->description === 'Perubahan Status'){
                 $properties = json_decode($log->log_name, false);
                 $new_status = $statuses[$properties->new_status];
@@ -536,6 +549,11 @@ class LogService
         if($inventory_id !== null) $this->createLogInventoryAssociation($inventory_id, $causer_id, $subject_id);
     }
 
+    public function removeAssociationLogInventory($subject_id, $causer_id, $old_inventory_id)
+    {
+        $this->deleteLogInventoryAssociation($old_inventory_id, $causer_id, $subject_id);
+    }
+
     // Ticket Log
 
     private function addLogTicket($subject_id, $causer_id, $log_name, $created_at = null, $description = null)
@@ -636,7 +654,16 @@ class LogService
         $properties['attributes'] = ['inventory' => $inventory_id];
         $created_at = date("Y-m-d H:i:s");
         $log_name = json_encode($properties);
-        $notes = "Set Association Item";
+        $notes = "Association Item";
+        $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, $notes);
+    }
+
+    public function removeItemLogTicket($subject_id, $causer_id, $old_inventory_id)
+    {
+        $properties['old'] = ['inventory' => $old_inventory_id];
+        $created_at = date("Y-m-d H:i:s");
+        $log_name = json_encode($properties);
+        $notes = "Association Item";
         $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, $notes);
     }
 

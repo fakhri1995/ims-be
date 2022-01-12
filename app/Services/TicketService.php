@@ -673,21 +673,26 @@ class TicketService
             $ticket = Ticket::find($id);
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
             if($ticket->closed_at !== null) return ["success" => false, "message" => "Status Ticket Sudah Closed", "status" => 400];
-            if($inventory_id === null) return ["success" => false, "message" => "Id Inventory Kosong", "status" => 400];
             if($ticket->ticketable_type !== 'App\Incident') return ["success" => false, "message" => "Tipe Tiket Tidak Sesuai", "status" => 400];
             $incident = Incident::find($ticket->ticketable_id);
             if($incident === null) return ["success" => false, "message" => "Incident pada Ticket Tidak Ditemukan", "status" => 400];
+            if($inventory_id === null && $incident->inventory_id === null) return ["success" => false, "message" => "Id Inventory Kosong", "status" => 400];
             $old_inventory_id = $incident->inventory_id;
             $incident->inventory_id = $inventory_id;
             $incident->save();
 
+            $causer_id = auth()->user()->id;
+            $logService = new LogService;
+            if($inventory_id === null){
+                $logService->removeItemLogTicket($id, $causer_id, $old_inventory_id);
+                $logService->removeAssociationLogInventory($id, $causer_id, $old_inventory_id);
+                return ["success" => true, "message" => "Inventory Berhasil Dikeluarkan dari Ticket", "status" => 200];
+            }
             if($old_inventory_id !== $inventory_id){
-                $causer_id = auth()->user()->id;
-                $logService = new LogService;
                 $logService->setItemLogTicket($id, $causer_id, $old_inventory_id, $inventory_id);
                 $logService->associationLogInventory($id, $causer_id, $old_inventory_id, $inventory_id);
+                return ["success" => true, "message" => "Inventory Berhasil Ditambahkan pada Ticket", "status" => 200];
             }
-            return ["success" => true, "message" => "Inventory Berhasil Ditambahkan pada Ticket", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
