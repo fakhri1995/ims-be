@@ -255,7 +255,6 @@ class LogService
                 $old_exist = false;
                 $new_exist = false;
                 $properties = json_decode($log->log_name, false);
-                // $inventory = Inventory::with('modelInventory:id,name')->find($properties->attributes->inventory);
                 if(isset($properties->old->inventory))$old_exist = true;
                 if(isset($properties->attributes->inventory))$new_exist = true;
                 if($old_exist){
@@ -302,15 +301,27 @@ class LogService
         $statuses = ['-','Dalam Proses', 'Menunggu Staff', 'Dalam Proses', 'Dalam Proses', 'Completed', 'Selesai', 'Dibatalkan'];
         $normal_logs = [];
         foreach($logs as $log){
-            if($log->description === 'Set Association Item'){
+            if($log->description === 'Association Item'){
                 $old_exist = false;
+                $new_exist = false;
                 $properties = json_decode($log->log_name, false);
-                $inventory = Inventory::with('modelInventory:id,name')->find($properties->attributes->inventory);
+                if(isset($properties->old->inventory))$old_exist = true;
+                if(isset($properties->attributes->inventory))$new_exist = true;
+                if($old_exist){
+                    if($new_exist) {
+                        $inventory = Inventory::with('modelInventory:id,name')->find($properties->attributes->inventory);
+                        $log_name = "Pengubahan Association menjadi ";
+                    } else {
+                        $inventory = Inventory::with('modelInventory:id,name')->find($properties->old->inventory);
+                        $log_name = "Pengeluaran Association ";
+                    }
+                } else {
+                    $inventory = Inventory::with('modelInventory:id,name')->find($properties->attributes->inventory);
+                    $log_name = "Penambahan Association ";
+                } 
                 if($inventory) $name = $inventory->modelInventory->name;
                 else $name = "Inventory Not Found";
-                if(isset($properties->old->inventory))$old_exist = true;
-                if($old_exist) $log->log_name = "Pengubahan Association menjadi $name";
-                else $log->log_name = "Penambahan Association $name";
+                $log->log_name = $log_name.$name;
             } else if($log->description === 'Perubahan Status'){
                 $properties = json_decode($log->log_name, false);
                 if(in_array($properties->new_status, [1,4,5]) || $properties->old_status === 4) continue; 
