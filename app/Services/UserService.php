@@ -3,10 +3,13 @@
 namespace App\Services;
 use App\User;
 use Exception;
+use App\Services\LoginService;
+use App\Mail\ChangePasswordMail;
 use App\Services\CompanyService;
 use Illuminate\Support\Facades\DB;
 use App\Services\CheckRouteService;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class UserService
 {
@@ -173,6 +176,17 @@ class UserService
             ];
 
             $set_role = $this->updateRoleUser($data_request, $role_id);
+
+            $loginService = new LoginService;
+            $token = $loginService->generate_token($data['email'], $data['password']);
+            if(!isset($token['error'])){
+                $email_data = [
+                    'token' => $token['access_token'],
+                    'subject' => 'Ubah Password Akun MIGSYS'
+                ];
+                Mail::to($data['email'])->send(new ChangePasswordMail($email_data));
+            } 
+            
             if($role_id === 1) return ["success" => true, "message" => "Akun Agent berhasil ditambah", "id" => $user->id, "status" => 200];
             else return ["success" => true, "message" => "Akun Requester berhasil ditambah", "id" => $user->id, "status" => 200];
         } catch(Exception $err){

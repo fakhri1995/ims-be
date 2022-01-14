@@ -12,14 +12,20 @@ use Illuminate\Support\Facades\Mail;
 
 class LoginService
 {
-    public function login($email, $password){
-        $login = Http::asForm()->post(config('service.passport.login_endpoint'), [
+    public function generate_token($email, $password){
+        $token = Http::asForm()->post(config('service.passport.login_endpoint'), [
             'grant_type' => 'password',
             'client_id' => config('service.passport.client_id'),
             'client_secret' => config('service.passport.client_secret'),
             'username' => $email,
             'password' => $password,
         ]);
+
+        return $token;
+    }
+
+    public function login($email, $password){
+        $login = $this->generate_token($email, $password);
 
         if(isset($login['error'])){
             $response = [
