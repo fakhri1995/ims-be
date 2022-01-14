@@ -1,6 +1,6 @@
 @component('mail::message')
 
-Silahkan gunakan token ini untuk merubah password anda {{ $data['token'] }} <br>
+Silahkan ubah password anda pada <a href="{{ url('https://migsys.herokuapp.com/forgetPassword?token='.$data['token']) }}">link ini</a>  <br>
 
 Salam,<br>
 {{ config('app.name') }}
