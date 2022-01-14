@@ -2,12 +2,13 @@
 
 namespace App\Console;
 
+use App\Console\Commands\UnhideTasks;
 use App\Console\Commands\SetOverdueTasks;
 use App\Console\Commands\GenerateDailyTask;
 use App\Console\Commands\GenerateWeeklyTask;
-use App\Console\Commands\GenerateTwicePerMonthTask;
 use App\Console\Commands\GenerateMonthlyTask;
 use App\Console\Commands\GenerateThricePerYearTask;
+use App\Console\Commands\GenerateTwicePerMonthTask;
 use App\Console\Commands\GenerateFourTimesPerYearTask;
 use Illuminate\Console\Scheduling\Schedule;
 use Laravel\Lumen\Console\Kernel as ConsoleKernel;
@@ -20,6 +21,7 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
+        UnhideTasks::class,
         SetOverdueTasks::class,
         GenerateDailyTask::class,
         GenerateWeeklyTask::class,
@@ -37,6 +39,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
+        $schedule->command(UnhideTasks::class)->cron('* * * * *');
         $schedule->command(SetOverdueTasks::class)->cron('* * * * *');
         $schedule->command(GenerateDailyTask::class)->cron('0 0 * * *');	
         $schedule->command(GenerateWeeklyTask::class)->cron('0 0 * * 1');

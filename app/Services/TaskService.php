@@ -316,7 +316,7 @@ class TaskService{
                 else if($sort_by === 'status') $tasks = $tasks->orderBy('status', $sort_type);
             }
             
-            $tasks = $tasks->paginate($rows);
+            $tasks = $tasks->where('is_visible', true)->paginate($rows);
             foreach($tasks as $task){
                 $task->location->full_location = $task->location->fullSubNameWParentTopParent();
                 $task->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
