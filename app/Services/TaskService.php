@@ -1012,6 +1012,8 @@ class TaskService{
             if($task->created_by === $login_id){
                 if($task->status !== 5) return ["success" => false, "message" => "Status Bukan Completed, Tidak Dapat Dilakukan Penolakan", "status" => 400];
                 else {
+                    foreach($task->users as $user) $task->users()->updateExistingPivot($user->id, ['check_out' => null]);
+                    
                     $task->status = 3;
                     $task->notes = $notes;
                     $task->save();
