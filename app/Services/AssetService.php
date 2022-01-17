@@ -811,6 +811,8 @@ class AssetService{
             $keyword = $request->get('keyword', null);
             $name = $request->get('name', null);
             $rows = $request->get('rows', 10);
+            $sort_by = $request->get('sort_by', null);
+            $sort_type = $request->get('sort_type', 'desc');
 
             $company = Company::find($id);
             if(!$company) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
@@ -820,28 +822,31 @@ class AssetService{
             
             $companyService = new CompanyService;
             $company_list = $companyService->checkSubCompanyList($company);
-            $inventories = Inventory::with(['modelInventory:id,asset_id,name','modelInventory.asset:id,name,code', 'locationInventory:id,name,parent_id,role'])->select('id', 'model_id', 'mig_id','location')->whereIn('location', $company_list);
-
+            $inventories = Inventory::with('locationInventory:id,name,parent_id,role')
+            ->select('inventories.id', 'inventories.mig_id', 'inventories.location','model_inventories.name as model_name','assets.name as asset_name','assets.code as asset_code')
+            ->join('model_inventories', 'inventories.model_id', '=', 'model_inventories.id')
+            ->join('assets', 'model_inventories.asset_id', '=', 'assets.id')
+            ->whereIn('inventories.location', $company_list);
             if($keyword){
                 $inventories = $inventories->where(function($query) use ($keyword) {
-                    $query->orWhere('mig_id', 'ilike', "%".$keyword."%");
-                    $query->orWhereHas('modelInventory', function($q) use ($keyword){
-                        $q->where('model_inventories.name', 'ilike', "%".$keyword."%");
-                    });
-                    $query->orWhereHas('modelInventory.asset', function($q) use ($keyword){
-                        $q->where('assets.name', 'ilike', "%".$keyword."%");
-                    });
+                    $query->where('inventories.mig_id', 'ilike', "%".$keyword."%")
+                    ->orWhere('model_inventories.name', 'ilike', "%".$keyword."%")
+                    ->orWhere('assets.name', 'ilike', "%".$keyword."%");
                 });
+            }
+            if($sort_by){
+                if($sort_by === 'mig_id') $inventories = $inventories->orderBy('inventories.mig_id', $sort_type);
+                else if($sort_by === 'model_name') $inventories = $inventories->orderBy('model_inventories.name', $sort_type);
+                else if($sort_by === 'asset_name') $inventories = $inventories->orderBy('assets.name', $sort_type);
             }
             
             $inventories = $inventories->paginate($rows);
             foreach($inventories as $inventory){
-                $inventory->modelInventory->asset->asset_name = $inventory->modelInventory->asset->name;
-                if(strlen($inventory->modelInventory->asset->code) > 3){
-                    $parent_model = substr($inventory->modelInventory->asset->code, 0, 3);
+                if(strlen($inventory->asset_code) > 3){
+                    $parent_model = substr($inventory->asset_code, 0, 3);
                     $parent = Asset::where('code', $parent_model)->first();
                     $parent_name = $parent === null ? "Asset Not Found" : $parent->name;
-                    $inventory->modelInventory->asset->asset_name = $parent_name . " / " . $inventory->modelInventory->asset->name;
+                    $inventory->asset_name = $parent_name . " / " . $inventory->asset_name;
                 }
                 $inventory->full_location = $inventory->locationInventory->fullSubName();
             }
