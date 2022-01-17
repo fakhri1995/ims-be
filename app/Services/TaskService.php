@@ -343,6 +343,7 @@ class TaskService{
                 ->orWhereIn('id', $task_ids);
             })->where('status', '<', 4)->orderBy('deadline', 'asc')->limit(2)->get();
 
+            return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $tasks, "status" => 200];
             if(count($tasks)){
                 foreach($tasks as $task){
                     $task->time_left = ucwords(Carbon::parse($task->deadline)->diffForHumans(null, true, false, 2));
