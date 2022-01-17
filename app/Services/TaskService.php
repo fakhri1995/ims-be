@@ -482,13 +482,15 @@ class TaskService{
     {
         $from = $request->get('from', null);
         $to = $request->get('to', null);
+        $assigned_only = $request->get('assigned_only', null);
         $login_id = auth()->user()->id;
 
         $task_ids = DB::table('task_user')->where('user_id', $login_id)->pluck('task_id');
-        $status_list = DB::table('tasks')->where('created_by', $login_id)->orWhereIn('id', $task_ids)
-        ->select(DB::raw('status, count(*) as status_count'))
-        ->groupBy('status')
-        ->get();
+
+        if($assigned_only) $status_list = DB::table('tasks')->whereIn('id', $task_ids);
+        else $status_list = DB::table('tasks')->where('created_by', $login_id)->orWhereIn('id', $task_ids);
+        
+        $status_list = $status_list->select(DB::raw('status, count(*) as status_count'))->groupBy('status')->get();
         $status_list_name = ["-", "Overdue", "Open", "On progress", "On hold", "Completed", "Closed"];
         
         $list = new Collection();
