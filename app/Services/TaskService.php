@@ -350,7 +350,6 @@ class TaskService{
                         $task->time_limit_percentage = 0;
                     } else {
                         $task->time_left = ucwords(Carbon::parse($task->deadline)->diffForHumans(null, true, false, 2));
-                        return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $task, "status" => 200];
                         $start_time = strtotime($task->created_at);
                         $deadline_time = strtotime($task->deadline);
                         $current_time = strtotime(date("Y-m-d H:i:s"));
