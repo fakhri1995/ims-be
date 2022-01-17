@@ -353,7 +353,7 @@ class TaskService{
                         $start_time = strtotime($task->created_at);
                         $deadline_time = strtotime($task->deadline);
                         $current_time = strtotime(date("Y-m-d H:i:s"));
-                        return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $task, "status" => 200];
+                        return ["success" => true, "message" => "Task Berhasil Diambil", "data" => [$start_time, $deadline_time, $current_time], "status" => 200];
                         $progress = $current_time - $start_time;
                         $limit = $deadline_time - $start_time;
                         $task->time_limit_percentage = $progress / $limit * 100;
