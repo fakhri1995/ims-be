@@ -356,6 +356,7 @@ class TaskService{
                         $progress = $current_time - $start_time;
                         $limit = $deadline_time - $start_time;
                         $task->time_limit_percentage = $progress / $limit * 100;
+                        return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $task, "status" => 200];
                     }
                 } 
             }
