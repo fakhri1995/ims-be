@@ -513,9 +513,11 @@ class TaskService{
 
         }
         $data = (object)[
+            "image_profile" => auth()->user()->profile_image,
+            "name" => auth()->user()->name,
             "status_list" => $list,
             "sum_task" => $sum_task,
-            "active_task" => $active_task
+            "active_task" => $active_task,
         ];
         
         return ["success" => true, "data" => $data, "status" => 200];
