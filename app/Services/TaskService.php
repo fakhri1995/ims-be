@@ -343,15 +343,17 @@ class TaskService{
                 ->orWhereIn('id', $task_ids);
             })->where('status', '<', 4)->orderBy('deadline', 'asc')->limit(2)->get();
 
-            foreach($tasks as $task){
-                $task->time_left = ucwords(Carbon::parse($task->deadline)->diffForHumans(null, true, false, 2));
-                $start_time = strtotime($task->created_at);
-                $deadline_time = strtotime($task->deadline);
-                $current_time = strtotime(date("Y-m-d H:i:s"));
-                $progress = $current_time - $start_time;
-                $limit = $deadline_time - $start_time;
-                $task->time_limit_percentage = $progress / $limit * 100;
-            } 
+            if(count($tasks)){
+                foreach($tasks as $task){
+                    $task->time_left = ucwords(Carbon::parse($task->deadline)->diffForHumans(null, true, false, 2));
+                    $start_time = strtotime($task->created_at);
+                    $deadline_time = strtotime($task->deadline);
+                    $current_time = strtotime(date("Y-m-d H:i:s"));
+                    $progress = $current_time - $start_time;
+                    $limit = $deadline_time - $start_time;
+                    $task->time_limit_percentage = $progress / $limit * 100;
+                } 
+            }
             return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $tasks, "status" => 200];
 
         } catch(Exception $err){
