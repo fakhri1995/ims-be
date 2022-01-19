@@ -304,8 +304,11 @@ class TaskService{
             if(count($status)) $tasks = $tasks->whereIn('status', $status);
             if($from && $to) $tasks = $tasks->whereBetween('deadline', [$from, $to]);
             if($keyword){
-                if(is_numeric($keyword)) $tasks = $tasks->where('name', 'ilike', "%".$keyword."%")->orWhere('id', $keyword);
-                else $tasks = $tasks->where('name', 'ilike', "%".$keyword."%");
+                if(is_numeric($keyword)){
+                    $tasks = $tasks->where(function ($query) use ($keyword){
+                        $query->where('name', 'ilike', "%".$keyword."%")->orWhere('id', $keyword);
+                    });
+                } else $tasks = $tasks->where('name', 'ilike', "%".$keyword."%");
             } 
             if($task_type > 0) $tasks = $tasks->where('task_type_id', $task_type);
             
@@ -410,8 +413,11 @@ class TaskService{
             if(count($status)) $tasks = $tasks->whereIn('status', $status);
             if($from && $to) $tasks = $tasks->whereBetween('deadline', [$from, $to]);
             if($keyword){
-                if(is_numeric($keyword)) $tasks = $tasks->where('name', 'ilike', "%".$keyword."%")->orWhere('id', $keyword);
-                else $tasks = $tasks->where('name', 'ilike', "%".$keyword."%");
+                if(is_numeric($keyword)){
+                    $tasks = $tasks->where(function ($query) use ($keyword){
+                        $query->where('name', 'ilike', "%".$keyword."%")->orWhere('id', $keyword);
+                    });
+                } else $tasks = $tasks->where('name', 'ilike', "%".$keyword."%");
             } 
             if($task_type > 0) $tasks = $tasks->where('task_type_id', $task_type);
             
