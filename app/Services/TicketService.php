@@ -1076,7 +1076,7 @@ class TicketService
             if($rows < 1) $rows = 10;
 
             $ticket_task_types = DB::table('ticket_task_types')
-            ->select('ticket_task_types.id', 'ticket_types.name as ticket_type_name', 'task_types.name as task_type_name', 'ticket_task_types.name', 'ticket_task_types.description')
+            ->select('ticket_task_types.id', 'ticket_types.name as ticket_type_name', 'task_types.name as task_type_name', 'ticket_task_types.name', 'ticket_task_types.description','ticket_task_types.task_type_id','ticket_task_types.ticket_type_id')
             ->join('ticket_types', 'ticket_task_types.ticket_type_id', '=', 'ticket_types.id')
             ->join('task_types', 'ticket_task_types.task_type_id', '=', 'task_types.id')
             ->whereNull('ticket_task_types.deleted_at');
