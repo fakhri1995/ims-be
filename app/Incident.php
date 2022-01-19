@@ -13,7 +13,6 @@ class Incident extends Model
     protected $casts = [
         'files' => 'array'
     ];
-    protected $with = ['location', 'assetType', 'inventory'];
 
     public function location()
     {
@@ -35,7 +34,7 @@ class Incident extends Model
 
     public function ticket()
     {
-        return $this->morphOne(Ticket::class, 'ticketable')->select('id', 'ticketable_id', 'ticketable_type', 'status_id')->with('status', 'type');
+        return $this->morphOne(Ticket::class, 'ticketable')->select('id', 'ticketable_id', 'ticketable_type')->with('type');
     }
 
     public function inventory()

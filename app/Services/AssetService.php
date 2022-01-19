@@ -889,6 +889,7 @@ class AssetService{
 
         try{
             $inventory = Inventory::with(['modelInventory.asset', 'locationInventory', 'additionalAttributes', 'inventoryParts', 'associations'])->find($id);
+            if($inventory === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             $inventory->modelInventory->asset->asset_name = $inventory->modelInventory->asset->name;
             if(strlen($inventory->modelInventory->asset->code) > 3){
                 $parent_model = substr($inventory->modelInventory->asset->code, 0, 3);
@@ -898,7 +899,6 @@ class AssetService{
             }
             $inventory->makeHidden('inventoryParts');
             $inventory->inventory_parts = $this->getInventoryPartsAssetParent($inventory->inventoryParts, 'inventoryParts');
-            if($inventory === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventory, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];

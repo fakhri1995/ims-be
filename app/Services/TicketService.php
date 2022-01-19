@@ -469,7 +469,7 @@ class TicketService
             $id = $request->get('id');
             $ticket = Ticket::select('tickets.id', 'tickets.ticketable_id', 'tickets.ticketable_type', 'tickets.task_id', 'tickets.closed_at', 'tickets.resolved_times', 'tasks.status')
             ->with(['task:id,created_at,status,created_by,location_id,group_id,deadline', 'task.group', 'task.users', 'task.creator:id,name,company_id', 
-            'task.location:id,name,parent_id,top_parent_id,role', 'task.creator.company:id,name,top_parent_id', 'type', 'ticketable'])
+            'task.location:id,name,parent_id,top_parent_id,role', 'task.creator.company:id,name,top_parent_id', 'type', 'ticketable.location', 'ticketable.assetType', 'ticketable.inventory'])
                 ->join('tasks', 'tickets.task_id', '=', 'tasks.id')
                 ->orderBy('tasks.task_type_id')->find($id);
             if($ticket === null) return ["success" => false, "message" => "Ticket Tidak Ditemukan", "status" => 400];
