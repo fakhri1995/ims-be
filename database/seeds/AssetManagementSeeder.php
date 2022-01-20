@@ -280,15 +280,15 @@ class AssetManagementSeeder extends Seeder
 
     public function run()
     {
-        // $this->makeBulkAssets();
-        // $this->makeBulkAssetColumns();
-        // $this->makeBulkModels();
-        // $this->makeBulkModelInventoryColumns();
+        $this->makeBulkAssets();
+        $this->makeBulkAssetColumns();
+        $this->makeBulkModels();
+        $this->makeBulkModelInventoryColumns();
         $this->makeBulkInventories();
-        // $this->makeStatusConditions();
-        // $this->makeStatusUsages();
-        // $this->makeRelationships();
-        // $this->makeRelationshipInventories();
+        $this->makeStatusConditions();
+        $this->makeStatusUsages();
+        $this->makeRelationships();
+        $this->makeRelationshipInventories();
     }
 
 }

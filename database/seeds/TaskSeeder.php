@@ -15,7 +15,7 @@ class TaskSeeder extends Seeder
     private function makeBulkTaskTypes()
     {
         $name_task = "Task Type";
-        for($i = 1; $i < 20; $i++){
+        for($i = 1; $i < 21; $i++){
             $task = new TaskType;
             $task->name = "$name_task $i";
             $task->description = "Lorem ipsum dolor sit amet consectetur adipisicing elit!";
@@ -30,7 +30,7 @@ class TaskSeeder extends Seeder
             $task = new Task;
             $task->name = "$name_task $i";
             $task->description = "Lorem ipsum dolor sit amet consectetur adipisicing elit. Nemo eligendi dolore aspernatur nihil at voluptates tempora neque, fuga laudantium corporis dolorum velit facilis deserunt, nobis maiores optio illum magnam cum!";
-            $task->task_type_id = random_int(13,32);
+            $task->task_type_id = random_int(1,20);
             $random_int = random_int(1,30);
             $task->location_id = $random_int;
             $task->created_by = random_int(15, 23);
@@ -54,6 +54,6 @@ class TaskSeeder extends Seeder
     public function run()
     {
         $this->makeBulkTasks();
-        // $this->makeBulkTaskTypes();
+        $this->makeBulkTaskTypes();
     }
 }

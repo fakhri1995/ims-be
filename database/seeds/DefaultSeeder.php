@@ -47,7 +47,7 @@ class DefaultSeeder extends Seeder
             'name' => 'Default Requester Users',
             'description' => 'For Created Requester Users From Default'
         ]);
-        $company_requesters = [72, 86, 100];
+        $company_requesters = [73, 86, 100];
         $index = 1;
         for($i = 0; $i < 3; $i++){
             for($j = 0; $j < 3; $j++){
@@ -188,9 +188,9 @@ class DefaultSeeder extends Seeder
 
     public function run()
     {
-        // $this->addDefaultUsers();
+        $this->addDefaultUsers();
         $this->addDefaultCompanies();
-        // $this->addDefaultGroup();
+        $this->addDefaultGroup();
     }
 
     public function defaultUsers()

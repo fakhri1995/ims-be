@@ -13,19 +13,9 @@ class TicketManagementSeeder extends Seeder
      * @return void
      */
 
-    private function makeProductTypeIncidents()
-    {
-        $status_names = ['UPS', 'ATM', 'PC'];
-        foreach($status_names as $status_name){
-            $status = new IncidentProductType;
-            $status->name = $status_name;
-            $status->save();
-        }
-    }
-
     private function makeStatusConditions()
     {
-        $status_names = ['Open', 'On Progress', 'On Hold', 'Canceled', 'Closed'];
+        $status_names = ['Overdue', 'Open', 'On Progress', 'On Hold', 'Completed', 'Closed', 'Canceled'];
         foreach($status_names as $status_name){
             $status = new TicketStatus;
             $status->name = $status_name;
@@ -47,9 +37,8 @@ class TicketManagementSeeder extends Seeder
 
     public function run()
     {
-        // $this->makeStatusConditions();
+        $this->makeStatusConditions();
         $this->makeTypes();
-        // $this->makeProductTypeIncidents();
     }
 
 }

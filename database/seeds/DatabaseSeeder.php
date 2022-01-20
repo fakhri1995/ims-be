@@ -11,7 +11,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // $this->call(AccessFeatureSeeder::class);
+        $this->call(AccessFeatureSeeder::class);
+        $this->call(AssetManagementSeeder::class);
+        $this->call(TaskSeeder::class);
+        $this->call(PolymorphicCodeSeeder::class);
+        $this->call(TicketManagementSeeder::class);
         $this->call(DefaultSeeder::class);
     }
 }
