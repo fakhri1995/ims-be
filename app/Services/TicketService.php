@@ -298,7 +298,7 @@ class TicketService
                 $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
             }
             
-            $tickets = $tickets->with(['task:id,created_at,status,created_by,location_id', 'task.creator:id,name', 'task.users:id,name', 'task.location:id,name,parent_id,top_parent_id,role'])
+            $tickets = $tickets->with(['task:id,created_at,status,created_by,location_id', 'task.creator:id,name,company_id', 'task.users:id,name', 'task.location:id,name,parent_id,top_parent_id,role'])
                 ->join('tasks', 'tickets.task_id', '=', 'tasks.id')
                 ->join('ticket_types', 'tickets.ticketable_type', '=', 'ticket_types.table_name');
                 // ->orderBy('tasks.task_type_id');
@@ -345,7 +345,10 @@ class TicketService
             foreach($tickets as $ticket){
                 $ticket->raised_at = date('d M Y, H:i', strtotime($ticket->task->created_at));
                 $ticket->full_name = $ticket->code.'-'.$ticket->ticketable_id;
-                $ticket->task->location->full_location = $ticket->task->location->fullSubNameWParentTopParent();
+
+                $ticket->task->creator->full_location = $ticket->task->creator->company->fullName();
+                $ticket->task->creator->makeHidden(['company']);
+                $ticket->task->location->full_location = $ticket->task->location->fullNameWParentTopParent();
                 $ticket->task->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
                 $ticket->status_name = $statuses[$ticket->status];
             }
