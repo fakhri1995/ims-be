@@ -1107,10 +1107,14 @@ class TicketService
         if($access["success"] === false) return $access;
 
         $ticket_task_type = new TicketTaskType;
-        $ticket_task_type->name = $request->get('name');
-        $ticket_task_type->description = $request->get('description');
-        $ticket_task_type->task_type_id = $request->get('task_type_id');
+        $req_task_type_id = $request->get('task_type_id');
+        $req_name = $request->get('name');
+        $check = TicketTaskType::where('task_type_id', $req_task_type_id)->where('name', $req_name)->first();
+        if($check) return ["success" => false, "message" => "Nama Tipe Tiket Task pada Tipe Task Sudah Ada", "status" => 400];
+        $ticket_task_type->name = $req_name;
+        $ticket_task_type->task_type_id = $req_task_type_id;
         $ticket_task_type->ticket_type_id = $request->get('ticket_type_id');
+        $ticket_task_type->description = $request->get('description');
         try{
             $ticket_task_type->save();
             return ["success" => true, "message" => "Ticket Task Type berhasil ditambahkan", "status" => 200];
@@ -1128,10 +1132,15 @@ class TicketService
         $ticket_task_type = TicketTaskType::find($id);
         if($ticket_task_type === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
         
-        $ticket_task_type->name = $request->get('name');
-        $ticket_task_type->description = $request->get('description');
-        $ticket_task_type->task_type_id = $request->get('task_type_id');
+        $req_task_type_id = $request->get('task_type_id');
+        $req_name = $request->get('name');
+        $check = TicketTaskType::where('task_type_id', $req_task_type_id)->where('name', $req_name)->first();
+        if($check && $check->id !== $id) return ["success" => false, "message" => "Nama Tipe Tiket Task pada Tipe Task Sudah Ada", "status" => 400];
+        
+        $ticket_task_type->name = $req_name;
+        $ticket_task_type->task_type_id = $req_task_type_id;
         $ticket_task_type->ticket_type_id = $request->get('ticket_type_id');
+        $ticket_task_type->description = $request->get('description');
         try{
             $ticket_task_type->save();
             return ["success" => true, "message" => "Ticket Task Type berhasil diubah", "status" => 200];
