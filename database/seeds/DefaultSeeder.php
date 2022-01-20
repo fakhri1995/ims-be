@@ -122,10 +122,10 @@ class DefaultSeeder extends Seeder
     }
 
     private function addTreeCompanies($data, $role, $highest_parent_id, $top_parent_id){
-        $parent_id = $this->addCompany($data['name'], 3, $highest_parent_id, $top_parent_id);
+        $parent_id = $this->addCompany($data['name'], $role, $highest_parent_id, $top_parent_id);
         if(isset($data['children'])){
             foreach($data['children'] as $child){
-                $this->addTreeCompanies($child, 3, $parent_id, $top_parent_id);
+                $this->addTreeCompanies($child, $role, $parent_id, $top_parent_id);
             }
         }
     }
