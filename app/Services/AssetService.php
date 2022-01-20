@@ -955,6 +955,7 @@ class AssetService{
         try{
             $id = $request->get('id', null);
             $name = $request->get('name', null);
+            $mig_id = $request->get('mig_id', null);
             if(!$id) return ["success" => false, "message" => "Id Asset Kosong", "status" => 400];
             $inventories = Inventory::with(['modelInventory.asset:id,name,deleted_at', 'inventoryReplacementParts'])->select('id', 'model_id', 'mig_id')
                     ->whereHas('modelInventory', function($q) use ($id){
