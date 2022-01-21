@@ -1481,8 +1481,13 @@ class AssetService{
                 $parent_inventory = Inventory::with(['inventoryPart', 'inventoryParts'])->select('id', 'status_usage')->find($id);
                 $old_inventory_parent_list = $parent_inventory->inventoryPart->pluck('id');
                 foreach($inventory_part_ids as $inventory_part_id){
+                    if($inventory_part_id == $id) return ["success" => false, "message" => "Id Inventory Sama Dengan Id Parent", "status" => 400];
                     $inventory = Inventory::with('inventoryParent', 'inventoryPart')->find($inventory_part_id);
-                    if($inventory === null) return ["success" => false, "message" => "Id Inventory Tidak Terdaftar", "status" => 400];
+                    if($inventory === null) return ["success" => false, "message" => "Inventory Id $inventory_part_id Tidak Terdaftar", "status" => 400];
+                }
+                foreach($inventory_part_ids as $inventory_part_id){
+                    $inventory = Inventory::with('inventoryParent', 'inventoryPart')->find($inventory_part_id);
+                    // if($inventory === null) return ["success" => false, "message" => "Id Inventory Tidak Terdaftar", "status" => 400];
                     // if($inventory->status_usage === 1)return ["success" => false, "message" => "Inventory Sedang Digunakan", "status" => 400];
                     
                     $old_inventory = [];
