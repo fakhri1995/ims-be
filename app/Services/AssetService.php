@@ -899,6 +899,23 @@ class AssetService{
             }
             $inventory->makeHidden('inventoryParts');
             $inventory->inventory_parts = $this->getInventoryPartsAssetParent($inventory->inventoryParts, 'inventoryParts');
+            if(count($inventory->associations)){
+                $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
+                foreach($inventory->associations as $association){
+                    if(isset($association->ticket->task->status)){
+                        $association->status_name = $statuses[$association->ticket->task->status];
+                        $association->status = $association->ticket->task->status;
+                    } 
+                    else {
+                        $association->status_name = '-';
+                        $association->status = 0;
+                    }
+
+                    if(isset($association->ticket->type->code)) $association->ticket_name = '#'.$association->ticket->type->code.' - '.$association->ticket->ticketable_id;
+                    else $association->ticket_name = '-';
+                    $association->makeHidden('ticket');
+                }
+            }
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventory, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
