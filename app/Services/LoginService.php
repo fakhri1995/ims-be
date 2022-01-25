@@ -88,14 +88,21 @@ class LoginService
     public function updateProfile($request){
         try{
             $password = $request->get('password');
-            if(strlen($password) < 8) return ["success" => false, "data" => "Password Minimal 8 Karakter", "status" => 400];
-            $confirm_password = $request->get('confirm_password');
-            if($password !== $confirm_password) return ["success" => false, "data" => "Password Tidak Sama!", "status" => 400];
-            auth()->user()->name = $request->get('name');
-            auth()->user()->phone_number = $request->get('phone_number');
-            auth()->user()->profile_image = $request->get('profile_image');
-            auth()->user()->password = Hash::make($password);
-            auth()->user()->save();
+            if($password === '' || $password === null) {
+                auth()->user()->name = $request->get('name');
+                auth()->user()->phone_number = $request->get('phone_number');
+                auth()->user()->profile_image = $request->get('profile_image');
+                auth()->user()->save();
+            } else {
+                if(strlen($password) < 8) return ["success" => false, "data" => "Password Minimal 8 Karakter", "status" => 400];
+                $confirm_password = $request->get('confirm_password');
+                if($password !== $confirm_password) return ["success" => false, "data" => "Password Tidak Sama!", "status" => 400];
+                auth()->user()->name = $request->get('name');
+                auth()->user()->phone_number = $request->get('phone_number');
+                auth()->user()->profile_image = $request->get('profile_image');
+                auth()->user()->password = Hash::make($password);
+                auth()->user()->save();
+            }
             return ["success" => true, "message" => "Berhasil Memperbarui Data Profile", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
