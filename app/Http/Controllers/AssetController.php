@@ -124,17 +124,7 @@ class AssetController extends Controller
     {
         $route_name = "MODEL_ADD";
         
-        $data_request = [
-            'name' => $request->get('name'),
-            'asset_id' => $request->get('asset_id'),
-            'description' => $request->get('description'),
-            'manufacturer_id' => $request->get('manufacturer_id'),
-            'required_sn' => $request->get('required_sn'),
-            'model_columns' => $request->get('model_columns',[]),
-            'model_parts' => $request->get('model_parts',[])
-        ];
-        
-        $response = $this->assetService->addModel($data_request, $route_name);
+        $response = $this->assetService->addModel($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -248,22 +238,7 @@ class AssetController extends Controller
     {
         $route_name = "INVENTORY_ADD";
         
-        $data_request = [
-            'model_id' => $request->get('model_id'),
-            'vendor_id' => $request->get('vendor_id'),
-            'status_condition' => $request->get('status_condition'),
-            'status_usage' => $request->get('status_usage'),
-            'serial_number' => $request->get('serial_number'),
-            'location' => $request->get('location'),
-            'deskripsi' => $request->get('deskripsi'),
-            'manufacturer_id' => $request->get('manufacturer_id'),
-            'mig_id' => $request->get('mig_id'),
-            'notes' => $request->get('notes'),
-            'inventory_values' => $request->get('inventory_values',[]),
-            'inventory_parts' => $request->get('inventory_parts',[])
-        ];
-        
-        $response = $this->assetService->addInventory($data_request, $route_name);
+        $response = $this->assetService->addInventory($request, $route_name);
         return response()->json($response, $response['status']);
     }
 

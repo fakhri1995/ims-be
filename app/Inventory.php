@@ -90,4 +90,9 @@ class Inventory extends Model
     {
         return $this->hasMany(Incident::class, 'inventory_id')->with(['ticket.task:id,status'])->select('id','inventory_id');
     }
+
+    public function quantities()
+    {
+        return $this->belongsToMany(Company::class, 'inventory_locations', 'inventory_id', 'company_id')->select('companies.id','companies.name', 'inventory_locations.quantity')->withPivot('quantity');
+    }
 }

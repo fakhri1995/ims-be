@@ -563,25 +563,26 @@ class AssetService{
         }
     }
 
-    public function addModel($data, $route_name)
+    public function addModel($request, $route_name)
     {
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $name = $data['name'];
+        $name = $request->get('name');
         $check_name = ModelInventory::where('name', $name)->first();
         if($check_name !== null) return ["success" => false, "message" => "Nama Model Telah Terdaftar", "status" => 200];
         $model = new ModelInventory;
-        $model->asset_id = $data['asset_id'];
+        $model->asset_id = $request->get('asset_id');
         $model->name = $name;
-        $model->description = $data['description'];
-        $model->manufacturer_id = $data['manufacturer_id'];
-        $model->required_sn = $data['required_sn'];
+        $model->description = $request->get('description');
+        $model->is_consumable = $request->get('is_consumable', false);
+        $model->manufacturer_id = $request->get('manufacturer_id');
+        $model->required_sn = $request->get('required_sn');
         try{
             $model->save();
-            $model_columns = $data['model_columns'];
+            $model_columns = $request->get('model_columns',[]);
             $this->createModelColumns($model_columns, $model->id);
-            $model_parts = $data['model_parts'];
+            $model_parts = $request->get('model_parts',[]);
             foreach($model_parts as $model_part){
                 $model->modelParts()->attach($model_part['id'], ['quantity' => $model_part['quantity']]);
             }
@@ -888,7 +889,7 @@ class AssetService{
         if($access["success"] === false) return $access;
 
         try{
-            $inventory = Inventory::with(['modelInventory.asset', 'locationInventory', 'additionalAttributes', 'inventoryParts', 'associations'])->find($id);
+            $inventory = Inventory::with(['modelInventory.asset', 'locationInventory', 'additionalAttributes', 'inventoryParts', 'associations', 'quantities'])->find($id);
             if($inventory === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             $inventory->modelInventory->asset->asset_name = $inventory->modelInventory->asset->name;
             if(strlen($inventory->modelInventory->asset->code) > 3){
@@ -1087,13 +1088,23 @@ class AssetService{
         return $list_ids;
     }
 
-    public function addInventory($data, $route_name)
+    public function addInventory($request, $route_name)
     {
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
-        $mig_id = $data['mig_id'];
-        $inventory_parts = $data['inventory_parts'];
+        $model_id = $request->get('model_id');
+        $model = ModelInventory::find($model_id);
+        if($model === null) return ["success" => false, "message" => "Model Tidak Ditemukan", "status" => 400];
+        $location = $request->get('location');
+        if($model->is_consumable){
+            $quantity = $request->get('quantity');
+            if($quantity === null)  return ["success" => false, "message" => "Quantity masih kosong", "status" => 400];
+            if($location === null)  return ["success" => false, "message" => "Lokasi masih kosong", "status" => 400];
+        }
+        $mig_id = $request->get('mig_id');
+        $inventory_parts = $request->get('inventory_parts',[]);
+
         $mig_ids = [];
         $model_column_ids = [];
         $allCheckMigIdsAndModelColumns = [];
@@ -1109,7 +1120,7 @@ class AssetService{
         $inventory = Inventory::select('id', 'mig_id')->whereIn('mig_id', $mig_ids)->first();
         if($inventory !== null) return ["success" => false, "message" => "MIG ID ".$inventory->mig_id." Sudah Terdaftar", "status" => 400];
         
-        $inventory_values = $data['inventory_values'];
+        $inventory_values = $request->get('inventory_values', []);
         if(count($inventory_values)){
             foreach($inventory_values as $inventory_value){
                 $model_column_ids[] = $inventory_value['model_inventory_column_id'];
@@ -1122,18 +1133,20 @@ class AssetService{
         if(count($check_list_remaining)) return ["success" => false, "message" => "ID ".array_values($check_list_remaining)[0]." Kolom Model Inventori Tidak Ditemukan", "status" => 400];
         
         $inventory = new Inventory;
-        $inventory->model_id = $data['model_id'];
-        $inventory->vendor_id = $data['vendor_id'];
-        $inventory->status_condition = $data['status_condition'];
-        $inventory->status_usage = $data['status_condition'];
-        $inventory->location = $data['location'];
-        $inventory->deskripsi = $data['deskripsi'];
-        $inventory->manufacturer_id = $data['manufacturer_id'];
+        $inventory->model_id = $model_id;
+        $inventory->vendor_id = $request->get('vendor_id');
+        $inventory->status_condition = $request->get('status_condition');
+        $inventory->status_usage = $request->get('status_condition');
+        $inventory->location = $location;
+        $inventory->deskripsi = $request->get('deskripsi');
+        $inventory->manufacturer_id = $request->get('manufacturer_id');
         $inventory->mig_id = $mig_id;
-        $inventory->serial_number = $data['serial_number'];
-        $notes = $data['notes'];
+        $inventory->serial_number = $request->get('serial_number');
+        $inventory->is_consumable = $model->is_consumable;
+        $notes = $request->get('notes');
         try{
             $inventory->save();
+            if($model->is_consumable) $inventory->quantities()->attach($location, ['quantity' => $quantity]);
 
             if(count($inventory_values)){
                 foreach($inventory_values as $inventory_value){
@@ -1146,7 +1159,7 @@ class AssetService{
             $logService = new LogService;
             $properties['attributes'] = $inventory;
             $logService->createLogInventory($inventory->id, $causer_id, $properties, $notes);
-            if(count($inventory_parts)){
+            if(count($inventory_parts) && !$model->is_consumable){
                 $properties = [];
                 $list_id = [];
                 foreach($inventory_parts as $inventory_part){
@@ -1196,22 +1209,32 @@ class AssetService{
         $id = $data['id'];
         $mig_id = $data['mig_id'];
         $notes = $data['notes'];
+        $location = $data['location'];
         $check_inventory = Inventory::select('id', 'mig_id')->where('mig_id', $mig_id)->first();
         if($check_inventory && $check_inventory->id !== $id) return ["success" => false, "message" => "MIG ID Sudah Terdaftar", "status" => 400];
         try{
-            $inventory = Inventory::with(['additionalAttributes'])->find($id);
+            $inventory = Inventory::with(['additionalAttributes', 'quantities'])->find($id);
             if($inventory === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         
             $old_inventory = [];
             foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
 
             $inventory->vendor_id = $data['vendor_id'];
-            $inventory->location = $data['location'];
+            $inventory->location = $location;
             $inventory->deskripsi = $data['deskripsi'];
             $inventory->manufacturer_id = $data['manufacturer_id'];
             $inventory->mig_id = $mig_id;
             $inventory->serial_number = $data['serial_number'];
             $inventory->save();
+            
+            if($inventory->is_consumable){
+                $search = $inventory->quantities->search(function ($item) use ($location) {
+                    return $item->id == $location;
+                });
+                $quantity = $inventory->quantities[$search]->quantity;
+                $inventory->quantities()->detach($old_inventory['location']);
+                $inventory->quantities()->attach((int)$location, ['quantity' => $quantity]);
+            }
 
             foreach($inventory->additionalAttributes as $temp_inventory_value){
                 $old_inventory[$temp_inventory_value->name] = $temp_inventory_value->value;

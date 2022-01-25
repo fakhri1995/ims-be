@@ -20,6 +20,7 @@ class CreateModelInventoriesTable extends Migration
             $table->string('description');
             $table->integer('manufacturer_id')->nullable();
             $table->boolean('required_sn');
+            $table->boolean('is_consumable');
             $table->softDeletes();
         });
     }

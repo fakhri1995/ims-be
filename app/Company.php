@@ -12,7 +12,7 @@ class Company extends Model
     use SoftDeletes;
 
     protected $hidden = [
-        'created_time', 'top_parent_id'
+        'created_time', 'top_parent_id', 'pivot'
     ];
 
     public $timestamps = false;

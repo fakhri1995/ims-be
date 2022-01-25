@@ -28,7 +28,8 @@ class InventoriesImport implements ToModel, WithHeadingRow, WithValidation
             'deskripsi'    => $row['deskripsi'],
             'manufacturer_id' => $row['manufacturer_id'],
             'mig_id'     => $row['mig_id'],
-            'serial_number'    => $row['serial_number']
+            'serial_number'    => $row['serial_number'],
+            'is_consumable' => false
         ]);
 
         $model_inventory_columns = ModelInventoryColumn::where('model_id', $model_id)->pluck('id');
