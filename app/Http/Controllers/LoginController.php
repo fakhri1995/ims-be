@@ -72,6 +72,12 @@ class LoginController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function updateProfile(Request $request)
+    {
+        $response = $this->loginService->updateProfile($request);
+        return response()->json($response, $response['status']);
+    }
+
     public function mailForgetPassword(Request $request)
     {
         $email = $request->input("email");
