@@ -1314,11 +1314,18 @@ class TaskService{
             if($task->status !== 3) return ["success" => false, "message" => "Status Bukan On Progress", "status" => 400];
             
             $inventory_from_task_ids = [];
-            $inventory_not_from_task_ids = [];
+            $inventory_not_from_task_in_ids = [];
+            $inventory_not_from_task_out_ids = [];
+            $inventory_not_from_task_ins = [];
             if(count($task->inventories)){
                 foreach($task->inventories as $inventory_task){
                     if($inventory_task->pivot->is_from_task) $inventory_from_task_ids[] = $inventory_task->id;
-                    else $inventory_not_from_task_ids[] = $inventory_task->id;
+                    else {
+                        if($inventory_task->pivot->is_in){
+                            $inventory_not_from_task_in_ids[] = $inventory_task->id;
+                            $inventory_not_from_task_ins[] = $inventory_task;
+                        } else $inventory_not_from_task_out_ids[] = $inventory_task->id;
+                    } 
                     
                     $inventory_task->is_from_task = $inventory_task->pivot->is_from_task;
                     $inventory_task->is_in = $inventory_task->pivot->is_in;
@@ -1353,6 +1360,19 @@ class TaskService{
                             } 
                         }
                     }
+                    // Check whether add_in_inventory's parent is same with inventory or inventory part with add_out_inventory_id id
+                    if(count($add_out_inventory_ids)){
+                        foreach($add_out_inventory_ids as $add_out_inventory_id){
+                            if($add_in_inventory['connect_id'] == $add_out_inventory_id){
+                                return ["success" => false, "message" => "Connect Id (Parent Id) Dengan Item Id $inventory_id Sama Dengan Item Yang Akan Dikeluarkan Dengan Id $add_out_inventory_id", "status" => 400];
+                            }
+                            $check_connect_id = $this->checkParent($add_in_inventory['connect_id'], $add_out_inventory_id);
+                            if($check_connect_id) break;
+                        }
+                        if($check_connect_id){
+                            return ["success" => false, "message" => "Connect Id (Parent Id) Dengan Item Id $inventory_id Sama Dengan Part Item Yang Akan Dikeluarkan Dengan Id $add_out_inventory_id", "status" => 400];
+                        } 
+                    }
                 }
             }
 
@@ -1376,7 +1396,7 @@ class TaskService{
                 foreach($remove_in_inventory_ids as $remove_in_inventory_id){
                     $check_in_task = array_intersect([$remove_in_inventory_id], $inventory_from_task_ids);
                     if(count($check_in_task)) return ["success" => false, "message" => "Item Dengan Id $remove_in_inventory_id Merupakan Item Utama Pada Task dan Tidak Dapat Didelete", "status" => 400];
-                    $check_not_in_task = array_intersect([$remove_in_inventory_id], $inventory_not_from_task_ids);
+                    $check_not_in_task = array_intersect([$remove_in_inventory_id], $inventory_not_from_task_in_ids);
                     if(!count($check_not_in_task)) return ["success" => false, "message" => "Item Dengan Id $remove_in_inventory_id Bukan Merupakan Item Pada Task dan Tidak Dapat Didelete", "status" => 400];
                     $search = $task->inventories->search(function ($query) use ($remove_in_inventory_id) {
                         return $query->id === $remove_in_inventory_id;
@@ -1388,8 +1408,8 @@ class TaskService{
             if(count($remove_out_inventory_ids)){
                 foreach($remove_out_inventory_ids as $remove_out_inventory_id){
                     $check_in_task = array_intersect([$remove_out_inventory_id], $inventory_from_task_ids);
-                    if(count($check_in_task) && !count(array_keys($inventory_not_from_task_ids, $remove_out_inventory_id))) return ["success" => false, "message" => "Item Dengan Id $remove_out_inventory_id Merupakan Item Utama Pada Task dan Tidak Dapat Didelete", "status" => 400];
-                    $check_not_in_task = array_intersect([$remove_out_inventory_id], $inventory_not_from_task_ids);
+                    if(count($check_in_task) && !count(array_keys($inventory_not_from_task_out_ids, $remove_out_inventory_id))) return ["success" => false, "message" => "Item Dengan Id $remove_out_inventory_id Merupakan Item Utama Pada Task dan Tidak Dapat Didelete", "status" => 400];
+                    $check_not_in_task = array_intersect([$remove_out_inventory_id], $inventory_not_from_task_out_ids);
                     if(!count($check_not_in_task)) return ["success" => false, "message" => "Item Dengan Id $remove_out_inventory_id Bukan Merupakan Item Pada Task dan Tidak Dapat Didelete", "status" => 400];
                     $search = $task->inventories->search(function ($query) use ($remove_out_inventory_id) {
                         return $query->id === $remove_out_inventory_id;
@@ -1406,8 +1426,44 @@ class TaskService{
                 } 
             }
             foreach($remove_in_inventory_ids as $remove_in_inventory_id) $task->inventories()->detach($remove_in_inventory_id);
-            foreach($add_in_inventories as $add_in_inventory) $task->inventories()->syncWithoutDetaching([$add_in_inventory['inventory_id'] => ['is_from_task' => false, 'is_in' => true, 'user_id' => $login_id, 'connect_id' => $add_in_inventory['connect_id']]]);
-            foreach($add_out_inventory_ids as $add_out_inventory_id) $task->inventories()->attach($add_out_inventory_id, ['is_from_task' => false, 'is_in' => false, 'user_id' => $login_id]);
+            foreach($add_out_inventory_ids as $add_out_inventory_id){
+                $task->inventories()->attach($add_out_inventory_id, ['is_from_task' => false, 'is_in' => false, 'user_id' => $login_id]);
+                // Check if add_out_inventory_ids are parent from inventory_not_from_task_ins 
+                // if yes, delete task inventory which have add_out_inventory_ids as their parent
+                if(count($inventory_not_from_task_ins)){
+                    foreach($inventory_not_from_task_ins as $inventory_not_from_task_in){
+                        if($add_out_inventory_id == $inventory_not_from_task_in->pivot->connect_id){
+                            $check_remove = true;
+                            break;
+                        }
+                        $check_remove = $this->checkParent($inventory_not_from_task_in->pivot->connect_id, $add_out_inventory_id);
+                        if($check_remove) break;
+                    }
+                    if($check_remove) $task->inventories()->detach($inventory_not_from_task_in->id);
+                }
+            } 
+            foreach($add_in_inventories as $add_in_inventory){
+                $task->inventories()->syncWithoutDetaching([$add_in_inventory['inventory_id'] => ['is_from_task' => false, 'is_in' => true, 'user_id' => $login_id, 'connect_id' => $add_in_inventory['connect_id']]]);
+                // Check if add_in_inventories's parent are from inventory_not_from_task_out_ids 
+                // if yes, delete task inventory which have add_out_inventory_ids as their children
+                if(count($inventory_not_from_task_out_ids)){
+                    foreach($inventory_not_from_task_out_ids as $inventory_not_from_task_out_id){
+                        if($add_in_inventory['connect_id'] == $inventory_not_from_task_out_id){
+                            $check_remove = true;
+                            break;
+                        }
+                        $check_remove = $this->checkParent($add_in_inventory['connect_id'], $inventory_not_from_task_out_id);
+                        if($check_remove) break;
+                    }
+                    if($check_remove){
+                        $check_in_task = array_intersect([$inventory_not_from_task_out_id], $inventory_from_task_ids);
+                        $task->inventories()->detach($inventory_not_from_task_out_id);
+                        if(count($check_in_task)){
+                            $task->inventories()->attach($inventory_not_from_task_out_id, ['is_from_task' => true, 'is_in' => null]);
+                        } 
+                    } 
+                }
+            } 
 
             return ["success" => true, "message" => "Berhasil Memperbarui Suku Cadang Task", "status" => 200];
         } catch(Exception $err){
