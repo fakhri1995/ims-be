@@ -243,13 +243,29 @@ class TaskService{
 
         try{
             $type = $request->get('type', 'keluar');
+            $id = $request->get('id', null);
             if($type == 'keluar'){
-                $id = $request->get('id', null);
                 $task = Task::with(['inventories.modelInventory.asset', 'inventories.inventoryParts', 'inventories' => function ($query) {
                     $query->wherePivot('is_from_task', true);
                 }])->find($id);
                 if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-                $data = $task->inventories;
+                $task_inventory_out = Task::with(['inventories.modelInventory.asset', 'inventories' => function ($query) {
+                    $query->wherePivot('is_in', false);
+                }])->find($id);
+
+                $list_inventories = [];
+                foreach($task_inventory_out->inventories as $inventory){
+                    $temp_list_inventories = $inventory->inventoryPartList()->toArray();
+                    $inventory->makeHidden('inventoryPartName', 'vendor_id', 'status_condition', 'status_usage', 'location', 'deskripsi', 'manufacturer_id', 'deleted_at', 'is_consumable');
+                    $temp_list_inventories[] = $inventory;
+                    $list_inventories = array_merge($list_inventories,$temp_list_inventories);
+                }
+
+                $data = (object)[
+                    "inventory_list" => $task->inventories,
+                    "check_list" => $list_inventories
+                ];
+                return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $data, "status" => 200];
             } else {
                 $keyword = $request->get('keyword', null);
                 $data = Inventory::where('location', auth()->user()->company_id)->select('inventories.id', 'inventories.mig_id', 'inventories.model_id', 'inventories.location', 'model_inventories.name as model_name', 'assets.name as asset_name')
@@ -262,11 +278,24 @@ class TaskService{
                         ->orWhere('assets.name', 'ilike', "%$keyword%");
                     });
                 } 
+
+                $task_inventory_in = Task::with(['inventories.modelInventory.asset', 'inventories' => function ($query) {
+                    $query->wherePivot('is_in', true);
+                }])->find($id);
                 
-                $data = $data->limit(50)->get();
+                $connect_ids = [];
+                foreach($task_inventory_in->inventories as $inventory){
+                    $connect_ids[] = $inventory->pivot->connect_id;
+                }
+                $inventories = Inventory::select('id', 'model_id', 'mig_id', 'serial_number')->with('modelInventory.asset')->find($connect_ids);
+                // $data = $data->limit(50)->get();
+                $data = (object)[
+                    "inventory_list" => $data->limit(50)->get(),
+                    "check_list" => $inventories
+                ];
+                return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $data, "status" => 200];
             }
             
-            return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $data, "status" => 200];
 
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];

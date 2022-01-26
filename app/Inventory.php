@@ -2,6 +2,7 @@
 
 namespace App;
 
+use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -84,6 +85,24 @@ class Inventory extends Model
     public function inventoryRelationships()
     {
         return $this->hasMany(RelationshipInventory::class, 'subject_id')->with(['relationship']);
+    }
+
+    public function inventoryPartName()
+    {
+        return $this->belongsToMany(Inventory::class, 'inventory_inventory_pivots', 'parent_id', 'child_id')->select('inventories.id', 'inventories.model_id', 'inventories.mig_id', 'inventories.serial_number')->with('modelInventory.asset');
+    }
+
+    public function inventoryPartList()
+    {
+        $inventories = new Collection();
+
+        foreach ($this->inventoryPartName as $inventory) {
+            $inventory->makeHidden('inventoryPartName');
+            $inventories->push($inventory);
+            $inventories = $inventories->merge($inventory->inventoryPartList());
+        }
+
+        return $inventories;
     }
 
     public function associations()
