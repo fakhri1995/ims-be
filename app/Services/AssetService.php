@@ -906,10 +906,12 @@ class AssetService{
                     if(isset($association->ticket->task->status)){
                         $association->status_name = $statuses[$association->ticket->task->status];
                         $association->status = $association->ticket->task->status;
+                        $association->ticket_id = $association->ticket->id;
                     } 
                     else {
                         $association->status_name = '-';
                         $association->status = 0;
+                        $association->ticket_id = 0;
                     }
 
                     if(isset($association->ticket->type->code)) $association->ticket_name = '#'.$association->ticket->type->code.' - '.$association->ticket->ticketable_id;
