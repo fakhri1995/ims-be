@@ -28,6 +28,13 @@ class TicketController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getTicketTaskStatusCounts(Request $request){
+        $route_name = "TICKET_TASK_STATUS_COUNTS_GET";
+        
+        $response = $this->ticketService->getTicketTaskStatusCounts($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getTicketRelation(Request $request){
         $route_name = "TICKET_GET";
         

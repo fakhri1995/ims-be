@@ -209,6 +209,8 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteRelationshipInventory', 'AssetController@deleteRelationshipInventory');
 
     //Ticket Routes
+    $router->get('/getTicketTaskStatusCounts', 'TicketController@getTicketTaskStatusCounts');
+
     $router->get('/getFilterTickets', 'TicketController@getFilterTickets');
     $router->get('/getTicketRelation', 'TicketController@getTicketRelation');
     $router->get('/getClientTicketRelation', 'TicketController@getClientTicketRelation');
