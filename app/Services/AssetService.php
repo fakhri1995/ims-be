@@ -948,6 +948,9 @@ class AssetService{
             if($model_id){
                 $inventories = $inventories->where('model_id', $model_id);
             }
+            if($name){
+                $inventories = $inventories->where('mig_id', 'ilike', "%".$name."%");
+            }
             
             $inventories = $inventories->paginate($rows);
             foreach($inventories as $inventory){
@@ -1443,7 +1446,7 @@ class AssetService{
         $causer_id = auth()->user()->id;
         try{
             $inventory = Inventory::with('inventoryPart', 'inventoryParent')->find($inventory_part_id);
-            if(!count($inventory->inventoryParent) || $inventory->inventoryParent[0]->id != $id) return ["success" => false, "message" => "Id Part Tidak Termasuk dari Part yang Dimiliki Inventory Ini", "status" => 400];
+            if(count($inventory->inventoryParent) || $inventory->inventoryParent[0]->id != $id) return ["success" => false, "message" => "Id Part Tidak Termasuk dari Part yang Dimiliki Inventory Ini", "status" => 400];
             
             $old_inventory = [];
             foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
