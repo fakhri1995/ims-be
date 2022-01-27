@@ -1442,18 +1442,17 @@ class AssetService{
         $inventory_part_id = $data['inventory_part_id'];
         $causer_id = auth()->user()->id;
         try{
-            $check_parent = $this->checkParent($inventory_part_id, $id);
-            if($check_parent === false) return ["success" => false, "message" => "Id Part Tidak Termasuk dari Part yang Dimiliki Inventory Ini", "error_id" => $inventory_part_id, "status" => 400];
+            $inventory = Inventory::with('inventoryPart', 'inventoryParent')->find($inventory_part_id);
+            if(!count($inventory->inventoryParent) || $inventory->inventoryParent[0]->id != $id) return ["success" => false, "message" => "Id Part Tidak Termasuk dari Part yang Dimiliki Inventory Ini", "status" => 400];
             
-            $parent_inventory = Inventory::with(['inventoryPart', 'inventoryParts'])->select('id')->find($id);
-            $old_inventory_parent_list = $parent_inventory->inventoryPart->pluck('id');
-
-            $inventory = Inventory::with('inventoryPart')->find($inventory_part_id);
             $old_inventory = [];
             foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
 
             $inventory->status_usage = 2;
             $inventory->save();
+
+            $parent_inventory = Inventory::with(['inventoryPart', 'inventoryParts'])->select('id')->find($id);
+            $old_inventory_parent_list = $parent_inventory->inventoryPart->pluck('id');
 
             $logService = new LogService;
             $properties = $this->checkUpdateProperties($old_inventory, $inventory);
@@ -1526,6 +1525,8 @@ class AssetService{
                     if($inventory_part_id == $id) return ["success" => false, "message" => "Id Inventory Sama Dengan Id Parent", "status" => 400];
                     $inventory = Inventory::with('inventoryParent', 'inventoryPart')->find($inventory_part_id);
                     if($inventory === null) return ["success" => false, "message" => "Inventory Id $inventory_part_id Tidak Terdaftar", "status" => 400];
+                    $check_parent = $this->checkParent($inventory_part_id, $id);
+                    if($check_parent) return ["success" => false, "message" => "Inventory Id $inventory_part_id Termasuk Dari Part Inventory Id $id", "status" => 400];
                 }
                 foreach($inventory_part_ids as $inventory_part_id){
                     $inventory = Inventory::with('inventoryParent', 'inventoryPart')->find($inventory_part_id);

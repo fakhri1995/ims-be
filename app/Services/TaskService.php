@@ -282,7 +282,7 @@ class TaskService{
                 $task_inventory_in = Task::with(['inventories.modelInventory.asset', 'inventories' => function ($query) {
                     $query->wherePivot('is_in', true);
                 }])->find($id);
-                
+                if($task_inventory_in === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
                 $connect_ids = [];
                 foreach($task_inventory_in->inventories as $inventory){
                     $connect_ids[] = $inventory->pivot->connect_id;
