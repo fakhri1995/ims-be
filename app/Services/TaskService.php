@@ -1010,7 +1010,7 @@ class TaskService{
             });
 
             if($search !== false){
-                if($task->status !== 3) return ["success" => false, "message" => "Status Bukan On Progress, Tidak Dapat Melakukan Submit", "status" => 400];
+                if(!array_intersect([$task->status], [1,3])) return ["success" => false, "message" => "Status Bukan On Progress, Tidak Dapat Melakukan Submit", "status" => 400];
                 else if($task->users[$search]->check_out !== null) return ["success" => false, "message" => "Anda Sudah Melakukan Submit", "status" => 400];
                 else { 
                     $task->users()->updateExistingPivot($login_id, ['check_out' => date("Y-m-d H:i:s")]);
@@ -1525,7 +1525,7 @@ class TaskService{
                 if($task->users[$search]->check_in === null) return ["success" => false, "message" => "Anda Perlu Melakukan Check In Terlebih Dahulu ", "status" => 400];
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
             
-            if($task->status !== 3) return ["success" => false, "message" => "Status Bukan On Progress", "status" => 400];
+            if(!array_intersect([$task->status], [1,3])) return ["success" => false, "message" => "Status Bukan On Progress", "status" => 400];
             
             $inventory = Inventory::find($inventory_id);
             if($inventory === null) return ["success" => false, "message" => "Id Inventori Tidak Ditemukan", "status" => 400];
@@ -1588,7 +1588,7 @@ class TaskService{
                 if($task->users[$search]->check_in === null) return ["success" => false, "message" => "Anda Perlu Melakukan Check In Terlebih Dahulu ", "status" => 400];
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
 
-            if($task->status !== 3) return ["success" => false, "message" => "Status Bukan On Progress", "status" => 400];
+            if(!array_intersect([$task->status], [1,3])) return ["success" => false, "message" => "Status Bukan On Progress", "status" => 400];
             $inventory_from_task_ids = [];
             if(count($task->inventories)){
                 foreach($task->inventories as $inventory_task) $inventory_from_task_ids[] = $inventory_task->id;
@@ -1629,7 +1629,7 @@ class TaskService{
                 if($task->users[$search]->check_in === null) return ["success" => false, "message" => "Anda Perlu Melakukan Check In Terlebih Dahulu ", "status" => 400];
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
 
-            if($task->status !== 3) return ["success" => false, "message" => "Status Bukan On Progress", "status" => 400];
+            if(!array_intersect([$task->status], [1,3])) return ["success" => false, "message" => "Status Bukan On Progress", "status" => 400];
 
             $inventory_from_task_ids = [];
             $inventory_not_from_task_ids = [];
