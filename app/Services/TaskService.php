@@ -1340,7 +1340,7 @@ class TaskService{
                 if($task->users[$search]->check_in === null) return ["success" => false, "message" => "Anda Perlu Melakukan Check In Terlebih Dahulu ", "status" => 400];
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
 
-            if($task->status !== 3) return ["success" => false, "message" => "Status Bukan On Progress", "status" => 400];
+            if(!array_intersect([$task->status], [1,3])) return ["success" => false, "message" => "Status Bukan On Progress", "status" => 400];
             
             $inventory_from_task_ids = [];
             $inventory_not_from_task_in_ids = [];
