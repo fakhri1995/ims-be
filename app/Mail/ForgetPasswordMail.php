@@ -28,6 +28,8 @@ class ForgetPasswordMail extends Mailable implements ShouldQueue
      */
     public function build()
     {
-        return $this->subject($this->data['subject'])->markdown('emails.forgot_password');
+        $image_url = public_path('img/MIG-logo.png');
+        return $this->subject($this->data['subject'])->view('emails.forgot_password')->with(['image_url' => $image_url]);
+        // return $this->subject($this->data['subject'])->markdown('emails.forgot_password')->with(['image_url' => $image_url, 'message' => $this]);
     }
 }

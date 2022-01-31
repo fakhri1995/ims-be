@@ -138,6 +138,7 @@ class LoginService
         DB::table('password_resets')->insert(['email' => $email, 'token' => $token_reset, 'created_at' => date("Y-m-d H:i:s")]);
 
         $data = [
+            'username' => $user->name,
             'token' => $token_reset,
             'subject' => 'Reset Password MIG Token'
         ];

@@ -181,6 +181,7 @@ class UserService
             $token = $loginService->generate_token($data['email'], $data['password']);
             if(!isset($token['error'])){
                 $email_data = [
+                    'username' => $user->name,
                     'token' => $token['access_token'],
                     'subject' => 'Ubah Password Akun MIGSYS'
                 ];
