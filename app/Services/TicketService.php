@@ -250,6 +250,7 @@ class TicketService
             "ticket" => $ticket_statuses,
             "task" => $task_statuses,
             "user" => (object)[
+                "id" => auth()->user()->id,
                 "image_profile" => auth()->user()->profile_image,
                 "name" => auth()->user()->name,
             ]
