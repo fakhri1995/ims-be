@@ -12,14 +12,15 @@ use App\Relationship;
 use App\TicketStatus;
 use App\ModelInventory;
 use App\ActivityLogTicket;
+use App\ActivityLogCompany;
 use App\ActivityLogInventory;
 use App\ModelInventoryColumn;
 use App\StatusUsageInventory;
+use App\ActivityLogPurchaseOrder;
 use App\StatusConditionInventory;
 use App\ActivityLogInventoryPivot;
 use App\Services\CheckRouteService;
 use App\ActivityLogInventoryRelationship;
-use App\ActivityLogCompany;
 
 class LogService
 {
@@ -733,5 +734,62 @@ class LogService
         $log_name = 'Deleted';
         $subjectable_type = 'App\Bank';
         $this->addLogCompany($log_name, $company_id, $subjectable_type, $subjectable_id);
+    }
+
+    private function addLogPurchaseOrder($purchase_order_id, $log_name, $description, $connectable_type, $connectable_id)
+    {
+        $log = new ActivityLogPurchaseOrder;
+        $log->purchase_order_id = $purchase_order_id;
+        $log->log_name = $log_name;
+        $log->description = $description;
+        $log->connectable_type = $connectable_type;
+        $log->connectable_id = $connectable_id;
+        $log->causer_id = auth()->user()->id;
+        $log->created_at = date("Y-m-d H:i:s");
+        $log->save();
+    }
+
+    public function createPurchaseOrder($purchase_order_id)
+    {
+        $log_name = 'Created';
+        $description = 'Detail Pembelian dibuat oleh ';
+        $connectable_type = 'App\User';
+        $connectable_id = auth()->user()->id;
+        $this->addLogPurchaseOrder($purchase_order_id, $log_name, $description, $connectable_type, $connectable_id);
+    }
+
+    public function acceptPurchaseOrder($purchase_order_id)
+    {
+        $log_name = 'Accepted';
+        $description = 'Pembelian disetujui oleh ';
+        $connectable_type = 'App\User';
+        $connectable_id = auth()->user()->id;
+        $this->addLogPurchaseOrder($purchase_order_id, $log_name, $description, $connectable_type, $connectable_id);
+    }
+
+    public function rejectPurchaseOrder($purchase_order_id)
+    {
+        $log_name = 'Rejected';
+        $description = 'Pembelian ditolak oleh ';
+        $connectable_type = 'App\User';
+        $connectable_id = auth()->user()->id;
+        $this->addLogPurchaseOrder($purchase_order_id, $log_name, $description, $connectable_type, $connectable_id);
+    }
+
+    public function sendPurchaseOrder($purchase_order_id, $vendor_id)
+    {
+        $log_name = 'Sent';
+        $description = 'Pengiriman barang oleh ';
+        $connectable_type = 'App\Vendor';
+        $this->addLogPurchaseOrder($purchase_order_id, $log_name, $description, $connectable_type, $vendor_id);
+    }
+
+    public function receivePurchaseOrder($purchase_order_id)
+    {
+        $log_name = 'Received';
+        $description = 'Barang diterima oleh ';
+        $connectable_type = 'App\User';
+        $connectable_id = auth()->user()->id;
+        $this->addLogPurchaseOrder($purchase_order_id, $log_name, $description, $connectable_type, $connectable_id);
     }
 }

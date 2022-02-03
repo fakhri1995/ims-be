@@ -288,6 +288,24 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addTaskType', 'TaskController@addTaskType');
     $router->put('/updateTaskType', 'TaskController@updateTaskType');
     $router->delete('/deleteTaskType', 'TaskController@deleteTaskType');
+
+    //Warehouse
+    $router->get('/getPurchaseOrders', 'WarehouseController@getPurchaseOrders');
+    $router->get('/getPurchaseOrder', 'WarehouseController@getPurchaseOrder');
+    $router->post('/addPurchaseOrder', 'WarehouseController@addPurchaseOrder');
+    $router->put('/updatePurchaseOrder', 'WarehouseController@updatePurchaseOrder');
+    $router->delete('/deletePurchaseOrder', 'WarehouseController@deletePurchaseOrder');
+    $router->put('/acceptPurchaseOrder', 'WarehouseController@acceptPurchaseOrder');
+    $router->put('/rejectPurchaseOrder', 'WarehouseController@rejectPurchaseOrder');
+    $router->put('/sendPurchaseOrder', 'WarehouseController@sendPurchaseOrder');
+    $router->put('/receivePurchaseOrder', 'WarehouseController@receivePurchaseOrder');
+    
+
+    //Warehouse
+    $router->get('/getDetailPurchaseOrders', 'WarehouseController@getDetailPurchaseOrders');
+    $router->post('/addDetailPurchaseOrder', 'WarehouseController@addDetailPurchaseOrder');
+    $router->put('/updateDetailPurchaseOrder', 'WarehouseController@updateDetailPurchaseOrder');
+    $router->delete('/deleteDetailPurchaseOrder', 'WarehouseController@deleteDetailPurchaseOrder');
 });
 
 //Group Routes

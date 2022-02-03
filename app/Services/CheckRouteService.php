@@ -26,4 +26,12 @@ class CheckRouteService
         }
         return $response;
     }    
+
+    public function romanNumeral(){
+        return ['-', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+    }    
+
+    public function statusPurchaseOrder(){
+        return ['-', 'Draft', 'Disetujui', 'Ditolak', 'Dikirim', 'Diterima'];
+    }
 }
