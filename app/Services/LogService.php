@@ -298,7 +298,7 @@ class LogService
         $user_company_id = auth()->user()->company_id;
         if($ticket->task->creator->company_id !== $user_company_id) return ["success" => false, "message" => "Tidak Memiliki Access untuk Ticket Ini", "status" => 401];
         $special_logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', 'Note Khusus')->orderBy('created_at','desc')->get();
-        $logs = ActivityLogTicket::where('subject_id', $id)->orderBy('created_at','desc')->get();
+        $logs = ActivityLogTicket::where('subject_id', $id)->where('is_for_client', true)->where('log_name', '<>', 'Note Khusus')->orderBy('created_at','desc')->get();
         $statuses = ['-','Dalam Proses', 'Menunggu Staff', 'Dalam Proses', 'Dalam Proses', 'Completed', 'Selesai', 'Dibatalkan'];
         $normal_logs = [];
         foreach($logs as $log){
@@ -311,14 +311,14 @@ class LogService
                 if($old_exist){
                     if($new_exist) {
                         $inventory = Inventory::with('modelInventory:id,name')->find($properties->attributes->inventory);
-                        $log_name = "Pengubahan Association menjadi ";
+                        $log_name = "Pengubahan Asosiasi Menjadi ";
                     } else {
                         $inventory = Inventory::with('modelInventory:id,name')->find($properties->old->inventory);
-                        $log_name = "Pengeluaran Association ";
+                        $log_name = "Pemisahan Asosiasi ";
                     }
                 } else {
                     $inventory = Inventory::with('modelInventory:id,name')->find($properties->attributes->inventory);
-                    $log_name = "Penambahan Association ";
+                    $log_name = "Penambahan Asosiasi ";
                 } 
                 if($inventory) $name = $inventory->modelInventory->name;
                 else $name = "Inventory Not Found";
@@ -568,7 +568,7 @@ class LogService
 
     // Ticket Log
 
-    private function addLogTicket($subject_id, $causer_id, $log_name, $created_at = null, $description = null)
+    private function addLogTicket($subject_id, $causer_id, $log_name, $created_at = null, $description = null, $is_for_client = false)
     {
         $log = new ActivityLogTicket;
         $log->subject_id = $subject_id;
@@ -576,6 +576,7 @@ class LogService
         $log->log_name = $log_name;
         $log->created_at = $created_at;
         $log->description = $description;
+        $log->is_for_client = $is_for_client;
         $log->save();
     }
 
@@ -596,14 +597,14 @@ class LogService
     public function createLogTicketIncident($subject_id, $causer_id, $created_at)
     {
         $log_name = "Waktu Kejadian";
-        $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at);
+        $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, null, true);
     }
     
     public function createLogTicket($subject_id, $causer_id)
     {
         $log_name = "Raised Ticket";
         $created_at = date("Y-m-d H:i:s");
-        $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at);
+        $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, null, true);
     }
 
     public function updateLogTicket($subject_id, $causer_id)
@@ -626,7 +627,7 @@ class LogService
         $created_at = date("Y-m-d H:i:s");
         $log_name = json_encode($properties);
         $notes = "Perubahan Status";
-        $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, $notes);
+        $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, $notes, true);
     }
 
 
@@ -643,7 +644,7 @@ class LogService
         }
         $log_name = "Assigned to $name";
         $created_at = date("Y-m-d H:i:s");
-        $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at);
+        $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, null, true);
     }
 
     public function setDeadlineLogTicket($subject_id, $causer_id)
@@ -657,7 +658,7 @@ class LogService
     {
         $log_name = "Note Khusus";
         $created_at = date("Y-m-d H:i:s");
-        $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, $notes);
+        $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, $notes, true);
     }
 
     public function setItemLogTicket($subject_id, $causer_id, $old_inventory_id, $inventory_id)

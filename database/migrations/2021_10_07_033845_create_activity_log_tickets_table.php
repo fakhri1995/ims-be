@@ -20,6 +20,7 @@ class CreateActivityLogTicketsTable extends Migration
             $table->unsignedBigInteger('subject_id');
             $table->unsignedBigInteger('causer_id');
             $table->dateTime('created_at');
+            $table->boolean('is_for_client');
             $table->index('subject_id');
         });
     }
