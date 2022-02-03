@@ -73,6 +73,11 @@ class WarehouseService{
                 if($purchase_order->arrived_date !== null) $purchase_order->arrived_date_template = date("d F Y", strtotime($purchase_order->arrived_date));
                 else $purchase_order->arrived_date_template = "-";
                 $purchase_order->status_name = $statuses[$purchase_order->status];
+                if(count($purchase_order->modelInventories)){
+                    foreach($purchase_order->modelInventories as $model){
+                        $model->quantity += $model->pivot->quantity;
+                    }
+                }
             }
             return ["success" => true, "message" => "Purchase Orders Berhasil Diambil", "data" => $purchase_orders, "status" => 200];
 
@@ -87,14 +92,16 @@ class WarehouseService{
         if($access["success"] === false) return $access;
         try{
             $id = $request->get('id');
-            $purchase_order = PurchaseOrder::with('activityLogPurchaseOrders', 'modelInventories', 'vendor:id,name')->find($id);
+            $purchase_order = PurchaseOrder::with(['activityLogPurchaseOrders', 'modelInventories:id,asset_id', 'modelInventories.asset:id,name', 'vendor:id,name'])->find($id);
             if($purchase_order === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
             $purchase_order->purchase_order_date_template = date("d F Y", strtotime($purchase_order->purchase_order_date));
             $price = 0;
+            $quantity = 0;
             if(count($purchase_order->modelInventories)){
                 foreach($purchase_order->modelInventories as $model){
                     $temp_price = $model->pivot->quantity *  $model->pivot->price;
                     $price += $temp_price;
+                    $quantity += $model->pivot->quantity;
                 }
             }
             if(count($purchase_order->activityLogPurchaseOrders)){
@@ -106,7 +113,7 @@ class WarehouseService{
                 }
             }
             $purchase_order->total_price = "Rp ".number_format($price,2,',','.');
-            $purchase_order->makeHidden('modelInventories');
+            $purchase_order->total_quantity = $quantity;
             return ["success" => true, "message" => "Purchase Order Berhasil Diambil", "data" => $purchase_order, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
