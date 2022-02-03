@@ -108,7 +108,8 @@ class TicketService
 
         $ticket_types = TicketType::all();
         $ticket_task_types = DB::table('ticket_task_types')
-            ->select('ticket_task_types.id', 'ticket_task_types.ticket_type_id as type_id', 'ticket_task_types.name', 'ticket_task_types.name')
+            ->select('ticket_task_types.id', 'ticket_task_types.ticket_type_id as type_id', 'ticket_task_types.name', 'task_types.name as task_type_name')
+            ->join('task_types', 'ticket_task_types.task_type_id', '=', 'task_types.id')
             ->whereNull('ticket_task_types.deleted_at')->get();
 
         $data = ["status_ticket" => $statuses, "ticket_types" => $ticket_types, "companies" => $companies, "ticket_task_types" => $ticket_task_types, "resolved_times" => $resolved_times];
