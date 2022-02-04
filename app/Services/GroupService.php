@@ -19,7 +19,7 @@ class GroupService{
         $assignable_type = $request->get('assignable_type', 1);
         $name = $request->get('name', null);
         if($assignable_type){
-            $users = User::select('id','name')->whereHas('groups', function($q){
+            $users = User::select('id','name','position', 'profile_image')->whereHas('groups', function($q){
                 $q->where('groups.id', 1);
             });
             if($name) $users = $users->where('users.name', 'ilike', "%".$name."%");

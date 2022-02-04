@@ -569,7 +569,7 @@ class TicketService
             $ticket->creator_id = $ticket->task->creator->id;
             $ticket->creator_name = $ticket->task->creator->name;
             $ticket->creator_location = $ticket->task->creator->company->fullName();
-            $ticket->raised_at = date("d F Y", strtotime($ticket->task->created_at));
+            $ticket->raised_at = $ticket->task->created_at;
             $ticket->resolved_times = $this->diffForHuman($ticket->resolved_times);
             $ticket->task->creator->company->makeHidden('topParent');
             $ticket->task->location->full_location = $ticket->task->location->fullSubNameWParentTopParent();
