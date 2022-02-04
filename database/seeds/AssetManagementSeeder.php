@@ -89,6 +89,7 @@ class AssetManagementSeeder extends Seeder
                 $model->description = "Bulk Model Seeder";
                 $model->manufacturer_id = 1;
                 $model->required_sn = false;
+                $model->is_consumable = false;
                 $model->save();
 
                 $code_a = $code.".1";  
@@ -98,6 +99,7 @@ class AssetManagementSeeder extends Seeder
                 $model_a->description = "Bulk Model Seeder";
                 $model_a->manufacturer_id = 1;
                 $model_a->required_sn = false;
+                $model_a->is_consumable = false;
                 $model_a->save();
                 $model->modelParts()->attach($model_a->id, ['quantity' => 1]);
 
@@ -110,6 +112,7 @@ class AssetManagementSeeder extends Seeder
                     $model_b->description = "Bulk Model Seeder";
                     $model_b->manufacturer_id = 1;
                     $model_b->required_sn = true;
+                    $model_b->is_consumable = false;
                     $model_b->save();
                     $model_a->modelParts()->attach($model_b->id, ['quantity' => 1]);
                 }
@@ -121,6 +124,7 @@ class AssetManagementSeeder extends Seeder
                 $model_a->description = "Bulk Model Seeder";
                 $model_a->manufacturer_id = 1;
                 $model_a->required_sn = false;
+                $model_a->is_consumable = false;
                 $model_a->save();
                 $model->modelParts()->attach($model_a->id, ['quantity' => 1]);
             }
