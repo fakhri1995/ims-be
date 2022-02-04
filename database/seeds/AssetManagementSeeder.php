@@ -163,6 +163,7 @@ class AssetManagementSeeder extends Seeder
                     $inventory->status_condition = 1;
                     $inventory->status_usage = random_int(1, 3);
                     $inventory->mig_id = "MIG-$index";
+                    $inventory->is_consumable = false;
                     $inventory->save();
                     $index+=1;
                     $model_id +=1;
@@ -177,6 +178,7 @@ class AssetManagementSeeder extends Seeder
                     $inventory_a->status_condition = 2;
                     $inventory_a->status_usage = 2;
                     $inventory_a->mig_id = "MIG-$index";
+                    $inventory_a->is_consumable = false;
                     $inventory_a->save();
                     $index+=1;
                     $model_id +=1;
@@ -192,7 +194,8 @@ class AssetManagementSeeder extends Seeder
                         $inventory_b->model_id = $model_id;
                         $inventory_b->status_condition = 3;
                         $inventory_b->status_usage = 3;
-                        $inventory_b->mig_id = "MIG-$index";   
+                        $inventory_b->mig_id = "MIG-$index";  
+                        $inventory_b->is_consumable = false; 
                         $inventory_b->save();
                         $index+=1;
                         $model_id +=1;
@@ -209,6 +212,7 @@ class AssetManagementSeeder extends Seeder
                     $inventory_a->status_condition = 2;
                     $inventory_a->status_usage = 2;
                     $inventory_a->mig_id = "MIG-$index";
+                    $inventory_a->is_consumable = false;
                     $inventory_a->save();
                     $index+=1;
                     $model_id +=1;
