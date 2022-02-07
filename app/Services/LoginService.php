@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Mail;
 class LoginService
 {
     public function generate_token($email, $password){
-        $token = Http::asForm()->post(config('service.passport.login_endpoint'), [
+        $token = Http::post(config('service.passport.login_endpoint'), [
             'grant_type' => 'password',
             'client_id' => config('service.passport.client_id'),
             'client_secret' => config('service.passport.client_secret'),
@@ -21,7 +21,7 @@ class LoginService
             'password' => $password,
         ]);
 
-        return $token;
+        return $token->json();
     }
 
     public function login($email, $password){
@@ -51,7 +51,11 @@ class LoginService
             ];
         }
 
-        $response = $login;
+        $response = [
+                "success" => true,
+                "data" => $login,
+                "status" => 200
+            ];
 
         return $response;
     }
