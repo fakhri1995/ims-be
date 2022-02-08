@@ -118,15 +118,20 @@ class LoginService
         $list_feature = [];
         foreach(auth()->user()->roles as $role)
         {
-            foreach($role->features as $feature) $list_feature[] = $feature->id;
+            foreach($role->features as $feature){
+                $list_feature[] = (object)[
+                    "id" => $feature->id, 
+                    "name" => $feature->name
+                ];
+            } 
             auth()->user()->roles->makeHidden(['features', 'description', 'deleted_at']);
         }
-        auth()->user()->features = array_values(array_unique($list_feature, SORT_NUMERIC));
+        auth()->user()->features = array_values(array_unique($list_feature, SORT_REGULAR));
         return [
-                "success" => true,
-                "data" => auth()->user(),
-                "status" => 200
-            ];
+            "success" => true,
+            "data" => auth()->user(),
+            "status" => 200
+        ];
     }
 
     public function mailForgetPassword($email){
