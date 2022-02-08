@@ -9,90 +9,47 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
-use GuzzleHttp\Psr7;
 
 class LoginService
 {
     public function generate_token($email, $password){
-        // $token = Http::post(config('service.passport.login_endpoint'), [
-        //     'grant_type' => 'password',
-        //     'client_id' => config('service.passport.client_id'),
-        //     'client_secret' => config('service.passport.client_secret'),
-        //     'username' => $email,
-        //     'password' => $password,
-        // ]);
+        $token = Http::asForm()->post(config('service.passport.login_endpoint'), [
+            'grant_type' => 'password',
+            'client_id' => config('service.passport.client_id'),
+            'client_secret' => config('service.passport.client_secret'),
+            'username' => $email,
+            'password' => $password,
+        ]);
 
-        // return $token->json();
-        $http = new Client;
-        try {
-            $response = $http->post(config('service.passport.login_endpoint'), [
-                'form_params' => [
-                    'grant_type' => 'password',
-                    'client_id' => config('service.passport.client_id'),
-                    'client_secret' => config('service.passport.client_secret'),
-                    'username' => $email,
-                    'password' => $password,
-                ]
-            ]);
-            return [true, $response->getBody()];
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = $response->getBody()->getContents();
-            return [false, Psr7\str($e->getResponse())];
-            // return $responseBodyAsString;
-            if ($e->getCode() === 400) {
-                return response()->json('Invalid Request. Please enter a username or a password.', $e->getCode());
-            } else if ($e->getCode() === 401) {
-                return response()->json('Your credentials are incorrect. Please try again', $e->getCode());
-            }
-            return response()->json('Something went wrong on the server.', $e->getCode());
-        }
+        return $token;
     }
 
     public function login($email, $password){
         $login = $this->generate_token($email, $password);
 
-        // if(isset($login['error'])){
-        //     $response = [
-        //         "success" => false, 
-        //         "message" => (object)[
-        //             "errorInfo" => [
-        //                 "status" => 401,
-        //                 "reason" => $login['error'],
-        //                 "server_code" => 401,
-        //                 "status_detail" => $login['error_description']
-        //             ]
-        //         ],
-        //         "status" => 401
-        //     ];
-        // } else {
-        //     $response = [
-        //         "success" => true,
-        //         "data" => [
-        //             "message" => "success generate token",
-        //             "token" => $login['access_token']
-        //         ],
-        //         "status" => 200
-        //     ];
-        // }
-        if($login[0]){
+        if(isset($login['error'])){
             $response = [
-                "success" => true,
-                "data" => json_decode($login[1]),
-                "status" => 200
+                "success" => false, 
+                "message" => (object)[
+                    "errorInfo" => [
+                        "status" => 401,
+                        "reason" => $login['error'],
+                        "server_code" => 401,
+                        "status_detail" => $login['error_description']
+                    ]
+                ],
+                "status" => 401
             ];
         } else {
-
             $response = [
-                    "success" => true,
-                    // "data" => json_decode($login),
-                    "data" => $login[1],
-                    "status" => 200
-                ];
+                "success" => true,
+                "data" => [
+                    "message" => "success generate token",
+                    "token" => $login['access_token']
+                ],
+                "status" => 200
+            ];
         }
-
 
         return $response;
     }
