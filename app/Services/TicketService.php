@@ -963,6 +963,8 @@ class TicketService
                 $user = User::find($assignable_id);
                 if($user === null) return ["success" => false, "message" => "Id Petugas Tidak Ditemukan", "status" => 400];
                 $ticket->task->users()->sync($assignable_id);
+                $ticket->task->group_id = null;
+                $ticket->task->save();
                 foreach($ticket->task->taskDetails as $taskDetail){
                     $taskDetail->users()->sync($assignable_id);
                 }    
