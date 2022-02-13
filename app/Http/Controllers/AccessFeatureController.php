@@ -26,39 +26,39 @@ class AccessFeatureController extends Controller
         return response()->json($response, $response['status']);
     }
 
-    public function addFeature(Request $request)
-    {
-        $route_name = "FEATURE_ADD";
-        $data_request = [
-            'name' => $request->get('name'),
-            'description' => $request->get('description')
-        ];
+    // public function addFeature(Request $request)
+    // {
+    //     $route_name = "FEATURE_ADD";
+    //     $data_request = [
+    //         'name' => $request->get('name'),
+    //         'description' => $request->get('description')
+    //     ];
         
-        $response = $this->accessService->addFeature($data_request, $route_name);
-        return response()->json($response, $response['status']);
-    }
+    //     $response = $this->accessService->addFeature($data_request, $route_name);
+    //     return response()->json($response, $response['status']);
+    // }
 
-    public function updateFeature(Request $request)
-    {
-        $route_name = "FEATURE_UPDATE";
-        $data_request = [
-            'id' => $request->get('id'),
-            'name' => $request->get('name'),
-            'description' => $request->get('description')
-        ];
+    // public function updateFeature(Request $request)
+    // {
+    //     $route_name = "FEATURE_UPDATE";
+    //     $data_request = [
+    //         'id' => $request->get('id'),
+    //         'name' => $request->get('name'),
+    //         'description' => $request->get('description')
+    //     ];
         
-        $response = $this->accessService->updateFeature($data_request, $route_name);
-        return response()->json($response, $response['status']);
-    }
+    //     $response = $this->accessService->updateFeature($data_request, $route_name);
+    //     return response()->json($response, $response['status']);
+    // }
 
-    public function deleteFeature(Request $request)
-    {
-        $route_name = "FEATURE_DELETE";
-        $id = $request->get('id', null);
+    // public function deleteFeature(Request $request)
+    // {
+    //     $route_name = "FEATURE_DELETE";
+    //     $id = $request->get('id', null);
         
-        $response = $this->accessService->deleteFeature($id, $route_name);
-        return response()->json($response, $response['status']);
-    }
+    //     $response = $this->accessService->deleteFeature($id, $route_name);
+    //     return response()->json($response, $response['status']);
+    // }
 
     // Module
     public function getModules(Request $request)
@@ -82,7 +82,7 @@ class AccessFeatureController extends Controller
 
     public function addModuleFeature(Request $request)
     {
-        $route_name = "MODULE_FEATURE_ADD";
+        $route_name = "MODULE_FEATURES_ADD";
         $data_request = [
             'id' => $request->get('id', null),
             'feature_ids' => $request->get('feature_ids', [])
@@ -107,7 +107,7 @@ class AccessFeatureController extends Controller
 
     public function deleteModuleFeature(Request $request)
     {
-        $route_name = "MODULE_FEATURE_DELETE";
+        $route_name = "MODULE_FEATURES_DELETE";
         $data_request = [
             'id' => $request->get('id', null),
             'feature_ids' => $request->get('feature_ids', [])

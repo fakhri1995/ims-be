@@ -1845,22 +1845,6 @@ class AssetService{
         }
     }
 
-    public function getVendor(Request $request, $route_name)
-    {
-        $access = $this->checkRouteService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
-
-        try{
-            $id = $request->get('id', null);
-            $vendor = Vendor::find($id);
-            if($vendor === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $vendor, "status" => 200];
-            
-        } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
-    }
-
     public function addVendor(Request $request, $route_name)
     {
         $access = $this->checkRouteService->checkRoute($route_name);
@@ -1950,20 +1934,6 @@ class AssetService{
         }
     }
 
-    public function getRelationship($id, $route_name)
-    {
-        $access = $this->checkRouteService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
-        
-        try{
-            $relationship = Relationship::find($id);
-            if($relationship === null) return ["success" => false, "message" => "Relationship Tidak Ditemukan", "status" => 400];
-            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $relationship, "status" => 200];
-        } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
-    }
-
     public function addRelationship($data, $route_name)
     {
         $access = $this->checkRouteService->checkRoute($route_name);
@@ -2016,20 +1986,6 @@ class AssetService{
     }
 
     // Relationship Inventory
-
-    // public function getRelationshipInventories($route_name)
-    // {
-    //     $access = $this->checkRouteService->checkRoute($route_name);
-    //     if($access["success"] === false) return $access;
-        
-    //     try{
-    //         $relationship_inventories = RelationshipInventory::get();
-    //         if($relationship_inventories->isEmpty()) return ["success" => false, "message" => "Relationship Inventory Belum dibuat", "status" => 200];
-    //         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $relationship_inventories, "status" => 200];
-    //     } catch(Exception $err){
-    //         return ["success" => false, "message" => $err, "status" => 400];
-    //     }
-    // }
 
     public function getCompanyRelationshipInventory($request, $route_name)
     {

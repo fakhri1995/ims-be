@@ -104,20 +104,25 @@ class CompanyService
         return $company;
     }
 
-    public function getSubLocations($id = null){
+    public function getSubLocations($request, $route_name){
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $id = $request->get('company_id');
         if($id === null) $id = auth()->user()->company_id;
         if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
         $company =  $this->getCompanyTreeSelect($id, 'subChild');
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $company, "status" => 200];
     }
 
-    public function getLocations($id = null, $bypass = false){
-        if($bypass) $company = $this->getCompanyTreeSelect($id, 'noSubChild', true);
-        else {
-            if($id === null) $id = auth()->user()->company_id;
-            if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
-            $company =  $this->getCompanyTreeSelect($id, 'noSubChild', true);
-        }
+    public function getLocations($request, $route_name){
+        $access = $this->checkRouteService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $id = $request->get('company_id');
+        if($id === null) $id = auth()->user()->company_id;
+        if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
+        $company =  $this->getLocationTrees($id, 'noSubChild', true);
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $company, "status" => 200];
         
     }
@@ -128,8 +133,13 @@ class CompanyService
 
         $id = auth()->user()->company_id;
         if($id === 1) $company = $this->getCompanyTreeSelect($id, 'branchChild', true);
-        else $company = $this->getCompanyTreeSelect($id, 'noSubChild', true);
+        else $company = $this->getLocationTrees($id, 'noSubChild', true);
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $company, "status" => 200];
+    }
+
+    public function getLocationTrees($id = null){
+        if($id === null) $id = auth()->user()->company_id;
+        return $this->getCompanyTreeSelect($id, 'noSubChild', true);
     }
 
     public function getAllCompanyList($route_name){
@@ -419,6 +429,7 @@ class CompanyService
             $id = $request->get('id', null);
             $company_id = auth()->user()->company_id;
             if($id == $company_id) return ["success" => false, "message" => "Tidak Dapat Menghapus Perusahaan User", "status" => 401];
+            if($id == 1) return ["success" => false, "message" => "Tidak Dapat Menghapus Perusahaan Mitramas Infosys Global", "status" => 400];
             if(!$this->checkPermission($id, $company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
             $company = Company::withCount('noSubChild', 'subChild')->find($id);
             if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];

@@ -26,55 +26,55 @@ class AccessService
         else return ["success" => true, "message" => "Users Berhasil Diambil", "data" => $features, "status" => 200 ];
     }
 
-    public function addFeature($data, $route_name)
-    {
-        $access = $this->checkRouteService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+    // public function addFeature($data, $route_name)
+    // {
+    //     $access = $this->checkRouteService->checkRoute($route_name);
+    //     if($access["success"] === false) return $access;
         
-        try{
-            $access_feature = new AccessFeature;
-            $access_feature->name = $data['name'];
-            $access_feature->description = $data['description'];
-            $access_feature->save();
-            return ["success" => true, "message" => "Feature Berhasil Dibuat", "id" => $access_feature->id, "status" => 200];
-        } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
-    }
+    //     try{
+    //         $access_feature = new AccessFeature;
+    //         $access_feature->name = $data['name'];
+    //         $access_feature->description = $data['description'];
+    //         $access_feature->save();
+    //         return ["success" => true, "message" => "Feature Berhasil Dibuat", "id" => $access_feature->id, "status" => 200];
+    //     } catch(Exception $err){
+    //         return ["success" => false, "message" => $err, "status" => 400];
+    //     }
+    // }
 
-    public function updateFeature($data, $route_name)
-    {
-        $access = $this->checkRouteService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+    // public function updateFeature($data, $route_name)
+    // {
+    //     $access = $this->checkRouteService->checkRoute($route_name);
+    //     if($access["success"] === false) return $access;
         
-        $id = $data['id'];
-        try{
-            $access_feature = AccessFeature::find($id);
-            if($access_feature === null) ["success" => false, "message" => "Id Feature Tidak Ditemukan", "status" => 400];
-            $access_feature->name = $data['name'];
-            $access_feature->description = $data['description'];
-            $access_feature->save();
-            return ["success" => true, "message" => "Feature Berhasil Diubah", "status" => 200];
-        } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
-    }
+    //     $id = $data['id'];
+    //     try{
+    //         $access_feature = AccessFeature::find($id);
+    //         if($access_feature === null) ["success" => false, "message" => "Id Feature Tidak Ditemukan", "status" => 400];
+    //         $access_feature->name = $data['name'];
+    //         $access_feature->description = $data['description'];
+    //         $access_feature->save();
+    //         return ["success" => true, "message" => "Feature Berhasil Diubah", "status" => 200];
+    //     } catch(Exception $err){
+    //         return ["success" => false, "message" => $err, "status" => 400];
+    //     }
+    // }
 
-    public function deleteFeature($id, $route_name)
-    {
-        $access = $this->checkRouteService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+    // public function deleteFeature($id, $route_name)
+    // {
+    //     $access = $this->checkRouteService->checkRoute($route_name);
+    //     if($access["success"] === false) return $access;
         
-        $access_feature = AccessFeature::find($id);
-        if($access_feature === null) return ["success" => false, "message" => "Id Feature Tidak Ditemukan", "status" => 400];
-        try{
-            $access_feature->delete();
-            $access_feature->roles()->detach();
-            return ["success" => true, "message" => "Feature Berhasil Dihapus", "status" => 200];
-        } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
-    }
+    //     $access_feature = AccessFeature::find($id);
+    //     if($access_feature === null) return ["success" => false, "message" => "Id Feature Tidak Ditemukan", "status" => 400];
+    //     try{
+    //         $access_feature->delete();
+    //         $access_feature->roles()->detach();
+    //         return ["success" => true, "message" => "Feature Berhasil Dihapus", "status" => 200];
+    //     } catch(Exception $err){
+    //         return ["success" => false, "message" => $err, "status" => 400];
+    //     }
+    // }
 
     //Modules
     public function getModules($route_name)
@@ -293,6 +293,7 @@ class AccessService
         $access = $this->checkRouteService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
+        if($id == 1) return ["success" => false, "message" => "Tidak Dapat Menghapus Role Super Admin", "status" => 401];
         $role = Role::with('features')->find($id);
         if($role === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         try{

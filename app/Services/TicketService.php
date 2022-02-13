@@ -30,7 +30,7 @@ class TicketService
     }
 
     // Status Ticket
-    // 1 = Open, 2 = On Progress, 3 = On Hold, 4 = Canceled, 5 = Closed
+    // 1 = Overdue, 2 = Open, 3 = On Progress, 4 = On Hold, 5 = Completed, 6 = Closed, 7 = Canceled
 
     public function getFilterTickets($request, $route_name){
         $access = $this->checkRouteService->checkRoute($route_name);
@@ -122,7 +122,7 @@ class TicketService
         
         
         $companyService = new CompanyService;
-        $companies = $companyService->getLocations();
+        $companies = $companyService->getLocationTrees();
 
         $statuses = [
             (object)[
@@ -793,73 +793,6 @@ class TicketService
         }
     }
     
-    // public function changeStatusTicket($data, $route_name)
-    // {
-    //     $access = $this->checkRouteService->checkRoute($route_name);
-    //     if($access["success"] === false) return $access;
-        
-    //     try{
-    //         $id = $data['id'];
-    //         $notes = $data['notes'];
-    //         $status_id = $data['status_id'];
-    //         $ticket = Ticket::find($id);
-    //         // return ["success" => false, "message" => $data, "status" => 400];
-    //         if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
-    //         if($ticket->status_id === 5) return ["success" => false, "message" => "Status Ticket Sudah Closed", "status" => 400];
-    //         if($status_id < 1 || $status_id > 5) return ["success" => false, "message" => "Status Tidak Tepat", "status" => 400];
-    //         if(strlen($notes) > 1000) return ["success" => false, "message" => "Notes Melebihi 1000 Karakter", "status" => 400];
-    //         if($ticket->status_id === 4 && $status_id !== 5) return ["success" => false, "message" => "Status Canceled Tidak Dapat Diubah Selain Menjadi Closed", "status" => 400];
-    //         if($status_id === 4 && $notes === null) return ["success" => false, "message" => "Untuk Status Canceled Diperlukan Keterangan (Notes)", "status" => 400];
-    //         $current_timestamp = date("Y-m-d H:i:s");
-    //         $old_status = $ticket->status_id;
-    //         $ticket->status_id = $status_id;
-            
-    //         if($ticket->status_id === 5){
-    //             $ticket->closed_at = $current_timestamp;
-    //             // if($ticket->type === 1){
-    //             //     $incident = Incident::find($ticket->ticketable_id);
-    //             //     $properties = [];
-    //             //     if($incident === null) $properties = ["false_message" => "Incident Id Not Found"];
-    //             //     else {
-    //             //         $inventory = Inventory::find($incident->inventory_id);
-    //             //         if($inventory === null) $properties = ["false_message" => "Inventory Id Not Found"];
-    //             //         else {
-    //             //             $inventory_columns = ModelInventoryColumn::get();
-    //             //             $inventory_values = InventoryValue::where('inventory_id', $inventory->id)->get();
-    //             //             $additional_attributes = [];
-    //             //             if(count($inventory_values)){
-    //             //                 foreach($inventory_values as $inventory_value){
-    //             //                     $inventory_value_column = $inventory_columns->where('id', $inventory_value->model_inventory_column_id)->first();
-    //             //                     $inventory_value->name = $inventory_value_column === null ? "not_found_column" : $inventory_value_column->name;
-    //             //                     $additional_attributes[] = $inventory_value;
-    //             //                 }
-    //             //             }
-    //             //             foreach($inventory->getAttributes() as $key => $value){
-    //             //                 $properties['attributes']['inventory'][$key] = $value;
-    //             //             }
-    //             //             if(count($additional_attributes)){
-    //             //                 foreach($additional_attributes as $additional_attribute){
-    //             //                     $properties['attributes']['inventory'][$additional_attribute->name] = $additional_attribute->value;
-    //             //                 }
-    //             //             }
-    //             //         }
-    //             //     }
-    //             //     $notes = "Closed Condition Inventory";
-    //             //     $logService->updateStatusLogTicket($ticket->id, $causer_id, $properties, $notes);
-    //             // }
-    //         }
-
-    //         $ticket->save();
-    //         $causer_id = auth()->user()->id;
-    //         $logService = new LogService;
-    //         if($old_status !== $ticket->status_id) $logService->updateStatusLogTicket($ticket->id, $causer_id, $ticket->status_id, $notes);
-
-    //         return ["success" => true, "message" => "Berhasil Merubah Status Ticket", "status" => 200];
-    //     } catch(Exception $err){
-    //         return ["success" => false, "message" => $err, "status" => 400];
-    //     }
-    // }
-    
     public function cancelTicket($request, $admin)
     {
         try{
@@ -901,34 +834,6 @@ class TicketService
         if($access["success"] === false) return $access;
         return $this->cancelTicket($request, false);
     }
-    
-    // public function cancelClientTicket($data, $route_name)
-    // {
-    //     $access = $this->checkRouteService->checkRoute($route_name);
-    //     if($access["success"] === false) return $access;
-        
-    //     try{
-    //         $id = $data['id'];
-    //         $notes = $data['notes'];
-    //         // return ["success" => true, "message" => $data, "status" => 400];
-    //         if($notes === null) return ["success" => false, "message" => "Untuk Status Canceled Diperlukan Keterangan (Notes)", "status" => 400];
-    //         $ticket = Ticket::with(['requester'])->find($id);
-    //         $company_user_login_id = auth()->user()->company_id;
-    //         if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
-    //         if($ticket->task->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Tidak Memiliki Akses Tiket Ini", "status" => 401];
-    //         if($ticket->status === 4) return ["success" => false, "message" => "Ticket Sudah Dalam Status Canceled", "status" => 400];
-    //         if($ticket->status === 5) return ["success" => false, "message" => "Ticket Dalam Status Closed", "status" => 400];
-    //         $ticket->status_id = 4;
-    //         $ticket->save();
-    //         $causer_id = auth()->user()->id;
-    //         $logService = new LogService;
-    //         $logService->updateStatusLogTicket($ticket->id, $causer_id, $ticket->status_id, $notes);
-            
-    //         return ["success" => true, "message" => $ticket->status_id, "status" => 200];
-    //     } catch(Exception $err){
-    //         return ["success" => false, "message" => $err, "status" => 400];
-    //     }
-    // }
     
     public function assignTicket($request, $route_name)
     {
@@ -1124,33 +1029,6 @@ class TicketService
     public function clientTicketExport($request, $route_name)
     {
         return $this->TicketExportPdf($request, $route_name, false);
-    }
-
-    public function getTicketNotesLog($request, $admin)
-    {
-        $id = $request->get('id');
-        $ticket = Ticket::with('task.creator:id,company_id')->find($id);
-        if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
-        $company_user_login_id = auth()->user()->company_id;
-        if(!$admin && $ticket->task->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Tidak Memiliki Akses Tiket Ini", "status" => 401];
-        
-        $logService = new LogService;
-        $logs = $logService->getTicketNotesLog($id);
-        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $logs, "status" => 200];
-    }
-
-    public function getAdminTicketNotesLog(Request $request, $route_name)
-    {
-        $access = $this->checkRouteService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
-        return $this->getTicketNotesLog($request, true);
-    }
-
-    public function getClientTicketNotesLog(Request $request, $route_name)
-    {
-        $access = $this->checkRouteService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
-        return $this->getClientTicketNotesLog($request, false);
     }
 
     // Ticket Task Types

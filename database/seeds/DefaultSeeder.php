@@ -37,7 +37,7 @@ class DefaultSeeder extends Seeder
             $user->profile_image = "-";
             $user->position = $data['position'];
             $user->is_enabled = true;
-            $user->created_time = "2021-02-09 09:37:19";
+            $user->created_time = "2022-02-09 09:37:19";
             $user->save();
 
             $user->roles()->syncWithoutDetaching([$super_admin_role->id]);
@@ -62,7 +62,7 @@ class DefaultSeeder extends Seeder
                 $user->profile_image = "-";
                 $user->position = $positions[random_int(0, 5)];
                 $user->is_enabled = true;
-                $user->created_time = "2021-02-09 09:37:19";
+                $user->created_time = "2022-02-09 09:37:19";
                 $user->save();
                 $user->roles()->syncWithoutDetaching([$default_requesters->id]);
                 $index++;
@@ -88,7 +88,7 @@ class DefaultSeeder extends Seeder
                 $user->profile_image = "-";
                 $user->position = $positions[random_int(0, 5)];
                 $user->is_enabled = true;
-                $user->created_time = "2021-02-09 09:37:19";
+                $user->created_time = "2022-02-09 09:37:19";
                 $user->save();
                 $user->roles()->syncWithoutDetaching([$default_agents->id]);
                 $index++;
@@ -106,12 +106,12 @@ class DefaultSeeder extends Seeder
         $company->phone_number = "-";
         $company->image_logo = "-";
         $company->role = $role;
-        $company->created_time = "2021-02-09 19:37:19";
+        $company->created_time = "2022-02-09 19:37:19";
         if($role === 4) $company->is_enabled = false;
         else $company->is_enabled = true;
         
         $company->singkatan = "-";
-        $company->tanggal_pkp = "2021-05-03";
+        $company->tanggal_pkp = "2022-05-03";
         $company->penanggung_jawab = '-';
         $company->npwp = '-';
         $company->fax = '-';
@@ -197,14 +197,20 @@ class DefaultSeeder extends Seeder
     {
         $data = [
             [
-                "name" => "Narendra Hanif",
-                "email" => "hanif@mitramas.com",
-                "password" => "m1tramas",
+                "name" => "Admin MIG",
+                "email" => "admin@mitramas.com",
+                "password" => "123456789",
                 "position" => "-"
             ],
             [
-                "name" => "Yues Tadrik Hafiyan",
-                "email" => "yues@mitramas.com",
+                "name" => "Narendra Hanif",
+                "email" => "hanif@mitramas.com",
+                "password" => "123456789",
+                "position" => "-"
+            ],
+            [
+                "name" => "Kennan Fattahillah Herdyhanto",
+                "email" => "kennan@mitramas.com",
                 "password" => "123456789",
                 "position" => "Frontend Developer"
             ],

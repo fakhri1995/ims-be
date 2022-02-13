@@ -90,7 +90,7 @@ class AssetController extends Controller
 
     public function getFilterModels(Request $request)
     {
-        $route_name = "INVENTORY_ADD";
+        $route_name = "MODELS_GET";
 
         $response = $this->assetService->getFilterModels($request, $route_name);
         return response()->json($response, $response['status']);
@@ -114,7 +114,7 @@ class AssetController extends Controller
     }
 
     public function getModelRelations(Request $request){
-        $route_name = "MODEL_ADD";
+        $route_name = "MODEL_GET";
 
         $response = $this->assetService->getModelRelations($route_name);
         return response()->json($response, $response['status']);
@@ -163,7 +163,7 @@ class AssetController extends Controller
     // Inventory
     public function getInventoryRelations(Request $request)
     {
-        $route_name = "INVENTORY_ADD";
+        $route_name = "INVENTORY_GET";
 
         $response = $this->assetService->getInventoryRelations($route_name);
         return response()->json($response, $response['status']);
@@ -171,7 +171,7 @@ class AssetController extends Controller
 
     public function getFilterInventories(Request $request)
     {
-        $route_name = "INVENTORY_ADD";
+        $route_name = "INVENTORIES_GET";
 
         $response = $this->assetService->getFilterInventories($request, $route_name);
         return response()->json($response, $response['status']);
@@ -222,14 +222,6 @@ class AssetController extends Controller
     {
         $route_name = "INVENTORY_STATUS_USAGE";
 
-        $response = $this->assetService->getChangeStatusUsageDetailList($request, $route_name);
-        return response()->json($response, $response['status']);
-    }
-
-    public function getInventoryAssociation(Request $request)
-    {
-        $route_name = "INVENTORY_ASSOCIATION_GET";
-        
         $response = $this->assetService->getChangeStatusUsageDetailList($request, $route_name);
         return response()->json($response, $response['status']);
     }
@@ -423,14 +415,6 @@ class AssetController extends Controller
         return response()->json($response, $response['status']);
     }
 
-    public function getVendor(Request $request)
-    {
-        $route_name = "VENDOR_GET";
-
-        $response = $this->assetService->getVendor($request, $route_name);
-        return response()->json($response, $response['status']);
-    }
-
     public function addVendor(Request $request)
     {
         $route_name = "VENDOR_ADD";
@@ -464,15 +448,6 @@ class AssetController extends Controller
         $route_name = "RELATIONSHIPS_GET";
 
         $response = $this->assetService->getRelationships($route_name);
-        return response()->json($response, $response['status']);
-    }
-
-    public function getRelationship(Request $request)
-    {
-        $route_name = "RELATIONSHIP_GET";
-        $id = $request->get('id', null);
-
-        $response = $this->assetService->getRelationship($id, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -545,7 +520,7 @@ class AssetController extends Controller
 
     public function getRelationshipInventoryRelation(Request $request)
     {
-        $route_name = "RELATIONSHIP_INVENTORY_ADD";
+        $route_name = "RELATIONSHIP_INVENTORY_GET";
 
         $response = $this->assetService->getRelationshipInventoryRelation($route_name);
         return response()->json($response, $response['status']);
@@ -553,7 +528,7 @@ class AssetController extends Controller
 
     public function getRelationshipInventoryDetailList(Request $request)
     {
-        $route_name = "RELATIONSHIP_INVENTORY_ADD";
+        $route_name = "RELATIONSHIP_INVENTORY_GET";
 
         $response = $this->assetService->getRelationshipInventoryDetailList($request, $route_name);
         return response()->json($response, $response['status']);

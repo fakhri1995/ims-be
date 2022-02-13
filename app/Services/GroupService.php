@@ -38,7 +38,10 @@ class GroupService{
         if($access["success"] === false) return $access;
         try{
             $name = $request->get('name', null);
+            $type = $request->get('type', null);
             $groups = Group::select('id', 'name');
+            if($type == 1) $groups = $groups->where('is_agent', true);
+            else if($type == 2) $groups = $groups->where('is_agent', false);
             if($name) $groups = $groups->where('groups.name', 'ilike', "%".$name."%");
             $data = $groups->limit(50)->get();
             
@@ -179,6 +182,7 @@ class GroupService{
 
     public function deleteGroup($id, $is_agent)
     {
+        if($id == 1) return ["success" => false, "message" => "Tidak Dapat Menghapus Group Engineer", "status" => 401];
         $group = Group::find($id);
         if($group === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         if($group->is_agent != $is_agent) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];

@@ -234,12 +234,6 @@ class LogService
     }
 
     // Get Ticket Log
-
-    public function getTicketNotesLog($id)
-    {
-        $logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', 'Note Khusus')->orderBy('created_at','desc')->get();
-        return $logs;
-    }
     
     public function getTicketLog($id, $route_name)
     {
@@ -338,29 +332,6 @@ class LogService
             "special_logs" => $special_logs
         ];
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
-    }
-
-    public function getCloseTicketLog($id, $route_name){
-        $checkRouteService = new CheckRouteService;
-        $access = $checkRouteService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
-        
-        $ticket = Ticket::select("id", "type", "subject_id")->find($id);
-        if($ticket === null) return ["success" => false, "message" => "Ticket Tidak Ditemukan", "status" => 400];
-        $ticket_logs = ActivityLogTicket::where('subject_id', $id)->get();
-
-        if($ticket->type === 1){
-            $incident = Incident::select("id", "inventory_id")->find($ticket->subject_id);
-            if($incident === null) return ["success" => true, "message" => "Incident Tidak Ditemukan", "data" => ["ticket_logs" => $ticket_logs, "inventory_logs" => []], "status" => 200];
-            else {
-                $inventory = Inventory::find($incident->inventory_id);
-                if($inventory === null) return ["success" => true, "message" => "Inventory Tidak Ditemukan", "data" => ["ticket_logs" => $ticket_logs, "inventory_logs" => []], "status" => 200];
-                else $inventory_logs = $this->inventoryLogs($inventory->id);
-            }
-            return ["success" => true, "data" => ["ticket_logs" => $ticket_logs, "inventory_logs" => $inventory_logs], "status" => 200];
-        }
-        
-        return ["success" => true, "data" => ["ticket_logs" => $ticket_logs], "status" => 200];
     }
 
     // Get Company Log

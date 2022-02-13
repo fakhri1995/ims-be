@@ -31,13 +31,6 @@ class ActivityLogController extends Controller
 
     // Ticket
 
-    public function getTicketNotesLog(Request $request){
-        $route_name = "TICKET_NOTES_LOG_GET";   
-        
-        $response = $this->logService->getTicketNotesLog($request, $route_name);
-        return response()->json($response, $response['status']);
-    }
-
     public function getTicketLog(Request $request){
         $route_name = "TICKET_LOG_GET";   
         $id = $request->get('id', null);
@@ -47,25 +40,17 @@ class ActivityLogController extends Controller
     }
     
     public function getClientTicketLog(Request $request){
-        $route_name = "CLIENT_TICKET_LOG_GET";   
+        $route_name = "TICKET_CLIENT_LOG_GET";   
         $id = $request->get('id', null);
         
         $response = $this->logService->getClientTicketLog($id, $route_name);
         return response()->json($response, $response['status']);
     }
 
-    public function getCloseTicketLog(Request $request){
-        $route_name = "LOG_CLOSE_TICKET_GET";   
-        $id = $request->get('id', null);
-        
-        $response = $this->logService->getCloseTicketLog($id, $route_name);
-        return response()->json($response, $response['status']);
-    }
-
     // Company
 
     public function getCompanyLog(Request $request){
-        $route_name = "LOG_COMPANY_GET";   
+        $route_name = "COMPANY_LOG_GET";   
         
         $response = $this->logService->getCompanyLog($request, $route_name);
         return response()->json($response, $response['status']);

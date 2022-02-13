@@ -94,7 +94,7 @@ class WarehouseController extends Controller
     // Detail Purchase Orders
     public function getDetailPurchaseOrders(Request $request)
     {
-        $route_name = "PURCHASE_ORDERS_GET";
+        $route_name = "PURCHASE_ORDER_DETAILS_GET";
 
         $response = $this->warehouseService->getDetailPurchaseOrders($request, $route_name);
         return response()->json($response, $response['status']);
@@ -102,7 +102,7 @@ class WarehouseController extends Controller
 
     public function addDetailPurchaseOrder(Request $request)
     {
-        $route_name = "PURCHASE_ORDER_ADD";
+        $route_name = "PURCHASE_ORDER_DETAIL_ADD";
         
         $response = $this->warehouseService->addDetailPurchaseOrder($request, $route_name);
         return response()->json($response, $response['status']);
@@ -110,7 +110,7 @@ class WarehouseController extends Controller
 
     public function updateDetailPurchaseOrder(Request $request)
     {
-        $route_name = "PURCHASE_ORDER_UPDATE";
+        $route_name = "PURCHASE_ORDER_DETAIL_UPDATE";
         
         $response = $this->warehouseService->updateDetailPurchaseOrder($request, $route_name);
         return response()->json($response, $response['status']);
@@ -118,7 +118,7 @@ class WarehouseController extends Controller
 
     public function deleteDetailPurchaseOrder(Request $request)
     {
-        $route_name = "PURCHASE_ORDER_DELETE";
+        $route_name = "PURCHASE_ORDER_DETAIL_DELETE";
         
         $response = $this->warehouseService->deleteDetailPurchaseOrder($request, $route_name);
         return response()->json($response, $response['status']);

@@ -297,7 +297,7 @@ class TaskController extends Controller
 
     public function getFilterTaskTypes(Request $request)
     {
-        $route_name = "TASK_ADD";
+        $route_name = "TASK_TYPES_GET";
 
         $response = $this->taskService->getFilterTaskTypes($request, $route_name);
         return response()->json($response, $response['status']);
@@ -305,7 +305,7 @@ class TaskController extends Controller
 
     public function getTaskTypes(Request $request)
     {
-        $route_name = "TASKS_GET";
+        $route_name = "TASK_TYPES_GET";
 
         $response = $this->taskService->getTaskTypes($request, $route_name);
         return response()->json($response, $response['status']);
@@ -313,7 +313,7 @@ class TaskController extends Controller
 
     public function getTaskType(Request $request)
     {
-        $route_name = "TASK_GET";
+        $route_name = "TASK_TYPE_GET";
 
         $response = $this->taskService->getTaskType($request, $route_name);
         return response()->json($response, $response['status']);
@@ -321,7 +321,7 @@ class TaskController extends Controller
 
     public function addTaskType(Request $request)
     {
-        $route_name = "TASK_ADD";
+        $route_name = "TASK_TYPE_ADD";
 
         $response = $this->taskService->addTaskType($request, $route_name);
         return response()->json($response, $response['status']);
@@ -329,7 +329,7 @@ class TaskController extends Controller
 
     public function updateTaskType(Request $request)
     {
-        $route_name = "TASK_UPDATE";
+        $route_name = "TASK_TYPE_UPDATE";
 
         $response = $this->taskService->updateTaskType($request, $route_name);
         return response()->json($response, $response['status']);
@@ -337,7 +337,7 @@ class TaskController extends Controller
 
     public function deleteTaskType(Request $request)
     {
-        $route_name = "TASK_DELETE";
+        $route_name = "TASK_TYPE_DELETE";
 
         $response = $this->taskService->deleteTaskType($request, $route_name);
         return response()->json($response, $response['status']);

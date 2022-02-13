@@ -21,7 +21,7 @@ class BankController extends Controller
     // MIG Banks
     public function getMainBanks(Request $request)
     {
-        $route_name = "MAIN_BANKS_GET";
+        $route_name = "COMPANY_MAIN_BANKS_GET";
 
         $response = $this->bankService->getMainBanks($route_name);
         return response()->json($response, $response['status']);
@@ -29,7 +29,7 @@ class BankController extends Controller
 
     public function addMainBank(Request $request)
     {
-        $route_name = "MAIN_BANK_ADD";
+        $route_name = "COMPANY_MAIN_BANK_ADD";
         
         $response = $this->bankService->addMainBank($request, $route_name);
         return response()->json($response, $response['status']);
@@ -37,7 +37,7 @@ class BankController extends Controller
 
     public function updateMainBank(Request $request)
     {
-        $route_name = "MAIN_BANK_UPDATE";
+        $route_name = "COMPANY_MAIN_BANK_UPDATE";
         
         $response = $this->bankService->updateMainBank($request, $route_name);
         return response()->json($response, $response['status']);
@@ -45,7 +45,7 @@ class BankController extends Controller
 
     public function deleteMainBank(Request $request)
     {
-        $route_name = "MAIN_BANK_DELETE";
+        $route_name = "COMPANY_MAIN_BANK_DELETE";
         $id = $request->get('id', null);
         
         $response = $this->bankService->deleteMainBank($id, $route_name);
@@ -55,7 +55,7 @@ class BankController extends Controller
     // Client Banks
     public function getClientBanks(Request $request)
     {
-        $route_name = "CLIENT_BANKS_GET";
+        $route_name = "COMPANY_CLIENT_BANKS_GET";
         $id = $request->get('id', null);
         
         $response = $this->bankService->getClientBanks($id, $route_name);
@@ -64,7 +64,7 @@ class BankController extends Controller
 
     public function addClientBank(Request $request)
     {
-        $route_name = "CLIENT_BANK_ADD";
+        $route_name = "COMPANY_CLIENT_BANK_ADD";
         
         $response = $this->bankService->addClientBank($request, $route_name);
         return response()->json($response, $response['status']);
@@ -72,7 +72,7 @@ class BankController extends Controller
 
     public function updateClientBank(Request $request)
     {
-        $route_name = "CLIENT_BANK_UPDATE";
+        $route_name = "COMPANY_CLIENT_BANK_UPDATE";
         
         $response = $this->bankService->updateClientBank($request, $route_name);
         return response()->json($response, $response['status']);
@@ -80,7 +80,7 @@ class BankController extends Controller
 
     public function deleteClientBank(Request $request)
     {
-        $route_name = "CLIENT_BANK_DELETE";
+        $route_name = "COMPANY_CLIENT_BANK_DELETE";
         $id = $request->get('id', null);
         
         $response = $this->bankService->deleteClientBank($id, $route_name);

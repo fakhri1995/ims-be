@@ -19,14 +19,14 @@ class GroupController extends Controller
 
     public function getAssignToList(Request $request)
     {
-        // $route_name = "AGENT_GROUPS_GET";
+        $route_name = "TICKET_ASSIGN";
         $response = $this->groupService->getAssignToList($request);
         return response()->json($response, $response['status']);
     }
 
     public function getFilterGroups(Request $request)
     {
-        $route_name = "FILTER_GROUPS_GET";
+        $route_name = "GROUPS_GET";
         
         $response = $this->groupService->getFilterGroups($request, $route_name);
         return response()->json($response, $response['status']);
@@ -83,7 +83,7 @@ class GroupController extends Controller
 
     public function deleteAgentGroup(Request $request)
     {
-        $route_name = "AGENT_GROUP_GET";
+        $route_name = "AGENT_GROUP_DELETE";
         
         $id = $request->get('id', null);
         
@@ -142,7 +142,7 @@ class GroupController extends Controller
 
     public function deleteRequesterGroup(Request $request)
     {
-        $route_name = "REQUESTER_GROUP_GET";
+        $route_name = "REQUESTER_GROUP_DELETE";
         
         $id = $request->get('id', null);
         

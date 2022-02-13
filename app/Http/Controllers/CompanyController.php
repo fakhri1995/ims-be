@@ -39,7 +39,7 @@ class CompanyController extends Controller
 
     public function getMainLocations(Request $request)
     {
-        $route_name = "MAIN_LOCATIONS_GET";
+        $route_name = "COMPANY_MAIN_LOCATIONS_GET";
         
         $response = $this->companyService->getMainLocations($route_name);
         return response()->json($response, $response['status']);
@@ -47,15 +47,17 @@ class CompanyController extends Controller
 
     public function getLocations(Request $request)
     {
-        $company_id = $request->get('company_id');
-        $response = $this->companyService->getLocations($company_id);
+        $route_name = "COMPANY_LOCATIONS_GET";
+
+        $response = $this->companyService->getLocations($request, $route_name);
         return response()->json($response, $response['status']);
     }
     
     public function getSubLocations(Request $request)
     {
-        $company_id = $request->get('company_id');
-        $response = $this->companyService->getSubLocations($company_id);
+        $route_name = "COMPANY_SUB_LOCATIONS_GET";
+        
+        $response = $this->companyService->getSubLocations($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
