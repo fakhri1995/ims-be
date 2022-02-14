@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         $this->call(TaskSeeder::class);
         $this->call(PolymorphicCodeSeeder::class);
         $this->call(TicketManagementSeeder::class);
+        $this->call(TicketSeeder::class);
         $this->call(DefaultSeeder::class);
     }
 }
