@@ -13,7 +13,6 @@ class CreateJobsTable extends Migration
      */
     public function up()
     {
-        \Illuminate\Support\Facades\DB::statement('SET SESSION sql_require_primary_key=0');
         Schema::create('jobs', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('queue')->index();

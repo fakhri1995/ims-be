@@ -13,7 +13,6 @@ class CreateActivityLogInventoryPivotsTable extends Migration
      */
     public function up()
     {
-        \Illuminate\Support\Facades\DB::statement('SET SESSION sql_require_primary_key=0');
         Schema::create('activity_log_inventory_pivots', function (Blueprint $table) {
             $table->id();
             $table->string('log_name')->nullable();

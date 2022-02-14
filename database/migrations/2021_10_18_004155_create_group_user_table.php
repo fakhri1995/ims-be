@@ -13,7 +13,6 @@ class CreateGroupUserTable extends Migration
      */
     public function up()
     {
-        \Illuminate\Support\Facades\DB::statement('SET SESSION sql_require_primary_key=0');
         Schema::create('group_user', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('group_id');

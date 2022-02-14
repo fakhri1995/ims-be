@@ -13,7 +13,6 @@ class CreateServiceCategoriesTable extends Migration
      */
     public function up()
     {
-        \Illuminate\Support\Facades\DB::statement('SET SESSION sql_require_primary_key=0');
         Schema::create('service_categories', function (Blueprint $table) {
             $table->id();
             $table->string('nama_kategori');
