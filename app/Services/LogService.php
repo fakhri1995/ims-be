@@ -19,7 +19,7 @@ use App\StatusUsageInventory;
 use App\ActivityLogPurchaseOrder;
 use App\StatusConditionInventory;
 use App\ActivityLogInventoryPivot;
-use App\Services\CheckRouteService;
+use App\Services\GlobalService;
 use App\ActivityLogInventoryRelationship;
 
 class LogService
@@ -33,8 +33,8 @@ class LogService
 
     public function getActivityInventoryLogs($id, $route_name)
     {
-        $checkRouteService = new CheckRouteService;
-        $access = $checkRouteService->checkRoute($route_name);
+        $GlobalService = new GlobalService;
+        $access = $GlobalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -237,8 +237,8 @@ class LogService
     
     public function getTicketLog($id, $route_name)
     {
-        $checkRouteService = new CheckRouteService;
-        $access = $checkRouteService->checkRoute($route_name);
+        $GlobalService = new GlobalService;
+        $access = $GlobalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $special_logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', 'Note Khusus')->orderBy('created_at','desc')->get();
@@ -283,8 +283,8 @@ class LogService
     
     public function getClientTicketLog($id, $route_name)
     {
-        $checkRouteService = new CheckRouteService;
-        $access = $checkRouteService->checkRoute($route_name);
+        $GlobalService = new GlobalService;
+        $access = $GlobalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $ticket = Ticket::with('task.creator')->find($id);

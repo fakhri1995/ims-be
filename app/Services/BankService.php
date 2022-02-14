@@ -4,18 +4,18 @@ namespace App\Services;
 use App\Bank;
 use Exception;
 use App\Services\LogService;
-use App\Services\CheckRouteService;
+use App\Services\GlobalService;
 
 class BankService{
     public function __construct()
     {
-        $this->checkRouteService = new CheckRouteService;
+        $this->globalService = new GlobalService;
     }
 
     // MIG Banks
     public function getMainBanks($route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         $session_company_id = auth()->user()->company_id;
         try{
@@ -29,7 +29,7 @@ class BankService{
 
     public function addMainBank($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $session_company_id = auth()->user()->company_id;
@@ -53,7 +53,7 @@ class BankService{
 
     public function updateMainBank($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $session_company_id = auth()->user()->company_id;
@@ -80,7 +80,7 @@ class BankService{
 
     public function deleteMainBank($id, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $session_company_id = auth()->user()->company_id;
@@ -101,7 +101,7 @@ class BankService{
     // Client Banks
     public function getClientBanks($id, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         try{
             if($id === 1) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini", "status" => 401];
@@ -115,7 +115,7 @@ class BankService{
 
     public function addClientBank($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $company_id = $request->get('company_id');
@@ -141,7 +141,7 @@ class BankService{
 
     public function updateClientBank($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = $request->get('id');
@@ -167,7 +167,7 @@ class BankService{
 
     public function deleteClientBank($id, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $bank = Bank::find($id);

@@ -5,18 +5,18 @@ use Exception;
 use App\PurchaseOrder;
 use App\Services\LogService;
 use Illuminate\Support\Facades\DB;
-use App\Services\CheckRouteService;
+use App\Services\GlobalService;
 
 class WarehouseService{
     public function __construct()
     {
-        $this->checkRouteService = new CheckRouteService;
+        $this->globalService = new GlobalService;
     }
 
     // Purchase Order
     public function getPurchaseOrders($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         try{
             $rows = $request->get('rows', 10);
@@ -67,7 +67,7 @@ class WarehouseService{
             $purchase_orders = $purchase_orders->paginate($rows);
             $purchase_orders->withPath(env('APP_URL').'/getPurchaseOrders'.$params);
             if($purchase_orders->isEmpty()) return ["success" => true, "message" => "Purchase Orders Masih Kosong", "data" => $purchase_orders, "status" => 200];
-            $statuses = $this->checkRouteService->statusPurchaseOrder();
+            $statuses = $this->globalService->statusPurchaseOrder();
             foreach($purchase_orders as $purchase_order){
                 $purchase_order->purchase_order_date_template = date("d F Y", strtotime($purchase_order->purchase_order_date));
                 if($purchase_order->arrived_date !== null) $purchase_order->arrived_date_template = date("d F Y", strtotime($purchase_order->arrived_date));
@@ -88,7 +88,7 @@ class WarehouseService{
 
     public function getPurchaseOrder($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         try{
             $id = $request->get('id');
@@ -122,7 +122,7 @@ class WarehouseService{
 
     public function addPurchaseOrder($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $purchase_order = new PurchaseOrder;
@@ -144,7 +144,7 @@ class WarehouseService{
 
     public function updatePurchaseOrder($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = $request->get('id');
@@ -165,7 +165,7 @@ class WarehouseService{
 
     public function deletePurchaseOrder($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $purchase_order = PurchaseOrder::find($request->get('id'));
@@ -182,7 +182,7 @@ class WarehouseService{
 
     public function acceptPurchaseOrder($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $purchase_order = PurchaseOrder::with('vendor:id,name')->find($request->get('id'));
@@ -196,7 +196,7 @@ class WarehouseService{
             $split = explode(' ', $year_and_month);
             $year = (int) $split[0];
             $month = (int) $split[1];
-            $roman_numeral = $this->checkRouteService->romanNumeral();
+            $roman_numeral = $this->globalService->romanNumeral();
             $last_purchase_order = PurchaseOrder::where('year', $year)->orderBy('sub_id', 'desc')->first();
             if($last_purchase_order === null) $purchase_order->sub_id = 1;
             else $purchase_order->sub_id = $last_purchase_order->sub_id + 1;
@@ -214,7 +214,7 @@ class WarehouseService{
 
     public function rejectPurchaseOrder($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $purchase_order = PurchaseOrder::find($request->get('id'));
@@ -235,7 +235,7 @@ class WarehouseService{
 
     public function sendPurchaseOrder($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $purchase_order = PurchaseOrder::find($request->get('id'));
@@ -256,7 +256,7 @@ class WarehouseService{
 
     public function receivePurchaseOrder($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $purchase_order = PurchaseOrder::find($request->get('id'));
@@ -279,7 +279,7 @@ class WarehouseService{
     // Detail Purchase Order
     public function getDetailPurchaseOrders($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         try{
             $id = $request->get('id');
@@ -313,7 +313,7 @@ class WarehouseService{
     
     public function addDetailPurchaseOrder($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $model_id = $request->get('model_id');
@@ -344,7 +344,7 @@ class WarehouseService{
 
     public function updateDetailPurchaseOrder($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $model_id = $request->get('model_id');
@@ -375,7 +375,7 @@ class WarehouseService{
 
     public function deleteDetailPurchaseOrder($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $model_id = $request->get('model_id');

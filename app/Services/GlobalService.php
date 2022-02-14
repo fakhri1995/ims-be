@@ -4,7 +4,7 @@ namespace App\Services;
 use App\AccessFeature;
 use App\Role;
 
-class CheckRouteService
+class GlobalService
 {
     public function checkRoute($route_name){
         //Super Admin Special Bypass

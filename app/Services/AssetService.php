@@ -24,12 +24,12 @@ use App\Services\CompanyService;
 use App\StatusConditionInventory;
 use App\Imports\InventoriesImport;
 use Illuminate\Support\Facades\DB;
-use App\Services\CheckRouteService;
+use App\Services\GlobalService;
 
 class AssetService{
     public function __construct()
     {
-        $this->checkRouteService = new CheckRouteService;
+        $this->globalService = new GlobalService;
     }
 
     public function getData($parent)
@@ -80,7 +80,7 @@ class AssetService{
 
     public function getAssets($route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
@@ -94,7 +94,7 @@ class AssetService{
 
     public function getAsset($id, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -159,7 +159,7 @@ class AssetService{
 
     public function addAsset($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $asset = new Asset;
@@ -290,7 +290,7 @@ class AssetService{
 
     public function updateAsset($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = $data['id'];
@@ -428,7 +428,7 @@ class AssetService{
 
     public function deleteAsset($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = $data['id'];
@@ -461,7 +461,7 @@ class AssetService{
 
     public function getFilterModels($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
@@ -477,7 +477,7 @@ class AssetService{
     
     public function getModels(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $asset_id = $request->get('asset_id', null);
@@ -520,7 +520,7 @@ class AssetService{
 
     public function getModel($id, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
@@ -535,7 +535,7 @@ class AssetService{
 
     public function getModelRelations($route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -565,7 +565,7 @@ class AssetService{
 
     public function addModel($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $name = $request->get('name');
@@ -637,7 +637,7 @@ class AssetService{
 
     public function updateModel($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = $data['id'];
@@ -680,7 +680,7 @@ class AssetService{
 
     public function deleteModel($id, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $model = ModelInventory::find($id);
@@ -715,7 +715,7 @@ class AssetService{
 
     public function getInventoryRelations($route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -736,7 +736,7 @@ class AssetService{
 
     public function getInventories($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -804,7 +804,7 @@ class AssetService{
 
     public function getCompanyInventories($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -860,7 +860,7 @@ class AssetService{
     
     public function getFilterInventories($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
@@ -885,7 +885,7 @@ class AssetService{
 
     public function getInventory($id, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -927,7 +927,7 @@ class AssetService{
 
     public function getInventoryAddable(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -972,7 +972,7 @@ class AssetService{
 
     public function getInventoryReplacements(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -998,7 +998,7 @@ class AssetService{
 
     public function getChangeStatusUsageDetailList(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = (int)$request->get('id', null);    
@@ -1095,7 +1095,7 @@ class AssetService{
 
     public function addInventory($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $model_id = $request->get('model_id');
@@ -1182,7 +1182,7 @@ class AssetService{
 
     public function addInventoryNotes($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $logService = new LogService;
@@ -1208,7 +1208,7 @@ class AssetService{
 
     public function updateInventory($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = $data['id'];
@@ -1288,7 +1288,7 @@ class AssetService{
 
     public function replaceInventoryPart($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = $data['id'];
@@ -1437,7 +1437,7 @@ class AssetService{
 
     public function removeInventoryPart($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = $data['id'];
@@ -1513,7 +1513,7 @@ class AssetService{
 
     public function addInventoryParts($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = $data['id'];
@@ -1591,7 +1591,7 @@ class AssetService{
 
     public function deleteInventory($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = $data['id'];
@@ -1640,7 +1640,7 @@ class AssetService{
 
     public function changeStatusCondition($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = $data['id'];
@@ -1671,7 +1671,7 @@ class AssetService{
 
     public function changeStatusUsage($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -1769,7 +1769,7 @@ class AssetService{
 
     public function getManufacturers($route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -1783,7 +1783,7 @@ class AssetService{
 
     public function addManufacturer($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $manufacturer = new Manufacturer;
@@ -1798,7 +1798,7 @@ class AssetService{
 
     public function updateManufacturer($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = $data['id'];
@@ -1815,7 +1815,7 @@ class AssetService{
 
     public function deleteManufacturer($id, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $manufacturer = Manufacturer::find($id);
@@ -1832,7 +1832,7 @@ class AssetService{
 
     public function getVendors(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -1847,7 +1847,7 @@ class AssetService{
 
     public function addVendor(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $vendor = new Vendor;
@@ -1874,7 +1874,7 @@ class AssetService{
 
     public function updateVendor(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -1903,7 +1903,7 @@ class AssetService{
 
     public function deleteVendor(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -1922,7 +1922,7 @@ class AssetService{
 
     public function getRelationships($route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
@@ -1936,7 +1936,7 @@ class AssetService{
 
     public function addRelationship($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
@@ -1953,7 +1953,7 @@ class AssetService{
 
     public function updateRelationship($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $relationship = Relationship::find($data['id']);
@@ -1971,7 +1971,7 @@ class AssetService{
 
     public function deleteRelationship($id, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $relationship = Relationship::withCount('relationshipInventories')->find($id);
@@ -1989,7 +1989,7 @@ class AssetService{
 
     public function getCompanyRelationshipInventory($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -2028,7 +2028,7 @@ class AssetService{
         else if($type_id === -2) $route_name = $route_names[2];
         else if($type_id === -3) $route_name = $route_names[3];
         else $route_name = $route_names[0];
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         try{
             $id = $data['id'];
@@ -2106,7 +2106,7 @@ class AssetService{
 
     public function getRelationshipInventoryRelation($route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
@@ -2119,7 +2119,7 @@ class AssetService{
 
     public function getRelationshipInventoryDetailList(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         $type_id = (int)$request->get('type_id', null);
         try{
@@ -2175,7 +2175,7 @@ class AssetService{
 
     public function addRelationshipInventories($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $relationship_id = $request->get('relationship_id', null);
@@ -2241,7 +2241,7 @@ class AssetService{
 
     public function updateRelationshipInventory($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -2357,7 +2357,7 @@ class AssetService{
 
     public function deleteRelationshipInventory($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         $id = $data['id'];
         $notes = $data['notes'];

@@ -7,7 +7,7 @@ use App\Services\LoginService;
 use App\Mail\ChangePasswordMail;
 use App\Services\CompanyService;
 use Illuminate\Support\Facades\DB;
-use App\Services\CheckRouteService;
+use App\Services\GlobalService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 
@@ -15,7 +15,7 @@ class UserService
 {
     public function __construct()
     {
-        $this->checkRouteService = new CheckRouteService;
+        $this->globalService = new GlobalService;
         $this->agent_role_id = 1;
         $this->requester_role_id = 2;
     }
@@ -34,7 +34,7 @@ class UserService
     }
 
     public function getFilterUsers($request, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $name = $request->get('name', null);
@@ -80,14 +80,14 @@ class UserService
     }
 
     public function getAgentDetail($account_id, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->getUserDetail($account_id, $this->agent_role_id);
     }
 
     public function getRequesterDetail($account_id, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->getUserDetail($account_id, $this->requester_role_id);
@@ -140,14 +140,14 @@ class UserService
     }
 
     public function getAgentList($request, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->getUserList($request, $this->agent_role_id);
     }
 
     public function getRequesterList($request, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->getUserList($request, $this->requester_role_id);
@@ -196,14 +196,14 @@ class UserService
     }
 
     public function addAgentMember($data, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->addUserMember($data, $this->agent_role_id);
     }
 
     public function addRequesterMember($data, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->addUserMember($data, $this->requester_role_id);
@@ -232,14 +232,14 @@ class UserService
     }
 
     public function updateAgentDetail($data, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->updateUserDetail($data, $this->agent_role_id);
     }
 
     public function updateRequesterDetail($data, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->updateUserDetail($data, $this->requester_role_id);
@@ -260,14 +260,14 @@ class UserService
     }
 
     public function changeAgentPassword($data, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->changeUserPassword($data, $this->agent_role_id);
     }
 
     public function changeRequesterPassword($data, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->changeUserPassword($data, $this->requester_role_id);
@@ -288,14 +288,14 @@ class UserService
     }
 
     public function agentActivation($data, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->userActivation($data, $this->agent_role_id);
     }
 
     public function requesterActivation($data, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->userActivation($data, $this->requester_role_id);
@@ -316,14 +316,14 @@ class UserService
     // }
 
     // public function updateFeatureAgent($data, $route_name){
-    //     $access = $this->checkRouteService->checkRoute($route_name);
+    //     $access = $this->globalService->checkRoute($route_name);
     //     if($access["success"] === false) return $access;
         
     //     return $this->updateRoleUser($data, $this->agent_role_id);
     // }
 
     // public function updateFeatureRequester($data, $route_name){
-    //     $access = $this->checkRouteService->checkRoute($route_name);
+    //     $access = $this->globalService->checkRoute($route_name);
     //     if($access["success"] === false) return $access;
         
     //     return $this->updateRoleUser($data, $this->requester_role_id);
@@ -345,14 +345,14 @@ class UserService
     }
 
     public function deleteAgent($id, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->deleteUser($id, $this->agent_role_id);
     }
 
     public function deleteRequester($id, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->deleteUser($id, $this->requester_role_id);

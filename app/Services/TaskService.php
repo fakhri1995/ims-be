@@ -15,14 +15,14 @@ use App\TaskTypeWork;
 use App\Services\LogService;
 use App\Services\CompanyService;
 use Illuminate\Support\Facades\DB;
-use App\Services\CheckRouteService;
+use App\Services\GlobalService;
 use Illuminate\Database\Eloquent\Collection;
 
 class TaskService{
 
     public function __construct()
     {
-        $this->checkRouteService = new CheckRouteService;
+        $this->globalService = new GlobalService;
     }
     
         // Single Textbox
@@ -86,7 +86,7 @@ class TaskService{
 
     public function getStatusTaskList($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $status_list_name = ["-", "Overdue", "Open", "On progress", "On hold", "Completed", "Closed"];
@@ -122,7 +122,7 @@ class TaskService{
     
     public function getTaskTypeCounts($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -143,7 +143,7 @@ class TaskService{
 
     public function getDeadlineTasks($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -216,7 +216,7 @@ class TaskService{
 
     public function getTaskStaffCounts($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -238,7 +238,7 @@ class TaskService{
 
     public function getTaskSparePartList($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -304,7 +304,7 @@ class TaskService{
     
     public function getTasks($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -363,7 +363,7 @@ class TaskService{
 
     public function getUserLastTwoTasks($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -400,7 +400,7 @@ class TaskService{
 
     public function getUserTasks($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -568,7 +568,7 @@ class TaskService{
 
     public function getUserTaskTypeCounts($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -601,7 +601,7 @@ class TaskService{
 
     public function getTaskPickList($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -654,7 +654,7 @@ class TaskService{
 
     public function getTask($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -686,7 +686,7 @@ class TaskService{
 
     public function addTask($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $is_group = $request->get('is_group', true);
@@ -757,7 +757,7 @@ class TaskService{
 
     public function updateTask($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -870,7 +870,7 @@ class TaskService{
 
     public function saveFilesTask($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -888,7 +888,7 @@ class TaskService{
 
     public function deleteTask($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -909,7 +909,7 @@ class TaskService{
 
     public function changeStatusToggle($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -961,7 +961,7 @@ class TaskService{
 
     public function changeAttendanceToggle($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -995,7 +995,7 @@ class TaskService{
 
     public function submitTask($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -1053,7 +1053,7 @@ class TaskService{
 
     public function declineTask($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -1239,7 +1239,7 @@ class TaskService{
 
     public function approveTask($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -1273,7 +1273,7 @@ class TaskService{
 
     public function assignSelfTask($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $login_id = auth()->user()->id;
@@ -1318,7 +1318,7 @@ class TaskService{
 
     public function sendInventoriesTask($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $login_id = auth()->user()->id;
@@ -1502,7 +1502,7 @@ class TaskService{
 
     public function sendInInventoryTask($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $login_id = auth()->user()->id;
@@ -1565,7 +1565,7 @@ class TaskService{
 
     public function sendOutInventoryTask($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $login_id = auth()->user()->id;
@@ -1678,7 +1678,7 @@ class TaskService{
 
     public function cancelSendInInventoryTask($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -1689,7 +1689,7 @@ class TaskService{
     
     public function cancelSendOutInventoryTask($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -1776,7 +1776,7 @@ class TaskService{
     
     public function addTaskDetail($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
@@ -1799,7 +1799,7 @@ class TaskService{
 
     public function updateTaskDetail($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -1980,7 +1980,7 @@ class TaskService{
 
     public function deleteTaskDetail($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -2000,7 +2000,7 @@ class TaskService{
 
     public function assignTaskDetail($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -2018,7 +2018,7 @@ class TaskService{
 
     public function fillTaskDetail($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -2089,7 +2089,7 @@ class TaskService{
 
     public function getFilterTaskTypes($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
@@ -2105,7 +2105,7 @@ class TaskService{
 
     public function getTaskTypes($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -2136,7 +2136,7 @@ class TaskService{
 
     public function getTaskType($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -2205,7 +2205,7 @@ class TaskService{
 
     public function addTaskType($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $task = new TaskType;
@@ -2242,7 +2242,7 @@ class TaskService{
 
     public function updateTaskType($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -2318,7 +2318,7 @@ class TaskService{
 
     public function deleteTaskType($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);

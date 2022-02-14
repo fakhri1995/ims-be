@@ -20,20 +20,20 @@ use Illuminate\Http\Request;
 use App\Exports\TicketsExport;
 use App\Services\CompanyService;
 use Illuminate\Support\Facades\DB;
-use App\Services\CheckRouteService;
+use App\Services\GlobalService;
 
 class TicketService
 {
     public function __construct()
     {
-        $this->checkRouteService = new CheckRouteService;
+        $this->globalService = new GlobalService;
     }
 
     // Status Ticket
     // 1 = Overdue, 2 = Open, 3 = On Progress, 4 = On Hold, 5 = Completed, 6 = Closed, 7 = Canceled
 
     public function getFilterTickets($request, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = $request->get('id', 0);
@@ -47,7 +47,7 @@ class TicketService
     }
 
     public function getTicketRelation($route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $companyService = new CompanyService;
@@ -117,7 +117,7 @@ class TicketService
     }
 
     public function getClientTicketRelation($route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         
@@ -177,7 +177,7 @@ class TicketService
 
     public function getTicketTaskStatusCounts($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $status_tickets = Ticket::select(DB::raw('status, count(*) as status_count'))
@@ -342,7 +342,7 @@ class TicketService
 
     public function getAdminTicketStatusCounts(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->getTicketStatusCounts($request, true);
@@ -350,7 +350,7 @@ class TicketService
 
     public function getClientTicketStatusCounts(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->getTicketStatusCounts($request, false);
@@ -447,7 +447,7 @@ class TicketService
     
     public function getAdminTickets(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->getTickets($request, true);
@@ -455,7 +455,7 @@ class TicketService
 
     public function getClientTickets(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->getTickets($request, false);
@@ -538,7 +538,7 @@ class TicketService
 
     public function getAdminClosedTickets(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->getClosedTickets($request, true);
@@ -546,7 +546,7 @@ class TicketService
 
     public function getClientClosedTickets(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->getClosedTickets($request, false);
@@ -630,7 +630,7 @@ class TicketService
 
     public function getAdminTicket(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         return $this->getTicket($request, true);
@@ -638,14 +638,14 @@ class TicketService
 
     public function getClientTicket(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         return $this->getTicket($request, false);
     }
 
     public function addTicket($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         try{
             $type_id = $request->get('type_id');
@@ -718,7 +718,7 @@ class TicketService
 
     public function updateTicket(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         try{
             $id = $request->get('id');
@@ -766,7 +766,7 @@ class TicketService
 
     public function setItemTicket($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         try{
@@ -830,21 +830,21 @@ class TicketService
 
     public function cancelAdminTicket(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         return $this->cancelTicket($request, true);
     }
 
     public function cancelClientTicket(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         return $this->cancelTicket($request, false);
     }
     
     public function assignTicket($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
@@ -907,7 +907,7 @@ class TicketService
 
     public function setDeadline($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
@@ -930,7 +930,7 @@ class TicketService
 
     public function addNote($request, $route_name, $admin)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
@@ -986,7 +986,7 @@ class TicketService
     
     public function ticketsExport($request, $route_name)
     {
-        // $access = $this->checkRouteService->checkRoute($route_name);
+        // $access = $this->globalService->checkRoute($route_name);
         // if($access["success"] === false) return $access;
     
         $current_timestamp = date("Y-m-d H:i:s");
@@ -1005,7 +1005,7 @@ class TicketService
     
     public function TicketExportPdf($request, $route_name, $admin)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id');
@@ -1041,7 +1041,7 @@ class TicketService
     // Ticket Task Types
     public function getTicketTaskTypes($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
@@ -1078,7 +1078,7 @@ class TicketService
 
     public function addTicketTaskType($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $ticket_task_type = new TicketTaskType;
@@ -1100,7 +1100,7 @@ class TicketService
 
     public function updateTicketTaskType($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = $request->get('id');
@@ -1126,7 +1126,7 @@ class TicketService
 
     public function deleteTicketTaskType($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = $request->get('id');

@@ -2,7 +2,7 @@
 
 namespace App\Services;
 use Illuminate\Http\Request;
-use App\Services\CheckRouteService;
+use App\Services\GlobalService;
 use App\Message;
 use App\Career;
 use Exception;
@@ -10,13 +10,13 @@ use Exception;
 class CompanyProfileService{
     public function __construct()
     {
-        $this->checkRouteService = new CheckRouteService;
+        $this->globalService = new GlobalService;
     }
 
     // Message
     public function getMessages(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
@@ -47,7 +47,7 @@ class CompanyProfileService{
 
     public function deleteMessage(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -75,7 +75,7 @@ class CompanyProfileService{
 
     public function addCareer(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $career = new Career;
@@ -93,7 +93,7 @@ class CompanyProfileService{
 
     public function updateCareer(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
@@ -113,7 +113,7 @@ class CompanyProfileService{
 
     public function deleteCareer(Request $request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);

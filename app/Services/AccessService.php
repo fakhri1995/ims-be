@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Services;
-use App\Services\CheckRouteService;
+use App\Services\GlobalService;
 use App\AccessFeature;
 use App\Module;
 use App\Role;
@@ -12,13 +12,13 @@ class AccessService
 {
     public function __construct()
     {
-        $this->checkRouteService = new CheckRouteService;
+        $this->globalService = new GlobalService;
     }
 
     // Features
     public function getFeatures($route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $features = AccessFeature::get();
@@ -28,7 +28,7 @@ class AccessService
 
     // public function addFeature($data, $route_name)
     // {
-    //     $access = $this->checkRouteService->checkRoute($route_name);
+    //     $access = $this->globalService->checkRoute($route_name);
     //     if($access["success"] === false) return $access;
         
     //     try{
@@ -44,7 +44,7 @@ class AccessService
 
     // public function updateFeature($data, $route_name)
     // {
-    //     $access = $this->checkRouteService->checkRoute($route_name);
+    //     $access = $this->globalService->checkRoute($route_name);
     //     if($access["success"] === false) return $access;
         
     //     $id = $data['id'];
@@ -62,7 +62,7 @@ class AccessService
 
     // public function deleteFeature($id, $route_name)
     // {
-    //     $access = $this->checkRouteService->checkRoute($route_name);
+    //     $access = $this->globalService->checkRoute($route_name);
     //     if($access["success"] === false) return $access;
         
     //     $access_feature = AccessFeature::find($id);
@@ -79,7 +79,7 @@ class AccessService
     //Modules
     public function getModules($route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $modules = Module::get();
@@ -98,7 +98,7 @@ class AccessService
 
     public function addModule($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
@@ -115,7 +115,7 @@ class AccessService
 
     public function updateModule($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $data['id'];
@@ -133,7 +133,7 @@ class AccessService
 
     public function addModuleFeature($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $module = Module::find($data['id']);
@@ -157,7 +157,7 @@ class AccessService
 
     public function deleteModuleFeature($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $module = Module::find($data['id']);
@@ -178,7 +178,7 @@ class AccessService
 
     public function deleteModule($id, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $module = Module::find($id);
@@ -194,7 +194,7 @@ class AccessService
     //Roles
     public function getRoleUserFeatures($role_id, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
@@ -221,7 +221,7 @@ class AccessService
 
     public function getRoles($route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
@@ -235,7 +235,7 @@ class AccessService
 
     public function getRole($id, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
@@ -249,7 +249,7 @@ class AccessService
 
     public function addRole($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         try{
@@ -269,7 +269,7 @@ class AccessService
 
     public function updateRole($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $data['id'];
@@ -290,7 +290,7 @@ class AccessService
 
     public function deleteRole($id, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         if($id == 1) return ["success" => false, "message" => "Tidak Dapat Menghapus Role Super Admin", "status" => 401];

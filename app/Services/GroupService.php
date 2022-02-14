@@ -4,14 +4,14 @@ namespace App\Services;
 use App\User;
 use App\Group;
 use Exception;
-use App\Services\CheckRouteService;
+use App\Services\GlobalService;
 
 class GroupService{
     public function __construct()
     {
         $this->agent = true;
         $this->requester = false;
-        $this->checkRouteService = new CheckRouteService;
+        $this->globalService = new GlobalService;
     }
 
     public function getAssignToList($request)
@@ -34,7 +34,7 @@ class GroupService{
 
     public function getFilterGroups($request, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         try{
             $name = $request->get('name', null);
@@ -66,7 +66,7 @@ class GroupService{
 
     public function getAgentGroups($route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         return $this->getGroups($this->agent);
@@ -74,7 +74,7 @@ class GroupService{
 
     public function getRequesterGroups($route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         return $this->getGroups($this->requester);
@@ -96,7 +96,7 @@ class GroupService{
 
     public function getAgentGroup($id, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         return $this->getGroup($id, $this->agent);
@@ -104,7 +104,7 @@ class GroupService{
 
     public function getRequesterGroup($id, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         return $this->getGroup($id, $this->requester);
@@ -130,7 +130,7 @@ class GroupService{
 
     public function addAgentGroup($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         return $this->addGroup($data, $this->agent);
@@ -138,7 +138,7 @@ class GroupService{
 
     public function addRequesterGroup($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         return $this->addGroup($data, $this->requester);
@@ -166,7 +166,7 @@ class GroupService{
 
     public function updateAgentGroup($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         return $this->updateGroup($data, $this->agent);
@@ -174,7 +174,7 @@ class GroupService{
 
     public function updateRequesterGroup($data, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         return $this->updateGroup($data, $this->requester);
@@ -197,7 +197,7 @@ class GroupService{
 
     public function deleteAgentGroup($id, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         return $this->deleteGroup($id, $this->agent);
@@ -205,7 +205,7 @@ class GroupService{
 
     public function deleteRequesterGroup($id, $route_name)
     {
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         return $this->deleteGroup($id, $this->requester);

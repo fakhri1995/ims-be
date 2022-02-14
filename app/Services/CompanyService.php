@@ -7,13 +7,13 @@ use App\Inventory;
 use App\Services\LogService;
 use App\RelationshipInventory;
 use Illuminate\Support\Facades\DB;
-use App\Services\CheckRouteService;
+use App\Services\GlobalService;
 
 class CompanyService
 {
     public function __construct()
     {
-        $this->checkRouteService = new CheckRouteService;
+        $this->globalService = new GlobalService;
         $this->client_role_id = 2;
         $this->branch_role_id = 3;
         $this->sub_role_id = 4;
@@ -105,7 +105,7 @@ class CompanyService
     }
 
     public function getSubLocations($request, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('company_id');
@@ -116,7 +116,7 @@ class CompanyService
     }
 
     public function getLocations($request, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $id = $request->get('company_id');
@@ -128,7 +128,7 @@ class CompanyService
     }
 
     public function getMainLocations($route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = auth()->user()->company_id;
@@ -143,7 +143,7 @@ class CompanyService
     }
 
     public function getAllCompanyList($route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         if(auth()->user()->role == 2) $companies = $this->getCompanyTreeSelect(auth()->user()->company_id, 'noSubChild');
@@ -152,7 +152,7 @@ class CompanyService
     }
 
     public function getBranchCompanyList($route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $companies = $this->getCompanyTreeSelect(1, 'branchChild');
@@ -160,7 +160,7 @@ class CompanyService
     }
 
     public function getClientCompanyList($route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $companies = $this->getCompanyTreeSelect(1, 'clientChild');
@@ -168,7 +168,7 @@ class CompanyService
     }
 
     public function getCompanyClientList($route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $companies = Company::select('id','name','address','phone_number','image_logo','role','parent_id', 'is_enabled')->where('parent_id', 1)->where('role', 2)->get();
@@ -178,7 +178,7 @@ class CompanyService
     
     public function getCompanyDetail($request, $route_name){
         try{
-            $access = $this->checkRouteService->checkRoute($route_name);
+            $access = $this->globalService->checkRoute($route_name);
             if($access["success"] === false) return $access;
 
             $id = $request->get('id', null);
@@ -219,7 +219,7 @@ class CompanyService
 
     public function getSubCompanyDetail($request, $route_name){
         try{
-            $access = $this->checkRouteService->checkRoute($route_name);
+            $access = $this->globalService->checkRoute($route_name);
             if($access["success"] === false) return $access;
             $id = $request->get('id', null);
             if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
@@ -260,7 +260,7 @@ class CompanyService
     
     public function getSubCompanyProfile($request, $route_name){
         try{
-            $access = $this->checkRouteService->checkRoute($route_name);
+            $access = $this->globalService->checkRoute($route_name);
             if($access["success"] === false) return $access;
             $id = $request->get('id', null);
             if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
@@ -295,7 +295,7 @@ class CompanyService
     }
 
     public function addCompany($request, $role_id, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         if($role_id === 4) $parent_id = $request->get('parent_id', null);
@@ -361,7 +361,7 @@ class CompanyService
     }
 
     public function updateCompany($request, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = $request->get('id');
@@ -394,7 +394,7 @@ class CompanyService
     }
 
     public function companyActivation($request, $route_name){
-        $access = $this->checkRouteService->checkRoute($route_name);
+        $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = $request->get('company_id', null);
@@ -423,7 +423,7 @@ class CompanyService
 
     public function deleteCompany($request, $route_name){
         try{
-            $access = $this->checkRouteService->checkRoute($route_name);
+            $access = $this->globalService->checkRoute($route_name);
             if($access["success"] === false) return $access;
 
             $id = $request->get('id', null);
