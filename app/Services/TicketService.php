@@ -254,6 +254,8 @@ class TicketService
                 "id" => auth()->user()->id,
                 "image_profile" => auth()->user()->profile_image,
                 "name" => auth()->user()->name,
+                "company_id" => auth()->user()->company_id,
+                "company_name" => auth()->user()->company->name,
             ]
         ];
         
