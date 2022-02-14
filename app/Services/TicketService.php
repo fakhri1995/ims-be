@@ -587,10 +587,17 @@ class TicketService
                     $ticket->assignment_profile_image = "-";
                 }
             } else {
-                $ticket->assignment_type = "Group";
-                $ticket->assignment_operator_id = $ticket->task->group->id;
-                $ticket->assignment_operator_name = $ticket->task->group->name;
-                $ticket->assignment_profile_image = "-";
+                if(!$ticket->task->group){
+                    $ticket->assignment_type = "-";
+                    $ticket->assignment_operator_id = -1;
+                    $ticket->assignment_operator_name = "-";
+                    $ticket->assignment_profile_image = "-";
+                } else {
+                    $ticket->assignment_type = "Group";
+                    $ticket->assignment_operator_id = $ticket->task->group->id;
+                    $ticket->assignment_operator_name = $ticket->task->group->name;
+                    $ticket->assignment_profile_image = "-";
+                }
             }
             
             if($admin){
