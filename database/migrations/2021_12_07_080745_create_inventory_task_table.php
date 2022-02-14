@@ -13,6 +13,7 @@ class CreateInventoryTaskTable extends Migration
      */
     public function up()
     {
+        \Illuminate\Support\Facades\DB::statement('SET SESSION sql_require_primary_key=0');
         Schema::create('inventory_task', function (Blueprint $table) {
             $table->unsignedBigInteger('task_id');
             $table->unsignedBigInteger('inventory_id');

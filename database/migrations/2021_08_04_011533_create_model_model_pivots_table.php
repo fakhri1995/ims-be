@@ -13,6 +13,7 @@ class CreateModelModelPivotsTable extends Migration
      */
     public function up()
     {
+        \Illuminate\Support\Facades\DB::statement('SET SESSION sql_require_primary_key=0');
         Schema::create('model_model_pivots', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('parent_id');

@@ -13,6 +13,7 @@ class CreateServiceItemKontraksTable extends Migration
      */
     public function up()
     {
+        \Illuminate\Support\Facades\DB::statement('SET SESSION sql_require_primary_key=0');
         Schema::create('service_item_kontraks', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('id_service_item');

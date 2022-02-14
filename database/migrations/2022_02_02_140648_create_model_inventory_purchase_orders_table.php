@@ -13,6 +13,7 @@ class CreateModelInventoryPurchaseOrdersTable extends Migration
      */
     public function up()
     {
+        \Illuminate\Support\Facades\DB::statement('SET SESSION sql_require_primary_key=0');
         Schema::create('model_inventory_purchase_order', function (Blueprint $table) {
             $table->unsignedBigInteger('model_inventory_id');
             $table->unsignedBigInteger('purchase_order_id');

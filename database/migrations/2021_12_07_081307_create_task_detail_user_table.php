@@ -13,6 +13,7 @@ class CreateTaskDetailUserTable extends Migration
      */
     public function up()
     {
+        \Illuminate\Support\Facades\DB::statement('SET SESSION sql_require_primary_key=0');
         Schema::create('task_detail_user', function (Blueprint $table) {
             $table->unsignedBigInteger('task_detail_id');
             $table->unsignedBigInteger('user_id');

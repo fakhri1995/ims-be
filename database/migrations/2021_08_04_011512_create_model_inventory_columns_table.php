@@ -13,6 +13,7 @@ class CreateModelInventoryColumnsTable extends Migration
      */
     public function up()
     {
+        \Illuminate\Support\Facades\DB::statement('SET SESSION sql_require_primary_key=0');
         Schema::create('model_inventory_columns', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('model_id');
