@@ -29,6 +29,7 @@ class DefaultSeeder extends Seeder
         foreach($datas as $data){
             $user = new User;
             $user->name = $data['name'];
+            $user->nip = $data['nip'];
             $user->company_id = 1;
             $user->email = $data['email'];
             $user->password = Hash::make($data['password']);
@@ -54,6 +55,7 @@ class DefaultSeeder extends Seeder
                 
                 $user = new User;
                 $user->name = "Requester ".$index;
+                $user->nip = "20".$index;
                 $user->company_id = $company_requesters[$i];
                 $user->email = "requester".$index."@mitramas.com";
                 $user->password = Hash::make("123456789");
@@ -80,6 +82,7 @@ class DefaultSeeder extends Seeder
                 
                 $user = new User;
                 $user->name = "Agent ".$index;
+                $user->nip = "10".$index;
                 $user->company_id = $company_agents[$i];
                 $user->email = "agent".$index."@mitramas.com";
                 $user->password = Hash::make("123456789");
@@ -198,42 +201,49 @@ class DefaultSeeder extends Seeder
         $data = [
             [
                 "name" => "Admin MIG",
+                "nip" => "5120101",
                 "email" => "admin@mitramas.com",
                 "password" => "123456789",
                 "position" => "-"
             ],
             [
                 "name" => "Narendra Hanif",
+                "nip" => "5120102",
                 "email" => "hanif@mitramas.com",
                 "password" => "123456789",
                 "position" => "-"
             ],
             [
                 "name" => "Kennan Fattahillah Herdyhanto",
+                "nip" => "5120103",
                 "email" => "kennan@mitramas.com",
                 "password" => "123456789",
                 "position" => "Frontend Developer"
             ],
             [
                 "name" => "Muhammad Faris Makarim",
+                "nip" => "5120104",
                 "email" => "faris@mitramas.com",
                 "password" => "123456789",
                 "position" => "Backend Developer"
             ],
             [
                 "name" => "Bintang Agung Nusantara",
+                "nip" => "5120105",
                 "email" => "bintang@mitramas.com",
                 "password" => "123456789",
                 "position" => "Product Manager"
             ],
             [
                 "name" => "Yusron Taufiq",
+                "nip" => "5120106",
                 "email" => "yusron@mitramas.com",
                 "password" => "123456789",
                 "position" => "UI & UX Designer"
             ],
             [
                 "name" => "Nauval Adiyasa",
+                "nip" => "5120107",
                 "email" => "nauval@mitramas.com",
                 "password" => "123456789",
                 "position" => "Android Developer"

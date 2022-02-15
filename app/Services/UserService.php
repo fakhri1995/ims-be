@@ -110,7 +110,7 @@ class UserService
     public function getUserList($request, $role_id){
         $company_id = auth()->user()->company_id;
         $users = User::with(['company:id,parent_id,name,top_parent_id', 'company.topParent'])
-        ->select('id','name', 'email','role','company_id', 'position','profile_image','phone_number','created_time','is_enabled')
+        ->select('id','name', 'nip', 'email','role','company_id', 'position','profile_image','phone_number','created_time','is_enabled')
         ->where('users.role', $role_id);
         if($company_id !== 1){
             $company_service = new CompanyService;
@@ -160,6 +160,7 @@ class UserService
         try{
             $user = new User;
             $user->name = $data['fullname'];
+            $user->nip = $data['nip'];
             $user->company_id = $data['company_id'];
             $user->email = $data['email'];
             $user->password = Hash::make($data['password']);
@@ -215,6 +216,7 @@ class UserService
         if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 401];
         try{
             $user->name = $data['fullname'];
+            $user->nip = $data['nip'];
             $user->phone_number = $data['phone_number'];
             $user->position = $data['position'];
             $user->save();
