@@ -3,7 +3,6 @@
 namespace App\Imports;
 
 use App\Inventory;
-use App\InventoryValue;
 use App\ModelInventoryColumn;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
