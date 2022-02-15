@@ -526,7 +526,9 @@ class AssetService{
         try{
             $model = ModelInventory::withCount('inventories')->with(['asset:id,name,code,required_sn,deleted_at','manufacturer','modelColumns','modelParts'])->find($id);
             if($model === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
-            
+            if(count($model->modelParts)){
+                foreach($model->modelParts as $part) $part->quantity = $part->pivot->quantity;
+            }
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $model, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -635,39 +637,45 @@ class AssetService{
         return ["success" => true];
     }
 
-    public function updateModel($data, $route_name)
+    public function updateModel($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $id = $data['id'];
+        $id = $request->get('id');
         $model = ModelInventory::find($id);
         if($model === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status"=> 400];
-        $model->asset_id = $data['asset_id'];
-        $model->name = $data['name'];
-        $model->description = $data['description'];
-        $model->manufacturer_id = $data['manufacturer_id'];
-        $model->required_sn = $data['required_sn'];
+        $model->asset_id = $request->get('asset_id');
+        $model->name = $request->get('name');
+        $model->description = $request->get('description');
+        $model->manufacturer_id = $request->get('manufacturer_id');
+        $model->required_sn = $request->get('required_sn');
         try{
-            $delete_column_ids = $data['delete_column_ids'];
-            $update_columns = $data['update_columns'];
+            $delete_column_ids = $request->get('delete_column_ids',[]);
+            $update_columns = $request->get('update_columns',[]);
             $check_update_delete_model_column = $this->updateDeleteModelColumn($id, $update_columns, $delete_column_ids);
             if(!$check_update_delete_model_column['success']) return $check_update_delete_model_column;
 
-            $add_columns = $data['add_columns'];
+            $add_columns = $request->get('add_columns',[]);
             $this->createModelColumns($add_columns, $id);
             
-            $delete_model_ids = $data['delete_model_ids'];
+            $delete_model_ids = $request->get('delete_model_ids',[]);
             if(count($delete_model_ids)){
                 foreach($delete_model_ids as $delete_model_id){
                     $model->modelParts()->detach($delete_model_id);
                 }
             }
             
-            $add_models = $data['add_models'];
+            $add_models = $request->get('add_models',[]);
             if(count($add_models)){
                 foreach($add_models as $add_model){
                     $model->modelParts()->attach($add_model['id'], ['quantity' => $add_model['quantity']]);
+                }
+            }
+            $update_models = $request->get('update_models',[]);
+            if(count($update_models)){
+                foreach($update_models as $update_model){
+                    $model->modelParts()->syncWithoutDetaching([$update_model['id'] => ['quantity' => $update_model['quantity']]]);
                 }
             }
 

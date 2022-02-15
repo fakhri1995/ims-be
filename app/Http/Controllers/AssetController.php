@@ -131,22 +131,8 @@ class AssetController extends Controller
     public function updateModel(Request $request)
     {
         $route_name = "MODEL_UPDATE";
-
-        $data_request = [
-            'id' => $request->get('id'),
-            'name' => $request->get('name'),
-            'asset_id' => $request->get('asset_id'),
-            'description' => $request->get('description'),
-            'manufacturer_id' => $request->get('manufacturer_id'),
-            'required_sn' => $request->get('required_sn'),
-            'delete_column_ids' => $request->get('delete_column_ids',[]),
-            'update_columns' => $request->get('update_columns',[]),
-            'add_columns' => $request->get('add_columns',[]),
-            'delete_model_ids' => $request->get('delete_model_ids',[]),
-            'add_models' => $request->get('add_models',[])
-        ];
         
-        $response = $this->assetService->updateModel($data_request, $route_name);
+        $response = $this->assetService->updateModel($request, $route_name);
         return response()->json($response, $response['status']);
     }
 

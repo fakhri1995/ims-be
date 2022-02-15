@@ -29,7 +29,7 @@ class ModelInventory extends Model
 
     public function modelParts()
     {
-        return $this->belongsToMany(ModelInventory::class, 'model_model_pivots', 'parent_id', 'child_id')->with('asset:id,name,code,required_sn,deleted_at','modelColumns','modelParts')->withTrashed();
+        return $this->belongsToMany(ModelInventory::class, 'model_model_pivots', 'parent_id', 'child_id')->with('asset:id,name,code,required_sn,deleted_at','modelColumns','modelParts')->withPivot('quantity')->withTrashed();
     }
 
     public function modelParent()
