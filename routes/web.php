@@ -298,6 +298,12 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addDetailPurchaseOrder', 'WarehouseController@addDetailPurchaseOrder');
     $router->put('/updateDetailPurchaseOrder', 'WarehouseController@updateDetailPurchaseOrder');
     $router->delete('/deleteDetailPurchaseOrder', 'WarehouseController@deleteDetailPurchaseOrder');
+
+    //Quality Control Purchase
+    $router->get('/getQualityControlPurchases', 'WarehouseController@getQualityControlPurchases');
+    $router->get('/getQualityControlPurchase', 'WarehouseController@getQualityControlPurchase');
+    $router->put('/saveQC', 'WarehouseController@saveQC');
+    
 });
 
 // //Incident Routes

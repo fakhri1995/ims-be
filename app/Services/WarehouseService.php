@@ -2,10 +2,12 @@
 
 namespace App\Services;
 use Exception;
+use App\PurchaseQC;
 use App\PurchaseOrder;
+use App\PurchaseQCDetail;
 use App\Services\LogService;
-use Illuminate\Support\Facades\DB;
 use App\Services\GlobalService;
+use Illuminate\Support\Facades\DB;
 
 class WarehouseService{
     public function __construct()
@@ -192,7 +194,6 @@ class WarehouseService{
         
         try{
             $year_and_month = date('Y m', strtotime($purchase_order->purchase_order_date));
-            // return ["success" => false, "message" => $purchase_order_date, "status" => 400];
             $split = explode(' ', $year_and_month);
             $year = (int) $split[0];
             $month = (int) $split[1];
@@ -200,6 +201,7 @@ class WarehouseService{
             $last_purchase_order = PurchaseOrder::where('year', $year)->orderBy('sub_id', 'desc')->first();
             if($last_purchase_order === null) $purchase_order->sub_id = 1;
             else $purchase_order->sub_id = $last_purchase_order->sub_id + 1;
+            if(!$purchase_order->vendor) return ["success" => false, "message" => "Vendor Purchase Order Tidak Ditemukan", "status" => 400];
             $purchase_order->purchase_order_number = sprintf('%03d', $purchase_order->sub_id).'/'.$purchase_order->purchase_order_number.'/'.$purchase_order->vendor->name.'/'.$roman_numeral[$month].'/'.$year;
             $purchase_order->year = $year;
             $purchase_order->status = 2;
@@ -259,7 +261,7 @@ class WarehouseService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $purchase_order = PurchaseOrder::find($request->get('id'));
+        $purchase_order = PurchaseOrder::with('modelOrders')->find($request->get('id'));
         if($purchase_order === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
         if($purchase_order->status === 5) return ["success" => false, "message" => "Purchase Order Telah Diterima", "status" => 400];
         if($purchase_order->status !== 4) return ["success" => false, "message" => "Purchase Order Tidak Dapat Diterima, Status Purchase Order Bukan Pada Status Dikirim!", "status" => 400];
@@ -270,9 +272,42 @@ class WarehouseService{
             $purchase_order->save();
             $logService = new LogService;
             $logService->receivePurchaseOrder($purchase_order->id);
+            $inventory_parts = [];
+            $purchase_quality_control = new PurchaseQC;
+            $purchase_quality_control->purchase_order_id = $purchase_order->id;
+            $purchase_quality_control->status = 1;
+            $purchase_quality_control->save();
+            if(count($purchase_order->modelOrders)){
+                foreach($purchase_order->modelOrders as $model){
+                    for($i = 0; $i < $model->pivot->quantity; $i++){
+                        $this->addPurchaseQCDetail($model, $purchase_quality_control->id, null);
+                    }
+                }
+            }
             return ["success" => true, "message" => "Purchase Order Berhasil Diterima", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    private function addPurchaseInventoryParts($model, $parent_id)
+    {
+        $this->addPurchaseQCDetail($model, null, $parent_id);
+    }
+
+    private function addPurchaseQCDetail($model, $purchase_q_c_id, $parent_id)
+    {
+        $qc_detail = new PurchaseQCDetail;
+        $qc_detail->purchase_q_c_id = $purchase_q_c_id;
+        $qc_detail->model_id = $model->id;
+        $qc_detail->parent_id = $parent_id;
+        $qc_detail->status = 1;
+        $qc_detail->save();
+        if(count($model->modelColumns)){
+            foreach($model->modelColumns as $model_column) $qc_detail->purchaseQCDetailAttributes()->attach($model_column->id, ['is_checked' => false]);
+        }
+        if(count($model->modelParts)){
+            foreach($model->modelParts as $model_part) $this->addPurchaseInventoryParts($model_part, $qc_detail->id);
         }
     }
     
@@ -321,6 +356,7 @@ class WarehouseService{
         $purchase_order_id = $request->get('purchase_order_id');
         $purchase_order = PurchaseOrder::with('modelInventories')->find($purchase_order_id);
         if($purchase_order === null) return ["success" => false, "message" => "Id Purchase Order Tidak Ditemukan", "status" => 400];
+        if($purchase_order->status !== 1) return ["success" => false, "message" => "Purchase Order Tidak Bisa Dihapus, Status Purchase Order Sudah Bukan Draft!", "status" => 400];
         $search = $purchase_order->modelInventories->search(function ($item) use ($model_id) {
             return $item->id === $model_id;
         });
@@ -352,6 +388,7 @@ class WarehouseService{
         $purchase_order_id = $request->get('purchase_order_id');
         $purchase_order = PurchaseOrder::with('modelInventories')->find($purchase_order_id);
         if($purchase_order === null) return ["success" => false, "message" => "Id Purchase Order Tidak Ditemukan", "status" => 400];
+        if($purchase_order->status !== 1) return ["success" => false, "message" => "Purchase Order Tidak Bisa Dihapus, Status Purchase Order Sudah Bukan Draft!", "status" => 400];
         $search = $purchase_order->modelInventories->search(function ($item) use ($model_id) {
             return $item->id === $model_id;
         });
@@ -383,6 +420,7 @@ class WarehouseService{
         $purchase_order_id = $request->get('purchase_order_id');
         $purchase_order = PurchaseOrder::with('modelInventories')->find($purchase_order_id);
         if($purchase_order === null) return ["success" => false, "message" => "Id Purchase Order Tidak Ditemukan", "status" => 400];
+        if($purchase_order->status !== 1) return ["success" => false, "message" => "Purchase Order Tidak Bisa Dihapus, Status Purchase Order Sudah Bukan Draft!", "status" => 400];
         
         try{
             $purchase_order->modelInventories()->detach($model_id);
@@ -390,5 +428,113 @@ class WarehouseService{
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
+    }
+    
+    // Quality Control Purchase
+    public function getQualityControlPurchases($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        try{
+            $rows = $request->get('rows', 10);
+            $keyword = $request->get('keyword', null);
+            $sort_by = $request->get('sort_by', null);
+            $sort_type = $request->get('sort_type', null);
+            $vendor = $request->get('vendor', null);
+
+            if($rows > 100) $rows = 100;
+            if($rows < 1) $rows = 10;
+            $purchase_quality_controls = PurchaseQC::select('*')->join('purchase_orders', 'purchase_q_c_s.id', '=', 'purchase_orders.id');
+            
+            $params = "?rows=$rows";
+            // if($keyword) $params = "$params&keyword=$keyword";
+            // if($sort_by) $params = "$params&sort_by=$sort_by";
+            // if($sort_type) $params = "$params&sort_type=$sort_type";
+            // if($asset) $params = "$params&asset=$asset";
+            // if($vendor) $params = "$params&vendor=$vendor";
+            // if($status) $params = "$params&status=$status";
+            
+            // if($asset){
+            //     $model_ids = DB::table('model_inventories')->where('asset_id', $asset)->pluck('id');
+            //     $purchase_order_ids = DB::table('model_inventory_purchase_order')->whereIn('model_inventory_id', $model_ids)->pluck('purchase_order_id');
+            //     $purchase_quality_controls = $purchase_quality_controls->whereIn('purchase_quality_controls.id', $purchase_order_ids);
+            // } 
+            // if($vendor) $purchase_quality_controls = $purchase_quality_controls->where('vendor_id', $vendor);
+            // if($keyword){
+            //     if(is_numeric($keyword)){
+            //         $purchase_quality_controls = $purchase_quality_controls->where(function ($query) use ($keyword){
+            //             $query->where('purchase_order_number', 'ilike', "%".$keyword."%")->orWhere('purchase_quality_controls.id', $keyword);
+            //         });
+            //     } else $purchase_quality_controls = $purchase_quality_controls->where('purchase_order_number', 'ilike', "%".$keyword."%");
+            // } 
+            // if($status) $purchase_quality_controls = $purchase_quality_controls->where('status', $status);
+            
+            // if($sort_by){
+            //     if($sort_type === null) $sort_type = 'desc';
+            //     if($sort_by === 'po_number') $purchase_quality_controls = $purchase_quality_controls->orderBy('purchase_order_number', $sort_type);
+            //     else if($sort_by === 'po_date') $purchase_quality_controls = $purchase_quality_controls->orderBy('purchase_order_date', $sort_type);
+            //     else if($sort_by === 'vendor') $purchase_quality_controls = $purchase_quality_controls->orderBy('vendor_name', $sort_type);
+            //     else if($sort_by === 'status') $purchase_quality_controls = $purchase_quality_controls->orderBy('status', $sort_type);
+            //     else if($sort_by === 'arrived_date') $purchase_quality_controls = $purchase_quality_controls->orderBy('arrived_date', $sort_type);
+            // }
+            
+            $purchase_quality_controls = $purchase_quality_controls->paginate($rows);
+            $purchase_quality_controls->withPath(env('APP_URL').'/getQualityControlPurchases'.$params);
+            if($purchase_quality_controls->isEmpty()) return ["success" => true, "message" => "Purchase Orders Masih Kosong", "data" => $purchase_quality_controls, "status" => 200];
+            // $statuses = $this->globalService->statusQualityControlPurchase();
+            // foreach($purchase_quality_controls as $purchase_order){
+            //     $purchase_order->purchase_order_date_template = date("d F Y", strtotime($purchase_order->purchase_order_date));
+            //     if($purchase_order->arrived_date !== null) $purchase_order->arrived_date_template = date("d F Y", strtotime($purchase_order->arrived_date));
+            //     else $purchase_order->arrived_date_template = "-";
+            //     $purchase_order->status_name = $statuses[$purchase_order->status];
+            //     if(count($purchase_order->modelInventories)){
+            //         foreach($purchase_order->modelInventories as $model){
+            //             $model->quantity += $model->pivot->quantity;
+            //         }
+            //     }
+            // }
+            return ["success" => true, "message" => "Quality Control Purchases Berhasil Diambil", "data" => $purchase_quality_controls, "status" => 200];
+
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getQualityControlPurchase($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        try{
+            $id = $request->get('id');
+            $purchase_quality_control = PurchaseQC::with(['purchaseOrder:id,purchase_order_number,purchase_order_date,arrived_date,status,vendor_id', 'purchaseOrder.vendor:id,name', 'purchaseOrder.modelInventories:id,name', 'PurchaseQCDetail'])->find($id);
+            if($purchase_quality_control === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+            $quantity = 0;
+            if(count($purchase_quality_control->purchaseOrder->modelInventories)){
+                foreach($purchase_quality_control->purchaseOrder->modelInventories as $model){
+                    $model->quantity = $model->pivot->quantity;
+                    $quantity += $model->quantity;
+                }
+            }
+            $purchase_quality_control->purchaseOrder->quantity = $quantity;
+            return ["success" => true, "message" => "Quality Control Purchase Berhasil Diambil", "data" => $purchase_quality_control, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function saveQC($request, $route_name)
+    {
+        $id = $request->get('id');
+        $purchase_q_c_id = $request->get('purchase_q_c_id');
+        $attributes = $request->get('attributes', []);
+        $purchase_quality_control_detail = PurchaseQCDetail::with('purchaseQCDetailAttributes')->find($id);
+        if($purchase_quality_control_detail === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        $top_parent_id_qcpd = $purchase_quality_control_detail->getTopParent();
+        if($purchase_q_c_id != $top_parent_id_qcpd->purchase_q_c_id) return ["success" => false, "message" => "Id Detail Bukan Milik Purchase Quality Control", "status" => 400];
+        $purchase_quality_control_detail->makeHidden('parent');
+        foreach($attributes as $attribute){
+            $purchase_quality_control_detail->purchaseQCDetailAttributes()->syncWithoutDetaching([$attribute['id'] => ['is_checked' => $attribute['is_checked']]]);
+        }
+        return ["success" => true, "message" => "Purchase Detail Quality Control Attributes Berhasil Disimpan", "status" => 200];   
     }
 }

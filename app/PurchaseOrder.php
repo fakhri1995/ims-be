@@ -16,6 +16,10 @@ class PurchaseOrder extends Model
         return $this->belongsToMany(ModelInventory::class)->withPivot('quantity', 'price', 'warranty_period', 'warranty_descripition');
     }
 
+    public function modelOrders(){
+        return $this->modelInventories()->with('modelParts', 'modelColumns');
+    }
+
     public function activityLogPurchaseOrders()
     {
         return $this->hasMany(ActivityLogPurchaseOrder::class)->with('connectable:id,name');

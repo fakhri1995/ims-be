@@ -123,4 +123,29 @@ class WarehouseController extends Controller
         $response = $this->warehouseService->deleteDetailPurchaseOrder($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    // Detail Purchase Orders
+    public function getQualityControlPurchases(Request $request)
+    {
+        $route_name = "PURCHASE_ORDER_QUALITY_CONTROLS_GET";
+
+        $response = $this->warehouseService->getQualityControlPurchases($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getQualityControlPurchase(Request $request)
+    {
+        $route_name = "PURCHASE_ORDER_QUALITY_CONTROL_GET";
+
+        $response = $this->warehouseService->getQualityControlPurchase($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function saveQC(Request $request)
+    {
+        $route_name = "PURCHASE_ORDER_QUALITY_CONTROL_GET";
+
+        $response = $this->warehouseService->saveQC($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }
