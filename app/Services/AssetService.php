@@ -476,7 +476,7 @@ class AssetService{
         try{
             $name = $request->get('name', null);
             $models = ModelInventory::with('asset')->select('id','name', 'asset_id', 'required_sn');
-            if($name) $models->where('name', 'ilike', "%".$name."%");
+            if($name) $models->where('name', 'like', "%".$name."%");
             $models = $models->limit(50)->get();
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $models, "status" => 200];
         } catch(Exception $err){
@@ -504,7 +504,7 @@ class AssetService{
             $assetChildrenTreeList = $this->assetChildrenTreeList($asset_id);
             $models = $models->whereIn('asset_id', $assetChildrenTreeList);
         } 
-        if($name) $models = $models->where('name', 'ilike', "%".$name."%");
+        if($name) $models = $models->where('name', 'like', "%".$name."%");
         if($sort_by){
             if($sort_by === 'name') $models = $models->orderBy('name', $sort_type);
             else if($sort_by === 'count') $models = $models->orderBy('inventories_count', $sort_type);
@@ -789,7 +789,7 @@ class AssetService{
                 });
             }
             if($mig_id){
-                $inventories = $inventories->where('mig_id', 'ilike', "%".$mig_id."%");
+                $inventories = $inventories->where('mig_id', 'like', "%".$mig_id."%");
             }
             if($model_id){
                 $inventories = $inventories->where('model_id', $model_id);
@@ -851,9 +851,9 @@ class AssetService{
             ->whereIn('inventories.location', $company_list);
             if($keyword){
                 $inventories = $inventories->where(function($query) use ($keyword) {
-                    $query->where('inventories.mig_id', 'ilike', "%".$keyword."%")
-                    ->orWhere('model_inventories.name', 'ilike', "%".$keyword."%")
-                    ->orWhere('assets.name', 'ilike', "%".$keyword."%");
+                    $query->where('inventories.mig_id', 'like', "%".$keyword."%")
+                    ->orWhere('model_inventories.name', 'like', "%".$keyword."%")
+                    ->orWhere('assets.name', 'like', "%".$keyword."%");
                 });
             }
             if($sort_by){
@@ -893,9 +893,9 @@ class AssetService{
             ->join('assets', 'model_inventories.asset_id', '=', 'assets.id');
             if($asset_id) $inventories = $inventories->where('assets.id', $asset_id);
             if($keyword){
-                $inventories = $inventories->where('inventories.mig_id', 'ilike', "%".$keyword."%")
-                ->orWhere('model_inventories.name', 'ilike', "%".$keyword."%")
-                ->orWhere('assets.name', 'ilike', "%".$keyword."%");
+                $inventories = $inventories->where('inventories.mig_id', 'like', "%".$keyword."%")
+                ->orWhere('model_inventories.name', 'like', "%".$keyword."%")
+                ->orWhere('assets.name', 'like', "%".$keyword."%");
             }
             $inventories = $inventories->limit(50)->get();
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventories, "status" => 200];
@@ -971,7 +971,7 @@ class AssetService{
                 $inventories = $inventories->where('model_id', $model_id);
             }
             if($name){
-                $inventories = $inventories->where('mig_id', 'ilike', "%".$name."%");
+                $inventories = $inventories->where('mig_id', 'like', "%".$name."%");
             }
             
             $inventories = $inventories->paginate($rows);
@@ -1009,7 +1009,7 @@ class AssetService{
                     });
 
             if($mig_id){
-                $inventories = $inventories->where('mig_id', 'ilike', "%".$mig_id."%");
+                $inventories = $inventories->where('mig_id', 'like', "%".$mig_id."%");
             }
             
             $inventories = $inventories->limit(50)->get();

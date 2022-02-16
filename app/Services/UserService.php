@@ -22,7 +22,7 @@ class UserService
 
     public function getUserListRoles($role, $name = null){
         $users = User::with(['roles:id,name', 'company:id,name,top_parent_id', 'company.topParent'])->select('id', 'name', 'company_id', 'role', 'position')->where('role', $role);
-        if($name) $users = $users->where('name', 'ilike', "%".$name."%");
+        if($name) $users = $users->where('name', 'like', "%".$name."%");
         $users = $users->limit(50)->get();
         foreach($users as $user){
             if($user->company->id !== 0){
@@ -41,7 +41,7 @@ class UserService
         $type = $request->get('type', null);
         $users = User::with(['company:id,name,top_parent_id', 'company.topParent'])->select('id', 'name', 'company_id', 'profile_image', 'position');
         if($type) $users = $users->where('role', $type);
-        if($name) $users = $users->where('name', 'ilike', "%".$name."%");
+        if($name) $users = $users->where('name', 'like', "%".$name."%");
         $users = $users->limit(50)->get();
         foreach($users as $user){
             if($user->company->id !== 0){
@@ -97,7 +97,7 @@ class UserService
     {
         $users = User::select('id','name', 'company_id', 'role', 'position')->with(['company:id,parent_id,name,top_parent_id', 'company.topParent']);
         if($role_id !== 0) $users = $users->where('users.role', $role_id);
-        if($name) $users = $users->where('name', 'ilike', "%".$name."%");
+        if($name) $users = $users->where('name', 'like', "%".$name."%");
         $users = $users->limit(50)->get();
         foreach($users as $user){
             $user->company_name = $user->company->topParent ? $user->company->topParent->name. ' - ' . $user->company->name : $user->company->name;
@@ -125,7 +125,7 @@ class UserService
 
         if($company_id) $users = $users->where('company_id', $company_id);
         if($is_enabled !== null) $users = $users->where('is_enabled', $is_enabled);
-        if($name) $users = $users->where('name', 'ilike', "%".$name."%");
+        if($name) $users = $users->where('name', 'like', "%".$name."%");
 
         if($rows > 100) $rows = 100;
         if($rows < 1) $rows = 10;

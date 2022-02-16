@@ -273,9 +273,9 @@ class TaskService{
                 ->join('assets', 'model_inventories.asset_id', '=', 'assets.id');
                 if($keyword !== null){
                     $data = $data->where(function ($query) use($keyword){
-                        $query->where('mig_id', 'ilike', "%$keyword%")
-                        ->orWhere('model_inventories.name', 'ilike', "%$keyword%")
-                        ->orWhere('assets.name', 'ilike', "%$keyword%");
+                        $query->where('mig_id', 'like', "%$keyword%")
+                        ->orWhere('model_inventories.name', 'like', "%$keyword%")
+                        ->orWhere('assets.name', 'like', "%$keyword%");
                     });
                 } 
 
@@ -335,9 +335,9 @@ class TaskService{
             if($keyword){
                 if(is_numeric($keyword)){
                     $tasks = $tasks->where(function ($query) use ($keyword){
-                        $query->where('name', 'ilike', "%".$keyword."%")->orWhere('id', $keyword);
+                        $query->where('name', 'like', "%".$keyword."%")->orWhere('id', $keyword);
                     });
-                } else $tasks = $tasks->where('name', 'ilike', "%".$keyword."%");
+                } else $tasks = $tasks->where('name', 'like', "%".$keyword."%");
             } 
             if($task_type > 0) $tasks = $tasks->where('task_type_id', $task_type);
             
@@ -444,9 +444,9 @@ class TaskService{
             if($keyword){
                 if(is_numeric($keyword)){
                     $tasks = $tasks->where(function ($query) use ($keyword){
-                        $query->where('name', 'ilike', "%".$keyword."%")->orWhere('id', $keyword);
+                        $query->where('name', 'like', "%".$keyword."%")->orWhere('id', $keyword);
                     });
-                } else $tasks = $tasks->where('name', 'ilike', "%".$keyword."%");
+                } else $tasks = $tasks->where('name', 'like', "%".$keyword."%");
             } 
             if($task_type > 0) $tasks = $tasks->where('task_type_id', $task_type);
             
@@ -478,7 +478,7 @@ class TaskService{
         $rows = $request->get('rows', 10);
 
         $users = DB::table('users')->select('id', 'name', 'profile_image')->where('role', 1);
-        if($name) $users = $users->where('name', 'ilike', "%$name%");
+        if($name) $users = $users->where('name', 'like', "%$name%");
         if($rows > 100) $rows = 100;
         if($rows < 1) $rows = 10;
         $users = $users->paginate($rows);
@@ -627,8 +627,8 @@ class TaskService{
             } 
             if($from && $to) $tasks = $tasks->whereBetween('deadline', [$from, $to]);
             if($keyword){
-                if(is_numeric($keyword)) $tasks = $tasks->where('name', 'ilike', "%".$keyword."%")->orWhere('id', $keyword);
-                else $tasks = $tasks->where('name', 'ilike', "%".$keyword."%");
+                if(is_numeric($keyword)) $tasks = $tasks->where('name', 'like', "%".$keyword."%")->orWhere('id', $keyword);
+                else $tasks = $tasks->where('name', 'like', "%".$keyword."%");
             } 
             if($task_type > 0) $tasks = $tasks->where('task_type_id', $task_type);
             
@@ -2095,7 +2095,7 @@ class TaskService{
         try{
             $name = $request->get('name', null);
             $task_types = TaskType::select('id','name');
-            if($name) $task_types->where('name', 'ilike', "%".$name."%");
+            if($name) $task_types->where('name', 'like', "%".$name."%");
             $task_types = $task_types->limit(50)->get();
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $task_types, "status" => 200];
         } catch(Exception $err){
@@ -2119,7 +2119,7 @@ class TaskService{
             
             $tasks = TaskType::select('id', 'name', 'description')->withCount('tasks');
 
-            if($name) $tasks = $tasks->where('name', 'ilike', "%".$name."%");
+            if($name) $tasks = $tasks->where('name', 'like', "%".$name."%");
             if($sort_by){
                 if($sort_by === 'name') $tasks = $tasks->orderBy('name', $sort_type);
                 else if($sort_by === 'count') $tasks = $tasks->orderBy('tasks_count', $sort_type);

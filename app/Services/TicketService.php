@@ -1069,7 +1069,7 @@ class TicketService
                 else if($sort_by === 'description') $ticket_task_types = $ticket_task_types->orderBy('description', $sort_type);
             }
             
-            if($keyword) $ticket_task_types = $ticket_task_types->where('ticket_task_types.name', 'ilike', "%".$keyword."%")->orWhere('task_types.name', 'ilike', "%".$keyword."%")->orWhere('ticket_types.name', 'ilike', "%".$keyword."%")->orWhere('ticket_task_types.description', 'ilike', "%".$keyword."%");
+            if($keyword) $ticket_task_types = $ticket_task_types->where('ticket_task_types.name', 'like', "%".$keyword."%")->orWhere('task_types.name', 'like', "%".$keyword."%")->orWhere('ticket_types.name', 'like', "%".$keyword."%")->orWhere('ticket_task_types.description', 'like', "%".$keyword."%");
             $ticket_task_types = $ticket_task_types->paginate($rows);
             if($ticket_task_types->isEmpty()) return ["success" => true, "message" => "Ticket Task Type Masih Kosong", "data" => $ticket_task_types, "status" => 200];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $ticket_task_types, "status" => 200];

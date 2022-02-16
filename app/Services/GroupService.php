@@ -22,11 +22,11 @@ class GroupService{
             $users = User::select('id','name','position', 'profile_image')->whereHas('groups', function($q){
                 $q->where('groups.id', 1);
             });
-            if($name) $users = $users->where('users.name', 'ilike', "%".$name."%");
+            if($name) $users = $users->where('users.name', 'like', "%".$name."%");
             $data = $users->limit(50)->get();
         } else {
             $groups = Group::select('id', 'name');
-            if($name) $groups = $groups->where('groups.name', 'ilike', "%".$name."%");
+            if($name) $groups = $groups->where('groups.name', 'like', "%".$name."%");
             $data = $groups->limit(50)->get();
         }
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
@@ -42,7 +42,7 @@ class GroupService{
             $groups = Group::select('id', 'name');
             if($type == 1) $groups = $groups->where('is_agent', true);
             else if($type == 2) $groups = $groups->where('is_agent', false);
-            if($name) $groups = $groups->where('groups.name', 'ilike', "%".$name."%");
+            if($name) $groups = $groups->where('groups.name', 'like', "%".$name."%");
             $data = $groups->limit(50)->get();
             
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];

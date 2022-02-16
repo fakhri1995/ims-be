@@ -51,9 +51,9 @@ class WarehouseService{
             if($keyword){
                 if(is_numeric($keyword)){
                     $purchase_orders = $purchase_orders->where(function ($query) use ($keyword){
-                        $query->where('purchase_order_number', 'ilike', "%".$keyword."%")->orWhere('purchase_orders.id', $keyword);
+                        $query->where('purchase_order_number', 'like', "%".$keyword."%")->orWhere('purchase_orders.id', $keyword);
                     });
-                } else $purchase_orders = $purchase_orders->where('purchase_order_number', 'ilike', "%".$keyword."%");
+                } else $purchase_orders = $purchase_orders->where('purchase_order_number', 'like', "%".$keyword."%");
             } 
             if($status) $purchase_orders = $purchase_orders->where('status', $status);
             
@@ -463,9 +463,9 @@ class WarehouseService{
             // if($keyword){
             //     if(is_numeric($keyword)){
             //         $purchase_quality_controls = $purchase_quality_controls->where(function ($query) use ($keyword){
-            //             $query->where('purchase_order_number', 'ilike', "%".$keyword."%")->orWhere('purchase_quality_controls.id', $keyword);
+            //             $query->where('purchase_order_number', 'like', "%".$keyword."%")->orWhere('purchase_quality_controls.id', $keyword);
             //         });
-            //     } else $purchase_quality_controls = $purchase_quality_controls->where('purchase_order_number', 'ilike', "%".$keyword."%");
+            //     } else $purchase_quality_controls = $purchase_quality_controls->where('purchase_order_number', 'like', "%".$keyword."%");
             // } 
             // if($status) $purchase_quality_controls = $purchase_quality_controls->where('status', $status);
             
