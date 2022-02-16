@@ -78,6 +78,15 @@ class AssetService{
         return $assets;
     }
 
+    private function assetChildrenTreeList($id)
+    {
+        $asset = Asset::find($id);
+        if($asset === null) return [];
+        $list_assets = $asset->getChildrenTreeList()->pluck('id');
+        $list_assets[] = $asset->id;
+        return $list_assets;
+    }
+
     public function getAssets($route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
@@ -491,7 +500,10 @@ class AssetService{
         
         $models = ModelInventory::withCount('inventories')->with('asset:id,name,code,deleted_at');
 
-        if($asset_id) $models = $models->where('asset_id', $asset_id);
+        if($asset_id){
+            $assetChildrenTreeList = $this->assetChildrenTreeList($asset_id);
+            $models = $models->whereIn('asset_id', $assetChildrenTreeList);
+        } 
         if($name) $models = $models->where('name', 'ilike', "%".$name."%");
         if($sort_by){
             if($sort_by === 'name') $models = $models->orderBy('name', $sort_type);
@@ -766,8 +778,9 @@ class AssetService{
             $inventories = Inventory::with(['statusCondition', 'statusUsage', 'locationInventory', 'modelInventory.asset:id,name,code,deleted_at'])->select('id', 'model_id', 'mig_id', 'status_condition', 'status_usage', 'location');
 
             if($asset_id){
-                $inventories = $inventories->whereHas('modelInventory', function($q) use ($asset_id){
-                    $q->where('model_inventories.asset_id', $asset_id);
+                $assetChildrenTreeList = $this->assetChildrenTreeList($asset_id);
+                $inventories = $inventories->whereHas('modelInventory', function($q) use ($assetChildrenTreeList){
+                    $q->whereIn('model_inventories.asset_id', $assetChildrenTreeList);
                 });
             }
             if($location_id){
@@ -949,8 +962,9 @@ class AssetService{
             $inventories = Inventory::with(['modelInventory.asset:id,name,deleted_at', 'inventoryAddableParts'])->select('id', 'model_id', 'mig_id')->where('status_usage', 2);
 
             if($asset_id){
-                $inventories = $inventories->whereHas('modelInventory', function($q) use ($asset_id){
-                    $q->where('model_inventories.asset_id', $asset_id);
+                $assetChildrenTreeList = $this->assetChildrenTreeList($asset_id);
+                $inventories = $inventories->whereHas('modelInventory', function($q) use ($assetChildrenTreeList){
+                    $q->whereIn('model_inventories.asset_id', $assetChildrenTreeList);
                 });
             }
             if($model_id){
@@ -988,9 +1002,10 @@ class AssetService{
             $name = $request->get('name', null);
             $mig_id = $request->get('mig_id', null);
             if(!$id) return ["success" => false, "message" => "Id Asset Kosong", "status" => 400];
-            $inventories = Inventory::with(['modelInventory.asset:id,name,deleted_at', 'inventoryReplacementParts'])->select('id', 'model_id', 'mig_id')
-                    ->whereHas('modelInventory', function($q) use ($id){
-                        $q->where('model_inventories.asset_id', $id);
+            $assetChildrenTreeList = $this->assetChildrenTreeList($id);
+            $inventories = Inventory::with(['modelInventory.asset:id,name,code,deleted_at', 'inventoryReplacementParts'])->select('id', 'model_id', 'mig_id')
+                    ->whereHas('modelInventory', function($q) use ($assetChildrenTreeList){
+                        $q->whereIn('model_inventories.asset_id', $assetChildrenTreeList);
                     });
 
             if($mig_id){
@@ -998,6 +1013,9 @@ class AssetService{
             }
             
             $inventories = $inventories->limit(50)->get();
+            foreach($inventories as $inventory){
+                $inventory->modelInventory->asset->asset_name = $inventory->modelInventory->asset->fullName();
+            }
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventories, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
