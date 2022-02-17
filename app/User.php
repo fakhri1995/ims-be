@@ -36,8 +36,8 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     public function company(){
         return $this->belongsTo(Company::class)->withDefault([
             'id' => 0,
-            'name' => 'Perusahaan Tidak Ditemukan',
-            'full_name'=> 'Perusahaan Tidak Ditemukan'
+            'name' => '-',
+            'full_name'=> '-'
         ]);
     }
 

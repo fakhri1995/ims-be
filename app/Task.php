@@ -34,7 +34,11 @@ class Task extends Model
 
     public function creator()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'created_by')->withDefault([
+            'id' => 0,
+            'name' => '-',
+            'company_id' => 0,
+        ]);
     }
     
     public function users()
