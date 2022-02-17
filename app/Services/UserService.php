@@ -303,19 +303,19 @@ class UserService
         return $this->userActivation($data, $this->requester_role_id);
     }
 
-    // public function updateRoleUser($data, $role_id){
-    //     $id = $data['id'];
-    //     $role_ids = $data['role_ids'];
-    //     $user = User::find($data['id']);
-    //     if($user === null) return ["success" => false, "message" => "Id Pengguna Tidak Ditemukan", "status" => 400];
-    //     if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 401];
-    //     try{
-    //         $user->roles()->sync($role_ids);
-    //         return ["success" => true, "message" => "Berhasil Merubah Fitur Akun", "status" => 200];
-    //     } catch(Exception $err){
-    //         return ["success" => false, "message" => $err, "status" => 400];
-    //     }
-    // }
+    public function updateRoleUser($data, $role_id){
+        $id = $data['id'];
+        $role_ids = $data['role_ids'];
+        $user = User::find($data['id']);
+        if($user === null) return ["success" => false, "message" => "Id Pengguna Tidak Ditemukan", "status" => 400];
+        if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 401];
+        try{
+            $user->roles()->sync($role_ids);
+            return ["success" => true, "message" => "Berhasil Merubah Fitur Akun", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
 
     // public function updateFeatureAgent($data, $route_name){
     //     $access = $this->globalService->checkRoute($route_name);
