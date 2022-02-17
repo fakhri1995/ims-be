@@ -1800,7 +1800,7 @@ class AssetService{
 
         try{
             $manufacturers = Manufacturer::get();
-            if($manufacturers->isEmpty()) return ["success" => false, "message" => "Manufacturer Belum dibuat", "status" => 400];
+            if($manufacturers->isEmpty()) return ["success" => false, "message" => "Manufacturer Belum dibuat", "data" => [], "status" => 400];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $manufacturers, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];

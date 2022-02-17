@@ -53,6 +53,7 @@ class UserController extends Controller
             "fullname" => $request->get('fullname'),
             "company_id" => $request->get('company_id'),
             "email" => $request->get('email'),
+            "nip" => $request->get('nip'),
             "phone_number" => $request->get('phone_number'),
             "profile_image" => $request->get('profile_image', null),
             "position" => $request->get('position', null),
@@ -72,6 +73,7 @@ class UserController extends Controller
         $data_request = [
             "id" => $request->get('id'),
             "fullname" => $request->get('fullname'),
+            "nip" => $request->get('nip'),
             "phone_number" => $request->get('phone_number'),
             "position" => $request->get('position', null),
             "role_ids" => $request->get('role_ids', [])
@@ -156,6 +158,7 @@ class UserController extends Controller
             "fullname" => $request->get('fullname'),
             "company_id" => $request->get('company_id'),
             "email" => $request->get('email'),
+            "nip" => $request->get('nip'),
             "phone_number" => $request->get('phone_number'),
             "profile_image" => $request->get('profile_image', null),
             "position" => $request->get('position', null),
@@ -175,6 +178,7 @@ class UserController extends Controller
         $data_request = [
             "id" => $request->get('id'),
             "fullname" => $request->get('fullname'),
+            "nip" => $request->get('nip'),
             "phone_number" => $request->get('phone_number'),
             "position" => $request->get('position', null),
             "role_ids" => $request->get('role_ids', [])
