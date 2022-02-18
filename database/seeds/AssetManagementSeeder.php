@@ -34,13 +34,13 @@ class AssetManagementSeeder extends Seeder
                 'name' => 'Kapasitas', 
                 'data_type' => 'String',
                 'default' => '4 GB',
-                'required' => 'false'
+                'required' => false
             ]);
             $asset_column_b = new AssetColumn([
                 'name' => 'Processor', 
                 'data_type' => 'String',
                 'default' => null,
-                'required' => 'false'
+                'required' => false
             ]);
             $asset->assetColumns()->saveMany([$asset_column_a, $asset_column_b]);
         }
@@ -60,13 +60,13 @@ class AssetManagementSeeder extends Seeder
             'name' => 'Kapasitas', 
             'data_type' => 'String',
             'default' => '4 GB',
-            'required' => 'false'
+            'required' => false
         ]);
         $model_column_b = new ModelInventoryColumn([
             'name' => 'Processor', 
             'data_type' => 'String',
             'default' => null,
-            'required' => 'false'
+            'required' => false
         ]);
         $model->modelColumns()->saveMany([$model_column_a, $model_column_b]);
         foreach($data['model_parts'] as $model_part){
