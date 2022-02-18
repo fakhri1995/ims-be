@@ -117,7 +117,7 @@ class AssetManagementSeeder extends Seeder
         $inventory->status_usage = $status_usage;
         $inventory->location = $location;
         $inventory->deskripsi = "-";
-        $inventory->manufacturer_id = "-";
+        $inventory->manufacturer_id = null;
         $inventory->mig_id = null;
         $inventory->serial_number = $serial_number;
         $inventory->is_consumable = false;
