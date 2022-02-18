@@ -22,7 +22,7 @@ class CreateInventoriesTable extends Migration
             $table->integer('location')->nullable();
             $table->string('deskripsi')->nullable();
             $table->integer('manufacturer_id')->nullable();
-            $table->string('mig_id');
+            $table->string('mig_id')->nullable();
             $table->string('serial_number')->nullable();
             $table->boolean('is_consumable');
             $table->softDeletes();
