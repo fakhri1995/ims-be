@@ -74,7 +74,7 @@ class Inventory extends Model
 
     public function inventoryParent()
     {
-        return $this->belongsToMany(Inventory::class, 'inventory_inventory_pivots', 'child_id', 'parent_id')->select('inventories.id', 'inventories.model_id', 'inventories.mig_id', 'inventories.status_condition', 'inventories.status_usage');
+        return $this->belongsToMany(Inventory::class, 'inventory_inventory_pivots', 'child_id', 'parent_id')->select('inventories.id', 'inventories.model_id', 'inventories.mig_id', 'inventories.status_condition', 'inventories.status_usage', 'inventories.location');
     }
 
     public function inventoryRelationshipsWithoutInventory()
@@ -113,5 +113,15 @@ class Inventory extends Model
     public function quantities()
     {
         return $this->belongsToMany(Company::class, 'inventory_locations', 'inventory_id', 'company_id')->select('companies.id','companies.name', 'inventory_locations.quantity')->withPivot('quantity');
+    }
+
+    public function vendor()
+    {
+        return $this->belongsTo(Vendor::class)->withTrashed();
+    }
+
+    public function manufacturer()
+    {
+        return $this->belongsTo(Manufacturer::class)->withTrashed();
     }
 }
