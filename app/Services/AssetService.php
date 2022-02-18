@@ -910,7 +910,7 @@ class AssetService{
         if($access["success"] === false) return $access;
 
         try{
-            $inventory = Inventory::with(['modelInventory.asset', 'locationInventory', 'additionalAttributes', 'inventoryParts', 'associations', 'quantities'])->find($id);
+            $inventory = Inventory::with(['modelInventory.asset', 'vendor', 'manufacturer', 'locationInventory', 'additionalAttributes', 'inventoryParts', 'associations', 'quantities'])->find($id);
             if($inventory === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             $inventory->modelInventory->asset->asset_name = $inventory->modelInventory->asset->name;
             if(strlen($inventory->modelInventory->asset->code) > 3){
@@ -1331,6 +1331,8 @@ class AssetService{
             $check_parent_inventory = $inventory->inventoryParent;
             if(!count($check_parent_inventory)) return ["success" => false, "message" => "Inventori yang akan Diganti Tidak Termasuk dari Part Inventori", "status" => 400];
             $parent_inventory = $check_parent_inventory[0];
+            $inventory_replacement_location = $parent_inventory->location;
+            $inventory_replacement_status_usage = $parent_inventory->status_usage;
             
             $old_inventory_parent_list = $parent_inventory->inventoryPart->pluck('id');
             $inventory_replacement = Inventory::find($replacement_id);
@@ -1339,7 +1341,9 @@ class AssetService{
             foreach($inventory_replacement->getAttributes() as $key => $value) $old_inventory_replacement[$key] = $value;
 
             $temp_status_usage = $inventory->status_usage;
-            $inventory->status_usage = $inventory_replacement->status_usage;
+            $inventory->status_usage = 3;
+            $inventory->status_condition = 2;
+            $inventory_replacement->location = auth()->user()->company_id;
             $inventory->save();
             $properties = $this->checkUpdateProperties($old_inventory, $inventory);
             if($properties){
@@ -1354,7 +1358,8 @@ class AssetService{
                 }
             }
             
-            $inventory_replacement->status_usage = $temp_status_usage;
+            $inventory_replacement->status_usage = $inventory_replacement_status_usage;
+            $inventory_replacement->location = $inventory_replacement_location;
             $inventory_replacement->save();
             $properties = $this->checkUpdateProperties($old_inventory_replacement, $inventory_replacement);
             if($properties){
@@ -1477,7 +1482,7 @@ class AssetService{
             $old_inventory = [];
             foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
 
-            $inventory->status_usage = 2;
+            $inventory->status_condition = 3;
             $inventory->save();
 
             $parent_inventory = Inventory::with(['inventoryPart', 'inventoryParts'])->select('id')->find($id);
@@ -1548,8 +1553,9 @@ class AssetService{
         $causer_id = auth()->user()->id;
         try{
             if(count($inventory_part_ids)){
-                $parent_inventory = Inventory::with(['inventoryPart', 'inventoryParts'])->select('id', 'status_usage')->find($id);
+                $parent_inventory = Inventory::with('inventoryPart')->select('id', 'status_usage', 'location', 'model_id')->find($id);
                 $old_inventory_parent_list = $parent_inventory->inventoryPart->pluck('id');
+                // Check kesamaan part yang akan ditambahkan dengan induknya
                 foreach($inventory_part_ids as $inventory_part_id){
                     if($inventory_part_id == $id) return ["success" => false, "message" => "Id Inventory Sama Dengan Id Parent", "status" => 400];
                     $inventory = Inventory::with('inventoryParent', 'inventoryPart')->find($inventory_part_id);
@@ -1557,6 +1563,52 @@ class AssetService{
                     $check_parent = $this->checkParent($inventory_part_id, $id);
                     if($check_parent) return ["success" => false, "message" => "Inventory Id $inventory_part_id Termasuk Dari Part Inventory Id $id", "status" => 400];
                 }
+
+                // Check jumlah kesamaan part yang dimiliki dengan yang akan ditambah dibandingkan dengan Template Modelnya
+                $list_count_inventory_part = DB::table('inventory_inventory_pivots')
+                     ->select(DB::raw('model_id, count(*) as quantity'))
+                     ->join('inventories', 'inventory_inventory_pivots.child_id', '=', 'inventories.id')
+                     ->where('parent_id', '=', $id)
+                     ->groupBy('model_id')
+                     ->get();
+
+                $list_count_model_part = DB::table('model_model_pivots')
+                    ->select('child_id as model_id','quantity')
+                    ->where('parent_id', '=', $parent_inventory->model_id)
+                    ->get();
+
+                $list_add_inventories = Inventory::select('id', 'model_id')->find($inventory_part_ids);
+                foreach($list_add_inventories as $check_inventory){
+                    $check_model = $check_inventory->model_id;
+                    $search_model = $list_count_model_part->search(function ($item) use ($check_model) {
+                        return $item->model_id === $check_model;
+                    });
+
+                    if($search_model !== false){
+                        $search_inventory = $list_count_inventory_part->search(function ($item) use ($check_model) {
+                            return $item->model_id === $check_model;
+                        });
+
+                        if($search_inventory !== false){
+                            // Membandingkan jumlah yang dibutuhkan pada template model dengan part yang dimiliki dari induk inventory
+                            if($list_count_inventory_part[$search_inventory]->quantity >= $list_count_model_part[$search_model]->quantity){
+                                $inventory_id = $check_inventory->id;
+                                return ["success" => false, "message" => "Inventory dengan id $inventory_id tidak bisa ditambahkan sebagai part karena induknya memiliki part dengan model id yang sama dengan jumlah maksimal", "status" => 400];
+                            } else $list_count_inventory_part[$search_inventory]->quantity += 1;
+                        } else {
+                            $list_count_inventory_part->push((object)[
+                                "model_id" => $check_model,
+                                "quantity" => 1
+                            ]);
+                        }
+
+                    } else {
+                        $inventory_id = $check_inventory->id;
+                        $model_id = $parent_inventory->model_id;
+                        return ["success" => false, "message" => "Inventory dengan id $inventory_id memiliki model yang berbeda dengan model dari part induk yang akan digabungkan", "status" => 400];
+                    } 
+                }
+
                 foreach($inventory_part_ids as $inventory_part_id){
                     $inventory = Inventory::with('inventoryParent', 'inventoryPart')->find($inventory_part_id);
                     // if($inventory === null) return ["success" => false, "message" => "Id Inventory Tidak Terdaftar", "status" => 400];
@@ -1565,6 +1617,7 @@ class AssetService{
                     $old_inventory = [];
                     foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
                     $inventory->status_usage = $parent_inventory->status_usage;
+                    $inventory->location = $parent_inventory->location;
                     $inventory->save();
                     
                     $logService = new LogService;
@@ -1573,12 +1626,12 @@ class AssetService{
                         $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
                     }
                     
-                    $parent_inventory->inventoryParts()->attach($inventory_part_id);
+                    $parent_inventory->inventoryPart()->attach($inventory_part_id);
                     $check_parent_inventory_part = $inventory->inventoryParent;
                     $properties = [];
                     if(count($check_parent_inventory_part)){
                         $parent_inventory_part = $check_parent_inventory_part[0];
-                        $parent_inventory_part->inventoryParts()->detach($inventory_part_id);
+                        $parent_inventory_part->inventoryPart()->detach($inventory_part_id);
                         $properties['old'] = ['parent_id' => $parent_inventory_part->id];
                         $properties['attributes'] = ['parent_id' => $id];
                         $logService->updateLogInventoryPivot($inventory_part_id, $causer_id, $properties, $notes);
