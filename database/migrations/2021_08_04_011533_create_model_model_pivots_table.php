@@ -14,7 +14,6 @@ class CreateModelModelPivotsTable extends Migration
     public function up()
     {
         Schema::create('model_model_pivots', function (Blueprint $table) {
-            $table->id();
             $table->unsignedBigInteger('parent_id');
             $table->unsignedBigInteger('child_id');
             $table->integer('quantity');

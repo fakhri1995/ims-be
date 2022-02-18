@@ -14,7 +14,6 @@ class CreateInventoryInventoryPivotsTable extends Migration
     public function up()
     {
         Schema::create('inventory_inventory_pivots', function (Blueprint $table) {
-            $table->id();
             $table->unsignedBigInteger('parent_id');
             $table->unsignedBigInteger('child_id');
 
