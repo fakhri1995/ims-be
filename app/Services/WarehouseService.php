@@ -356,7 +356,7 @@ class WarehouseService{
         $purchase_order_id = $request->get('purchase_order_id');
         $purchase_order = PurchaseOrder::with('modelInventories')->find($purchase_order_id);
         if($purchase_order === null) return ["success" => false, "message" => "Id Purchase Order Tidak Ditemukan", "status" => 400];
-        if($purchase_order->status !== 1) return ["success" => false, "message" => "Purchase Order Tidak Bisa Dihapus, Status Purchase Order Sudah Bukan Draft!", "status" => 400];
+        if($purchase_order->status < 3) return ["success" => false, "message" => "Purchase Order Tidak Bisa Dihapus, Status Purchase Tidak Tepat!", "status" => 400];
         $search = $purchase_order->modelInventories->search(function ($item) use ($model_id) {
             return $item->id === $model_id;
         });
@@ -388,7 +388,7 @@ class WarehouseService{
         $purchase_order_id = $request->get('purchase_order_id');
         $purchase_order = PurchaseOrder::with('modelInventories')->find($purchase_order_id);
         if($purchase_order === null) return ["success" => false, "message" => "Id Purchase Order Tidak Ditemukan", "status" => 400];
-        if($purchase_order->status !== 1) return ["success" => false, "message" => "Purchase Order Tidak Bisa Dihapus, Status Purchase Order Sudah Bukan Draft!", "status" => 400];
+        if($purchase_order->status < 3) return ["success" => false, "message" => "Purchase Order Tidak Bisa Dihapus, Status Purchase Tidak Tepat!", "status" => 400];
         $search = $purchase_order->modelInventories->search(function ($item) use ($model_id) {
             return $item->id === $model_id;
         });
@@ -420,7 +420,7 @@ class WarehouseService{
         $purchase_order_id = $request->get('purchase_order_id');
         $purchase_order = PurchaseOrder::with('modelInventories')->find($purchase_order_id);
         if($purchase_order === null) return ["success" => false, "message" => "Id Purchase Order Tidak Ditemukan", "status" => 400];
-        if($purchase_order->status !== 1) return ["success" => false, "message" => "Purchase Order Tidak Bisa Dihapus, Status Purchase Order Sudah Bukan Draft!", "status" => 400];
+        if($purchase_order->status < 3) return ["success" => false, "message" => "Purchase Order Tidak Bisa Dihapus, Status Purchase Tidak Tepat!", "status" => 400];
         
         try{
             $purchase_order->modelInventories()->detach($model_id);
