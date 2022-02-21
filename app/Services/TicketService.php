@@ -726,7 +726,8 @@ class TicketService
             $id = $request->get('id');
             $ticket = Ticket::with('task')->find($id);
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
-                        
+            if($ticket->task->status > 4) return ["success" => false, "message" => "Update Ticket Tidak Dapat Dilakukan, Status Ticket Tidak Tepat", "status" => 400];
+            
             $logService = new LogService;
             $causer_id = auth()->user()->id;
             $location_id = $request->get('location_id');
@@ -774,17 +775,18 @@ class TicketService
         try{
             $id = $data['id'];
             $inventory_id = $data['inventory_id'];
-            $ticket = Ticket::find($id);
+            $ticket = Ticket::with('task')->find($id);
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
             if($ticket->closed_at !== null) return ["success" => false, "message" => "Status Ticket Sudah Closed", "status" => 400];
             if($ticket->ticketable_type !== 'App\Incident') return ["success" => false, "message" => "Tipe Tiket Tidak Sesuai", "status" => 400];
             $incident = Incident::find($ticket->ticketable_id);
             if($incident === null) return ["success" => false, "message" => "Incident pada Ticket Tidak Ditemukan", "status" => 400];
             if($inventory_id === null && $incident->inventory_id === null) return ["success" => false, "message" => "Id Inventory Kosong", "status" => 400];
+            if(!in_array($ticket->task->status, [1,2,3])) return ["success" => false, "message" => "Proses Item Tidak Dapat Dilakukan, Status Ticket Tidak Tepat", "status" => 400];
             $old_inventory_id = $incident->inventory_id;
+            if($old_inventory_id === $inventory_id) return ["success" => true, "message" => "Inventory Id Sama dengan Inventory yang Sudah Terhubung", "status" => 400];
             $incident->inventory_id = $inventory_id;
             $incident->save();
-
             $causer_id = auth()->user()->id;
             $logService = new LogService;
             if($inventory_id === null){
@@ -812,7 +814,7 @@ class TicketService
             $company_user_login_id = auth()->user()->company_id;
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
             if(!$admin && $ticket->task->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Tidak Memiliki Akses Tiket Ini", "status" => 401];
-            if($ticket->task->status === 7) return ["success" => false, "message" => "Ticket Sudah Dicancel", "status" => 400];
+            if($ticket->task->status > 5) return ["success" => false, "message" => "Ticket Tidak Dapat Dicancel, Status Tidak Tepat", "status" => 400];
             $old_status = $ticket->task->status;
             $ticket->task->status = 7;
             $ticket->task->save();
@@ -918,6 +920,7 @@ class TicketService
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
             $deadline = $request->get('deadline');
             if($deadline === null) return ["success" => false, "message" => "Deadline Masih Kosong", "status" => 400];
+            if(!in_array($ticket->task->status, [1,2,3])) return ["success" => false, "message" => "Proses Item Tidak Dapat Dilakukan, Status Ticket Tidak Tepat", "status" => 400];
             $ticket->task->deadline = $deadline;
             $ticket->task->save();
             $logService = new LogService;
