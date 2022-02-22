@@ -39,6 +39,6 @@ class Incident extends Model
 
     public function inventory()
     {
-        return $this->belongsTo(Inventory::class)->with(['statusCondition', 'statusUsage', 'modelInventory.asset', 'additionalAttributes']);
+        return $this->belongsTo(Inventory::class)->with(['statusCondition', 'statusUsage', 'modelInventory.asset', 'additionalAttributes', 'locationInventory']);
     }
 }
