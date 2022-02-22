@@ -1564,48 +1564,54 @@ class AssetService{
                     if($check_parent) return ["success" => false, "message" => "Inventory Id $inventory_part_id Termasuk Dari Part Inventory Id $id", "status" => 400];
                 }
 
-                // Check jumlah kesamaan part yang dimiliki dengan yang akan ditambah dibandingkan dengan Template Modelnya
+                // Check jumlah kesamaan tipe asset part yang dimiliki dengan yang akan ditambah dibandingkan dengan Template Modelnya
                 $list_count_inventory_part = DB::table('inventory_inventory_pivots')
-                     ->select(DB::raw('model_id, count(*) as quantity'))
+                     ->select(DB::raw('asset_id, count(*) as quantity'))
+                    //  ->select(DB::raw('model_id, count(*) as quantity'))
                      ->join('inventories', 'inventory_inventory_pivots.child_id', '=', 'inventories.id')
+                     ->join('model_inventories', 'inventories.model_id', '=', 'model_inventories.id')
                      ->where('parent_id', '=', $id)
-                     ->groupBy('model_id')
+                     ->groupBy('asset_id')
                      ->get();
 
-                $list_count_model_part = DB::table('model_model_pivots')
-                    ->select('child_id as model_id','quantity')
+                $list_count_asset_part = DB::table('model_model_pivots')
+                    ->join('model_inventories', 'model_model_pivots.child_id', '=', 'model_inventories.id')
+                    ->select(DB::raw('asset_id, sum(quantity) as quantity'))
+                    // ->select('child_id as model_id','quantity', 'model_inventories.asset_id')
                     ->where('parent_id', '=', $parent_inventory->model_id)
+                    ->groupBy('asset_id')
                     ->get();
 
-                $list_add_inventories = Inventory::select('id', 'model_id')->find($inventory_part_ids);
+                foreach($list_count_asset_part as $part) $part->quantity = (int)$part->quantity;
+                // return ["success" => true, "message" => [$list_count_inventory_part, $list_count_asset_part], "status" => 200];
+                $list_add_inventories = Inventory::select('inventories.id', 'model_id', 'asset_id')->join('model_inventories', 'inventories.model_id', '=', 'model_inventories.id')->find($inventory_part_ids);
                 foreach($list_add_inventories as $check_inventory){
-                    $check_model = $check_inventory->model_id;
-                    $search_model = $list_count_model_part->search(function ($item) use ($check_model) {
-                        return $item->model_id === $check_model;
+                    $check_asset = $check_inventory->asset_id;
+                    $search_asset = $list_count_asset_part->search(function ($item) use ($check_asset) {
+                        return $item->asset_id === $check_asset;
                     });
 
-                    if($search_model !== false){
-                        $search_inventory = $list_count_inventory_part->search(function ($item) use ($check_model) {
-                            return $item->model_id === $check_model;
+                    if($search_asset !== false){
+                        $search_inventory = $list_count_inventory_part->search(function ($item) use ($check_asset) {
+                            return $item->asset_id === $check_asset;
                         });
-
                         if($search_inventory !== false){
-                            // Membandingkan jumlah yang dibutuhkan pada template model dengan part yang dimiliki dari induk inventory
-                            if($list_count_inventory_part[$search_inventory]->quantity >= $list_count_model_part[$search_model]->quantity){
+                            // Membandingkan jumlah yang dibutuhkan pada template asset dengan part yang dimiliki dari induk inventory
+                            if($list_count_inventory_part[$search_inventory]->quantity >= $list_count_asset_part[$search_asset]->quantity){
                                 $inventory_id = $check_inventory->id;
-                                return ["success" => false, "message" => "Inventory dengan id $inventory_id tidak bisa ditambahkan sebagai part karena induknya memiliki part dengan model id yang sama dengan jumlah maksimal", "status" => 400];
+                                return ["success" => false, "message" => "Inventory dengan id $inventory_id tidak bisa ditambahkan sebagai part karena induknya memiliki part dengan asset id yang sama dengan jumlah maksimal", "status" => 400];
                             } else $list_count_inventory_part[$search_inventory]->quantity += 1;
                         } else {
                             $list_count_inventory_part->push((object)[
-                                "model_id" => $check_model,
+                                "asset_id" => $check_asset,
                                 "quantity" => 1
                             ]);
                         }
 
                     } else {
                         $inventory_id = $check_inventory->id;
-                        $model_id = $parent_inventory->model_id;
-                        return ["success" => false, "message" => "Inventory dengan id $inventory_id memiliki model yang berbeda dengan model dari part induk yang akan digabungkan", "status" => 400];
+                        $asset_id = $parent_inventory->asset_id;
+                        return ["success" => false, "message" => "Inventory dengan id $inventory_id memiliki asset yang berbeda dengan asset dari part induk yang akan digabungkan", "status" => 400];
                     } 
                 }
 
