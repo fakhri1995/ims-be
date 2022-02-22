@@ -18,6 +18,10 @@ class CreateTaskUserTable extends Migration
             $table->unsignedBigInteger('user_id');
             $table->dateTime('check_in')->nullable();
             $table->dateTime('check_out')->nullable();
+            $table->string('lat_check_in')->nullable();
+            $table->string('long_check_in')->nullable();
+            $table->string('lat_check_out')->nullable();
+            $table->string('long_check_out')->nullable();
 
             $table->index('task_id');
             $table->index('user_id');

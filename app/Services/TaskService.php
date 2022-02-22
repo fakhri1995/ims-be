@@ -965,6 +965,8 @@ class TaskService{
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
+        $lat = $request->get('lat', null);
+        $long = $request->get('long', null);
         $task = Task::with('users')->find($id);
         if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
         try{
@@ -975,7 +977,7 @@ class TaskService{
 
             if($search !== false){
                 if($task->users[$search]->check_in === null){
-                    $task->users()->updateExistingPivot($login_id, ['check_in' => date("Y-m-d H:i:s")]);
+                    $task->users()->updateExistingPivot($login_id, ['check_in' => date("Y-m-d H:i:s"), 'lat_check_in' => $lat, 'long_check_in' => $long]);
                     if($task->status === 2){
                         $task->status = 3;
                         $task->save();
@@ -999,6 +1001,8 @@ class TaskService{
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
+        $lat = $request->get('lat', null);
+        $long = $request->get('long', null);
         $task = Task::with(['users', 'inventories' => function ($query) {
                 $query->wherePivot('is_from_task', false);
             }])->find($id);
@@ -1013,7 +1017,7 @@ class TaskService{
                 if(!array_intersect([$task->status], [1,3])) return ["success" => false, "message" => "Status Bukan On Progress, Tidak Dapat Melakukan Submit", "status" => 400];
                 else if($task->users[$search]->check_out !== null) return ["success" => false, "message" => "Anda Sudah Melakukan Submit", "status" => 400];
                 else { 
-                    $task->users()->updateExistingPivot($login_id, ['check_out' => date("Y-m-d H:i:s")]);
+                    $task->users()->updateExistingPivot($login_id, ['check_out' => date("Y-m-d H:i:s"), 'lat_check_out' => $lat, 'long_check_out' => $long]);
                     $task->load('users');
                     $all_check_out = true;
                     foreach($task->users as $user){
@@ -1066,7 +1070,7 @@ class TaskService{
             if($task->created_by === $login_id){
                 if($task->status !== 5) return ["success" => false, "message" => "Status Bukan Completed, Tidak Dapat Dilakukan Penolakan", "status" => 400];
                 else {
-                    foreach($task->users as $user) $task->users()->updateExistingPivot($user->id, ['check_out' => null]);
+                    foreach($task->users as $user) $task->users()->updateExistingPivot($user->id, ['check_out' => null, 'lat_check_out' => null, 'long_check_out' => null]);
                     
                     $task->status = 3;
                     $task->notes = $notes;
