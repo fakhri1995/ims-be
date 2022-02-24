@@ -55,4 +55,9 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     {
         return $this->belongsToMany(Task::class, 'task_user');
     }
+
+    public function attendanceForms()
+    {
+        return $this->belongsToMany(AttendanceForm::class, 'attendance_form_user')->select('id');
+    }
 }

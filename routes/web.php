@@ -303,6 +303,19 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getQualityControlPurchases', 'WarehouseController@getQualityControlPurchases');
     $router->get('/getQualityControlPurchase', 'WarehouseController@getQualityControlPurchase');
     $router->put('/saveQC', 'WarehouseController@saveQC');
+
+
+    //Attendance Management
+    //Form Routes
+    $router->get('/getAttendanceForms', 'AttendanceController@getAttendanceForms');
+    $router->get('/getAttendanceForm', 'AttendanceController@getAttendanceForm');
+    $router->post('/addAttendanceForm', 'AttendanceController@addAttendanceForm');
+    $router->post('/addUserAttendanceForm', 'AttendanceController@addUserAttendanceForm');
+    $router->put('/updateAttendanceForm', 'AttendanceController@updateAttendanceForm');
+    $router->delete('/deleteAttendanceForm', 'AttendanceController@deleteAttendanceForm');
+    $router->delete('/removeUserAttendanceForm', 'AttendanceController@removeUserAttendanceForm');
+
+    
     
 });
 
