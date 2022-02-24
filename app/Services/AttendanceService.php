@@ -56,7 +56,7 @@ class AttendanceService{
         if($access["success"] === false) return $access;
         try{
             $id = $request->get('id');
-            $attendance_form = AttendanceForm::with('users')->find($id);
+            $attendance_form = AttendanceForm::with(['users:id,name,profile_image,position', 'creator:id,name,profile_image,position'])->find($id);
             if($attendance_form === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
             return ["success" => true, "message" => "Attendance Form Berhasil Diambil", "data" => $attendance_form, "status" => 200];
         } catch(Exception $err){
@@ -73,6 +73,7 @@ class AttendanceService{
         $attendance_form->name = $request->get('name');
         $attendance_form->description = $request->get('description');
         $attendance_form->updated_at = date('Y-m-d H:i:s');
+        $attendance_form->created_by = auth()->user()->id;
         $details = $request->get('details', []);
         try{
             if(count($details)){

@@ -18,6 +18,7 @@ class CreateAttendanceFormsTable extends Migration
             $table->string('name');
             $table->text('description');
             $table->jsonb('details');
+            $table->unsignedBigInteger('created_by');
             $table->dateTime('updated_at');
             $table->softDeletes();
         });
