@@ -1289,11 +1289,11 @@ class AssetService{
         }
     }
 
-    public function setStatusInventoryPartReplacements($inventory, $causer_id, $status, $replacement){
+    public function setStatusInventoryPartReplacements($inventory, $causer_id, $status_usage, $status_condition, $location, $replacement){
         $old_inventory = [];
         foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
 
-        $inventory->status_usage = $status;
+        $inventory->status_usage = $status_usage;
         $inventory->save();
 
         $logService = new LogService;
@@ -1307,7 +1307,7 @@ class AssetService{
         $inventories = $inventory->inventoryPart;
         if(count($inventories)){
             foreach($inventories as $temp_inventory){
-                $this->setStatusInventoryPartReplacements($temp_inventory, $causer_id, $status, $replacement);
+                $this->setStatusInventoryPartReplacements($temp_inventory, $causer_id, $status_usage, $status_condition, $location, $replacement);
             }
         }
     }
@@ -1340,10 +1340,11 @@ class AssetService{
             $old_inventory_replacement = [];
             foreach($inventory_replacement->getAttributes() as $key => $value) $old_inventory_replacement[$key] = $value;
 
+            $origin_location = auth()->user()->company_id;
             $temp_status_usage = $inventory->status_usage;
             $inventory->status_usage = 3;
             $inventory->status_condition = 2;
-            $inventory_replacement->location = auth()->user()->company_id;
+            $inventory->location = $origin_location;
             $inventory->save();
             $properties = $this->checkUpdateProperties($old_inventory, $inventory);
             if($properties){
@@ -1354,7 +1355,7 @@ class AssetService{
             
             if(count($inventory->inventoryPart)){
                 foreach($inventory->inventoryPart as $temp_inventory){
-                    $this->setStatusInventoryPartReplacements($temp_inventory, $causer_id, $inventory->status_usage, false);
+                    $this->setStatusInventoryPartReplacements($temp_inventory, $causer_id, $inventory->status_usage, $inventory->status_condition, $origin_location, false);
                 }
             }
             
@@ -1416,7 +1417,7 @@ class AssetService{
             
             if(count($inventory_replacement->inventoryPart)){
                 foreach($inventory_replacement->inventoryPart as $temp_inventory){
-                    $this->setStatusInventoryPartReplacements($temp_inventory, $causer_id, $inventory_replacement->status_usage, true);
+                    $this->setStatusInventoryPartReplacements($temp_inventory, $causer_id, $inventory_replacement->status_usage, $inventory_replacement->status_condition, $inventory_replacement_location, true);
                 }
             }
             
@@ -1448,7 +1449,7 @@ class AssetService{
         $old_inventory = [];
         foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
 
-        $inventory->status_usage = 2;
+        $inventory->status_condition = 3;
         $inventory->save();
 
         $logService = new LogService;
@@ -1523,9 +1524,10 @@ class AssetService{
         }
     }
 
-    public function addChildInventoryPart($inventory, $causer_id, $status_usage){
+    public function addChildInventoryPart($inventory, $causer_id, $status_usage, $location){
         $properties['old'] = ['status_usage' => $inventory->status_usage];
         $inventory->status_usage = $status_usage;
+        $inventory->location = $location;
         $inventory->save();
         $properties['attributes'] = ['status_usage' => $status_usage];
 
@@ -1621,9 +1623,11 @@ class AssetService{
                     // if($inventory->status_usage === 1)return ["success" => false, "message" => "Inventory Sedang Digunakan", "status" => 400];
                     
                     $old_inventory = [];
+                    $status_usage = $parent_inventory->status_usage;
+                    $location = $parent_inventory->location;
                     foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
-                    $inventory->status_usage = $parent_inventory->status_usage;
-                    $inventory->location = $parent_inventory->location;
+                    $inventory->status_usage = $status_usage;
+                    $inventory->location = $location;
                     $inventory->save();
                     
                     $logService = new LogService;
@@ -1651,7 +1655,7 @@ class AssetService{
 
                     if(count($inventory->inventoryPart)){
                         foreach($inventory->inventoryPart as $temp_inventory){
-                            $this->addChildInventoryPart($temp_inventory, $causer_id, $parent_inventory->status_usage);
+                            $this->addChildInventoryPart($temp_inventory, $causer_id, $status_usage, $location);
                         }
                     }
                 }

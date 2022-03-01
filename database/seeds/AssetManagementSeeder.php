@@ -93,6 +93,16 @@ class AssetManagementSeeder extends Seeder
         return $randomString.'-';
     }
 
+    private function generateRandomNumber($length = 6) {
+        $characters = '123456789';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        }
+        return $randomString;
+    }
+
     public function saveInventoryParts($parent_inventory, $data, $status_condition, $status_usage, $location)
     {
         $inventory = $this->createInventory($data, $status_condition, $status_usage, $location);
@@ -118,7 +128,7 @@ class AssetManagementSeeder extends Seeder
         $inventory->location = $location;
         $inventory->deskripsi = "-";
         $inventory->manufacturer_id = null;
-        $inventory->mig_id = null;
+        $inventory->mig_id = $this->generateRandomNumber();
         $inventory->serial_number = $serial_number;
         $inventory->is_consumable = false;
         $inventory->save();
