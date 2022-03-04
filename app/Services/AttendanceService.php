@@ -1,9 +1,16 @@
 <?php 
 
 namespace App\Services;
+use App\User;
 use Exception;
 use App\AttendanceForm;
+use App\AttendanceUser;
+use App\AttendanceProject;
+use App\AttendanceActivity;
 use Illuminate\Support\Str;
+use App\AttendanceProjectType;
+use App\AttendanceProjectStatus;
+use App\AttendanceProjectCategory;
 
 class AttendanceService{
     public function __construct()
@@ -77,13 +84,9 @@ class AttendanceService{
         $details = $request->get('details', []);
         try{
             if(count($details)){
-                $new_details = [];
-                foreach($details as $detail){
-                    $detail['key'] = Str::uuid()->toString();
-                    $new_details[] = $detail;
-                }
+                foreach($details as &$detail) $detail['key'] = Str::uuid()->toString();
             }
-            $attendance_form->details = $new_details;
+            $attendance_form->details = $details;
             $attendance_form->save();
             return ["success" => true, "message" => "Attendance Form Berhasil Ditambahkan", "id" => $attendance_form->id, "status" => 200];
         } catch(Exception $err){
@@ -136,8 +139,11 @@ class AttendanceService{
         $user_ids = $request->get('user_ids', []);
         $attendance_form = AttendanceForm::with('users')->find($id);
         if($attendance_form === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        if(!count($user_ids)) return ["success" => false, "message" => "user_ids masih kosong", "status" => 400];
         
         try{
+            $users = User::with('attendanceForms')->whereIn('id', $user_ids)->get();
+            foreach($users as $user) $user->attendanceForms()->detach();
             $attendance_form->users()->syncWithoutDetaching($user_ids);
             return ["success" => true, "message" => "User Attendance Form Berhasil Ditambah", "status" => 200];
         } catch(Exception $err){
@@ -162,204 +168,9 @@ class AttendanceService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
-
-    public function sendAttendanceForm($request, $route_name)
-    {
-        $access = $this->globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
-
-        $attendance_form = AttendanceForm::find($request->get('id'));
-        if($attendance_form === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-        if($attendance_form->status === 4) return ["success" => false, "message" => "Attendance Form Telah Dikirim", "status" => 400];
-        if($attendance_form->status !== 2) return ["success" => false, "message" => "Attendance Form Tidak Dapat Dikirim, Status Attendance Form Bukan Pada Status Disetujui!", "status" => 400];
-        
-        try{
-            $attendance_form->status = 4;
-            $attendance_form->save();
-            $logService = new LogService;
-            $logService->sendAttendanceForm($attendance_form->id, $attendance_form->vendor_id);
-            return ["success" => true, "message" => "Attendance Form Berhasil Dikirim", "status" => 200];
-        } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
-    }
-
-    public function receiveAttendanceForm($request, $route_name)
-    {
-        $access = $this->globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
-
-        $attendance_form = AttendanceForm::with('modelOrders')->find($request->get('id'));
-        if($attendance_form === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-        if($attendance_form->status === 5) return ["success" => false, "message" => "Attendance Form Telah Diterima", "status" => 400];
-        if($attendance_form->status !== 4) return ["success" => false, "message" => "Attendance Form Tidak Dapat Diterima, Status Attendance Form Bukan Pada Status Dikirim!", "status" => 400];
-        
-        try{
-            $attendance_form->arrived_date = date('Y-m-d H:i:s');
-            $attendance_form->status = 5;
-            $attendance_form->save();
-            $logService = new LogService;
-            $logService->receiveAttendanceForm($attendance_form->id);
-            $inventory_parts = [];
-            $purchase_quality_control = new PurchaseQC;
-            $purchase_quality_control->attendance_form_id = $attendance_form->id;
-            $purchase_quality_control->status = 1;
-            $purchase_quality_control->save();
-            if(count($attendance_form->modelOrders)){
-                foreach($attendance_form->modelOrders as $model){
-                    for($i = 0; $i < $model->pivot->quantity; $i++){
-                        $this->addPurchaseQCDetail($model, $purchase_quality_control->id, null);
-                    }
-                }
-            }
-            return ["success" => true, "message" => "Attendance Form Berhasil Diterima", "status" => 200];
-        } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
-    }
-
-    private function addPurchaseInventoryParts($model, $parent_id)
-    {
-        $this->addPurchaseQCDetail($model, null, $parent_id);
-    }
-
-    private function addPurchaseQCDetail($model, $purchase_q_c_id, $parent_id)
-    {
-        $qc_detail = new PurchaseQCDetail;
-        $qc_detail->purchase_q_c_id = $purchase_q_c_id;
-        $qc_detail->model_id = $model->id;
-        $qc_detail->parent_id = $parent_id;
-        $qc_detail->status = 1;
-        $qc_detail->save();
-        if(count($model->modelColumns)){
-            foreach($model->modelColumns as $model_column) $qc_detail->purchaseQCDetailAttributes()->attach($model_column->id, ['is_checked' => false]);
-        }
-        if(count($model->modelParts)){
-            foreach($model->modelParts as $model_part) $this->addPurchaseInventoryParts($model_part, $qc_detail->id);
-        }
-    }
     
-    // Detail Attendance Form
-    public function getDetailAttendanceForms($request, $route_name)
-    {
-        $access = $this->globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
-        try{
-            $id = $request->get('id');
-            $sort_by = $request->get('sort_by');
-            $sort_type = $request->get('sort_type', 'desc');
-            
-            $attendance_form = AttendanceForm::find($id);
-            if($attendance_form === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-            
-            $attendance_forms = DB::table('model_inventory_attendance_form')->select(DB::raw('model_inventories.id, assets.name as asset_name, model_inventories.name as model_name, model_inventory_attendance_form.quantity, model_inventory_attendance_form.price, model_inventory_attendance_form.warranty_period, model_inventory_attendance_form.warranty_descripition, model_inventory_attendance_form.quantity * model_inventory_attendance_form.price as total_price'))->where('attendance_form_id', $id)
-            ->join('model_inventories', 'model_inventory_attendance_form.model_inventory_id', '=', 'model_inventories.id')
-            ->join('assets', 'model_inventories.asset_id', '=', 'assets.id');
-
-            if($sort_by){
-                if($sort_by === 'asset') $attendance_forms = $attendance_forms->orderBy('asset_name', $sort_type);
-                else if($sort_by === 'model') $attendance_forms = $attendance_forms->orderBy('model_name', $sort_type);
-                else if($sort_by === 'quantity') $attendance_forms = $attendance_forms->orderBy('quantity', $sort_type);
-                else if($sort_by === 'price') $attendance_forms = $attendance_forms->orderBy('price', $sort_type);
-                else if($sort_by === 'total_price') $attendance_forms = $attendance_forms->orderBy('total_price', $sort_type);
-                else if($sort_by === 'warranty_period') $attendance_forms = $attendance_forms->orderBy('warranty_period', $sort_type);
-            }
-            $attendance_forms = $attendance_forms->get();
-
-            if($attendance_forms->isEmpty()) return ["success" => true, "message" => "Detail Attendance Forms Masih Kosong", "data" => $attendance_forms, "status" => 200];
-            return ["success" => true, "message" => "Detail Attendance Forms Berhasil Diambil", "data" => $attendance_forms, "status" => 200];
-
-        } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
-    }
-    
-    public function addDetailAttendanceForm($request, $route_name)
-    {
-        $access = $this->globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
-
-        $model_id = $request->get('model_id');
-        if($model_id === null) return ["success" => false, "message" => "Model Id Belum Diisi!", "status" => 400];
-        $attendance_form_id = $request->get('attendance_form_id');
-        $attendance_form = AttendanceForm::with('modelInventories')->find($attendance_form_id);
-        if($attendance_form === null) return ["success" => false, "message" => "Id Attendance Form Tidak Ditemukan", "status" => 400];
-        if($attendance_form->status < 3) return ["success" => false, "message" => "Attendance Form Tidak Bisa Dihapus, Status Purchase Tidak Tepat!", "status" => 400];
-        $search = $attendance_form->modelInventories->search(function ($item) use ($model_id) {
-            return $item->id === $model_id;
-        });
-
-        if($search !== false) return ["success" => false, "message" => "Model Sudah Dimasukkan Pada Detail Attendance Form", "status" => 400];
-        
-        $price = $request->get('price');
-        if($price === null) return ["success" => false, "message" => "Harga Belum Diisi!", "status" => 400];
-        $quantity = $request->get('quantity');
-        if($quantity === null) return ["success" => false, "message" => "Jumlah Belum Diisi!", "status" => 400];
-        $warranty_period = $request->get('warranty_period');
-        if($warranty_period === null) return ["success" => false, "message" => "Garansi Belum Diisi!", "status" => 400];
-        $warranty_descripition = $request->get('warranty_descripition');
-        try{
-            $attendance_form->modelInventories()->attach($model_id, ['price' => $price, 'quantity' => $quantity, 'warranty_period' => $warranty_period, 'warranty_descripition' => $warranty_descripition]);
-            return ["success" => true, "message" => "Detail Attendance Form Berhasil Ditambahkan", "status" => 200];
-        } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
-    }
-
-    public function updateDetailAttendanceForm($request, $route_name)
-    {
-        $access = $this->globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
-
-        $model_id = $request->get('model_id');
-        if($model_id === null) return ["success" => false, "message" => "Model Id Belum Diisi!", "status" => 400];
-        $attendance_form_id = $request->get('attendance_form_id');
-        $attendance_form = AttendanceForm::with('modelInventories')->find($attendance_form_id);
-        if($attendance_form === null) return ["success" => false, "message" => "Id Attendance Form Tidak Ditemukan", "status" => 400];
-        if($attendance_form->status < 3) return ["success" => false, "message" => "Attendance Form Tidak Bisa Dihapus, Status Purchase Tidak Tepat!", "status" => 400];
-        $search = $attendance_form->modelInventories->search(function ($item) use ($model_id) {
-            return $item->id === $model_id;
-        });
-
-        if($search === false) return ["success" => false, "message" => "Model Tidak Termasuk Pada Detail Attendance Form", "status" => 400];
-        
-        $price = $request->get('price');
-        if($price === null) return ["success" => false, "message" => "Harga Belum Diisi!", "status" => 400];
-        $quantity = $request->get('quantity');
-        if($quantity === null) return ["success" => false, "message" => "Jumlah Belum Diisi!", "status" => 400];
-        $warranty_period = $request->get('warranty_period');
-        if($warranty_period === null) return ["success" => false, "message" => "Garansi Belum Diisi!", "status" => 400];
-        $warranty_descripition = $request->get('warranty_descripition');
-        try{
-            $attendance_form->modelInventories()->syncWithoutDetaching([$model_id => ['price' => $price, 'quantity' => $quantity, 'warranty_period' => $warranty_period, 'warranty_descripition' => $warranty_descripition]]);
-            return ["success" => true, "message" => "Detail Attendance Form Berhasil Diubah", "status" => 200];
-        } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
-    }
-
-    public function deleteDetailAttendanceForm($request, $route_name)
-    {
-        $access = $this->globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
-
-        $model_id = $request->get('model_id');
-        if($model_id === null) return ["success" => false, "message" => "Model Id Belum Diisi!", "status" => 400];
-        $attendance_form_id = $request->get('attendance_form_id');
-        $attendance_form = AttendanceForm::with('modelInventories')->find($attendance_form_id);
-        if($attendance_form === null) return ["success" => false, "message" => "Id Attendance Form Tidak Ditemukan", "status" => 400];
-        if($attendance_form->status < 3) return ["success" => false, "message" => "Attendance Form Tidak Bisa Dihapus, Status Purchase Tidak Tepat!", "status" => 400];
-        
-        try{
-            $attendance_form->modelInventories()->detach($model_id);
-            return ["success" => true, "message" => "Detail Attendance Form Berhasil Dihapus", "status" => 200];
-        } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
-    }
-    
-    // Quality Control Purchase
-    public function getQualityControlPurchases($request, $route_name)
+    // Attendance Activity
+    public function getAttendanceActivities($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
@@ -368,101 +179,427 @@ class AttendanceService{
             $keyword = $request->get('keyword', null);
             $sort_by = $request->get('sort_by', null);
             $sort_type = $request->get('sort_type', null);
-            $vendor = $request->get('vendor', null);
 
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
-            $purchase_quality_controls = PurchaseQC::select('*')->join('attendance_forms', 'purchase_q_c_s.id', '=', 'attendance_forms.id');
-            
+            $attendance_activities = AttendanceActivity::select('*');
+
             $params = "?rows=$rows";
-            // if($keyword) $params = "$params&keyword=$keyword";
-            // if($sort_by) $params = "$params&sort_by=$sort_by";
-            // if($sort_type) $params = "$params&sort_type=$sort_type";
-            // if($asset) $params = "$params&asset=$asset";
-            // if($vendor) $params = "$params&vendor=$vendor";
-            // if($status) $params = "$params&status=$status";
+            if($keyword) $params = "$params&keyword=$keyword";
+            if($sort_by) $params = "$params&sort_by=$sort_by";
+            if($sort_type) $params = "$params&sort_type=$sort_type";
             
-            // if($asset){
-            //     $model_ids = DB::table('model_inventories')->where('asset_id', $asset)->pluck('id');
-            //     $attendance_form_ids = DB::table('model_inventory_attendance_form')->whereIn('model_inventory_id', $model_ids)->pluck('attendance_form_id');
-            //     $purchase_quality_controls = $purchase_quality_controls->whereIn('purchase_quality_controls.id', $attendance_form_ids);
-            // } 
-            // if($vendor) $purchase_quality_controls = $purchase_quality_controls->where('vendor_id', $vendor);
-            // if($keyword){
-            //     if(is_numeric($keyword)){
-            //         $purchase_quality_controls = $purchase_quality_controls->where(function ($query) use ($keyword){
-            //             $query->where('attendance_form_number', 'like', "%".$keyword."%")->orWhere('purchase_quality_controls.id', $keyword);
-            //         });
-            //     } else $purchase_quality_controls = $purchase_quality_controls->where('attendance_form_number', 'like', "%".$keyword."%");
-            // } 
-            // if($status) $purchase_quality_controls = $purchase_quality_controls->where('status', $status);
+            if($keyword) $attendance_activities = $attendance_activities->where('name', 'like', "%".$keyword."%");
+            if($sort_by){
+                if($sort_type === null) $sort_type = 'desc';
+                if($sort_by === 'name') $attendance_activities = $attendance_activities->orderBy('name', $sort_type);
+                else if($sort_by === 'description') $attendance_activities = $attendance_activities->orderBy('description', $sort_type);
+                else if($sort_by === 'updated_at') $attendance_activities = $attendance_activities->orderBy('updated_at', $sort_type);
+                else if($sort_by === 'count') $attendance_activities = $attendance_activities->orderBy('users_count', $sort_type);
+            }
             
-            // if($sort_by){
-            //     if($sort_type === null) $sort_type = 'desc';
-            //     if($sort_by === 'po_number') $purchase_quality_controls = $purchase_quality_controls->orderBy('attendance_form_number', $sort_type);
-            //     else if($sort_by === 'po_date') $purchase_quality_controls = $purchase_quality_controls->orderBy('attendance_form_date', $sort_type);
-            //     else if($sort_by === 'vendor') $purchase_quality_controls = $purchase_quality_controls->orderBy('vendor_name', $sort_type);
-            //     else if($sort_by === 'status') $purchase_quality_controls = $purchase_quality_controls->orderBy('status', $sort_type);
-            //     else if($sort_by === 'arrived_date') $purchase_quality_controls = $purchase_quality_controls->orderBy('arrived_date', $sort_type);
-            // }
-            
-            $purchase_quality_controls = $purchase_quality_controls->paginate($rows);
-            $purchase_quality_controls->withPath(env('APP_URL').'/getQualityControlPurchases'.$params);
-            if($purchase_quality_controls->isEmpty()) return ["success" => true, "message" => "Attendance Forms Masih Kosong", "data" => $purchase_quality_controls, "status" => 200];
-            // $statuses = $this->globalService->statusQualityControlPurchase();
-            // foreach($purchase_quality_controls as $attendance_form){
-            //     $attendance_form->attendance_form_date_template = date("d F Y", strtotime($attendance_form->attendance_form_date));
-            //     if($attendance_form->arrived_date !== null) $attendance_form->arrived_date_template = date("d F Y", strtotime($attendance_form->arrived_date));
-            //     else $attendance_form->arrived_date_template = "-";
-            //     $attendance_form->status_name = $statuses[$attendance_form->status];
-            //     if(count($attendance_form->modelInventories)){
-            //         foreach($attendance_form->modelInventories as $model){
-            //             $model->quantity += $model->pivot->quantity;
-            //         }
-            //     }
-            // }
-            return ["success" => true, "message" => "Quality Control Purchases Berhasil Diambil", "data" => $purchase_quality_controls, "status" => 200];
+            $attendance_activities = $attendance_activities->paginate($rows);
+            $attendance_activities->withPath(env('APP_URL').'/getAttendanceActivities'.$params);
+            if($attendance_activities->isEmpty()) return ["success" => true, "message" => "Attendance Activities Masih Kosong", "data" => $attendance_activities, "status" => 200];
+            return ["success" => true, "message" => "Attendance Activities Berhasil Diambil", "data" => $attendance_activities, "status" => 200];
 
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
 
-    public function getQualityControlPurchase($request, $route_name)
+    public function getAttendanceActivity($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         try{
             $id = $request->get('id');
-            $purchase_quality_control = PurchaseQC::with(['purchaseOrder:id,attendance_form_number,attendance_form_date,arrived_date,status,vendor_id', 'purchaseOrder.vendor:id,name', 'purchaseOrder.modelInventories:id,name', 'PurchaseQCDetail'])->find($id);
-            if($purchase_quality_control === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-            $quantity = 0;
-            if(count($purchase_quality_control->purchaseOrder->modelInventories)){
-                foreach($purchase_quality_control->purchaseOrder->modelInventories as $model){
-                    $model->quantity = $model->pivot->quantity;
-                    $quantity += $model->quantity;
-                }
-            }
-            $purchase_quality_control->purchaseOrder->quantity = $quantity;
-            return ["success" => true, "message" => "Quality Control Purchase Berhasil Diambil", "data" => $purchase_quality_control, "status" => 200];
+            $attendance_activity = AttendanceActivity::with(['attendanceProject:id,name', 'attendanceProjectStatus:id,name'])->get();
+            if($attendance_activity === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+            return ["success" => true, "message" => "Attendance Activity Berhasil Diambil", "data" => $attendance_activity, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
 
-    public function saveQC($request, $route_name)
+    public function addAttendanceActivity($request, $route_name)
     {
-        $id = $request->get('id');
-        $purchase_q_c_id = $request->get('purchase_q_c_id');
-        $attributes = $request->get('attributes', []);
-        $purchase_quality_control_detail = PurchaseQCDetail::with('purchaseQCDetailAttributes')->find($id);
-        if($purchase_quality_control_detail === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-        $top_parent_id_qcpd = $purchase_quality_control_detail->getTopParent();
-        if($purchase_q_c_id != $top_parent_id_qcpd->purchase_q_c_id) return ["success" => false, "message" => "Id Detail Bukan Milik Purchase Quality Control", "status" => 400];
-        $purchase_quality_control_detail->makeHidden('parent');
-        foreach($attributes as $attribute){
-            $purchase_quality_control_detail->purchaseQCDetailAttributes()->syncWithoutDetaching([$attribute['id'] => ['is_checked' => $attribute['is_checked']]]);
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $attendance_activity = new AttendanceActivity;
+        $attendance_activity->user_id = auth()->user()->id;
+        $attendance_activity->attendance_form_id = $request->get('attendance_form_id');
+        $attendance_activity->attendance_project_id = $request->get('attendance_project_id');
+        $attendance_activity->attendance_project_status_id = $request->get('attendance_project_status_id');
+        $attendance_activity->updated_at = date('Y-m-d H:i:s');
+        $attendance_activity->details = $request->get('details', []);
+        try{
+            $attendance_activity->save();
+            return ["success" => true, "message" => "Attendance Activity Berhasil Dibuat", "id" => $attendance_activity->id, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
         }
-        return ["success" => true, "message" => "Purchase Detail Quality Control Attributes Berhasil Disimpan", "status" => 200];   
+    }
+
+    public function updateAttendanceActivity($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $attendance_activity = AttendanceActivity::find($id);
+        if($attendance_activity === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        $attendance_activity->name = $request->get('name');
+        $attendance_activity->description = $request->get('description');
+        $attendance_activity->updated_at = date('Y-m-d H:i:s');
+        try{
+            $attendance_activity->save();
+            return ["success" => true, "message" => "Attendance Activity Berhasil Diubah", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteAttendanceActivity($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $attendance_activity = AttendanceActivity::find($id);
+        if($attendance_activity === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        
+        try{
+            $attendance_activity->delete();
+            return ["success" => true, "message" => "Attendance Activity berhasil dihapus", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    
+    // Attendance User
+    public function getAttendancesUser($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $login_id = auth()->user()->id;
+            $user_attendances = AttendanceUser::where('user_id', $login_id)->orderBy('check_in', 'desc')->get();
+            return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $user_attendances, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function setAttendanceToggle($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $login_id = auth()->user()->id;
+            $lat = $request->get('lat');
+            $long = $request->get('long');
+            $evidence = $request->get('evidence');
+            $user_attendance = AttendanceUser::where('user_id', $login_id)->orderBy('check_in', 'desc')->first();
+            if(!$user_attendance || $user_attendance->check_out) {
+                $location = (object)[
+                    "check_in_lat" => $lat,
+                    "check_in_long" => $long,
+                    "check_out_lat" => null,
+                    "check_out_long" => null,
+                ];
+                $evidence = (object) [
+                    "check_in_evidence" => $evidence,
+                    "check_out_evidence" => null
+                ];
+                $user_attendance = new AttendanceUser;
+                $user_attendance->user_id = $login_id;
+                $user_attendance->check_in = date('Y-m-d H:i:s');
+                $user_attendance->is_wfo = $request->get('wfo', false);
+                $user_attendance->location = $location;
+                $user_attendance->evidence = $evidence;
+                $user_attendance->save();
+                return ["success" => true, "message" => "Berhasil Check In", "status" => 200];
+            } else {
+                $location_temp = $user_attendance->location;
+                $location_temp->check_out_lat = $lat;
+                $location_temp->check_out_long = $long;
+                $evidence_temp = $user_attendance->evidence;
+                $evidence_temp->check_out_evidence = $evidence;
+                $user_attendance->check_out = date('Y-m-d H:i:s');
+                $user_attendance->location = $location_temp;
+                $user_attendance->evidence = $evidence_temp;
+                $user_attendance->save();
+                return ["success" => true, "message" => "Berhasil Check Out", "status" => 200];
+            }
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    // Attendance Project
+    public function getAttendanceProjects($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $login_id = auth()->user()->id;
+            $projects = AttendanceProject::where('user_id', $login_id)->get();
+            if($projects->isEmpty()) return ["success" => true, "message" => "Project Belum dibuat", "data" => [], "status" => 200];
+            return ["success" => true, "message" => "Projects Berhasil Diambil", "data" => $projects, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addAttendanceProject($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $project = new AttendanceProject;
+        $project->user_id = auth()->user()->id;
+        $project->name = $request->get('name');
+        $project->description = $request->get('description');
+        $project->project_code = $request->get('project_code');
+        $project->attendance_project_category = $request->get('attendance_project_category');
+        $project->attendance_project_type = $request->get('attendance_project_type');
+        try{
+            $project->save();
+            return ["success" => true, "message" => "Project berhasil dibuat", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateAttendanceProject($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $login_id = auth()->user()->id;
+        $project = AttendanceProject::find($id);
+        if($project === null || $project->user_id !== $login_id) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        $project->name = $request->get('name');
+        $project->description = $request->get('description');
+        $project->project_code = $request->get('project_code');
+        $project->attendance_project_category = $request->get('attendance_project_category');
+        $project->attendance_project_type = $request->get('attendance_project_type');
+        try{
+            $project->save();
+            return ["success" => true, "message" => "Project berhasil diubah", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteAttendanceProject($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $project = AttendanceProject::find($id);
+        if($project === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        try{
+            $project->delete();
+            return ["success" => true, "message" => "Project berhasil dihapus", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    // Attendance Project Type
+    public function getAttendanceProjectTypes($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $project_types = AttendanceProjectType::get();
+            if($project_types->isEmpty()) return ["success" => true, "message" => "Project Type Belum dibuat", "data" => [], "status" => 200];
+            return ["success" => true, "message" => "Project Types Berhasil Diambil", "data" => $project_types, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addAttendanceProjectType($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $project_type = new AttendanceProjectType;
+        $project_type->name = $request->get('name');
+        try{
+            $project_type->save();
+            return ["success" => true, "message" => "Project Type berhasil dibuat", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateAttendanceProjectType($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $project_type = AttendanceProjectType::find($id);
+        if($project_type === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        $project_type->name = $request->get('name');
+        try{
+            $project_type->save();
+            return ["success" => true, "message" => "Project Type berhasil diubah", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteAttendanceProjectType($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $project_type = AttendanceProjectType::find($id);
+        if($project_type === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        try{
+            $project_type->delete();
+            return ["success" => true, "message" => "Project Type berhasil dihapus", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    // Attendance Project Status
+    public function getAttendanceProjectStatuses($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $project_statuses = AttendanceProjectStatus::get();
+            if($project_statuses->isEmpty()) return ["success" => true, "message" => "Project Status Belum dibuat", "data" => [], "status" => 200];
+            return ["success" => true, "message" => "Project Statuses Berhasil Diambil", "data" => $project_statuses, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addAttendanceProjectStatus($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $project_status = new AttendanceProjectStatus;
+        $project_status->name = $request->get('name');
+        try{
+            $project_status->save();
+            return ["success" => true, "message" => "Project Status berhasil dibuat", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateAttendanceProjectStatus($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $project_status = AttendanceProjectStatus::find($id);
+        if($project_status === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        $project_status->name = $request->get('name');
+        try{
+            $project_status->save();
+            return ["success" => true, "message" => "Project Status berhasil diubah", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteAttendanceProjectStatus($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $project_status = AttendanceProjectStatus::find($id);
+        if($project_status === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        try{
+            $project_status->delete();
+            return ["success" => true, "message" => "Project Status berhasil dihapus", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    // Attendance Project Category
+    public function getAttendanceProjectCategories($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $project_categories = AttendanceProjectCategory::get();
+            if($project_categories->isEmpty()) return ["success" => true, "message" => "Project Category Belum dibuat", "data" => [], "status" => 200];
+            return ["success" => true, "message" => "Project Categories Berhasil Diambil", "data" => $project_categories, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addAttendanceProjectCategory($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $project_category = new AttendanceProjectCategory;
+        $project_category->name = $request->get('name');
+        try{
+            $project_category->save();
+            return ["success" => true, "message" => "Project Category berhasil dibuat", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateAttendanceProjectCategory($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $project_category = AttendanceProjectCategory::find($id);
+        if($project_category === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        $project_category->name = $request->get('name');
+        try{
+            $project_category->save();
+            return ["success" => true, "message" => "Project Category berhasil diubah", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteAttendanceProjectCategory($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $project_category = AttendanceProjectCategory::find($id);
+        if($project_category === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        try{
+            $project_category->delete();
+            return ["success" => true, "message" => "Project Category berhasil dihapus", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
     }
 }

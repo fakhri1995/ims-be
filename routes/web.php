@@ -315,6 +315,41 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteAttendanceForm', 'AttendanceController@deleteAttendanceForm');
     $router->delete('/removeUserAttendanceForm', 'AttendanceController@removeUserAttendanceForm');
 
+    //Activity Routes
+    $router->get('/getAttendanceActivities', 'AttendanceController@getAttendanceActivities');
+    $router->get('/getAttendanceActivity', 'AttendanceController@getAttendanceActivity');
+    $router->post('/addAttendanceActivity', 'AttendanceController@addAttendanceActivity');
+    $router->put('/updateAttendanceActivity', 'AttendanceController@updateAttendanceActivity');
+    $router->delete('/deleteAttendanceActivity', 'AttendanceController@deleteAttendanceActivity');
+
+    //Attendance User
+    $router->get('/getAttendancesUser', 'AttendanceController@getAttendancesUser');
+    $router->post('/setAttendanceToggle', 'AttendanceController@setAttendanceToggle');
+    
+    //Attendance Project Routes
+    $router->get('/getAttendanceProjects', 'AttendanceController@getAttendanceProjects');
+    $router->post('/addAttendanceProject', 'AttendanceController@addAttendanceProject');
+    $router->put('/updateAttendanceProject', 'AttendanceController@updateAttendanceProject');
+    $router->delete('/deleteAttendanceProject', 'AttendanceController@deleteAttendanceProject');
+    
+    //Attendance Project Category Routes
+    $router->get('/getAttendanceProjectCategories', 'AttendanceController@getAttendanceProjectCategories');
+    $router->post('/addAttendanceProjectCategory', 'AttendanceController@addAttendanceProjectCategory');
+    $router->put('/updateAttendanceProjectCategory', 'AttendanceController@updateAttendanceProjectCategory');
+    $router->delete('/deleteAttendanceProjectCategory', 'AttendanceController@deleteAttendanceProjectCategory');
+
+    //Attendance Project Type Routes
+    $router->get('/getAttendanceProjectTypes', 'AttendanceController@getAttendanceProjectTypes');
+    $router->post('/addAttendanceProjectType', 'AttendanceController@addAttendanceProjectType');
+    $router->put('/updateAttendanceProjectType', 'AttendanceController@updateAttendanceProjectType');
+    $router->delete('/deleteAttendanceProjectType', 'AttendanceController@deleteAttendanceProjectType');
+
+    //Attendance Project Status Routes
+    $router->get('/getAttendanceProjectStatuses', 'AttendanceController@getAttendanceProjectStatuses');
+    $router->post('/addAttendanceProjectStatus', 'AttendanceController@addAttendanceProjectStatus');
+    $router->put('/updateAttendanceProjectStatus', 'AttendanceController@updateAttendanceProjectStatus');
+    $router->delete('/deleteAttendanceProjectStatus', 'AttendanceController@deleteAttendanceProjectStatus');
+
     
     
 });
