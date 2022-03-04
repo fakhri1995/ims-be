@@ -119,7 +119,7 @@ class AttendanceController extends Controller
     // Attendance User
     public function getAttendancesUser(Request $request)
     {
-        $route_name = "ATTENDANCE_USER_GET";
+        $route_name = "ATTENDANCES_USER_GET";
 
         $response = $this->attendanceService->getAttendancesUser($request, $route_name);
         return response()->json($response, $response['status']);
@@ -235,7 +235,7 @@ class AttendanceController extends Controller
     // Attendance Project Category
     public function getAttendanceProjectCategories(Request $request)
     {
-        $route_name = "ATTENDANCE_PROJECT_STATUSES_GET";
+        $route_name = "ATTENDANCE_PROJECT_CATEGORIES_GET";
 
         $response = $this->attendanceService->getAttendanceProjectCategories($request, $route_name);
         return response()->json($response, $response['status']);
@@ -243,7 +243,7 @@ class AttendanceController extends Controller
 
     public function addAttendanceProjectCategory(Request $request)
     {
-        $route_name = "ATTENDANCE_PROJECT_STATUS_ADD";
+        $route_name = "ATTENDANCE_PROJECT_CATEGORY_ADD";
         
         $response = $this->attendanceService->addAttendanceProjectCategory($request, $route_name);
         return response()->json($response, $response['status']);
@@ -251,7 +251,7 @@ class AttendanceController extends Controller
 
     public function updateAttendanceProjectCategory(Request $request)
     {
-        $route_name = "ATTENDANCE_PROJECT_STATUS_UPDATE";
+        $route_name = "ATTENDANCE_PROJECT_CATEGORY_UPDATE";
         
         $response = $this->attendanceService->updateAttendanceProjectCategory($request, $route_name);
         return response()->json($response, $response['status']);
@@ -259,7 +259,7 @@ class AttendanceController extends Controller
 
     public function deleteAttendanceProjectCategory(Request $request)
     {
-        $route_name = "ATTENDANCE_PROJECT_STATUS_DELETE";
+        $route_name = "ATTENDANCE_PROJECT_CATEGORY_DELETE";
         
         $response = $this->attendanceService->deleteAttendanceProjectCategory($request, $route_name);
         return response()->json($response, $response['status']);
