@@ -18,7 +18,12 @@ class CreateAttendanceUsersTable extends Migration
             $table->unsignedBigInteger('user_id');
             $table->dateTime('check_in');
             $table->dateTime('check_out')->nullable();
-            $table->string('location');
+            $table->string('long_check_in');
+            $table->string('lat_check_in');
+            $table->string('long_check_out')->nullable();
+            $table->string('lat_check_out')->nullable();
+            $table->string('geo_loc_check_in')->nullable();
+            $table->string('geo_loc_check_out')->nullable();
             $table->string('evidence');
             $table->boolean('is_wfo');
 

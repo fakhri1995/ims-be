@@ -58,6 +58,6 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
 
     public function attendanceForms()
     {
-        return $this->belongsToMany(AttendanceForm::class, 'attendance_form_user')->select('id', 'name');
+        return $this->belongsToMany(AttendanceForm::class, 'attendance_form_user');
     }
 }

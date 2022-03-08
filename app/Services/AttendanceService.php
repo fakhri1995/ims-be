@@ -83,8 +83,24 @@ class AttendanceService{
         $attendance_form->created_by = auth()->user()->id;
         $details = $request->get('details', []);
         try{
+            $i = 1;
             if(count($details)){
-                foreach($details as &$detail) $detail['key'] = Str::uuid()->toString();
+                foreach($details as &$detail){
+                    if(!isset($detail['required'])) return ["success" => false, "message" => "Detail form $i masih kosong pada required", "status" => 400];
+                    if(gettype($detail['required']) !== "boolean") return ["success" => false, "message" => "Detail form $i pada required harus bertipe boolean", "status" => 400];
+                    if(!isset($detail['name'])) return ["success" => false, "message" => "Detail form $i masih kosong pada name", "status" => 400];
+                    if(gettype($detail['name']) !== "string") return ["success" => false, "message" => "Detail form $i pada name harus bertipe string", "status" => 400];
+                    if(!isset($detail['description'])) return ["success" => false, "message" => "Detail form $i masih kosong pada description", "status" => 400];
+                    if(gettype($detail['description']) !== "string") return ["success" => false, "message" => "Detail form $i pada description harus bertipe string", "status" => 400];
+                    if(!isset($detail['type'])) return ["success" => false, "message" => "Detail form $i masih kosong pada type", "status" => 400];
+                    if(gettype($detail['type']) !== "integer") return ["success" => false, "message" => "Detail form $i pada type harus bertipe integer", "status" => 400];
+                    if(in_array($detail['type'], [3,5])){
+                        if(!isset($detail['list'])) return ["success" => false, "message" => "Detail form $i masih kosong pada list", "status" => 400];
+                        if(gettype($detail['list']) !== "array") return ["success" => false, "message" => "Detail form $i pada list harus bertipe array", "status" => 400];
+                    }
+                    $detail['key'] = Str::uuid()->toString();
+                    $i++;
+                } 
             }
             $attendance_form->details = $details;
             $attendance_form->save();
@@ -142,7 +158,7 @@ class AttendanceService{
         if(!count($user_ids)) return ["success" => false, "message" => "user_ids masih kosong", "status" => 400];
         
         try{
-            $users = User::with('attendanceForms')->whereIn('id', $user_ids)->get();
+            $users = User::with('attendanceForms:id,name')->whereIn('id', $user_ids)->get();
             foreach($users as $user) $user->attendanceForms()->detach();
             $attendance_form->users()->syncWithoutDetaching($user_ids);
             return ["success" => true, "message" => "User Attendance Form Berhasil Ditambah", "status" => 200];
@@ -175,33 +191,15 @@ class AttendanceService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         try{
-            $rows = $request->get('rows', 10);
-            $keyword = $request->get('keyword', null);
-            $sort_by = $request->get('sort_by', null);
-            $sort_type = $request->get('sort_type', null);
-
-            if($rows > 100) $rows = 100;
-            if($rows < 1) $rows = 10;
-            $attendance_activities = AttendanceActivity::select('*');
-
-            $params = "?rows=$rows";
-            if($keyword) $params = "$params&keyword=$keyword";
-            if($sort_by) $params = "$params&sort_by=$sort_by";
-            if($sort_type) $params = "$params&sort_type=$sort_type";
-            
-            if($keyword) $attendance_activities = $attendance_activities->where('name', 'like', "%".$keyword."%");
-            if($sort_by){
-                if($sort_type === null) $sort_type = 'desc';
-                if($sort_by === 'name') $attendance_activities = $attendance_activities->orderBy('name', $sort_type);
-                else if($sort_by === 'description') $attendance_activities = $attendance_activities->orderBy('description', $sort_type);
-                else if($sort_by === 'updated_at') $attendance_activities = $attendance_activities->orderBy('updated_at', $sort_type);
-                else if($sort_by === 'count') $attendance_activities = $attendance_activities->orderBy('users_count', $sort_type);
-            }
-            
-            $attendance_activities = $attendance_activities->paginate($rows);
-            $attendance_activities->withPath(env('APP_URL').'/getAttendanceActivities'.$params);
-            if($attendance_activities->isEmpty()) return ["success" => true, "message" => "Attendance Activities Masih Kosong", "data" => $attendance_activities, "status" => 200];
-            return ["success" => true, "message" => "Attendance Activities Berhasil Diambil", "data" => $attendance_activities, "status" => 200];
+            $last_two_month = date("Y-m-d", strtotime("-2 months"));
+            $today = date('Y-m-d');
+            $today_attendance_activities = AttendanceActivity::whereDate('updated_at', '=', $today)->get();
+            $last_two_month_attendance_activities = AttendanceActivity::whereDate('updated_at', '>', $last_two_month)->whereDate('updated_at', '<>', $today)->get();
+            $data = (object)[
+                "today_activities" => $today_attendance_activities,
+                "last_two_month_activities" => $last_two_month_attendance_activities
+            ];
+            return ["success" => true, "message" => "Attendance Activities Berhasil Diambil", "data" => $data, "status" => 200];
 
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -214,7 +212,7 @@ class AttendanceService{
         if($access["success"] === false) return $access;
         try{
             $id = $request->get('id');
-            $attendance_activity = AttendanceActivity::with(['attendanceProject:id,name', 'attendanceProjectStatus:id,name'])->get();
+            $attendance_activity = AttendanceActivity::find($id);
             if($attendance_activity === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
             return ["success" => true, "message" => "Attendance Activity Berhasil Diambil", "data" => $attendance_activity, "status" => 200];
         } catch(Exception $err){
@@ -227,13 +225,27 @@ class AttendanceService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
+        $attendance_form_id = $request->get('attendance_form_id');
+        $attendance_form = AttendanceForm::find($attendance_form_id);
+        if($attendance_form === null) return ["success" => false, "message" => "Id Form Tidak Ditemukan", "status" => 400];
+        $activity_details = $request->get('details', []);
+        foreach($attendance_form->details as $form_detail){
+            $search = array_search($form_detail['key'], array_column($activity_details, 'key'));
+            if($search === false) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum diisi" , "status" => 400];
+            if(!isset($activity_details[$search]['value'])) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
+            if($form_detail['type'] === 3){
+                if(gettype($activity_details[$search]['value']) !== "array") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe array", "status" => 400];
+            } else {
+                if(gettype($activity_details[$search]['value']) !== "string") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe string", "status" => 400];
+            }
+        }
         $attendance_activity = new AttendanceActivity;
         $attendance_activity->user_id = auth()->user()->id;
-        $attendance_activity->attendance_form_id = $request->get('attendance_form_id');
-        $attendance_activity->attendance_project_id = $request->get('attendance_project_id');
-        $attendance_activity->attendance_project_status_id = $request->get('attendance_project_status_id');
+        $attendance_activity->attendance_form_id = $attendance_form_id;
+        // $attendance_activity->attendance_project_id = $request->get('attendance_project_id');
+        // $attendance_activity->attendance_project_status_id = $request->get('attendance_project_status_id');
         $attendance_activity->updated_at = date('Y-m-d H:i:s');
-        $attendance_activity->details = $request->get('details', []);
+        $attendance_activity->details = $activity_details;
         try{
             $attendance_activity->save();
             return ["success" => true, "message" => "Attendance Activity Berhasil Dibuat", "id" => $attendance_activity->id, "status" => 200];
@@ -250,12 +262,24 @@ class AttendanceService{
         $id = $request->get('id');
         $attendance_activity = AttendanceActivity::find($id);
         if($attendance_activity === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-        $attendance_activity->name = $request->get('name');
-        $attendance_activity->description = $request->get('description');
+        $attendance_form = AttendanceForm::find($attendance_activity->attendance_form_id);
+        if($attendance_form === null) return ["success" => false, "message" => "Id Form Tidak Ditemukan", "status" => 400];
+        $activity_details = $request->get('details', []);
+        foreach($attendance_form->details as $form_detail){
+            $search = array_search($form_detail['key'], array_column($activity_details, 'key'));
+            if($search === false) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum diisi" , "status" => 400];
+            if(!isset($activity_details[$search]['value'])) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
+            if($form_detail['type'] === 3){
+                if(gettype($activity_details[$search]['value']) !== "array") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe array", "status" => 400];
+            } else {
+                if(gettype($activity_details[$search]['value']) !== "string") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe string", "status" => 400];
+            }
+        }
         $attendance_activity->updated_at = date('Y-m-d H:i:s');
+        $attendance_activity->details = $activity_details;
         try{
             $attendance_activity->save();
-            return ["success" => true, "message" => "Attendance Activity Berhasil Diubah", "status" => 200];
+            return ["success" => true, "message" => "Attendance Activity Berhasil Diperbarui", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -269,6 +293,8 @@ class AttendanceService{
         $id = $request->get('id');
         $attendance_activity = AttendanceActivity::find($id);
         if($attendance_activity === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        if($attendance_activity->user_id !== auth()->user()->id) return ["success" => false, "message" => "Aktivitas bukan milik user login", "status" => 400];
+        if(date('Y-m-d', strtotime($attendance_activity->updated_at)) !== date('Y-m-d')) return ["success" => false, "message" => "Aktivitas selain hari ini tidak dapat dihapus", "status" => 400];
         
         try{
             $attendance_activity->delete();
@@ -302,35 +328,34 @@ class AttendanceService{
             $login_id = auth()->user()->id;
             $lat = $request->get('lat');
             $long = $request->get('long');
+            $geo_loc = $request->get('geo_loc');
             $evidence = $request->get('evidence');
+            if(!$evidence) return ["success" => false, "message" => "Evidence belum diisi", "status" => 400];
             $user_attendance = AttendanceUser::where('user_id', $login_id)->orderBy('check_in', 'desc')->first();
             if(!$user_attendance || $user_attendance->check_out) {
-                $location = (object)[
-                    "check_in_lat" => $lat,
-                    "check_in_long" => $long,
-                    "check_out_lat" => null,
-                    "check_out_long" => null,
-                ];
                 $evidence = (object) [
                     "check_in_evidence" => $evidence,
                     "check_out_evidence" => null
                 ];
                 $user_attendance = new AttendanceUser;
                 $user_attendance->user_id = $login_id;
+                $user_attendance->long_check_in = $long;
+                $user_attendance->lat_check_in = $lat;
+                $user_attendance->geo_loc_check_in = $geo_loc;
                 $user_attendance->check_in = date('Y-m-d H:i:s');
                 $user_attendance->is_wfo = $request->get('wfo', false);
-                $user_attendance->location = $location;
                 $user_attendance->evidence = $evidence;
                 $user_attendance->save();
                 return ["success" => true, "message" => "Berhasil Check In", "status" => 200];
             } else {
-                $location_temp = $user_attendance->location;
-                $location_temp->check_out_lat = $lat;
-                $location_temp->check_out_long = $long;
+                $today_attendance_activities = AttendanceActivity::whereDate('updated_at', '=', date("Y-m-d"))->get();
+                if(!count($today_attendance_activities)) return ["success" => false, "message" => "Tidak Bisa Melakukan Check Out Saat Aktivitas Belum Terisi" , "status" => 400];
                 $evidence_temp = $user_attendance->evidence;
                 $evidence_temp->check_out_evidence = $evidence;
                 $user_attendance->check_out = date('Y-m-d H:i:s');
-                $user_attendance->location = $location_temp;
+                $user_attendance->long_check_out = $long;
+                $user_attendance->lat_check_out = $lat;
+                $user_attendance->geo_loc_check_out = $geo_loc;
                 $user_attendance->evidence = $evidence_temp;
                 $user_attendance->save();
                 return ["success" => true, "message" => "Berhasil Check Out", "status" => 200];

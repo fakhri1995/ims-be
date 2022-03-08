@@ -17,13 +17,14 @@ class CreateAttendanceActivitiesTable extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('attendance_form_id');
-            $table->unsignedBigInteger('attendance_project_id');
-            $table->integer('attendance_project_status_id')->nullable();
+            // $table->unsignedBigInteger('attendance_project_id');
+            // $table->integer('attendance_project_status_id')->nullable();
             $table->jsonb('details');
             $table->dateTime('updated_at');
             
             $table->index('user_id');
-            $table->index('attendance_project_id');
+            $table->index('updated_at');
+            // $table->index('attendance_project_id');
         });
     }
 

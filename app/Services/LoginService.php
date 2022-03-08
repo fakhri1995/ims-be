@@ -115,6 +115,8 @@ class LoginService
         auth()->user()->makeHidden(['deleted_at', 'is_enabled', 'company_id']);
         auth()->user()->groups;
         auth()->user()->groups->makeHidden(['pivot']);
+        auth()->user()->attendanceForms;
+        auth()->user()->attendanceForms->makeHidden(['updated_at', 'deleted_at', 'created_by']);
         $list_feature = [];
         foreach(auth()->user()->roles as $role)
         {
