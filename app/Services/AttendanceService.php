@@ -193,8 +193,9 @@ class AttendanceService{
         try{
             $last_two_month = date("Y-m-d", strtotime("-2 months"));
             $today = date('Y-m-d');
-            $today_attendance_activities = AttendanceActivity::whereDate('updated_at', '=', $today)->get();
-            $last_two_month_attendance_activities = AttendanceActivity::whereDate('updated_at', '>', $last_two_month)->whereDate('updated_at', '<>', $today)->get();
+            $login_id = auth()->user()->id;
+            $today_attendance_activities = AttendanceActivity::where('user_id', $login_id)->whereDate('updated_at', '=', $today)->get();
+            $last_two_month_attendance_activities = AttendanceActivity::where('user_id', $login_id)->whereDate('updated_at', '>', $last_two_month)->whereDate('updated_at', '<>', $today)->get();
             $data = (object)[
                 "today_activities" => $today_attendance_activities,
                 "last_two_month_activities" => $last_two_month_attendance_activities
@@ -312,7 +313,7 @@ class AttendanceService{
 
         try{
             $login_id = auth()->user()->id;
-            $user_attendances = AttendanceUser::where('user_id', $login_id)->orderBy('check_in', 'desc')->get();
+            $user_attendances = AttendanceUser::where('user_id', $login_id)->whereDate('check_in', '>', date("Y-m-d", strtotime("-1 months")))->orderBy('check_in', 'desc')->get();
             return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $user_attendances, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
