@@ -887,11 +887,15 @@ class AssetService{
         try{
             $keyword = $request->get('keyword', null);
             $asset_id = $request->get('asset_id', null);
-            // $inventories = Inventory::with('modelInventory.asset')->select('id','mig_id', 'model_id');
             $inventories = DB::table('inventories')->select('inventories.id', 'inventories.model_id', 'inventories.mig_id', 'model_inventories.name as model_name', 'assets.name as asset_name')
             ->join('model_inventories', 'inventories.model_id', '=', 'model_inventories.id')
             ->join('assets', 'model_inventories.asset_id', '=', 'assets.id');
-            if($asset_id) $inventories = $inventories->where('assets.id', $asset_id);
+            
+            if($asset_id){
+                $assetChildrenTreeList = $this->assetChildrenTreeList($asset_id);
+                $inventories = $inventories->whereIn('assets.id', $assetChildrenTreeList);
+                // $inventories = $inventories->where('assets.id', $asset_id);
+            } 
             if($keyword){
                 $inventories = $inventories->where('inventories.mig_id', 'like', "%".$keyword."%")
                 ->orWhere('model_inventories.name', 'like', "%".$keyword."%")
