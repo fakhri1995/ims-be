@@ -249,7 +249,7 @@ class TicketService
         ];
         
         $user_attendance_form_ids = DB::table('attendance_form_user')->where('user_id', $login_id)->pluck('attendance_form_id');
-        $attendance_forms = DB::table('attendance_forms')->whereIn('id', $user_attendance_form_ids)->get();
+        $attendance_forms = DB::table('attendance_forms')->select('id', 'name', 'description', 'details', 'updated_at')->whereIn('id', $user_attendance_form_ids)->get();
         $last_check_in = DB::table('attendance_users')->where('user_id', $login_id)->orderBy('check_in', 'desc')->first();
 
         if(count($attendance_forms)) foreach($attendance_forms as $form) $form->details = json_decode($form->details);
