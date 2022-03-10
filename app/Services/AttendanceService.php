@@ -313,8 +313,36 @@ class AttendanceService{
 
         try{
             $login_id = auth()->user()->id;
-            $user_attendances = AttendanceUser::where('user_id', $login_id)->whereDate('check_in', '>', date("Y-m-d", strtotime("-1 months")))->orderBy('check_in', 'desc')->get();
-            return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $user_attendances, "status" => 200];
+            $user_attendances = AttendanceUser::where('user_id', $login_id)->whereDate('check_in', '>', date("Y-m-d", strtotime("-1 months")))->orderBy('check_in', 'asc')->get();
+            
+            $check_day = "00";
+            $is_late = false;
+            $i = 0;
+            $late = 0;
+            $on_time = 0;
+            foreach($user_attendances as $user_attendance){
+                $attendance_day = date('d', strtotime($user_attendance->check_in));
+                if($check_day !== $attendance_day){
+                    $check_day = $attendance_day;
+                    if(date('H:i:s', strtotime($user_attendance->check_in)) > "08:15:00"){
+                        $is_late = true;
+                        $late++;
+                    } 
+                    else{
+                        $is_late = false;
+                        $on_time++;
+                    } 
+                }
+                $user_attendance->is_late = $is_late;
+                $i++;
+            }
+            
+            $data = (object)[
+                "user_attendances" => $user_attendances->sortByDesc('check_in')->values(),
+                "late_count" => $late,
+                "on_time_count" => $on_time
+            ];
+            return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $data, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }

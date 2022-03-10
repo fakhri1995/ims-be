@@ -247,6 +247,14 @@ class TicketService
             "sum_task" => $sum_task,
             "active_task" => $active_task,
         ];
+        
+        $user_attendance_form_ids = DB::table('attendance_form_user')->where('user_id', $login_id)->pluck('attendance_form_id');
+        $attendance_forms = DB::table('attendance_forms')->whereIn('id', $user_attendance_form_ids)->get();
+        $last_check_in = DB::table('attendance_users')->where('user_id', $login_id)->orderBy('check_in', 'desc')->first();
+
+        if(count($attendance_forms)) foreach($attendance_forms as $form) $form->details = json_decode($form->details);
+        if($last_check_in) $last_check_in->evidence = json_decode($last_check_in->evidence);
+        
         $data = (object)[
             "ticket" => $ticket_statuses,
             "task" => $task_statuses,
@@ -256,7 +264,9 @@ class TicketService
                 "name" => auth()->user()->name,
                 "company_id" => auth()->user()->company_id,
                 "company_name" => auth()->user()->company->name,
-            ]
+            ],
+            "attendanceForm" => $attendance_forms,
+            "last_check_in" => $last_check_in
         ];
         
         return ["success" => true, "message" => "Status Ticket Berhasil Diambil", "data" => $data, "status" => 200];
