@@ -226,14 +226,17 @@ class AttendanceService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
+        $login_id = auth()->user()->id;
         $attendance_form_id = $request->get('attendance_form_id');
         $attendance_form = AttendanceForm::find($attendance_form_id);
         if($attendance_form === null) return ["success" => false, "message" => "Id Form Tidak Ditemukan", "status" => 400];
+        $last_check_in = AttendanceUser::where('user_id', $login_id)->orderBy('check_in', 'desc')->first();
+        if($last_check_in->check_out) return ["success" => false, "message" => "Silahkan Lakukan Check In Terlebih Dahulu", "status" => 400];
         $activity_details = $request->get('details', []);
         foreach($attendance_form->details as $form_detail){
             $search = array_search($form_detail['key'], array_column($activity_details, 'key'));
             if($search === false) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum diisi" , "status" => 400];
-            if(!isset($activity_details[$search]['value'])) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
+            if(!isset($activity_details[$search]['value']) || $activity_details[$search]['value'] === "") return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
             if($form_detail['type'] === 3){
                 if(gettype($activity_details[$search]['value']) !== "array") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe array", "status" => 400];
             } else {
