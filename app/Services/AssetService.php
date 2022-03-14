@@ -1327,7 +1327,7 @@ class AssetService{
         $causer_id = auth()->user()->id;
         $logService = new LogService;
         try{
-            $inventory = Inventory::find($id);
+            $inventory = Inventory::with('modelInventory')->find($id);
             if($inventory === null) return ["success" => false, "message" => "Id Inventori yang akan Diganti Tidak Ditemukan", "status" => 400];
             $old_inventory = [];
             foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
@@ -1339,8 +1339,9 @@ class AssetService{
             $inventory_replacement_status_usage = $parent_inventory->status_usage;
             
             $old_inventory_parent_list = $parent_inventory->inventoryPart->pluck('id');
-            $inventory_replacement = Inventory::find($replacement_id);
+            $inventory_replacement = Inventory::with('modelInventory')->find($replacement_id);
             if($inventory_replacement === false) return ["success" => false, "message" => "Id Inventori Pengganti Tidak Ditemukan", "status" => 400];
+            if($inventory->modelInventory->asset_id !== $inventory_replacement->modelInventory->asset_id) return ["success" => false, "message" => "Tipe aset inventory dan inventory replacement tidak sama", "status" => 400];
             $old_inventory_replacement = [];
             foreach($inventory_replacement->getAttributes() as $key => $value) $old_inventory_replacement[$key] = $value;
 
