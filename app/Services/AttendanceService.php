@@ -78,8 +78,11 @@ class AttendanceService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
+        $name = $request->get('name');
+        $check_attendance_form_name = AttendanceForm::where('name', $name)->first();
+        if($check_attendance_form_name) return ["success" => false, "message" => "Nama Form Aktivitas Sudah Ada", "status" => 400];
         $attendance_form = new AttendanceForm;
-        $attendance_form->name = $request->get('name');
+        $attendance_form->name = $name;
         $attendance_form->description = $request->get('description');
         $attendance_form->updated_at = date('Y-m-d H:i:s');
         $attendance_form->created_by = auth()->user()->id;
@@ -349,9 +352,9 @@ class AttendanceService{
         if($access["success"] === false) return $access;
 
         try{
-            $users_attendances = AttendanceUser::select('id', 'user_id', 'check_in', 'check_out','geo_loc_check_in', 'geo_loc_check_out', 'is_wfo')->with('user:id,name,profile_image')->whereDate('check_in', '=', date("Y-m-d"))->get();
+            $users_attendances = AttendanceUser::with('user:id,name,profile_image')->whereDate('check_in', '=', date("Y-m-d"))->get();
             $attendance_user_ids = $users_attendances->pluck('user_id')->unique()->values();
-            $absent_users = User::select('id','name', 'position')->with('attendanceForms:id,name')->whereNotIn('id', $attendance_user_ids)->whereNull('deleted_at')->where('is_enabled', true)->get();
+            $absent_users = User::select('id','name', 'position', 'profile_image')->with('attendanceForms:id,name')->whereNotIn('id', $attendance_user_ids)->whereNull('deleted_at')->where('is_enabled', true)->get();
             $data = (object)[
                 'users_attendances_count' => count($users_attendances),
                 'absent_users_count' => count($absent_users),
