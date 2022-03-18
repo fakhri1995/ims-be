@@ -117,12 +117,46 @@ class AttendanceController extends Controller
     }
 
     // Attendance User
+    public function getAttendancesUsers(Request $request)
+    {
+        $route_name = "ATTENDANCES_USERS_GET";
+
+        $response = $this->attendanceService->getAttendancesUsers($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getAttendancesUser(Request $request)
     {
         $route_name = "ATTENDANCES_USER_GET";
 
         $response = $this->attendanceService->getAttendancesUser($request, $route_name);
         return response()->json($response, $response['status']);
+    }
+
+    public function getAttendanceUser(Request $request)
+    {
+        $route_name = "ATTENDANCE_USER_GET";
+
+        $response = $this->attendanceService->getAttendanceUser($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function exportAttendanceActivityUser(Request $request)
+    {
+        $route_name = "ATTENDANCE_ACTIVITY_USER_EXPORT";
+
+        $response = $this->attendanceService->exportAttendanceActivityUser($request, $route_name);
+        if(!$response['success']) return response()->json($response, $response['status']);
+        return $response['data'];
+    }
+
+    public function exportAttendanceActivityUsers(Request $request)
+    {
+        $route_name = "ATTENDANCE_ACTIVITY_USERS_EXPORT";
+
+        $response = $this->attendanceService->exportAttendanceActivityUsers($request, $route_name);
+        if(!$response['success']) return response()->json($response, $response['status']);
+        return $response['data'];
     }
 
     public function setAttendanceToggle(Request $request)

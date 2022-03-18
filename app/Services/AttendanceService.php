@@ -9,8 +9,10 @@ use App\AttendanceProject;
 use App\AttendanceActivity;
 use Illuminate\Support\Str;
 use App\AttendanceProjectType;
+use App\Exports\AttendanceActivitiesExport;
 use App\AttendanceProjectStatus;
 use App\AttendanceProjectCategory;
+use Excel;
 
 class AttendanceService{
     public function __construct()
@@ -38,7 +40,7 @@ class AttendanceService{
             if($sort_by) $params = "$params&sort_by=$sort_by";
             if($sort_type) $params = "$params&sort_type=$sort_type";
             
-            if($keyword) $attendance_forms = $attendance_forms->where('name', 'like', "%".$keyword."%");
+            if($keyword) $attendance_forms = $attendance_forms->where('name', 'like', "%".$keyword."%")->orWhere('description', 'like', "%".$keyword."%");
             if($sort_by){
                 if($sort_type === null) $sort_type = 'desc';
                 if($sort_by === 'name') $attendance_forms = $attendance_forms->orderBy('name', $sort_type);
@@ -236,7 +238,7 @@ class AttendanceService{
         foreach($attendance_form->details as $form_detail){
             $search = array_search($form_detail['key'], array_column($activity_details, 'key'));
             if($search === false) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum diisi" , "status" => 400];
-            if(!isset($activity_details[$search]['value']) || $activity_details[$search]['value'] === "") return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
+            if(!isset($activity_details[$search]['value']) || ($form_detail['required'] && $activity_details[$search]['value'] === "")) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
             if($form_detail['type'] === 3){
                 if(gettype($activity_details[$search]['value']) !== "array") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe array", "status" => 400];
             } else {
@@ -272,7 +274,7 @@ class AttendanceService{
         foreach($attendance_form->details as $form_detail){
             $search = array_search($form_detail['key'], array_column($activity_details, 'key'));
             if($search === false) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum diisi" , "status" => 400];
-            if(!isset($activity_details[$search]['value'])) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
+            if(!isset($activity_details[$search]['value']) || ($form_detail['required'] && $activity_details[$search]['value'] === "")) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
             if($form_detail['type'] === 3){
                 if(gettype($activity_details[$search]['value']) !== "array") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe array", "status" => 400];
             } else {
@@ -307,8 +309,61 @@ class AttendanceService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
+
+    private function activityExport($from, $to, $attendance_form, $multiple = false, $user_ids = [])
+    {
+        return Excel::download(new AttendanceActivitiesExport($from, $to, $attendance_form, $multiple, $user_ids), 'Attendance Activity Report.xlsx');
+    }
+
+    public function exportAttendanceActivityUser($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+    
+        $from = $request->get('from', null);
+        $to = $request->get('to', null);
+        $attendance_forms = auth()->user()->attendanceForms;
+        if(!count($attendance_forms)) return ["success" => false, "message" => "User Belum Memiliki Form Kehadiran", "status" => 400];
+        $excel = $this->activityExport($from, $to, $attendance_forms[0]);
+        return ["success" => true, "message" => "Berhasil Export Attendance Activity", "data" => $excel, "status" => 200];
+    }
+
+    public function exportAttendanceActivityUsers($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+    
+        $from = $request->get('from', null);
+        $to = $request->get('to', null);
+        $attendance_form = AttendanceForm::find($request->get('attendance_form_id'));
+        $user_ids = json_decode($request->get('user_ids', "[]"));
+        if(!$attendance_form) return ["success" => false, "message" => "Attendance Form Tidak Ditemukan", "status" => 400];
+        $excel = $this->activityExport($from, $to, $attendance_form, true, $user_ids);
+        return ["success" => true, "message" => "Berhasil Export Attendance Activity", "data" => $excel, "status" => 200];
+    }
     
     // Attendance User
+    public function getAttendancesUsers($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $users_attendances = AttendanceUser::select('id', 'user_id', 'check_in', 'check_out','geo_loc_check_in', 'geo_loc_check_out', 'is_wfo')->with('user:id,name,profile_image')->whereDate('check_in', '=', date("Y-m-d"))->get();
+            $attendance_user_ids = $users_attendances->pluck('user_id')->unique()->values();
+            $absent_users = User::select('id','name', 'position')->with('attendanceForms:id,name')->whereNotIn('id', $attendance_user_ids)->whereNull('deleted_at')->where('is_enabled', true)->get();
+            $data = (object)[
+                'users_attendances_count' => count($users_attendances),
+                'absent_users_count' => count($absent_users),
+                'users_attendances' => $users_attendances,
+                'absent_users' => $absent_users,
+            ];
+            return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $data, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     public function getAttendancesUser($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
@@ -346,6 +401,35 @@ class AttendanceService{
                 "on_time_count" => $on_time
             ];
             return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $data, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getAttendanceUser($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $login_id = auth()->user()->id;
+            $id = $request->get('id');
+            $user_attendance = AttendanceUser::find($id);
+            if(!$user_attendance) return ["success" => false, "message" => "User Attendance Tidak Ditemukan" , "status" => 400];
+            if($user_attendance->user_id !== $login_id) return ["success" => false, "message" => "User Attendance Bukan Milik User Login" , "status" => 400];
+            
+            $attendance_forms = auth()->user()->attendanceForms;
+            if(!count($attendance_forms)) return ["success" => false, "message" => "User Attendance Form Belum Diassign" , "status" => 400];
+            else {
+                $attendance_form = $attendance_forms[0];
+                $attendance_activities = AttendanceActivity::where('user_id', $login_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->where('attendance_form_id', $attendance_form->id)->get();
+            }
+            $data = (object)[
+                "user_attendance" => $user_attendance,
+                "attendance_form" => $attendance_form,
+                "attendance_activities" => $attendance_activities
+            ];
+            return ["success" => true, "message" => "Berhasil Mengambil Data Attendance", "data" => $data, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }

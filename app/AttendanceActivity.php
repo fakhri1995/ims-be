@@ -9,6 +9,11 @@ class AttendanceActivity extends Model
     protected $casts = ["details" => "array"];
     public $timestamps = false;
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function attendanceForm()
     {
         return $this->belongsTo(AttendanceForm::class);
