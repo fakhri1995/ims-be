@@ -4,6 +4,7 @@ namespace App\Console;
 
 use App\Console\Commands\UnhideTasks;
 use App\Console\Commands\SetOverdueTasks;
+use App\Console\Commands\AutoCheckOutAttendance;
 use App\Console\Commands\GenerateDailyTask;
 use App\Console\Commands\GenerateWeeklyTask;
 use App\Console\Commands\GenerateMonthlyTask;
@@ -23,6 +24,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         UnhideTasks::class,
         SetOverdueTasks::class,
+        AutoCheckOutAttendance::class,
         GenerateDailyTask::class,
         GenerateWeeklyTask::class,
         GenerateTwicePerMonthTask::class,
@@ -41,6 +43,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command(UnhideTasks::class)->cron('* * * * *');
         $schedule->command(SetOverdueTasks::class)->cron('* * * * *');
+        $schedule->command(AutoCheckOutAttendance::class)->cron('59 23 * * *');
         $schedule->command(GenerateDailyTask::class)->cron('0 0 * * *');	
         $schedule->command(GenerateWeeklyTask::class)->cron('0 0 * * 1');
         $schedule->command(GenerateTwicePerMonthTask::class)->cron('0 0 1,15 * *');	

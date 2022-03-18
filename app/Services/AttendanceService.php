@@ -464,6 +464,7 @@ class AttendanceService{
                 $user_attendance->check_in = date('Y-m-d H:i:s');
                 $user_attendance->is_wfo = $request->get('wfo', false);
                 $user_attendance->evidence = $evidence;
+                $user_attendance->checked_out_by_system = false;
                 $user_attendance->save();
                 return ["success" => true, "message" => "Berhasil Check In", "status" => 200];
             } else {

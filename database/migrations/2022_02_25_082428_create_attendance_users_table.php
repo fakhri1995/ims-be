@@ -26,6 +26,7 @@ class CreateAttendanceUsersTable extends Migration
             $table->string('geo_loc_check_out')->nullable();
             $table->string('evidence');
             $table->boolean('is_wfo');
+            $table->boolean('checked_out_by_system');
 
             $table->index('user_id');
             $table->index('check_in');
