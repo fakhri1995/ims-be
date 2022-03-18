@@ -54,7 +54,7 @@ class UserService
 
     public function getUserDetail($account_id, $role_id){
         try{
-            $user = User::with(['roles:id,name', 'company'])->find($account_id);
+            $user = User::with(['roles:id,name', 'company', 'attendanceForms:id,name'])->find($account_id);
             if($user === null) return ["success" => false, "message" => "Id Akun Tidak Ditemukan", "status" => 400];
             if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 401];
             else {
@@ -153,40 +153,43 @@ class UserService
         return $this->getUserList($request, $this->requester_role_id);
     }
 
-    public function addUserMember($data, $role_id){
-        $check_email_user = User::where('email', $data['email'])->first();
+    public function addUserMember($request, $role_id){
+        $email = $request->get('email');
+        $password = $request->get('password');
+        $check_email_user = User::where('email', $email)->first();
         if($check_email_user) return ["success" => false, "message" => "Email Telah Digunakan", "status" => 400];
-        if($data['password'] !== $data['confirm_password']) return ["success" => false, "message" => "Password Tidak Sama", "status" => 400];
+        if($password !== $request->get('confirm_password')) return ["success" => false, "message" => "Password Tidak Sama", "status" => 400];
         try{
             $user = new User;
-            $user->name = $data['fullname'];
-            $user->nip = $data['nip'];
-            $user->company_id = $data['company_id'];
-            $user->email = $data['email'];
-            $user->password = Hash::make($data['password']);
+            $user->name = $request->get('fullname');
+            $user->nip = $request->get('nip');
+            $user->company_id = $request->get('company_id');
+            $user->email = $email;
+            $user->password = Hash::make($password);
             $user->role = $role_id;
-            $user->phone_number = $data['phone_number'];
-            $user->profile_image = $data['profile_image'];
-            $user->position = $data['position'];
+            $user->phone_number = $request->get('phone_number');
+            $user->profile_image = $request->get('profile_image');
+            $user->position = $request->get('position');
             $user->is_enabled = false;
             $user->created_time = date("Y-m-d H:i:s");
             $user->save();
             $data_request = [
                 "id" => $user->id,
-                "role_ids" => $data['role_ids']
+                "role_ids" => $request->get('role_ids', [])
             ];
 
             $set_role = $this->updateRoleUser($data_request, $role_id);
-
+            $attendance_form_ids = $request->get('attendance_form_ids', []);
+            $user->attendanceForms()->attach($attendance_form_ids);
             $loginService = new LoginService;
-            $token = $loginService->generate_token($data['email'], $data['password']);
+            $token = $loginService->generate_token($email, $password);
             if(!isset($token['error'])){
                 $email_data = [
                     'username' => $user->name,
                     'token' => $token['access_token'],
                     'subject' => 'Ubah Password Akun MIGSYS'
                 ];
-                Mail::to($data['email'])->send(new ChangePasswordMail($email_data));
+                Mail::to($email)->send(new ChangePasswordMail($email_data));
             } 
             
             if($role_id === 1) return ["success" => true, "message" => "Akun Agent berhasil ditambah", "id" => $user->id, "status" => 200];
@@ -210,21 +213,24 @@ class UserService
         return $this->addUserMember($data, $this->requester_role_id);
     }
 
-    public function updateUserDetail($data, $role_id){
-        $user = User::find($data['id']);
+    public function updateUserDetail($request, $role_id){
+        $id = $request->get('id');
+        $user = User::find($id);
         if($user === null) return ["success" => false, "message" => "Id Pengguna Tidak Ditemukan", "status" => 400];
         if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 401];
         try{
-            $user->name = $data['fullname'];
-            $user->nip = $data['nip'];
-            $user->phone_number = $data['phone_number'];
-            $user->position = $data['position'];
+            $user->name = $request->get('fullname');
+            $user->nip = $request->get('nip');
+            $user->phone_number = $request->get('phone_number');
+            $user->position = $request->get('position');
             $user->save();
             $data_request = [
-                "id" => $data['id'],
-                "role_ids" => $data['role_ids']
+                "id" => $id,
+                "role_ids" => $request->get('role_ids', [])
             ];
             $save_role = $this->updateRoleUser($data_request, $role_id);
+            $attendance_form_ids = $request->get('attendance_form_ids', []);
+            $user->attendanceForms()->sync($attendance_form_ids);
             if(!$save_role["success"]) return $save_role;
             if($role_id === 1) return ["success" => true, "message" => "Akun Agent berhasil diperbarui", "status" => 200];
             else return ["success" => true, "message" => "Akun Requester berhasil diperbarui", "status" => 200];

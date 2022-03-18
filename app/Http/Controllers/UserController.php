@@ -49,37 +49,15 @@ class UserController extends Controller
     {
         $route_name = "AGENT_ADD";
         
-        $data_request = [
-            "fullname" => $request->get('fullname'),
-            "company_id" => $request->get('company_id'),
-            "email" => $request->get('email'),
-            "nip" => $request->get('nip'),
-            "phone_number" => $request->get('phone_number'),
-            "profile_image" => $request->get('profile_image', null),
-            "position" => $request->get('position', null),
-            "password" => $request->get('password'),
-            "confirm_password" => $request->get('confirm_password'),
-            "role_ids" => $request->get('role_ids', [])
-        ];
-        
-        $response = $this->userService->addAgentMember($data_request, $route_name);
+        $response = $this->userService->addAgentMember($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function updateAgentDetail(Request $request)
     {
         $route_name = "AGENT_UPDATE";
-        
-        $data_request = [
-            "id" => $request->get('id'),
-            "fullname" => $request->get('fullname'),
-            "nip" => $request->get('nip'),
-            "phone_number" => $request->get('phone_number'),
-            "position" => $request->get('position', null),
-            "role_ids" => $request->get('role_ids', [])
-        ];
 
-        $response = $this->userService->updateAgentDetail($data_request, $route_name);
+        $response = $this->userService->updateAgentDetail($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -154,37 +132,15 @@ class UserController extends Controller
     {
         $route_name = "REQUESTER_ADD";
         
-        $data_request = [
-            "fullname" => $request->get('fullname'),
-            "company_id" => $request->get('company_id'),
-            "email" => $request->get('email'),
-            "nip" => $request->get('nip'),
-            "phone_number" => $request->get('phone_number'),
-            "profile_image" => $request->get('profile_image', null),
-            "position" => $request->get('position', null),
-            "password" => $request->get('password'),
-            "confirm_password" => $request->get('confirm_password'),
-            "role_ids" => $request->get('role_ids', [])
-        ];
-        
-        $response = $this->userService->addRequesterMember($data_request, $route_name);
+        $response = $this->userService->addRequesterMember($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function updateRequesterDetail(Request $request)
     {
         $route_name = "REQUESTER_UPDATE";
-        
-        $data_request = [
-            "id" => $request->get('id'),
-            "fullname" => $request->get('fullname'),
-            "nip" => $request->get('nip'),
-            "phone_number" => $request->get('phone_number'),
-            "position" => $request->get('position', null),
-            "role_ids" => $request->get('role_ids', [])
-        ];
 
-        $response = $this->userService->updateRequesterDetail($data_request, $route_name);
+        $response = $this->userService->updateRequesterDetail($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
