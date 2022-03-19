@@ -3,6 +3,7 @@
 namespace App\Services;
 use App\User;
 use Exception;
+use GuzzleHttp\Client;
 use App\AttendanceForm;
 use App\AttendanceUser;
 use App\AttendanceProject;
@@ -451,6 +452,15 @@ class AttendanceService{
             $evidence = $request->get('evidence');
             if(!$evidence) return ["success" => false, "message" => "Evidence belum diisi", "status" => 400];
             $user_attendance = AttendanceUser::where('user_id', $login_id)->orderBy('check_in', 'desc')->first();
+            
+            if(!$geo_loc) {
+                $client = new Client();
+                $nominatim_response = $client->request('GET', "https://nominatim.openstreetmap.org/reverse.php?lat=$lat&lon=$long&zoom=18&format=jsonv2");
+                $response = json_decode((string) $nominatim_response->getBody());
+                if(isset($response->error)) $geo_loc = null;
+                else $geo_loc = $response->display_name;
+            }
+            
             if(!$user_attendance || $user_attendance->check_out) {
                 $evidence = (object) [
                     "check_in_evidence" => $evidence,
