@@ -353,9 +353,11 @@ class AttendanceService{
         if($access["success"] === false) return $access;
 
         try{
-            $users_attendances = AttendanceUser::with('user:id,name,profile_image')->whereDate('check_in', '=', date("Y-m-d"))->get();
+            $users_attendances = AttendanceUser::whereHas('user', function($q){
+                $q->where('role', 1);
+            })->with('user:id,name,profile_image')->whereDate('check_in', '=', date("Y-m-d"))->get();
             $attendance_user_ids = $users_attendances->pluck('user_id')->unique()->values();
-            $absent_users = User::select('id','name', 'position', 'profile_image')->with('attendanceForms:id,name')->whereNotIn('id', $attendance_user_ids)->whereNull('deleted_at')->where('is_enabled', true)->get();
+            $absent_users = User::select('id','name', 'position', 'profile_image')->with('attendanceForms:id,name')->where('role', 1)->whereNotIn('id', $attendance_user_ids)->whereNull('deleted_at')->where('is_enabled', true)->get();
             $data = (object)[
                 'users_attendances_count' => count($users_attendances),
                 'absent_users_count' => count($absent_users),
