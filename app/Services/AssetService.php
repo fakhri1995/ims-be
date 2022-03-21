@@ -958,12 +958,18 @@ class AssetService{
         try{
             $asset_id = $request->get('asset_id', null);
             $model_id = $request->get('model_id', null);
+            $inventory_id = $request->get('inventory_id');
             $name = $request->get('name', null);
             $rows = $request->get('rows', 10);
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
             
-            $inventories = Inventory::with(['modelInventory.asset:id,name,deleted_at', 'inventoryAddableParts'])->select('id', 'model_id', 'mig_id')->where('status_usage', 2);
+            if($inventory_id === null) return ["success" => false, "message" => "inventory_id kosong", "data" => [], "status" => 400];
+            $inventory = Inventory::find($inventory_id);
+            if($inventory === null) return ["success" => false, "message" => "Inventory Tidak Ditemukan", "data" => [], "status" => 400];
+            $list_inventory = $inventory->inventoryPartList()->pluck('id');
+            $list_inventory[] = $inventory->id;
+            $inventories = Inventory::with(['modelInventory.asset:id,name,deleted_at', 'inventoryAddableParts'])->select('id', 'model_id', 'mig_id')->where('status_usage', 2)->whereNotIn('id', $list_inventory);
 
             if($asset_id){
                 $assetChildrenTreeList = $this->assetChildrenTreeList($asset_id);
