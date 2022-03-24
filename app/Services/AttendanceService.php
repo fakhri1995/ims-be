@@ -412,7 +412,7 @@ class AttendanceService{
         }
     }
 
-    public function getAttendanceUser($request, $route_name)
+    public function getAttendanceUserFunc($request, $route_name, $admin = false)
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
@@ -422,7 +422,7 @@ class AttendanceService{
             $id = $request->get('id');
             $user_attendance = AttendanceUser::find($id);
             if(!$user_attendance) return ["success" => false, "message" => "User Attendance Tidak Ditemukan" , "status" => 400];
-            if($user_attendance->user_id !== $login_id) return ["success" => false, "message" => "User Attendance Bukan Milik User Login" , "status" => 400];
+            if($user_attendance->user_id !== $login_id && !$admin) return ["success" => false, "message" => "User Attendance Bukan Milik User Login" , "status" => 400];
             
             $attendance_forms = auth()->user()->attendanceForms;
             if(!count($attendance_forms)) return ["success" => false, "message" => "User Attendance Form Belum Diassign" , "status" => 400];
@@ -439,6 +439,14 @@ class AttendanceService{
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
+    }
+
+    public function getAttendanceUser($request, $route_name){
+        return $this->getAttendanceUserFunc($request, $route_name);
+    }
+
+    public function getAttendanceUserAdmin($request, $route_name){
+        return $this->getAttendanceUserFunc($request, $route_name, true);
     }
 
     public function setAttendanceToggle($request, $route_name)
