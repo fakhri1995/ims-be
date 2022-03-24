@@ -141,6 +141,14 @@ class AttendanceController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getAttendanceUserAdmin(Request $request)
+    {
+        $route_name = "ATTENDANCE_USER_ADMIN_GET";
+
+        $response = $this->attendanceService->getAttendanceUserAdmin($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function exportAttendanceActivityUser(Request $request)
     {
         $route_name = "ATTENDANCE_ACTIVITY_USER_EXPORT";
