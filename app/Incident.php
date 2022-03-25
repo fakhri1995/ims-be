@@ -24,7 +24,7 @@ class Incident extends Model
 
     public function assetType()
     {
-        return $this->belongsTo(TicketTaskType::class, 'product_type')->withTrashed();
+        return $this->belongsTo(TicketDetailType::class, 'product_type')->withTrashed();
     }
     
     // public function productType()

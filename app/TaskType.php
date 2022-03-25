@@ -19,9 +19,4 @@ class TaskType extends Model
     {
         return $this->hasMany(Task::class);
     }
-
-    public function ticketTaskType()
-    {
-        return $this->hasMany(TicketTaskType::class);
-    }
 }

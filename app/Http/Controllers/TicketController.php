@@ -188,6 +188,14 @@ class TicketController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function updateStatusTicket(Request $request)
+    {
+        $route_name = "TICKET_STATUS_UPDATE";
+
+        $response = $this->ticketService->updateStatusTicket($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function setDeadline(Request $request)
     {
         $route_name = "TICKET_DEADLINE_SET";
@@ -196,13 +204,13 @@ class TicketController extends Controller
         return response()->json($response, $response['status']);
     }
     
-    public function assignTicket(Request $request)
-    {
-        $route_name = "TICKET_ASSIGN";
+    // public function assignTicket(Request $request)
+    // {
+    //     $route_name = "TICKET_ASSIGN";
 
-        $response = $this->ticketService->assignTicket($request, $route_name);
-        return response()->json($response, $response['status']);
-    }
+    //     $response = $this->ticketService->assignTicket($request, $route_name);
+    //     return response()->json($response, $response['status']);
+    // }
 
     public function addNoteTicket(Request $request)
     {
@@ -249,35 +257,35 @@ class TicketController extends Controller
         return $response['data'];
     }
 
-    public function getTicketTaskTypes(Request $request)
+    public function getTicketDetailTypes(Request $request)
     {
-        $route_name = "TICKET_TASK_TYPES_GET";
+        $route_name = "TICKET_DETAIL_TYPES_GET";
 
-        $response = $this->ticketService->getTicketTaskTypes($request, $route_name);
+        $response = $this->ticketService->getTicketDetailTypes($request, $route_name);
         return response()->json($response, $response['status']);   
     }
 
-    public function addTicketTaskType(Request $request)
+    public function addTicketDetailType(Request $request)
     {
-        $route_name = "TICKET_TASK_TYPE_ADD";
+        $route_name = "TICKET_DETAIL_TYPE_ADD";
 
-        $response = $this->ticketService->addTicketTaskType($request, $route_name);
+        $response = $this->ticketService->addTicketDetailType($request, $route_name);
         return response()->json($response, $response['status']);   
     }
 
-    public function updateTicketTaskType(Request $request)
+    public function updateTicketDetailType(Request $request)
     {
-        $route_name = "TICKET_TASK_TYPE_UPDATE";
+        $route_name = "TICKET_DETAIL_TYPE_UPDATE";
 
-        $response = $this->ticketService->updateTicketTaskType($request, $route_name);
+        $response = $this->ticketService->updateTicketDetailType($request, $route_name);
         return response()->json($response, $response['status']);   
     }
 
-    public function deleteTicketTaskType(Request $request)
+    public function deleteTicketDetailType(Request $request)
     {
-        $route_name = "TICKET_TASK_TYPE_DELETE";
+        $route_name = "TICKET_DETAIL_TYPE_DELETE";
 
-        $response = $this->ticketService->deleteTicketTaskType($request, $route_name);
+        $response = $this->ticketService->deleteTicketDetailType($request, $route_name);
         return response()->json($response, $response['status']);   
     }
 }

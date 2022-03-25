@@ -21,9 +21,9 @@ class Ticket extends Model
         return $this->belongsTo(TicketType::class, 'ticketable_type', 'table_name');
     }
 
-    public function task()
+    public function tasks()
     {
-        return $this->belongsTo(Task::class)->withTrashed();
+        return $this->hasMany(Task::class, 'reference_id', 'id')->withTrashed();
     }
 
     public function ticketable(){
@@ -44,17 +44,12 @@ class Ticket extends Model
     //     ])->select('id', 'name');
     // }
 
-    // public function requester()
-    // {
-    //     return $this->belongsTo(User::class, 'requester_id')->withDefault([
-    //         'id' => 0,
-    //         'name' => '-',
-    //         'company_id'=> 0,
-    //         'company'=> (object) [
-    //             'id'=> 0,
-    //             'name'=> '-',
-    //             'full_name'=> '-'
-    //         ]
-    //     ])->select('id', 'name','company_id')->with(['company:id,name,top_parent_id', 'company.topParent']);
-    // }
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by')->withDefault([
+            'id' => 0,
+            'name' => '-',
+            'company_id' => 0,
+        ]);
+    }
 }
