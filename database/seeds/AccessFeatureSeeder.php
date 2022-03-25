@@ -537,13 +537,17 @@ class AccessFeatureSeeder extends Seeder
                 "description" => "Fitur untuk TICKET_UPDATE"
             ],
             [
+                "name" => "TICKET_STATUS_UPDATE",
+                "description" => "Fitur untuk menghapus TICKET_STATUS_UPDATE"
+            ],
+            [
                 "name" => "TICKET_DEADLINE_SET",
                 "description" => "Fitur untuk TICKET_DEADLINE_SET"
             ],
-            [
-                "name" => "TICKET_ASSIGN",
-                "description" => "Fitur untuk TICKET_ASSIGN"
-            ],
+            // [
+            //     "name" => "TICKET_ASSIGN",
+            //     "description" => "Fitur untuk TICKET_ASSIGN"
+            // ],
             [
                 "name" => "TICKET_ITEM_SET",
                 "description" => "Fitur untuk TICKET_ITEM_SET"
@@ -561,19 +565,19 @@ class AccessFeatureSeeder extends Seeder
                 "description" => "Fitur untuk TICKET_EXPORT"
             ],
             [
-                "name" => "TICKET_TASK_TYPES_GET",
+                "name" => "TICKET_DETAIL_TYPES_GET",
                 "description" => "Fitur untuk mengambil list tipe tiket task"
             ],
             [
-                "name" => "TICKET_TASK_TYPE_ADD",
+                "name" => "TICKET_DETAIL_TYPE_ADD",
                 "description" => "Fitur untuk membuat tipe tiket task"
             ],
             [
-                "name" => "TICKET_TASK_TYPE_UPDATE",
+                "name" => "TICKET_DETAIL_TYPE_UPDATE",
                 "description" => "Fitur untuk memperbarui tipe tiket task"
             ],
             [
-                "name" => "TICKET_TASK_TYPE_DELETE",
+                "name" => "TICKET_DETAIL_TYPE_DELETE",
                 "description" => "Fitur untuk menghapus tipe tiket task"
             ],
             [
@@ -1399,11 +1403,14 @@ class AccessFeatureSeeder extends Seeder
                         "name" => "TICKET_UPDATE"
                     ],
                     [
-                        "name" => "TICKET_DEADLINE_SET"
+                        "name" => "TICKET_STATUS_UPDATE"
                     ],
                     [
-                        "name" => "TICKET_ASSIGN"
+                        "name" => "TICKET_DEADLINE_SET"
                     ],
+                    // [
+                    //     "name" => "TICKET_ASSIGN"
+                    // ],
                     [
                         "name" => "TICKET_ITEM_SET"
                     ],
@@ -1443,36 +1450,23 @@ class AccessFeatureSeeder extends Seeder
                     [
                         "name" => "TICKET_CLIENT_EXPORT"
                     ],
-
-                    [
-                        "name" => "TICKET_TASK_TYPES_GET"
-                    ],
-                    [
-                        "name" => "TICKET_TASK_TYPE_ADD"
-                    ],
-                    [
-                        "name" => "TICKET_TASK_TYPE_UPDATE"
-                    ],
-                    [
-                        "name" => "TICKET_TASK_TYPE_DELETE"
-                    ]
                 ]
             ],
             [
-                "name" => "Tipe Task Ticket",
-                "description" => "Modul yang berisi fitur-fitur untuk tipe task ticket",
+                "name" => "Tipe Detail Ticket",
+                "description" => "Modul yang berisi fitur-fitur untuk tipe detail ticket",
                 "features" => [
                     [
-                        "name" => "TICKET_TASK_TYPES_GET"
+                        "name" => "TICKET_DETAIL_TYPES_GET"
                     ],
                     [
-                        "name" => "TICKET_TASK_TYPE_ADD"
+                        "name" => "TICKET_DETAIL_TYPE_ADD"
                     ],
                     [
-                        "name" => "TICKET_TASK_TYPE_UPDATE"
+                        "name" => "TICKET_DETAIL_TYPE_UPDATE"
                     ],
                     [
-                        "name" => "TICKET_TASK_TYPE_DELETE"
+                        "name" => "TICKET_DETAIL_TYPE_DELETE"
                     ]
                 ]
             ],
