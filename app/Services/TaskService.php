@@ -2326,10 +2326,9 @@ class TaskService{
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
-        $task = TaskType::with('ticketTaskType')->find($id);
+        $task = TaskType::find($id);
         if($task === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         try{
-            if(count($task->ticketTaskType)) return ["success" => false, "message" => "Tipe Task Masih Memiliki Tipe Tiket Task yang Terhubung", "status" => 400];
             $task->delete();
             return ["success" => true, "message" => "Tipe Task Berhasil Dihapus", "status" => 200];
         } catch(Exception $err){

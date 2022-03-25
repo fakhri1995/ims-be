@@ -3,7 +3,6 @@
 namespace App\Exports;
 
 use App\Ticket;
-use App\Services\GeneralService;
 use Maatwebsite\Excel\Concerns\FromView;
 use Illuminate\Contracts\View\View;
 
@@ -12,22 +11,19 @@ class TicketsExport implements FromView
 
     public function __construct($from = null, $to = null, $group = null, $engineer = null, $type = null, $is_history = false, $core_attributes, $secondary_attributes)
     {
-        $generalService = new GeneralService;
-        $current_timestamp = $generalService->getTimeNow();
+        $current_timestamp = date("Y-m-d H:i:s");
         $this->type = $type;
         $this->core_attributes = $core_attributes;
         $this->secondary_attributes = $secondary_attributes;
 
         if($type == 1){
             $this->tickets = Ticket::select('tickets.ticketable_id', 'tickets.ticketable_type', 'tickets.task_id', 'tickets.closed_at', 'tickets.resolved_times', 'tasks.status', 'tasks.group_id', 'tasks.created_at')
-            ->with(['task:id,created_by,group_id', 'task.creator:id,name,company_id', 
-            'task.creator.company:id,name,top_parent_id', 'type:id,code,table_name'])
+            ->with(['creator:id,name,company_id', 'creator.company:id,name,top_parent_id', 'type:id,code,table_name'])
             ->join('tasks', 'tickets.task_id', '=', 'tasks.id')
             ->where('tickets.ticketable_type', 'App\Incident');
         } else {
             $this->tickets = Ticket::select('tickets.ticketable_id', 'tickets.ticketable_type', 'tickets.task_id', 'tickets.closed_at', 'tickets.resolved_times', 'tasks.status', 'tasks.group_id', 'tasks.created_at')
-            ->with(['task:id,created_by,group_id', 'task.creator:id,name,company_id', 
-            'task.creator.company:id,name,top_parent_id', 'type:id,code,table_name', 'ticketable:id,product_type,product_id', 'ticketable.assetType:id,name', 'ticketable.location:id,name,parent_id,top_parent_id,role'])
+            ->with(['creator:id,name,company_id', 'creator.company:id,name,top_parent_id', 'type:id,code,table_name', 'ticketable:id,product_type,product_id', 'ticketable.assetType:id,name', 'ticketable.location:id,name,parent_id,top_parent_id,role'])
             ->join('tasks', 'tickets.task_id', '=', 'tasks.id');
         }
         if($engineer || $group){

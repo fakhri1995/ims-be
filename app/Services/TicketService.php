@@ -13,7 +13,7 @@ use App\Incident;
 use App\TaskType;
 use App\TaskDetail;
 use App\TicketType;
-use App\TicketTaskType;
+use App\TicketDetailType;
 use App\Services\LogService;
 use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
@@ -107,12 +107,12 @@ class TicketService
         ];
 
         $ticket_types = TicketType::all();
-        $ticket_task_types = DB::table('ticket_task_types')
-            ->select('ticket_task_types.id', 'ticket_task_types.ticket_type_id as type_id', 'ticket_task_types.name', 'task_types.name as task_type_name')
-            ->join('task_types', 'ticket_task_types.task_type_id', '=', 'task_types.id')
-            ->whereNull('ticket_task_types.deleted_at')->get();
+        $ticket_detail_types = DB::table('ticket_detail_types')
+            ->select('ticket_detail_types.id', 'ticket_detail_types.ticket_type_id as type_id', 'ticket_detail_types.name', 'ticket_types.name as ticket_type_name')
+            ->join('ticket_types', 'ticket_detail_types.ticket_type_id', '=', 'ticket_types.id')
+            ->whereNull('ticket_detail_types.deleted_at')->get();
 
-        $data = ["status_ticket" => $statuses, "ticket_types" => $ticket_types, "companies" => $companies, "ticket_task_types" => $ticket_task_types, "resolved_times" => $resolved_times];
+        $data = ["status_ticket" => $statuses, "ticket_types" => $ticket_types, "companies" => $companies, "ticket_detail_types" => $ticket_detail_types, "resolved_times" => $resolved_times];
         return ["success" => true, "data" => $data, "status" => 200];
     }
 
@@ -167,11 +167,12 @@ class TicketService
 
         $ticket_types = TicketType::all();
 
-        $ticket_task_types = DB::table('ticket_task_types')
-            ->select('ticket_task_types.id', 'ticket_task_types.ticket_type_id as type_id', 'ticket_task_types.name', 'ticket_task_types.name')
-            ->whereNull('ticket_task_types.deleted_at')->get();
+        $ticket_detail_types = DB::table('ticket_detail_types')
+            ->select('ticket_detail_types.id', 'ticket_detail_types.ticket_type_id as type_id', 'ticket_detail_types.name', 'ticket_types.name as ticket_type_name')
+            ->join('ticket_types', 'ticket_detail_types.ticket_type_id', '=', 'ticket_types.id')
+            ->whereNull('ticket_detail_types.deleted_at')->get();
 
-        $data = ["status_ticket" => $statuses, "ticket_types" => $ticket_types, "companies" => $companies, "ticket_task_types" => $ticket_task_types, "resolved_times" => $resolved_times];
+        $data = ["status_ticket" => $statuses, "ticket_types" => $ticket_types, "companies" => $companies, "ticket_detail_types" => $ticket_detail_types, "resolved_times" => $resolved_times];
         return ["success" => true, "data" => $data, "status" => 200];
     }
 
@@ -180,8 +181,7 @@ class TicketService
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $status_tickets = Ticket::select(DB::raw('status, count(*) as status_count'))
-            ->join('tasks', 'tickets.task_id', '=', 'tasks.id');
+        $status_tickets = Ticket::select(DB::raw('status, count(*) as status_count'));
         // if(!$admin){
         //     $company_user_login_id = auth()->user()->company_id;
         //     $status_tickets = $status_tickets->whereHas('task.creator', function($query) use ($company_user_login_id){
@@ -190,7 +190,7 @@ class TicketService
         //     $statuses = ['-','Dalam Proses', 'Menunggu Staff', 'Dalam Proses', 'Dalam Proses', 'Completed', 'Selesai', 'Dibatalkan'];
         // } else 
         $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
-        $status_tickets = $status_tickets->groupBy('tasks.status')->get();
+        $status_tickets = $status_tickets->groupBy('status')->get();
         $sum_ticket = $status_tickets->sum('status_count');
         $list = [];
         for($i = 1; $i < 8; $i++){
@@ -274,16 +274,15 @@ class TicketService
 
     private function getTicketStatusCounts(Request $request, $admin)
     {
-        $status_tickets = Ticket::select(DB::raw('status, count(*) as status_count'))
-            ->join('tasks', 'tickets.task_id', '=', 'tasks.id');
+        $status_tickets = Ticket::select(DB::raw('status, count(*) as status_count'));
         if(!$admin){
             $company_user_login_id = auth()->user()->company_id;
-            $status_tickets = $status_tickets->whereHas('task.creator', function($query) use ($company_user_login_id){
+            $status_tickets = $status_tickets->whereHas('creator', function($query) use ($company_user_login_id){
                 $query->where('users.company_id', $company_user_login_id);
             });
             $statuses = ['-','Dalam Proses', 'Menunggu Staff', 'Dalam Proses', 'Dalam Proses', 'Completed', 'Selesai', 'Dibatalkan'];
         } else $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
-        $status_tickets = $status_tickets->groupBy('tasks.status')->get();
+        $status_tickets = $status_tickets->groupBy('status')->get();
         $sum_ticket = $status_tickets->sum('status_count');
         $list = [];
         for($i = 1; $i < 8; $i++){
@@ -309,7 +308,7 @@ class TicketService
                 "sum_ticket" => $sum_ticket
             ];
         } else {
-            $total_counts = Ticket::whereNotNull('closed_at')->count();
+            $total_counts = Ticket::whereNotNull('resolved_times')->count();
             $three_hours = Ticket::where('resolved_times', '<', 10801)->count();
             $three_to_twelve_hours = Ticket::where('resolved_times', '>', 10800)->where('resolved_times', '<', 43201)->count();
             $twelve_to_thirty_hours = Ticket::where('resolved_times', '>', 43200)->where('resolved_times', '<', 108001)->count();
@@ -387,20 +386,17 @@ class TicketService
             $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
             if(!$admin){
                 $company_user_login_id = auth()->user()->company_id;
-                $tickets = Ticket::select('tickets.id', 'tickets.ticketable_id', 'tickets.ticketable_type', 'tickets.task_id', 'tasks.status', 'ticket_types.id as type_id', 'ticket_types.name as type_name', 'ticket_types.code')
-                ->whereHas('task.creator', function($query) use ($company_user_login_id){
+                $tickets = Ticket::with(['creator:id,name,company_id', 'ticketable:id,location_id'])->select('tickets.id', 'tickets.ticketable_id', 'tickets.ticketable_type', 'tickets.status', 'tickets.created_by', 'tickets.deadline', 'tickets.raised_at', 'ticket_types.id as type_id', 'ticket_types.name as type_name', 'ticket_types.code')
+                ->whereHas('creator', function($query) use ($company_user_login_id){
                     $query->where('users.company_id', $company_user_login_id);
                 });
                 $statuses = ['-','Dalam Proses', 'Menunggu Staff', 'Dalam Proses', 'Dalam Proses', 'Completed', 'Selesai', 'Dibatalkan'];
             } else {
-                $tickets = Ticket::select('tickets.id', 'tickets.ticketable_id', 'tickets.ticketable_type', 'tickets.task_id', 'tasks.status', 'ticket_types.id as type_id', 'ticket_types.name as type_name', 'ticket_types.code');
+                $tickets = Ticket::with(['creator:id,name,company_id', 'ticketable:id,location_id'])->select('tickets.id', 'tickets.ticketable_id', 'tickets.ticketable_type', 'tickets.status', 'tickets.created_by', 'tickets.deadline', 'tickets.raised_at', 'ticket_types.id as type_id', 'ticket_types.name as type_name', 'ticket_types.code');
                 $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
             }
             
-            $tickets = $tickets->with(['task:id,created_at,status,created_by,location_id', 'task.creator:id,name,company_id', 'task.users:id,name', 'task.location:id,name,parent_id,top_parent_id,role'])
-                ->join('tasks', 'tickets.task_id', '=', 'tasks.id')
-                ->join('ticket_types', 'tickets.ticketable_type', '=', 'ticket_types.table_name');
-                // ->orderBy('tasks.task_type_id');
+            $tickets = $tickets->join('ticket_types', 'tickets.ticketable_type', '=', 'ticket_types.table_name');
 
             if($ticket_id){
                 $tickets = $tickets->where('ticketable_id', $ticket_id);
@@ -417,38 +413,37 @@ class TicketService
                 }
             }
             if($from && $to){
-                $tickets = $tickets->whereBetween('tasks.created_at', [$from, $to]);
+                $tickets = $tickets->whereBetween('raised_at', [$from, $to]);
             }
             if($location_id){
                 $company = Company::withTrashed()->find($location_id);
                 if(!$company) return ["success" => false, "message" => "Lokasi Tidak Ditemukan", "status" => 400];
                 $companyService = new CompanyService;
                 $company_list = $companyService->checkSubCompanyList($company)->toArray();
-                $tickets = $tickets->whereIn('location_id', $company_list);
-                // $tickets = $tickets->whereHasMorph(
-                //     'ticketable',
-                //     ['App\Incident'],
-                //     function ($query) use ($location_id){
-                //         $query->where('location_id', '=', $location_id);
-                //     }
-                // );
+                // $tickets = $tickets->whereIn('location_id', $company_list);
+                $tickets = $tickets->whereHasMorph(
+                    'ticketable',
+                    ['App\Incident'],
+                    function ($query) use ($company_list){
+                        $query->whereIn('location_id', $company_list);
+                    }
+                );
             }
             if($sort_by){
                 if($sort_by === 'id') $tickets = $tickets->orderBy('ticketable_id', $sort_type);
                 else if($sort_by === 'type') $tickets = $tickets->orderBy('ticket_types.name', $sort_type);
-                else if($sort_by === 'raised_at') $tickets = $tickets->orderBy('tasks.created_at', $sort_type);
+                else if($sort_by === 'raised_at') $tickets = $tickets->orderBy('raised_at', $sort_type);
                 else if($sort_by === 'status') $tickets = $tickets->orderBy('status', $sort_type);
             }
             $tickets = $tickets->paginate($rows);
 
             foreach($tickets as $ticket){
-                $ticket->raised_at = date('d M Y, H:i', strtotime($ticket->task->created_at));
                 $ticket->full_name = $ticket->code.'-'.$ticket->ticketable_id;
 
-                $ticket->task->creator->full_location = $ticket->task->creator->company->fullName();
-                $ticket->task->creator->makeHidden(['company']);
-                $ticket->task->location->full_location = $ticket->task->location->fullNameWParentTopParent();
-                $ticket->task->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
+                $ticket->creator->full_location = $ticket->creator->company->fullName();
+                $ticket->creator->makeHidden(['company']);
+                $ticket->ticketable->location->full_location = $ticket->ticketable->location->fullNameWParentTopParent();
+                $ticket->ticketable->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
                 $ticket->status_name = $statuses[$ticket->status];
             }
             return ["success" => true, "message" => "Tickets Berhasil Diambil", "data" => $tickets, "status" => 200];
@@ -492,17 +487,15 @@ class TicketService
            
             if(!$admin){
                 $company_user_login_id = auth()->user()->company_id;
-                $tickets = Ticket::select('tickets.id', 'tickets.ticketable_id', 'tickets.ticketable_type', 'tickets.task_id', 'tickets.resolved_times', 'tasks.status', 'ticket_types.id as type_id', 'ticket_types.name as type_name', 'ticket_types.code')
-                ->whereHas('task.creator', function($query) use ($company_user_login_id){
+                $tickets = Ticket::with(['creator:id,name,company_id', 'ticketable:id,location_id'])->select('tickets.id', 'tickets.ticketable_id', 'tickets.ticketable_type', 'tickets.resolved_times', 'tickets.status', 'tickets.created_by', 'tickets.raised_at', 'ticket_types.id as type_id', 'ticket_types.name as type_name', 'ticket_types.code')
+                ->whereHas('creator', function($query) use ($company_user_login_id){
                     $query->where('users.company_id', $company_user_login_id);
                 });
             } else {
-                $tickets = Ticket::select('tickets.id', 'tickets.ticketable_id', 'tickets.ticketable_type', 'tickets.task_id', 'tickets.resolved_times', 'tasks.status', 'ticket_types.id as type_id', 'ticket_types.name as type_name', 'ticket_types.code');
+                $tickets = Ticket::with(['creator:id,name,company_id', 'ticketable:id,location_id'])->select('tickets.id', 'tickets.ticketable_id', 'tickets.ticketable_type', 'tickets.resolved_times', 'tickets.status', 'tickets.created_by', 'tickets.raised_at', 'ticket_types.id as type_id', 'ticket_types.name as type_name', 'ticket_types.code');
             }
 
-            $tickets = $tickets->with(['task:id,created_at,status,created_by,location_id', 'task.creator:id,name', 'task.users:id,name', 'task.location:id,name,parent_id,top_parent_id,role'])
-                ->join('tasks', 'tickets.task_id', '=', 'tasks.id')
-                ->join('ticket_types', 'tickets.ticketable_type', '=', 'ticket_types.table_name')
+            $tickets = $tickets->join('ticket_types', 'tickets.ticketable_type', '=', 'ticket_types.table_name')
                 ->where('status', 6);
 
             if($ticket_id){
@@ -518,29 +511,34 @@ class TicketService
                 $tickets = $tickets->where('resolved_times', '<', $to_res);
             }
             if($from && $to){
-                $tickets = $tickets->whereBetween('tasks.created_at', [$from, $to]);
+                $tickets = $tickets->whereBetween('raised_at', [$from, $to]);
             }
             if($location_id){
                 $company = Company::withTrashed()->find($location_id);
                 if(!$company) return ["success" => false, "message" => "Lokasi Tidak Ditemukan", "status" => 400];
                 $companyService = new CompanyService;
                 $company_list = $companyService->checkSubCompanyList($company)->toArray();
-                $tickets = $tickets->whereIn('location_id', $company_list);
+                $tickets = $tickets->whereHasMorph(
+                    'ticketable',
+                    ['App\Incident'],
+                    function ($query) use ($company_list){
+                        $query->whereIn('location_id', $company_list);
+                    }
+                );
             }
             if($sort_by){
                 if($sort_by === 'id') $tickets = $tickets->orderBy('ticketable_id', $sort_type);
                 else if($sort_by === 'type') $tickets = $tickets->orderBy('ticket_types.name', $sort_type);
-                else if($sort_by === 'raised_at') $tickets = $tickets->orderBy('tasks.created_at', $sort_type);
+                else if($sort_by === 'raised_at') $tickets = $tickets->orderBy('raised_at', $sort_type);
                 else if($sort_by === 'resolved_times') $tickets = $tickets->orderBy('resolved_times', $sort_type);
             }
             $tickets = $tickets->paginate($rows);
 
             foreach($tickets as $ticket){
-                $ticket->raised_at = date('d M Y, H:i', strtotime($ticket->task->created_at));
                 $ticket->full_name = $ticket->code.'-'.$ticket->ticketable_id;
                 $ticket->resolved_times = $this->diffForHuman($ticket->resolved_times);
-                $ticket->task->location->full_location = $ticket->task->location->fullSubNameWParentTopParent();
-                $ticket->task->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
+                $ticket->ticketable->location->full_location = $ticket->ticketable->location->fullNameWParentTopParent();
+                $ticket->ticketable->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
             }
             return ["success" => true, "message" => "Tickets Berhasil Diambil", "data" => $tickets, "status" => 200];
         } catch(Exception $err){
@@ -564,59 +562,52 @@ class TicketService
         return $this->getClosedTickets($request, false);
     }
 
-
     public function getTicket(Request $request, $admin)
     {
         try{
             $id = $request->get('id');
-            $ticket = Ticket::select('tickets.id', 'tickets.ticketable_id', 'tickets.ticketable_type', 'tickets.task_id', 'tickets.closed_at', 'tickets.resolved_times', 'tasks.status')
-            ->with(['task:id,created_at,status,created_by,location_id,group_id,deadline', 'task.group', 'task.users', 'task.creator:id,name,company_id', 
-            'task.location:id,name,parent_id,top_parent_id,role', 'task.creator.company:id,name,top_parent_id', 'type', 'ticketable.location', 'ticketable.assetType', 'ticketable.inventory'])
-                ->join('tasks', 'tickets.task_id', '=', 'tasks.id')
-                ->orderBy('tasks.task_type_id')->find($id);
+            $ticket = Ticket::select('tickets.id', 'tickets.ticketable_id', 'tickets.ticketable_type', 'tickets.created_by', 'tickets.status', 'tickets.raised_at', 'tickets.closed_at', 'tickets.resolved_times', 'tickets.deadline')
+            ->with(['tasks:id,name,reference_id,group_id,deadline', 'tasks.users:id,name', 'tasks.group:id,name', 'creator:id,name,company_id', 'creator.company:id,name,top_parent_id', 'type', 'ticketable.location', 'ticketable.assetType', 'ticketable.inventory'])
+            ->find($id);
             if($ticket === null) return ["success" => false, "message" => "Ticket Tidak Ditemukan", "status" => 400];
             $company_user_login_id = auth()->user()->company_id;
-            if(!$admin && $ticket->task->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Tidak Memiliki Akses Tiket Ini", "status" => 401];
+            if(!$admin && $ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Tidak Memiliki Akses Tiket Ini", "status" => 401];
             $ticket->name = $ticket->type->code.'-'.$ticket->ticketable_id;
-            $ticket->creator_id = $ticket->task->creator->id;
-            $ticket->creator_name = $ticket->task->creator->name;
-            $ticket->creator_location = $ticket->task->creator->company->fullName();
-            $ticket->raised_at = $ticket->task->created_at;
+            $ticket->creator->location = $ticket->creator->location ?? $ticket->creator->company->fullName();
+            $ticket->creator->company->makeHidden('topParent');
             $ticket->resolved_times = $this->diffForHuman($ticket->resolved_times);
-            $ticket->task->creator->company->makeHidden('topParent');
-            $ticket->task->location->full_location = $ticket->task->location->fullSubNameWParentTopParent();
-            $ticket->task->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
-            if($ticket->task->group_id === null){
-                if(count($ticket->task->users)){
-                    $ticket->assignment_type = "Engineer";
-                    $ticket->assignment_operator_id = $ticket->task->users[0]->id;
-                    $ticket->assignment_operator_name = $ticket->task->users[0]->name;
-                    $ticket->assignment_profile_image = $ticket->task->users[0]->profile_image;
-                } else {
-                    $ticket->assignment_type = "-";
-                    $ticket->assignment_operator_id = 0;
-                    $ticket->assignment_operator_name = "-";
-                    $ticket->assignment_profile_image = "-";
-                }
-            } else {
-                if(!$ticket->task->group){
-                    $ticket->assignment_type = "-";
-                    $ticket->assignment_operator_id = -1;
-                    $ticket->assignment_operator_name = "-";
-                    $ticket->assignment_profile_image = "-";
-                } else {
-                    $ticket->assignment_type = "Group";
-                    $ticket->assignment_operator_id = $ticket->task->group->id;
-                    $ticket->assignment_operator_name = $ticket->task->group->name;
-                    $ticket->assignment_profile_image = "-";
-                }
-            }
-            
+            // $ticket->task->location->full_location = $ticket->task->location->fullSubNameWParentTopParent();
+            // $ticket->task->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
+            // if($ticket->task->group_id === null){
+            //     if(count($ticket->task->users)){
+            //         $ticket->assignment_type = "Engineer";
+            //         $ticket->assignment_operator_id = $ticket->task->users[0]->id;
+            //         $ticket->assignment_operator_name = $ticket->task->users[0]->name;
+            //         $ticket->assignment_profile_image = $ticket->task->users[0]->profile_image;
+            //     } else {
+            //         $ticket->assignment_type = "-";
+            //         $ticket->assignment_operator_id = 0;
+            //         $ticket->assignment_operator_name = "-";
+            //         $ticket->assignment_profile_image = "-";
+            //     }
+            // } else {
+            //     if(!$ticket->task->group){
+            //         $ticket->assignment_type = "-";
+            //         $ticket->assignment_operator_id = -1;
+            //         $ticket->assignment_operator_name = "-";
+            //         $ticket->assignment_profile_image = "-";
+            //     } else {
+            //         $ticket->assignment_type = "Group";
+            //         $ticket->assignment_operator_id = $ticket->task->group->id;
+            //         $ticket->assignment_operator_name = $ticket->task->group->name;
+            //         $ticket->assignment_profile_image = "-";
+            //     }
+            // }
             if($admin){
-                $ticket->deadline = $ticket->task->deadline ? date("d M Y, H:i", strtotime($ticket->task->deadline)) : "-";
+                $ticket->deadline = $ticket->deadline ? date("d M Y, H:i", strtotime($ticket->deadline)) : "-";
                 $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
             } else {
-                $ticket->deadline = $this->approximate_deadline($ticket->task->deadline);
+                $ticket->deadline = $this->approximate_deadline($ticket->deadline);
                 $statuses = ['-','Dalam Proses', 'Menunggu Staff', 'Dalam Proses', 'Dalam Proses', 'Completed', 'Selesai', 'Dibatalkan'];
             }
             $ticket->status_name = $statuses[$ticket->status];
@@ -626,7 +617,7 @@ class TicketService
             $ticket->ticketable->incident_time = date("d F Y - H:i:s" ,strtotime($ticket->ticketable->incident_time));
             $ticket->ticketable->location->full_location = $ticket->ticketable->location->fullSubNameWParentTopParent();
             $ticket->ticketable->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
-            $ticket->makeHidden('task', 'type');
+            $ticket->makeHidden('type');
             if($ticket->ticketable_type === 'App\Incident'){
                 if($ticket->ticketable->inventory !== null){
                     if($ticket->ticketable->inventory->modelInventory->id !== 0 || $ticket->ticketable->inventory->modelInventory->asset->id !== 0){
@@ -667,10 +658,10 @@ class TicketService
             $ticketable_type = '-';
             $causer_id = auth()->user()->id;
             $current_timestamp = date("Y-m-d H:i:s");
-            $ticket_task_type_id = $request->get('ticket_task_type_id');
+            // $ticket_detail_type_id = $request->get('ticket_detail_type_id');
             $location_id = $request->get('location_id');
-            $ticket_task_type = TicketTaskType::with('taskType.works','ticketType')->find($ticket_task_type_id);
-            if($ticket_task_type === null) return ["success" => false, "message" => "Id Tipe Task Ticket Tidak Ditemukan", "status" => 400];
+            // $ticket_detail_type = TicketDetailType::with('taskType.works','ticketType')->find($ticket_detail_type_id);
+            // if($ticket_detail_type === null) return ["success" => false, "message" => "Id Tipe Task Ticket Tidak Ditemukan", "status" => 400];
             if($type_id === 1){
                 $files = $request->get('files', []);
                 // $names = [];
@@ -684,11 +675,11 @@ class TicketService
                 //         array_push($names, $name);
                 //     }
                 // }
-                $new_task_reponse = $this->addTask($ticket_task_type, $location_id, $causer_id);
-                // return ["success" => true, "message" => $new_task_reponse, "status" => 200];
-                if(!$new_task_reponse['success']) return $new_task_reponse;
+                // $new_task_reponse = $this->addTask($ticket_detail_type, $location_id, $causer_id);
+                // if(!$new_task_reponse['success']) return $new_task_reponse;
                 $incident = new Incident;
-                $incident->product_type = $request->get('ticket_task_type_id');
+                // $incident->product_type = $request->get('ticket_detail_type_id');
+                $incident->product_type = $request->get('ticket_detail_type_id');
                 $incident->product_id = $request->get('product_id');
                 $incident->pic_name = $request->get('pic_name');
                 $incident->pic_contact = $request->get('pic_contact');
@@ -703,16 +694,19 @@ class TicketService
                 $ticketable_id = $incident->id;
             }
             
-            $new_task = $new_task_reponse['task'];
+            // $new_task = $new_task_reponse['task'];
             
             $ticket = new Ticket;
-            $ticket->task_id = $new_task->id;
+            // $ticket->task_id = $new_task->id;
+            $ticket->status = 2;
+            $ticket->created_by = $causer_id;
+            $ticket->raised_at = $current_timestamp;
             $ticket->ticketable_id = $ticketable_id;
             $ticket->ticketable_type = $ticketable_type;
             $ticket->save();
 
-            $new_task->reference_id = $ticket->id;
-            $new_task->save();
+            // $new_task->reference_id = $ticket->id;
+            // $new_task->save();
 
             $logService = new LogService;
             if($request->get('incident_time') === null) $time = $current_timestamp;
@@ -734,9 +728,9 @@ class TicketService
         if($access["success"] === false) return $access;
         try{
             $id = $request->get('id');
-            $ticket = Ticket::with('task')->find($id);
+            $ticket = Ticket::find($id);
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
-            if($ticket->task->status > 4) return ["success" => false, "message" => "Update Ticket Tidak Dapat Dilakukan, Status Ticket Tidak Tepat", "status" => 400];
+            if($ticket->status > 4) return ["success" => false, "message" => "Update Ticket Tidak Dapat Dilakukan, Status Ticket Tidak Tepat", "status" => 400];
             
             $logService = new LogService;
             $causer_id = auth()->user()->id;
@@ -744,11 +738,12 @@ class TicketService
             $requester_id = $request->get('requester_id');
             $raised_at = $request->get('raised_at');
             if($ticket->ticketable_type === 'App\Incident'){
-                $update_task_reponse = $this->updateTask($ticket->task, $raised_at, $location_id, $requester_id, $id);
-                if(!$update_task_reponse['success']) return $update_task_reponse;
+                // $update_task_reponse = $this->updateTask($ticket->task, $raised_at, $location_id, $requester_id, $id);
+                // if(!$update_task_reponse['success']) return $update_task_reponse;
                 $incident = Incident::find($ticket->ticketable_id);
                 if($incident === null) return ["success" => false, "message" => "Ticket Tidak Memiliki Incident", "status" => 400];
                 $old_incident_time = $incident->incident_time;
+                $incident->product_type = $request->get('ticket_detail_type_id');
                 $incident->product_id = $request->get('product_id');
                 $incident->pic_name = $request->get('pic_name');
                 $incident->pic_contact = $request->get('pic_contact');
@@ -764,14 +759,46 @@ class TicketService
             }
             $closed_at = $request->get('closed_at');
             if($ticket->closed_at !== $closed_at){
-                $ticket->resolved_times = strtotime($closed_at) - strtotime($task->created_at);
+                $ticket->resolved_times = strtotime($closed_at) - strtotime($ticket->raised_at);
             } 
+            $ticket->created_by = $requester_id;
+            $ticket->raised_at = $raised_at;
             $ticket->closed_at = $closed_at;
             $ticket->save();
 
             $logService->updateLogTicket($id, $causer_id);
 
             return ["success" => true, "message" => "Ticket Berhasil Diperbarui", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateStatusTicket(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        try{
+            $id = $request->get('id');
+            $ticket = Ticket::find($id);
+            if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
+            
+            $old_status = $ticket->status;
+            $causer_id = auth()->user()->id;
+            
+            $status = $request->get('status');
+            $notes = $request->get('notes');
+            if($status === 6) $ticket->resolved_times = strtotime(date("Y-m-d H:i:s")) - strtotime($ticket->raised_at);
+            else $ticket->resolved_times = null;
+            
+            $ticket->status = $status;
+            $ticket->save();
+
+            $logService = new LogService;
+            $logService->updateStatusLogTicket($ticket->id, $causer_id, $old_status, $status, $notes);
+
+
+            return ["success" => true, "message" => "Status Ticket Berhasil Diperbarui", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -785,14 +812,14 @@ class TicketService
         try{
             $id = $data['id'];
             $inventory_id = $data['inventory_id'];
-            $ticket = Ticket::with('task')->find($id);
+            $ticket = Ticket::find($id);
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
             if($ticket->closed_at !== null) return ["success" => false, "message" => "Status Ticket Sudah Closed", "status" => 400];
             if($ticket->ticketable_type !== 'App\Incident') return ["success" => false, "message" => "Tipe Tiket Tidak Sesuai", "status" => 400];
             $incident = Incident::find($ticket->ticketable_id);
             if($incident === null) return ["success" => false, "message" => "Incident pada Ticket Tidak Ditemukan", "status" => 400];
             if($inventory_id === null && $incident->inventory_id === null) return ["success" => false, "message" => "Id Inventory Kosong", "status" => 400];
-            if(!in_array($ticket->task->status, [1,2,3])) return ["success" => false, "message" => "Proses Item Tidak Dapat Dilakukan, Status Ticket Tidak Tepat", "status" => 400];
+            if(!in_array($ticket->status, [1,2,3])) return ["success" => false, "message" => "Proses Item Tidak Dapat Dilakukan, Status Ticket Tidak Tepat", "status" => 400];
             $old_inventory_id = $incident->inventory_id;
             if($old_inventory_id === $inventory_id) return ["success" => true, "message" => "Inventory Id Sama dengan Inventory yang Sudah Terhubung", "status" => 400];
             $incident->inventory_id = $inventory_id;
@@ -820,17 +847,17 @@ class TicketService
             $id = $request->get('id');
             $notes = $request->get('notes');
             if($notes === null) return ["success" => false, "message" => "Untuk Status Canceled Diperlukan Keterangan (Notes)", "status" => 400];
-            $ticket = Ticket::with(['task.taskDetails', 'task.users', 'task.group'])->find($id);
+            $ticket = Ticket::with('creator')->find($id);
             $company_user_login_id = auth()->user()->company_id;
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
-            if(!$admin && $ticket->task->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Tidak Memiliki Akses Tiket Ini", "status" => 401];
-            if($ticket->task->status > 5) return ["success" => false, "message" => "Ticket Tidak Dapat Dicancel, Status Tidak Tepat", "status" => 400];
-            $old_status = $ticket->task->status;
-            $ticket->task->status = 7;
-            $ticket->task->save();
-            $ticket->task->delete();
-            $ticket->task->taskDetails()->delete();
-            $ticket->task->users()->detach();
+            if(!$admin && $ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Tidak Memiliki Akses Tiket Ini", "status" => 401];
+            if($ticket->status > 5) return ["success" => false, "message" => "Ticket Tidak Dapat Dicancel, Status Tidak Tepat", "status" => 400];
+            $old_status = $ticket->status;
+            $ticket->status = 7;
+            $ticket->save();
+            // $ticket->task->delete();
+            // $ticket->task->taskDetails()->delete();
+            // $ticket->task->users()->detach();
 
             $causer_id = auth()->user()->id;
             $logService = new LogService;
@@ -856,68 +883,68 @@ class TicketService
         return $this->cancelTicket($request, false);
     }
     
-    public function assignTicket($request, $route_name)
-    {
-        $access = $this->globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+    // public function assignTicket($request, $route_name)
+    // {
+    //     $access = $this->globalService->checkRoute($route_name);
+    //     if($access["success"] === false) return $access;
         
-        try{
-            $id = $request->get('id');
-            $assignable_type = $request->get('assignable_type');
-            $assignable_id = $request->get('assignable_id');
-            $ticket = Ticket::with(['task.taskDetails','task.users', 'task.group'])->find($id);
-            if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
-            if($assignable_type === null) return ["success" => false, "message" => "Jenis yang Ditugaskan Kosong", "status" => 400];
-            if($assignable_id === null) return ["success" => false, "message" => "Tujuan Penugasan Kosong", "status" => 400];
+    //     try{
+    //         $id = $request->get('id');
+    //         $assignable_type = $request->get('assignable_type');
+    //         $assignable_id = $request->get('assignable_id');
+    //         $ticket = Ticket::with(['task.taskDetails','task.users', 'task.group'])->find($id);
+    //         if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
+    //         if($assignable_type === null) return ["success" => false, "message" => "Jenis yang Ditugaskan Kosong", "status" => 400];
+    //         if($assignable_id === null) return ["success" => false, "message" => "Tujuan Penugasan Kosong", "status" => 400];
             
             
-            if($ticket->task->group_id !== null){
-                $old_assignable_type = 'App\Group';
-                $old_assignable_id = $ticket->task->group_id;
-            } else {
-                if(count($ticket->task->users)){
-                    $old_assignable_type = 'App\User';
-                    $old_assignable_id = $ticket->task->users[0]->user_id;
-                } else {
-                    $old_assignable_type = null;
-                    $old_assignable_id = null;
-                }
-            }
+    //         if($ticket->task->group_id !== null){
+    //             $old_assignable_type = 'App\Group';
+    //             $old_assignable_id = $ticket->task->group_id;
+    //         } else {
+    //             if(count($ticket->task->users)){
+    //                 $old_assignable_type = 'App\User';
+    //                 $old_assignable_id = $ticket->task->users[0]->user_id;
+    //             } else {
+    //                 $old_assignable_type = null;
+    //                 $old_assignable_id = null;
+    //             }
+    //         }
             
-            if($assignable_type){
-                $assignable_type = 'App\User';
-                $user = User::find($assignable_id);
-                if($user === null) return ["success" => false, "message" => "Id Petugas Tidak Ditemukan", "status" => 400];
-                $ticket->task->users()->sync($assignable_id);
-                $ticket->task->group_id = null;
-                $ticket->task->save();
-                foreach($ticket->task->taskDetails as $taskDetail){
-                    $taskDetail->users()->sync($assignable_id);
-                }    
-            } else {
-                $assignable_type = 'App\Group';
-                $group = Group::with('users')->find($assignable_id);
-                if($group === null) return ["success" => false, "message" => "Id Group Tidak Ditemukan", "status" => 400];
-                $assignable_ids = $group->users->pluck('id');
-                $ticket->task->users()->sync($assignable_ids);
-                $ticket->task->group_id = $assignable_id;
-                $ticket->task->save();
-                foreach($ticket->task->taskDetails as $taskDetail){
-                    $taskDetail->users()->sync($assignable_ids);
-                }  
-            }
+    //         if($assignable_type){
+    //             $assignable_type = 'App\User';
+    //             $user = User::find($assignable_id);
+    //             if($user === null) return ["success" => false, "message" => "Id Petugas Tidak Ditemukan", "status" => 400];
+    //             $ticket->task->users()->sync($assignable_id);
+    //             $ticket->task->group_id = null;
+    //             $ticket->task->save();
+    //             foreach($ticket->task->taskDetails as $taskDetail){
+    //                 $taskDetail->users()->sync($assignable_id);
+    //             }    
+    //         } else {
+    //             $assignable_type = 'App\Group';
+    //             $group = Group::with('users')->find($assignable_id);
+    //             if($group === null) return ["success" => false, "message" => "Id Group Tidak Ditemukan", "status" => 400];
+    //             $assignable_ids = $group->users->pluck('id');
+    //             $ticket->task->users()->sync($assignable_ids);
+    //             $ticket->task->group_id = $assignable_id;
+    //             $ticket->task->save();
+    //             foreach($ticket->task->taskDetails as $taskDetail){
+    //                 $taskDetail->users()->sync($assignable_ids);
+    //             }  
+    //         }
 
-            if($old_assignable_id !== $assignable_id || $old_assignable_type !== $assignable_type){
-                $logService = new LogService;
-                $causer_id = auth()->user()->id;
-                $logService->assignLogTicket($ticket->id, $causer_id, $assignable_type, $assignable_id);
-            }
+    //         if($old_assignable_id !== $assignable_id || $old_assignable_type !== $assignable_type){
+    //             $logService = new LogService;
+    //             $causer_id = auth()->user()->id;
+    //             $logService->assignLogTicket($ticket->id, $causer_id, $assignable_type, $assignable_id);
+    //         }
             
-            return ["success" => true, "message" => "Ticket Berhasil Ditugaskan", "status" => 200];
-        } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
-    }
+    //         return ["success" => true, "message" => "Ticket Berhasil Ditugaskan", "status" => 200];
+    //     } catch(Exception $err){
+    //         return ["success" => false, "message" => $err, "status" => 400];
+    //     }
+    // }
 
     public function setDeadline($request, $route_name)
     {
@@ -926,13 +953,13 @@ class TicketService
         
         try{
             $id = $request->get('id');
-            $ticket = Ticket::with('task')->find($id);
+            $ticket = Ticket::find($id);
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
             $deadline = $request->get('deadline');
             if($deadline === null) return ["success" => false, "message" => "Deadline Masih Kosong", "status" => 400];
-            if(!in_array($ticket->task->status, [1,2,3])) return ["success" => false, "message" => "Proses Item Tidak Dapat Dilakukan, Status Ticket Tidak Tepat", "status" => 400];
-            $ticket->task->deadline = $deadline;
-            $ticket->task->save();
+            if(!in_array($ticket->status, [1,2,3])) return ["success" => false, "message" => "Proses Item Tidak Dapat Dilakukan, Status Ticket Tidak Tepat", "status" => 400];
+            $ticket->deadline = $deadline;
+            $ticket->save();
             $logService = new LogService;
             $causer_id = auth()->user()->id;
             $logService->setDeadlineLogTicket($id, $causer_id);
@@ -952,11 +979,11 @@ class TicketService
             $id = $request->get('id');
             $notes = $request->get('notes', null);
             if($notes === null) return ["success" => false, "message" => "Notes Masih Kosong", "status" => 400];
-            $ticket = Ticket::with('task.creator')->find($id);
+            $ticket = Ticket::with('creator')->find($id);
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
             if(!$admin){
                 $company_user_login_id = auth()->user()->company_id;
-                if($ticket->task->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
+                if($ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
             }
             $logService = new LogService;
             $causer_id = auth()->user()->id;
@@ -1053,8 +1080,8 @@ class TicketService
         return $this->TicketExportPdf($request, $route_name, false);
     }
 
-    // Ticket Task Types
-    public function getTicketTaskTypes($request, $route_name)
+    // Ticket Detail Types
+    public function getTicketDetailTypes($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
@@ -1068,89 +1095,85 @@ class TicketService
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
 
-            $ticket_task_types = DB::table('ticket_task_types')
-            ->select('ticket_task_types.id', 'ticket_types.name as ticket_type_name', 'task_types.name as task_type_name', 'ticket_task_types.name', 'ticket_task_types.description','ticket_task_types.task_type_id','ticket_task_types.ticket_type_id')
-            ->join('ticket_types', 'ticket_task_types.ticket_type_id', '=', 'ticket_types.id')
-            ->join('task_types', 'ticket_task_types.task_type_id', '=', 'task_types.id')
-            ->whereNull('ticket_task_types.deleted_at');
+            $ticket_detail_types = DB::table('ticket_detail_types')
+            ->select('ticket_detail_types.id', 'ticket_types.name as ticket_type_name', 'ticket_detail_types.name', 'ticket_detail_types.description','ticket_detail_types.ticket_type_id')
+            ->join('ticket_types', 'ticket_detail_types.ticket_type_id', '=', 'ticket_types.id')
+            ->whereNull('ticket_detail_types.deleted_at');
 
             if($sort_by){
-                if($sort_by === 'name') $ticket_task_types = $ticket_task_types->orderBy('name', $sort_type);
-                else if($sort_by === 'ticket_type_name') $ticket_task_types = $ticket_task_types->orderBy('ticket_type_name', $sort_type);
-                else if($sort_by === 'task_type_name') $ticket_task_types = $ticket_task_types->orderBy('task_type_name', $sort_type);
-                else if($sort_by === 'id') $ticket_task_types = $ticket_task_types->orderBy('id', $sort_type);
-                else if($sort_by === 'description') $ticket_task_types = $ticket_task_types->orderBy('description', $sort_type);
+                if($sort_by === 'name') $ticket_detail_types = $ticket_detail_types->orderBy('name', $sort_type);
+                else if($sort_by === 'ticket_type_name') $ticket_detail_types = $ticket_detail_types->orderBy('ticket_type_name', $sort_type);
+                else if($sort_by === 'id') $ticket_detail_types = $ticket_detail_types->orderBy('id', $sort_type);
+                else if($sort_by === 'description') $ticket_detail_types = $ticket_detail_types->orderBy('description', $sort_type);
             }
             
-            if($keyword) $ticket_task_types = $ticket_task_types->where('ticket_task_types.name', 'like', "%".$keyword."%")->orWhere('task_types.name', 'like', "%".$keyword."%")->orWhere('ticket_types.name', 'like', "%".$keyword."%")->orWhere('ticket_task_types.description', 'like', "%".$keyword."%");
-            $ticket_task_types = $ticket_task_types->paginate($rows);
-            if($ticket_task_types->isEmpty()) return ["success" => true, "message" => "Ticket Task Type Masih Kosong", "data" => $ticket_task_types, "status" => 200];
-            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $ticket_task_types, "status" => 200];
+            if($keyword) $ticket_detail_types = $ticket_detail_types->where('ticket_detail_types.name', 'like', "%".$keyword."%")->orWhere('task_types.name', 'like', "%".$keyword."%")->orWhere('ticket_types.name', 'like', "%".$keyword."%")->orWhere('ticket_detail_types.description', 'like', "%".$keyword."%");
+            $ticket_detail_types = $ticket_detail_types->paginate($rows);
+            if($ticket_detail_types->isEmpty()) return ["success" => true, "message" => "Ticket Detail Type Masih Kosong", "data" => $ticket_detail_types, "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $ticket_detail_types, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
 
-    public function addTicketTaskType($request, $route_name)
+    public function addTicketDetailType($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $ticket_task_type = new TicketTaskType;
-        $req_task_type_id = $request->get('task_type_id');
+        $ticket_detail_type = new TicketDetailType;
+        $req_ticket_type_id = $request->get('ticket_type_id');
         $req_name = $request->get('name');
-        $check = TicketTaskType::where('task_type_id', $req_task_type_id)->where('name', $req_name)->first();
-        if($check) return ["success" => false, "message" => "Nama Tipe Tiket Task pada Tipe Task Sudah Ada", "status" => 400];
-        $ticket_task_type->name = $req_name;
-        $ticket_task_type->task_type_id = $req_task_type_id;
-        $ticket_task_type->ticket_type_id = $request->get('ticket_type_id');
-        $ticket_task_type->description = $request->get('description');
+        $check = TicketDetailType::where('ticket_type_id', $req_ticket_type_id)->where('name', $req_name)->first();
+        if($check) return ["success" => false, "message" => "Nama Detail Tipe Ticket pada Tipe Tiket Tersebut Sudah Ada", "status" => 400];
+        $ticket_detail_type->name = $req_name;
+        $ticket_detail_type->ticket_type_id = $req_ticket_type_id;
+        $ticket_detail_type->description = $request->get('description');
         try{
-            $ticket_task_type->save();
-            return ["success" => true, "message" => "Ticket Task Type berhasil ditambahkan", "status" => 200];
+            $ticket_detail_type->save();
+            return ["success" => true, "message" => "Ticket Detail Type berhasil ditambahkan", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
 
-    public function updateTicketTaskType($request, $route_name)
+    public function updateTicketDetailType($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = $request->get('id');
-        $ticket_task_type = TicketTaskType::find($id);
-        if($ticket_task_type === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        $ticket_detail_type = TicketDetailType::find($id);
+        if($ticket_detail_type === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
         
-        $req_task_type_id = $request->get('task_type_id');
+        $req_ticket_type_id = $request->get('ticket_type_id');
         $req_name = $request->get('name');
-        $check = TicketTaskType::where('task_type_id', $req_task_type_id)->where('name', $req_name)->first();
-        if($check && $check->id !== $id) return ["success" => false, "message" => "Nama Tipe Tiket Task pada Tipe Task Sudah Ada", "status" => 400];
+        $check = TicketDetailType::where('ticket_type_id', $req_ticket_type_id)->where('name', $req_name)->first();
+        if($check && $check->id !== $id) return ["success" => false, "message" => "Nama Detail Tipe Ticket pada Tipe Tiket Tersebut Sudah Ada", "status" => 400];
         
-        $ticket_task_type->name = $req_name;
-        $ticket_task_type->task_type_id = $req_task_type_id;
-        $ticket_task_type->ticket_type_id = $request->get('ticket_type_id');
-        $ticket_task_type->description = $request->get('description');
+        $ticket_detail_type->name = $req_name;
+        $ticket_detail_type->ticket_type_id = $req_ticket_type_id;
+        $ticket_detail_type->description = $request->get('description');
         try{
-            $ticket_task_type->save();
-            return ["success" => true, "message" => "Ticket Task Type berhasil diubah", "status" => 200];
+            $ticket_detail_type->save();
+            return ["success" => true, "message" => "Ticket Detail Type berhasil diubah", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
 
-    public function deleteTicketTaskType($request, $route_name)
+    public function deleteTicketDetailType($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
         $id = $request->get('id');
-        $ticket_task_type = TicketTaskType::find($id);
-        if($ticket_task_type === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        $ticket_detail_type = TicketDetailType::find($id);
+        if($ticket_detail_type === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
         
         try{
-            $ticket_task_type->delete();
-            return ["success" => true, "message" => "Ticket Task Type berhasil dihapus", "status" => 200];
+            $ticket_detail_type->delete();
+            return ["success" => true, "message" => "Ticket Detail Type berhasil dihapus", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -1202,13 +1225,13 @@ class TicketService
         return $new_works;
     }
     
-    private function addTask($ticket_task_type, $location_id, $created_by)
+    private function addTask($ticket_detail_type, $location_id, $created_by)
     {
         try{
             $task = new Task;
-            $task->name = $ticket_task_type->ticketType->name.'-'.$ticket_task_type->name;
+            $task->name = $ticket_detail_type->ticketType->name.'-'.$ticket_detail_type->name;
             $task->description = "-";
-            $task->task_type_id = $ticket_task_type->task_type_id;
+            $task->task_type_id = $ticket_detail_type->task_type_id;
             $task->location_id = $location_id;
             $task->reference_id = null;
             $task->created_by = $created_by;
@@ -1226,8 +1249,8 @@ class TicketService
             $task->status = 2;
             
             $task->save();
-            if(count($ticket_task_type->taskType->works)){
-                $new_works = $this->clusteringNewTaskWorks($ticket_task_type->taskType->works);
+            if(count($ticket_detail_type->taskType->works)){
+                $new_works = $this->clusteringNewTaskWorks($ticket_detail_type->taskType->works);
                 $task->taskDetails()->saveMany($new_works);
             }
             return ["success" => true, "message" => "Task Berhasil Dibuat","task" => $task, "status" => 200];

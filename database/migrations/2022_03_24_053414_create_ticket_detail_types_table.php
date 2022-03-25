@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateTicketTaskTypesTable extends Migration
+class CreateTicketDetailTypesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,8 @@ class CreateTicketTaskTypesTable extends Migration
      */
     public function up()
     {
-        Schema::create('ticket_task_types', function (Blueprint $table) {
+        Schema::create('ticket_detail_types', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger("task_type_id");
             $table->unsignedBigInteger('ticket_type_id');
             $table->string('name');
             $table->string('description')->nullable();
@@ -30,6 +29,6 @@ class CreateTicketTaskTypesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('ticket_task_types');
+        Schema::dropIfExists('ticket_detail_types');
     }
 }

@@ -227,13 +227,14 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/setItemTicket', 'TicketController@setItemTicket');
     $router->put('/cancelTicket', 'TicketController@cancelTicket');
     $router->put('/cancelClientTicket', 'TicketController@cancelClientTicket');
-    $router->put('/assignTicket', 'TicketController@assignTicket');
+    // $router->put('/assignTicket', 'TicketController@assignTicket');
+    $router->put('/updateStatusTicket', 'TicketController@updateStatusTicket');
     $router->put('/setDeadline', 'TicketController@setDeadline');
 
-    $router->get('/getTicketTaskTypes', 'TicketController@getTicketTaskTypes');
-    $router->post('/addTicketTaskType', 'TicketController@addTicketTaskType');
-    $router->put('/updateTicketTaskType', 'TicketController@updateTicketTaskType');
-    $router->delete('/deleteTicketTaskType', 'TicketController@deleteTicketTaskType');
+    $router->get('/getTicketDetailTypes', 'TicketController@getTicketDetailTypes');
+    $router->post('/addTicketDetailType', 'TicketController@addTicketDetailType');
+    $router->put('/updateTicketDetailType', 'TicketController@updateTicketDetailType');
+    $router->delete('/deleteTicketDetailType', 'TicketController@deleteTicketDetailType');
     
     
     //Task Routes
