@@ -41,14 +41,14 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command(UnhideTasks::class)->cron('* * * * *');
-        $schedule->command(SetOverdueTasks::class)->cron('* * * * *');
-        $schedule->command(AutoCheckOutAttendance::class)->cron('59 23 * * *');
-        $schedule->command(GenerateDailyTask::class)->cron('0 0 * * *');	
-        $schedule->command(GenerateWeeklyTask::class)->cron('0 0 * * 1');
-        $schedule->command(GenerateTwicePerMonthTask::class)->cron('0 0 1,15 * *');	
-        $schedule->command(GenerateMonthlyTask::class)->cron('0 0 1 * *');
-        $schedule->command(GenerateThricePerYearTask::class)->cron('0 0 1 */4 *');
-        $schedule->command(GenerateFourTimesPerYearTask::class)->cron('0 0 1 */3 *');
+        $schedule->command(UnhideTasks::class)->cron('* * * * *')->runInBackground();
+        $schedule->command(SetOverdueTasks::class)->cron('* * * * *')->runInBackground();
+        $schedule->command(AutoCheckOutAttendance::class)->cron('59 23 * * *')->runInBackground();
+        $schedule->command(GenerateDailyTask::class)->cron('0 0 * * *')->runInBackground();	
+        $schedule->command(GenerateWeeklyTask::class)->cron('0 0 * * 1')->runInBackground();
+        $schedule->command(GenerateTwicePerMonthTask::class)->cron('0 0 1,15 * *')->runInBackground();	
+        $schedule->command(GenerateMonthlyTask::class)->cron('0 0 1 * *')->runInBackground();
+        $schedule->command(GenerateThricePerYearTask::class)->cron('0 0 1 */4 *')->runInBackground();
+        $schedule->command(GenerateFourTimesPerYearTask::class)->cron('0 0 1 */3 *')->runInBackground();
     }
 }
