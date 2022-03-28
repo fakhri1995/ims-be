@@ -424,15 +424,9 @@ class AttendanceService{
             if(!$user_attendance) return ["success" => false, "message" => "User Attendance Tidak Ditemukan" , "status" => 400];
             if($user_attendance->user_id !== $login_id && !$admin) return ["success" => false, "message" => "User Attendance Bukan Milik User Login" , "status" => 400];
             
-            $attendance_forms = auth()->user()->attendanceForms;
-            if(!count($attendance_forms)) return ["success" => false, "message" => "User Attendance Form Belum Diassign" , "status" => 400];
-            else {
-                $attendance_form = $attendance_forms[0];
-                $attendance_activities = AttendanceActivity::where('user_id', $login_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->where('attendance_form_id', $attendance_form->id)->get();
-            }
+            $attendance_activities = AttendanceActivity::with('attendanceForm:id,details')->where('user_id', $login_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
             $data = (object)[
                 "user_attendance" => $user_attendance,
-                "attendance_form" => $attendance_form,
                 "attendance_activities" => $attendance_activities
             ];
             return ["success" => true, "message" => "Berhasil Mengambil Data Attendance", "data" => $data, "status" => 200];
@@ -488,7 +482,7 @@ class AttendanceService{
                 $user_attendance->save();
                 return ["success" => true, "message" => "Berhasil Check In", "status" => 200];
             } else {
-                $today_attendance_activities = AttendanceActivity::whereDate('updated_at', '=', date("Y-m-d"))->get();
+                $today_attendance_activities = AttendanceActivity::where('user_id', $login_id)->whereDate('updated_at', '=', date("Y-m-d"))->get();
                 if(!count($today_attendance_activities)) return ["success" => false, "message" => "Tidak Bisa Melakukan Check Out Saat Aktivitas Belum Terisi" , "status" => 400];
                 $evidence_temp = $user_attendance->evidence;
                 $evidence_temp->check_out_evidence = $evidence;
