@@ -23,7 +23,7 @@ class Ticket extends Model
 
     public function tasks()
     {
-        return $this->hasMany(Task::class, 'reference_id', 'id')->withTrashed();
+        return $this->hasMany(Task::class, 'reference_id', 'id');
     }
 
     public function ticketable(){
