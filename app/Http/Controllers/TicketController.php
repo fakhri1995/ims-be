@@ -230,6 +230,42 @@ class TicketController extends Controller
         
     }
 
+    public function updateNoteTicket(Request $request)
+    {
+        $route_name = "TICKET_NOTE_UPDATE";
+
+        $response = $this->ticketService->updateNoteTicket($request, $route_name);
+        return response()->json($response, $response['status']);
+        
+    }
+
+    public function clientUpdateNoteTicket(Request $request)
+    {
+        $route_name = "TICKET_CLIENT_NOTE_UPDATE";
+
+        $response = $this->ticketService->clientUpdateNoteTicket($request, $route_name);
+        return response()->json($response, $response['status']);
+        
+    }
+    
+    public function deleteNoteTicket(Request $request)
+    {
+        $route_name = "TICKET_NOTE_DELETE";
+
+        $response = $this->ticketService->deleteNoteTicket($request, $route_name);
+        return response()->json($response, $response['status']);
+        
+    }
+
+    public function clientDeleteNoteTicket(Request $request)
+    {
+        $route_name = "TICKET_CLIENT_NOTE_DELETE";
+
+        $response = $this->ticketService->clientDeleteNoteTicket($request, $route_name);
+        return response()->json($response, $response['status']);
+        
+    }
+
     public function ticketsExport(Request $request)
     {
         $route_name = "TICKETS_EXPORT";

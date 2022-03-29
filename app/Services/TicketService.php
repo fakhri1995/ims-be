@@ -787,6 +787,7 @@ class TicketService
             $causer_id = auth()->user()->id;
             
             $status = $request->get('status');
+            if($status < 1 || $status > 7) return ["success" => false, "message" => "Status Tidak Tepat", "status" => 400];
             $notes = $request->get('notes');
             if($status === 6) $ticket->resolved_times = strtotime(date("Y-m-d H:i:s")) - strtotime($ticket->raised_at);
             else $ticket->resolved_times = null;
@@ -1003,6 +1004,76 @@ class TicketService
     public function clientAddNoteTicket($request, $route_name)
     {
         return $this->addNote($request, $route_name, false);
+    }
+
+    public function updateNote($request, $route_name, $admin)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $id = $request->get('id');
+            $log_id = $request->get('log_id');
+            $notes = $request->get('notes', null);
+            if($notes === null) return ["success" => false, "message" => "Notes Masih Kosong", "status" => 400];
+            $ticket = Ticket::find($id);
+            if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
+            if(!$admin){
+                $company_user_login_id = auth()->user()->company_id;
+                if($ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
+            }
+            $logService = new LogService;
+            $causer_id = auth()->user()->id;
+            $response = $logService->updateNoteLogTicket($id, $causer_id, $notes, $log_id, $admin);
+            
+            return $response;
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateNoteTicket($request, $route_name)
+    {
+        return $this->updateNote($request, $route_name, true);
+    }
+
+    public function clientUpdateNoteTicket($request, $route_name)
+    {
+        return $this->updateNote($request, $route_name, false);
+    }
+
+    public function deleteNote($request, $route_name, $admin)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $id = $request->get('id');
+            $log_id = $request->get('log_id');
+            $ticket = Ticket::find($id);
+            if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
+            if(!$admin){
+                $company_user_login_id = auth()->user()->company_id;
+                if($ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
+            }
+            $logService = new LogService;
+            $causer_id = auth()->user()->id;
+            $response = $logService->deleteNoteLogTicket($id, $causer_id, $log_id, $admin);
+            
+            return $response;
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteNoteTicket($request, $route_name)
+    {
+        return $this->deleteNote($request, $route_name, true);
+    }
+
+    public function clientDeleteNoteTicket($request, $route_name)
+    {
+        return $this->deleteNote($request, $route_name, false);
     }
     
     // type

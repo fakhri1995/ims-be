@@ -633,6 +633,38 @@ class LogService
         $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, $notes, true);
     }
 
+    public function updateNoteLogTicket($id, $causer_id, $notes, $log_id, $admin){
+        try{
+            $log = ActivityLogTicket::find($log_id);
+            if($log === null) return ["success" => false, "message" => "Log Tidak Ditemukan", "status" => 400];
+            if($log->log_name !== "Note Khusus") return ["success" => false, "message" => "Log Tidak Ditemukan", "status" => 400];
+            if($log->subject_id !== $id && !$admin) return ["success" => false, "message" => "Log Bukan Milik Tiket Terhubung", "status" => 401];
+            if($log->causer_id !== $causer_id && !$admin) return ["success" => false, "message" => "Log Tidak Dibuat Oleh User Login!", "status" => 401];
+            $log->created_at = date("Y-m-d H:i:s");
+            $log->description = $notes;
+            $log->save();
+            
+            return ["success" => true, "message" => "Catatan berhasil diperbarui", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteNoteLogTicket($id, $causer_id, $log_id, $admin){
+        try{
+            $log = ActivityLogTicket::find($log_id);
+            if($log === null) return ["success" => false, "message" => "Log Tidak Ditemukan", "status" => 400];
+            if($log->log_name !== "Note Khusus") return ["success" => false, "message" => "Log Tidak Ditemukan", "status" => 400];
+            if($log->subject_id !== $id && !$admin) return ["success" => false, "message" => "Log Bukan Milik Tiket Terhubung", "status" => 401];
+            if($log->causer_id !== $causer_id && !$admin) return ["success" => false, "message" => "Log Tidak Dibuat Oleh User Login!", "status" => 401];
+            $log->delete();
+            
+            return ["success" => true, "message" => "Catatan berhasil dihapus", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     public function setItemLogTicket($subject_id, $causer_id, $old_inventory_id, $inventory_id)
     {
         if($old_inventory_id !== null) $properties['old'] = ['inventory' => $old_inventory_id];
