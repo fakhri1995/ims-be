@@ -184,7 +184,7 @@ class TicketService
         $status_tickets = Ticket::select(DB::raw('status, count(*) as status_count'));
         // if(!$admin){
         //     $company_user_login_id = auth()->user()->company_id;
-        //     $status_tickets = $status_tickets->whereHas('task.creator', function($query) use ($company_user_login_id){
+        //     $status_tickets = $status_tickets->whereHas('creator', function($query) use ($company_user_login_id){
         //         $query->where('users.company_id', $company_user_login_id);
         //     });
         //     $statuses = ['-','Dalam Proses', 'Menunggu Staff', 'Dalam Proses', 'Dalam Proses', 'Completed', 'Selesai', 'Dibatalkan'];
@@ -787,6 +787,7 @@ class TicketService
             $causer_id = auth()->user()->id;
             
             $status = $request->get('status');
+            if($status < 1 || $status > 7) return ["success" => false, "message" => "Status Tidak Tepat", "status" => 400];
             $notes = $request->get('notes');
             if($status === 6) $ticket->resolved_times = strtotime(date("Y-m-d H:i:s")) - strtotime($ticket->raised_at);
             else $ticket->resolved_times = null;
@@ -1004,6 +1005,76 @@ class TicketService
     {
         return $this->addNote($request, $route_name, false);
     }
+
+    public function updateNote($request, $route_name, $admin)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $id = $request->get('id');
+            $log_id = $request->get('log_id');
+            $notes = $request->get('notes', null);
+            if($notes === null) return ["success" => false, "message" => "Notes Masih Kosong", "status" => 400];
+            $ticket = Ticket::find($id);
+            if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
+            if(!$admin){
+                $company_user_login_id = auth()->user()->company_id;
+                if($ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
+            }
+            $logService = new LogService;
+            $causer_id = auth()->user()->id;
+            $response = $logService->updateNoteLogTicket($id, $causer_id, $notes, $log_id, $admin);
+            
+            return $response;
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateNoteTicket($request, $route_name)
+    {
+        return $this->updateNote($request, $route_name, true);
+    }
+
+    public function clientUpdateNoteTicket($request, $route_name)
+    {
+        return $this->updateNote($request, $route_name, false);
+    }
+
+    public function deleteNote($request, $route_name, $admin)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $id = $request->get('id');
+            $log_id = $request->get('log_id');
+            $ticket = Ticket::find($id);
+            if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
+            if(!$admin){
+                $company_user_login_id = auth()->user()->company_id;
+                if($ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
+            }
+            $logService = new LogService;
+            $causer_id = auth()->user()->id;
+            $response = $logService->deleteNoteLogTicket($id, $causer_id, $log_id, $admin);
+            
+            return $response;
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteNoteTicket($request, $route_name)
+    {
+        return $this->deleteNote($request, $route_name, true);
+    }
+
+    public function clientDeleteNoteTicket($request, $route_name)
+    {
+        return $this->deleteNote($request, $route_name, false);
+    }
     
     // type
 
@@ -1051,19 +1122,19 @@ class TicketService
         if($access["success"] === false) return $access;
         
         $id = $request->get('id');
-        $ticket = Ticket::with(['task:id,created_at,status,created_by,location_id,group_id,deadline', 'task.creator:id,name,company_id', 
-            'task.location:id,name,parent_id,top_parent_id,role', 'task.creator.company:id,name,top_parent_id', 'type', 'ticketable.assetType'])->find($id);
+        $ticket = Ticket::with(['creator:id,name,company_id', 'ticketable.location:id,name,parent_id,top_parent_id,role', 
+            'creator.company:id,name,top_parent_id', 'type', 'ticketable.assetType'])->find($id);
         if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
         if(!$admin){
             $company_user_login_id = auth()->user()->company_id;
-            if($ticket->task->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
+            if($ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
         }
 
         $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
-        $ticket->status = $statuses[$ticket->task->status];
-        $ticket->creator_location = $ticket->task->creator->company->fullName();
-        $ticket->raised_at = date("Y-m-d H:i:s", strtotime($ticket->task->created_at));
-        $ticket->task->location->full_location = $ticket->task->location->fullSubNameWParentTopParent();
+        $ticket->status = $statuses[$ticket->status];
+        $ticket->creator_location = $ticket->creator->company->fullName();
+        $ticket->raised_at = date("Y-m-d H:i:s", strtotime($ticket->raised_at));
+        $ticket->ticketable->location->full_location = $ticket->ticketable->location->fullSubNameWParentTopParent();
         $ticket->ticketable->incident_time = date("Y-m-d H:i:s" ,strtotime($ticket->ticketable->incident_time));    
         $data = ['ticket' => $ticket];
         $pdf = PDF::loadView('pdf.ticket', $data);
