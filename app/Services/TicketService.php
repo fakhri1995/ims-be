@@ -184,7 +184,7 @@ class TicketService
         $status_tickets = Ticket::select(DB::raw('status, count(*) as status_count'));
         // if(!$admin){
         //     $company_user_login_id = auth()->user()->company_id;
-        //     $status_tickets = $status_tickets->whereHas('task.creator', function($query) use ($company_user_login_id){
+        //     $status_tickets = $status_tickets->whereHas('creator', function($query) use ($company_user_login_id){
         //         $query->where('users.company_id', $company_user_login_id);
         //     });
         //     $statuses = ['-','Dalam Proses', 'Menunggu Staff', 'Dalam Proses', 'Dalam Proses', 'Completed', 'Selesai', 'Dibatalkan'];
@@ -1051,19 +1051,19 @@ class TicketService
         if($access["success"] === false) return $access;
         
         $id = $request->get('id');
-        $ticket = Ticket::with(['task:id,created_at,status,created_by,location_id,group_id,deadline', 'task.creator:id,name,company_id', 
-            'task.location:id,name,parent_id,top_parent_id,role', 'task.creator.company:id,name,top_parent_id', 'type', 'ticketable.assetType'])->find($id);
+        $ticket = Ticket::with(['creator:id,name,company_id', 'ticketable.location:id,name,parent_id,top_parent_id,role', 
+            'creator.company:id,name,top_parent_id', 'type', 'ticketable.assetType'])->find($id);
         if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
         if(!$admin){
             $company_user_login_id = auth()->user()->company_id;
-            if($ticket->task->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
+            if($ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
         }
 
         $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
-        $ticket->status = $statuses[$ticket->task->status];
-        $ticket->creator_location = $ticket->task->creator->company->fullName();
-        $ticket->raised_at = date("Y-m-d H:i:s", strtotime($ticket->task->created_at));
-        $ticket->task->location->full_location = $ticket->task->location->fullSubNameWParentTopParent();
+        $ticket->status = $statuses[$ticket->status];
+        $ticket->creator_location = $ticket->creator->company->fullName();
+        $ticket->raised_at = date("Y-m-d H:i:s", strtotime($ticket->raised_at));
+        $ticket->ticketable->location->full_location = $ticket->ticketable->location->fullSubNameWParentTopParent();
         $ticket->ticketable->incident_time = date("Y-m-d H:i:s" ,strtotime($ticket->ticketable->incident_time));    
         $data = ['ticket' => $ticket];
         $pdf = PDF::loadView('pdf.ticket', $data);

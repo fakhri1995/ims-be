@@ -3,8 +3,9 @@
 namespace App\Exports;
 
 use App\Ticket;
-use Maatwebsite\Excel\Concerns\FromView;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\View\View;
+use Maatwebsite\Excel\Concerns\FromView;
 
 class TicketsExport implements FromView
 {
@@ -17,28 +18,12 @@ class TicketsExport implements FromView
         $this->secondary_attributes = $secondary_attributes;
 
         if($type == 1){
-            $this->tickets = Ticket::select('tickets.ticketable_id', 'tickets.ticketable_type', 'tickets.task_id', 'tickets.closed_at', 'tickets.resolved_times', 'tasks.status', 'tasks.group_id', 'tasks.created_at')
-            ->with(['creator:id,name,company_id', 'creator.company:id,name,top_parent_id', 'type:id,code,table_name'])
-            ->join('tasks', 'tickets.task_id', '=', 'tasks.id')
+            $this->tickets = Ticket::select('tickets.ticketable_id', 'tickets.ticketable_type', 'tickets.created_by', 'tickets.closed_at', 'tickets.resolved_times', 'tickets.status', 'tickets.raised_at')
+            ->with(['creator:id,name,company_id', 'creator.company:id,name,top_parent_id', 'creator.company.topParent:id,name', 'type:id,code,table_name', 'ticketable.assetType:id,name', 'ticketable.location:id,name,parent_id,top_parent_id,role'])
             ->where('tickets.ticketable_type', 'App\Incident');
         } else {
-            $this->tickets = Ticket::select('tickets.ticketable_id', 'tickets.ticketable_type', 'tickets.task_id', 'tickets.closed_at', 'tickets.resolved_times', 'tasks.status', 'tasks.group_id', 'tasks.created_at')
-            ->with(['creator:id,name,company_id', 'creator.company:id,name,top_parent_id', 'type:id,code,table_name', 'ticketable:id,product_type,product_id', 'ticketable.assetType:id,name', 'ticketable.location:id,name,parent_id,top_parent_id,role'])
-            ->join('tasks', 'tickets.task_id', '=', 'tasks.id');
-        }
-        if($engineer || $group){
-            if($engineer){
-                $engineer_id = (int)$engineer;
-                $this->tickets = $this->tickets->whereHas('users', function($q) use($engineer_id){
-                    $q->where('id', $engineer_id);
-                });
-            } else {
-                $group_id = (int) $group;
-                $this->tickets->where('group_id', $group_id);
-            } 
-
-            // if($engineer) $this->tickets = $this->tickets->where('assignable_id', $engineer)->where('assignable_type', 'App\User');
-            // else $this->tickets->where('assignable_id', $group)->where('assignable_type', 'App\Group');
+            $this->tickets = Ticket::select('tickets.ticketable_id', 'tickets.ticketable_type', 'tickets.created_by', 'tickets.closed_at', 'tickets.resolved_times', 'tickets.status', 'tickets.raised_at')
+            ->with(['creator:id,name,company_id', 'creator.company:id,name,top_parent_id', 'creator.company.topParent:id,name', 'type:id,code,table_name']);
         }
 
         if($is_history) $this->tickets = $this->tickets->where('status', 6);
@@ -52,31 +37,47 @@ class TicketsExport implements FromView
             $to = date("Y-m-d", $current_timestamp_times);
         }
 
-        $this->tickets = $this->tickets->whereBetween('created_at', [$from, $to])->get();
+        $this->tickets = $this->tickets->whereBetween('raised_at', [$from, $to]);
+        if($group){
+            $ticket_ids = DB::table('tasks')->select('id', 'reference_id', 'group_id')->where('tasks.group_id', $group)->pluck('reference_id')->unique()->values();
+            $this->tickets = $this->tickets->whereIn('id', $ticket_ids);
+        } else if($engineer){
+            $task_ids = DB::table('task_user')->select('task_id', 'user_id')->where('task_user.user_id', $engineer)->pluck('task_id')->unique()->values();
+            $ticket_ids = DB::table('tasks')->select('id', 'reference_id', 'group_id')->whereIn('tasks.id', $task_ids)->pluck('reference_id')->unique()->values();
+            $this->tickets = $this->tickets->whereIn('id', $ticket_ids);
+        }
+        
+        $this->tickets = $this->tickets->get();
         $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
+        
         if($type == 1){
             foreach($this->tickets as $ticket){
-                $ticket->resolved_times = $this->diffForHuman($ticket->resolved_times);
-                $ticket->status = $statuses[$ticket->status];
-                $ticket->name = $ticket->type->code .'-'. $ticket->ticketable_id;
-                if($ticket->task->group_id === null){
-                    if(count($ticket->task->users)) $ticket->assignment_operator = $ticket->task->users[0]->name;
-                    else $ticket->assignment_operator = "-";
-                } else $ticket->assignment_operator = $ticket->task->group->name;
+                $this->preProcessingTicketData($ticket, $statuses, $group, $engineer);
                 $ticket->ticketable->full_location = $ticket->ticketable->location->fullNameWParentTopParent();
             }
         } else {
             foreach($this->tickets as $ticket){
-                $ticket->resolved_times = $this->diffForHuman($ticket->resolved_times);
-                $ticket->status = $statuses[$ticket->status];
-                $ticket->name = $ticket->type->code .'-'. $ticket->ticketable_id;
-                if($ticket->task->group_id === null){
-                    if(count($ticket->task->users)) $ticket->assignment_operator = $ticket->task->users[0]->name;
-                    else $ticket->assignment_operator = "-";
-                } else $ticket->assignment_operator = $ticket->task->group->name;
+                $this->preProcessingTicketData($ticket, $statuses, $group, $engineer);
             }
         }
         
+    }
+
+    private function preProcessingTicketData($ticket, $statuses, $group, $engineer){
+        if($ticket->creator->id && $ticket->creator->company->id) $ticket->creator->company->full_name = $ticket->creator->company->fullName();
+        else $ticket->creator->company->full_name = "-";
+        $ticket->resolved_times = $this->diffForHuman($ticket->resolved_times);
+        $ticket->status = $statuses[$ticket->status];
+        $ticket->name = $ticket->type->code .'-'. $ticket->ticketable_id;
+        if($group){
+            $ticket->assignment_operator = DB::table('groups')->select('id', 'name')->find($group)->name ?? "-";
+            if($this->core_attributes[0] || $this->core_attributes[8]) $this->core_attributes[8] = "Nama Group";
+        } else if($engineer){
+            $ticket->assignment_operator = DB::table('users')->select('id', 'name')->find($engineer)->name ?? "-";
+            if($this->core_attributes[0] || $this->core_attributes[8]) $this->core_attributes[8] = "Nama User";
+        } else {
+            $this->core_attributes[8] = 0;
+        }
     }
 
     private function diffForHuman($times){

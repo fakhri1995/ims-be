@@ -53,9 +53,13 @@
             background-color: white;
             box-shadow: 0.2rem 0.2rem 5px #bbbbbb;
             border-radius: 0.5rem;
-            padding-top: 1rem;
-            padding-left: 3rem;
-            padding-right: 3rem;
+            padding: 10px 3rem;
+        }
+
+        .image {
+            width: 50px;
+            margin: auto;
+            display: block;
         }
     </style>
 </head>
@@ -64,8 +68,8 @@
     <div>
         <div class="boxRow">
             <div class="box" style="justify-content: space-between; align-items: center;">
-                <img src="{{ public_path('img/logoTicket.png') }}" height="50px" alt="">
-                <h1 style="margin-top: 5px; float:right;">Detail Tiket</h1>
+                <img src="{{ public_path('img/logoTicket.png') }}" alt="" class="image">
+                <h1 style="margin-top: 15px; float:right;">Detail Tiket</h1>
             </div>
         </div>
         <div class="boxRow">
@@ -73,11 +77,11 @@
                 <div class="box" style="margin-bottom: 1rem;">
                     <div class="diajukanOleh" style=" margin-bottom: 1rem;">
                         <h2>Diajukan Oleh</h2>
-                        <p>{{ $ticket->task->creator->name }}</p>
+                        <p>{{ $ticket->creator->name ?? '-' }}</p>
                     </div>
                     <div class="lokasi" style=" margin-bottom: 1rem;">
                         <h2>Lokasi</h2>
-                        <p style="text-transform: capitalize;">{{ $ticket->task->creator->company->name ?? '-'}}</p>
+                        <p style="text-transform: capitalize;">{{ $ticket->creator->company->name ?? '-' }}</p>
                     </div>
                     <div class="waktuKejadian" style=" margin-bottom: 1rem;">
                         <h2>Waktu Pengajuan</h2>
@@ -87,17 +91,17 @@
             </div>
             <div class="boxColumn" style="margin-right: 1rem;">
                 <div class="box" style=" width:350px; ">
-                    <div style=" margin-bottom: 1rem; float:right; padding-right:2rem;">
+                    <div style="margin-bottom: 1rem; float:right; padding-right:2rem;">
                         <h2 style="font-size: 18px;">Tipe Tiket</h2>
-                        <h1>{{ $ticket->type->name }}</h1>
+                        <h1>{{ $ticket->type->name ?? '-' }}</h1>
                     </div>
-                    <div style=" margin-bottom: 3rem;">
+                    <div style="margin-bottom: 3rem;">
                         <h2 style="font-size: 18px;">Nomor Tiket</h2>
                         <h1>{{ '#'. $ticket->type->code .'-'. $ticket->ticketable_id }}</h1>
                     </div>
                     <div>
                         <h2 style="font-size: 18px;">Status</h2>
-                        @if($ticket->task->status === 1) <h1 style="color: red; margin-bottom: 3rem;">
+                        @if($ticket->status === 1) <h1 style="color: red; margin-bottom: 3rem;">
                         @else <h1 style="margin-bottom: 3rem;">
                         @endif
                         {{ $ticket->status }}</h1>
@@ -109,11 +113,11 @@
                 <div class="box" style="">
                     <div class="tipeAset" style=" margin-bottom: 1rem;">
                         <h2>Tipe Aset</h2>
-                        <p>{{ $ticket->ticketable->assetType->name }}</p>
+                        <p>{{ $ticket->ticketable->assetType->name ?? '-' }}</p>
                     </div>
                     <div class="lokasi" style=" margin-bottom: 1rem;">
                         <h2>Lokasi</h2>
-                        <p>{{ $ticket->task->location->full_location }}</p>
+                        <p>{{ $ticket->ticketable->location->full_location }}</p>
                     </div>
                     <div class="waktuKejadian" style=" margin-bottom: 1rem;">
                         <h2>Waktu Kejadian</h2>
