@@ -9,7 +9,7 @@ use App\AccessFeature;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
-class DefaultSeeder extends Seeder
+class DefaultStagingSeeder extends Seeder
 {
     /**
      * Run the database seeds.
