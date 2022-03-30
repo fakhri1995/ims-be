@@ -53,6 +53,122 @@ class AccessFeatureSeeder extends Seeder
     {
         $data = [
             [
+                "name" => "SIDEBAR_DASHBOARD",
+                "description" => "Fitur untuk menampilkan sidebar dashboard"
+            ],
+            [
+                "name" => "SIDEBAR_ATTENDANCE",
+                "description" => "Fitur untuk menampilkan sidebar attendance"
+            ],
+            [
+                "name" => "SIDEBAR_ATTENDANCE_ADMIN",
+                "description" => "Fitur untuk menampilkan sidebar admin attendance"
+            ],
+            [
+                "name" => "SIDEBAR_ATTENDANCE_FORM_ACTIVITY",
+                "description" => "Fitur untuk menampilkan sidebar form aktivitas"
+            ],
+            [
+                "name" => "SIDEBAR_ATTENDANCE_MY",
+                "description" => "Fitur untuk menampilkan sidebar my attendance"
+            ],
+            [
+                "name" => "SIDEBAR_ITEMS",
+                "description" => "Fitur untuk menampilkan sidebar items"
+            ],
+            [
+                "name" => "SIDEBAR_COMPANY",
+                "description" => "Fitur untuk menampilkan sidebar perusahaan"
+            ],
+            [
+                "name" => "SIDEBAR_COMPANY_CLIENT",
+                "description" => "Fitur untuk menampilkan sidebar client"
+            ],
+            [
+                "name" => "SIDEBAR_COMPANY_PROFILE",
+                "description" => "Fitur untuk menampilkan sidebar profil perusahaan"
+            ],
+            [
+                "name" => "SIDEBAR_TASK",
+                "description" => "Fitur untuk menampilkan sidebar task"
+            ],
+            [
+                "name" => "SIDEBAR_TASK_ADMIN",
+                "description" => "Fitur untuk menampilkan sidebar task amdin"
+            ],
+            [
+                "name" => "SIDEBAR_TASK_MY",
+                "description" => "Fitur untuk menampilkan sidebar my task"
+            ],
+            [
+                "name" => "SIDEBAR_TICKET",
+                "description" => "Fitur untuk menampilkan sidebar ticket"
+            ],
+            [
+                "name" => "SIDEBAR_ASSET",
+                "description" => "Fitur untuk menampilkan sidebar asset"
+            ],
+            [
+                "name" => "SIDEBAR_ASSET_TYPE",
+                "description" => "Fitur untuk menampilkan sidebar tipe asset"
+            ],
+            [
+                "name" => "SIDEBAR_ASSET_MANUFACTURER",
+                "description" => "Fitur untuk menampilkan sidebar manufacturer"
+            ],
+            [
+                "name" => "SIDEBAR_ASSET_MODEL",
+                "description" => "Fitur untuk menampilkan sidebar model"
+            ],
+            [
+                "name" => "SIDEBAR_ASSET_RELATIONSHIP_TYPE",
+                "description" => "Fitur untuk menampilkan sidebar relationship type"
+            ],
+            [
+                "name" => "SIDEBAR_ASSET_VENDOR",
+                "description" => "Fitur untuk menampilkan sidebar vendor"
+            ],
+            [
+                "name" => "SIDEBAR_FEATURE",
+                "description" => "Fitur untuk menampilkan sidebar feature"
+            ],
+            [
+                "name" => "SIDEBAR_FEATURE_MODULE",
+                "description" => "Fitur untuk menampilkan sidebar module"
+            ],
+            [
+                "name" => "SIDEBAR_FEATURE_ROLE",
+                "description" => "Fitur untuk menampilkan sidebar role"
+            ],
+            [
+                "name" => "SIDEBAR_USER",
+                "description" => "Fitur untuk menampilkan sidebar user"
+            ],
+            [
+                "name" => "SIDEBAR_USER_AGENT",
+                "description" => "Fitur untuk menampilkan sidebar agent"
+            ],
+            [
+                "name" => "SIDEBAR_USER_REQUESTER",
+                "description" => "Fitur untuk menampilkan sidebar requester"
+            ],
+            [
+                "name" => "SIDEBAR_USER_GROUP",
+                "description" => "Fitur untuk menampilkan sidebar group"
+            ],
+            [
+                "name" => "SIDEBAR_CMS",
+                "description" => "Fitur untuk menampilkan sidebar cms"
+            ],
+            [
+                "name" => "SIDEBAR_CMS_CAREER",
+                "description" => "Fitur untuk menampilkan sidebar career"
+            ],
+            [
+                "name" => "SIDEBAR_CMS_MESSAGE",
+                "description" => "Fitur untuk menampilkan sidebar message"
+            ],
+            [
                 "name" => "USERS_GET",
                 "description" => "Fitur untuk mengambil detail data seluruh user"
             ],
@@ -505,6 +621,14 @@ class AccessFeatureSeeder extends Seeder
                 "description" => "Fitur untuk TICKET_CLIENT_NOTE_ADD"
             ],
             [
+                "name" => "TICKET_CLIENT_NOTE_UPDATE",
+                "description" => "Fitur untuk TICKET_CLIENT_NOTE_UPDATE"
+            ],
+            [
+                "name" => "TICKET_CLIENT_NOTE_DELETE",
+                "description" => "Fitur untuk TICKET_CLIENT_NOTE_UPDATE"
+            ],
+            [
                 "name" => "TICKET_CLIENT_EXPORT",
                 "description" => "Fitur untuk TICKET_CLIENT_EXPORT"
             ],
@@ -537,6 +661,14 @@ class AccessFeatureSeeder extends Seeder
                 "description" => "Fitur untuk TICKET_UPDATE"
             ],
             [
+                "name" => "TICKET_NOTE_UPDATE",
+                "description" => "Fitur untuk TICKET_NOTE_UPDATE"
+            ],
+            [
+                "name" => "TICKET_NOTE_DELETE",
+                "description" => "Fitur untuk TICKET_NOTE_DELETE"
+            ],
+            [
                 "name" => "TICKET_STATUS_UPDATE",
                 "description" => "Fitur untuk menghapus TICKET_STATUS_UPDATE"
             ],
@@ -544,10 +676,10 @@ class AccessFeatureSeeder extends Seeder
                 "name" => "TICKET_DEADLINE_SET",
                 "description" => "Fitur untuk TICKET_DEADLINE_SET"
             ],
-            // [
-            //     "name" => "TICKET_ASSIGN",
-            //     "description" => "Fitur untuk TICKET_ASSIGN"
-            // ],
+            [
+                "name" => "TICKET_ASSIGN",
+                "description" => "Fitur untuk TICKET_ASSIGN"
+            ],
             [
                 "name" => "TICKET_ITEM_SET",
                 "description" => "Fitur untuk TICKET_ITEM_SET"
@@ -723,6 +855,82 @@ class AccessFeatureSeeder extends Seeder
             [
                 "name" => "TASK_CANCEL_SEND_OUT_INVENTORY",
                 "description" => "Fitur untuk memasukkan kembali barang yang akan dikeluarkan dari tempat task"
+            ],
+            [
+                "name" => "ATTENDANCE_FORMS_GET",
+                "description" => "Fitur untuk mengambil seluruh form attendance"
+            ],
+            [
+                "name" => "ATTENDANCE_FORM_GET",
+                "description" => "Fitur untuk mengambil detail form attendance"
+            ],
+            [
+                "name" => "ATTENDANCE_FORM_ADD",
+                "description" => "Fitur untuk menambah form attendance"
+            ],
+            [
+                "name" => "ATTENDANCE_FORM_USERS_ADD",
+                "description" => "Fitur untuk menugaskan user ke suatu form attendance"
+            ],
+            [
+                "name" => "ATTENDANCE_FORM_UPDATE",
+                "description" => "Fitur untuk memperbarui form attendance"
+            ],
+            [
+                "name" => "ATTENDANCE_FORM_DELETE",
+                "description" => "Fitur untuk menghapus form attendance"
+            ],
+            [
+                "name" => "ATTENDANCE_FORM_USERS_REMOVE",
+                "description" => "Fitur untuk mengeluarkan user dari suatu form attendance"
+            ],
+            [
+                "name" => "ATTENDANCE_ACTIVITIES_GET",
+                "description" => "Fitur untuk mengambil seluruh aktivitas attendance user login"
+            ],
+            // [
+            //     "name" => "ATTENDANCE_ACTIVITY_GET",
+            //     "description" => "Fitur untuk mengambil detail form attendance"
+            // ],
+            [
+                "name" => "ATTENDANCE_ACTIVITY_ADD",
+                "description" => "Fitur untuk menambah aktivitas attendance"
+            ],
+            [
+                "name" => "ATTENDANCE_ACTIVITY_UPDATE",
+                "description" => "Fitur untuk memperbarui aktivitas attendance"
+            ],
+            [
+                "name" => "ATTENDANCE_ACTIVITY_DELETE",
+                "description" => "Fitur untuk menghapus aktivitas attendance"
+            ],
+            [
+                "name" => "ATTENDANCES_USERS_GET",
+                "description" => "Fitur untuk mengambil seluruh form attendance"
+            ],
+            [
+                "name" => "ATTENDANCES_USER_GET",
+                "description" => "Fitur untuk mengambil detail form attendance"
+            ],
+            [
+                "name" => "ATTENDANCE_USER_ADMIN_GET",
+                "description" => "Fitur untuk menambah form attendance"
+            ],
+            [
+                "name" => "ATTENDANCE_USER_GET",
+                "description" => "Fitur untuk menugaskan user ke suatu form attendance"
+            ],
+            [
+                "name" => "ATTENDANCE_TOGGLE_SET",
+                "description" => "Fitur untuk memperbarui form attendance"
+            ],
+            [
+                "name" => "ATTENDANCE_ACTIVITY_USER_EXPORT",
+                "description" => "Fitur untuk menghapus form attendance"
+            ],
+            [
+                "name" => "ATTENDANCE_ACTIVITY_USERS_EXPORT",
+                "description" => "Fitur untuk mengeluarkan user dari suatu form attendance"
             ],
             [
                 "name" => "PURCHASE_ORDERS_GET",
@@ -918,6 +1126,99 @@ class AccessFeatureSeeder extends Seeder
     public function defaultDataModules()
     {
         $data = [
+            [
+                "name" => "Side Bar",
+                "description" => "Modul yang berisi list side bar",
+                "features" => [
+                    [
+                        "name" => "SIDEBAR_DASHBOARD",
+                    ],
+                    [
+                        "name" => "SIDEBAR_ATTENDANCE",
+                    ],
+                    [
+                        "name" => "SIDEBAR_ATTENDANCE_ADMIN",
+                    ],
+                    [
+                        "name" => "SIDEBAR_ATTENDANCE_FORM_ACTIVITY",
+                    ],
+                    [
+                        "name" => "SIDEBAR_ATTENDANCE_MY",
+                    ],
+                    [
+                        "name" => "SIDEBAR_ITEMS",
+                    ],
+                    [
+                        "name" => "SIDEBAR_COMPANY",
+                    ],
+                    [
+                        "name" => "SIDEBAR_COMPANY_CLIENT",
+                    ],
+                    [
+                        "name" => "SIDEBAR_COMPANY_PROFILE",
+                    ],
+                    [
+                        "name" => "SIDEBAR_TASK",
+                    ],
+                    [
+                        "name" => "SIDEBAR_TASK_ADMIN",
+                    ],
+                    [
+                        "name" => "SIDEBAR_TASK_MY",
+                    ],
+                    [
+                        "name" => "SIDEBAR_TICKET",
+                    ],
+                    [
+                        "name" => "SIDEBAR_ASSET",
+                    ],
+                    [
+                        "name" => "SIDEBAR_ASSET_TYPE",
+                    ],
+                    [
+                        "name" => "SIDEBAR_ASSET_MANUFACTURER",
+                    ],
+                    [
+                        "name" => "SIDEBAR_ASSET_MODEL",
+                    ],
+                    [
+                        "name" => "SIDEBAR_ASSET_RELATIONSHIP_TYPE",
+                    ],
+                    [
+                        "name" => "SIDEBAR_ASSET_VENDOR",
+                    ],
+                    [
+                        "name" => "SIDEBAR_FEATURE",
+                    ],
+                    [
+                        "name" => "SIDEBAR_FEATURE_MODULE",
+                    ],
+                    [
+                        "name" => "SIDEBAR_FEATURE_ROLE",
+                    ],
+                    [
+                        "name" => "SIDEBAR_USER",
+                    ],
+                    [
+                        "name" => "SIDEBAR_USER_AGENT",
+                    ],
+                    [
+                        "name" => "SIDEBAR_USER_REQUESTER",
+                    ],
+                    [
+                        "name" => "SIDEBAR_USER_GROUP",
+                    ],
+                    [
+                        "name" => "SIDEBAR_CMS",
+                    ],
+                    [
+                        "name" => "SIDEBAR_CMS_CAREER",
+                    ],
+                    [
+                        "name" => "SIDEBAR_CMS_MESSAGE",
+                    ],
+                ]
+            ],
             [
                 "name" => "Agent",
                 "description" => "Modul yang berisi fitur-fitur agent",
@@ -1403,14 +1704,20 @@ class AccessFeatureSeeder extends Seeder
                         "name" => "TICKET_UPDATE"
                     ],
                     [
+                        "name" => "TICKET_NOTE_UPDATE"
+                    ],
+                    [
+                        "name" => "TICKET_NOTE_DELETE"
+                    ],
+                    [
                         "name" => "TICKET_STATUS_UPDATE"
                     ],
                     [
                         "name" => "TICKET_DEADLINE_SET"
                     ],
-                    // [
-                    //     "name" => "TICKET_ASSIGN"
-                    // ],
+                    [
+                        "name" => "TICKET_ASSIGN"
+                    ],
                     [
                         "name" => "TICKET_ITEM_SET"
                     ],
@@ -1446,6 +1753,12 @@ class AccessFeatureSeeder extends Seeder
                     ],
                     [
                         "name" => "TICKET_CLIENT_NOTE_ADD"
+                    ],
+                    [
+                        "name" => "TICKET_CLIENT_NOTE_UPDATE"
+                    ],
+                    [
+                        "name" => "TICKET_CLIENT_NOTE_DELETE"
                     ],
                     [
                         "name" => "TICKET_CLIENT_EXPORT"
@@ -1558,8 +1871,8 @@ class AccessFeatureSeeder extends Seeder
                 ]
             ],
             [
-                "name" => "Beranda Admin",
-                "description" => "Modul yang berisi fitur-fitur untuk beranda admin",
+                "name" => "Task Beranda Admin",
+                "description" => "Modul yang berisi fitur-fitur untuk beranda task admin",
                 "features" => [
                     [
                         "name" => "TASK_STAFF_STATUSES_GET"
@@ -1579,8 +1892,8 @@ class AccessFeatureSeeder extends Seeder
                 ]
             ],
             [
-                "name" => "Beranda Pengguna",
-                "description" => "Modul yang berisi fitur-fitur untuk beranda pengguna",
+                "name" => "Task Beranda Pengguna",
+                "description" => "Modul yang berisi fitur-fitur untuk beranda task pengguna",
                 "features" => [
                     [
                         "name" => "TASK_USER_STATUSES_GET"
@@ -1597,8 +1910,8 @@ class AccessFeatureSeeder extends Seeder
                 ]
             ],
             [
-                "name" => "Spare Part",
-                "description" => "Modul yang berisi fitur-fitur untuk spare part",
+                "name" => "Task Spare Part",
+                "description" => "Modul yang berisi fitur-fitur untuk task spare part",
                 "features" => [
                     [
                         "name" => "TASK_SPARE_PART_LIST_GET"
@@ -1611,6 +1924,81 @@ class AccessFeatureSeeder extends Seeder
                     ],
                     [
                         "name" => "TASK_CANCEL_SEND_OUT_INVENTORY"
+                    ]
+                ]
+            ],
+            [
+                "name" => "Attendance Form",
+                "description" => "Modul yang berisi fitur-fitur untuk task spare part",
+                "features" => [
+                    [
+                        "name" => "ATTENDANCE_FORMS_GET"
+                    ],
+                    [
+                        "name" => "ATTENDANCE_FORM_GET",
+                    ],
+                    [
+                        "name" => "ATTENDANCE_FORM_ADD",
+                    ],
+                    [
+                        "name" => "ATTENDANCE_FORM_USERS_ADD",
+                    ],
+                    [
+                        "name" => "ATTENDANCE_FORM_UPDATE",
+                    ],
+                    [
+                        "name" => "ATTENDANCE_FORM_DELETE",
+                    ],
+                    [
+                        "name" => "ATTENDANCE_FORM_USERS_REMOVE",
+                    ],
+                ]
+            ],
+            [
+                "name" => "Attendance Activity",
+                "description" => "Modul yang berisi fitur-fitur untuk attendance activity",
+                "features" => [
+                    [
+                        "name" => "ATTENDANCE_ACTIVITIES_GET",
+                    ],
+                    // [
+                    //     "name" => "ATTENDANCE_ACTIVITY_GET",
+                    // ]
+                    [
+                        "name" => "ATTENDANCE_ACTIVITY_ADD",
+                    ],
+                    [
+                        "name" => "ATTENDANCE_ACTIVITY_UPDATE",
+                    ],
+                    [
+                        "name" => "ATTENDANCE_ACTIVITY_DELETE",
+                    ],
+                ]
+            ],
+            [
+                "name" => "Attendance User",
+                "description" => "Modul yang berisi fitur-fitur untuk attendance user",
+                "features" => [ 
+                    [
+                        "name" => "ATTENDANCES_USERS_GET",
+                    ],
+                    [
+                        "name" => "ATTENDANCES_USER_GET",
+                    ],
+                    [
+                        "name" => "ATTENDANCE_USER_ADMIN_GET",
+                    ],
+                    [
+                        "name" => "ATTENDANCE_USER_GET",
+                    ],
+                    [
+                        "name" => "ATTENDANCE_TOGGLE_SET",
+                    ],
+                    [
+                        "name" => "ATTENDANCE_ACTIVITY_USER_EXPORT",
+                    ],
+                    [
+                        "name" => "ATTENDANCE_ACTIVITY_USERS_EXPORT",
                     ]
                 ]
             ],
