@@ -988,9 +988,9 @@ class TicketService
             }
             $logService = new LogService;
             $causer_id = auth()->user()->id;
-            $logService->addNoteLogTicket($id, $causer_id, $notes);
+            $log = $logService->addNoteLogTicket($id, $causer_id, $notes);
             
-            return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "status" => 200];
+            return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "id" => $log->id, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
