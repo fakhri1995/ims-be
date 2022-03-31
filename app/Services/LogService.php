@@ -550,6 +550,8 @@ class LogService
         $log->description = $description;
         $log->is_for_client = $is_for_client;
         $log->save();
+
+        return $log;
     }
 
     public function updateIncidentLogTicket($subject_id, $incident_time)
@@ -630,7 +632,8 @@ class LogService
     {
         $log_name = "Note Khusus";
         $created_at = date("Y-m-d H:i:s");
-        $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, $notes, true);
+        $log = $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, $notes, true);
+        return $log;
     }
 
     public function updateNoteLogTicket($id, $causer_id, $notes, $log_id, $admin){
