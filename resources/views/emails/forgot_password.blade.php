@@ -6,7 +6,7 @@ Hi {{$data['username']}} <br>
 Anda menerima pemberitahuan email ini karena Anda telah lupa password Akun Migsys. Silahkan melakukan reset password! <br>
 Abaikan email ini jika anda merasa tidak menggunakan fitur reset password. <br> <br>  
 
-<a href="{{ 'https://migsys.herokuapp.com/resetPassword?token='.$data['token'] }}" target="_blank" style="background-color: #35763B; /* Green */
+<a href="{{ env('APP_URL').'/resetPassword?token='.$data['token'] }}" target="_blank" style="background-color: #35763B; /* Green */
   border: none;
   border-radius: 10px;
   color: white;
