@@ -18,7 +18,7 @@ class CreateUsersTable extends Migration
             $table->string("email")->unique();
             $table->string("password");
             $table->string("name");
-            $table->string("nip");
+            $table->string("nip")->nullable();
             $table->string("profile_image")->nullable();
             $table->string("phone_number");
             $table->unsignedBigInteger("company_id");

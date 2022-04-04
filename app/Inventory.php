@@ -107,7 +107,7 @@ class Inventory extends Model
 
     public function associations()
     {
-        return $this->hasMany(Incident::class, 'inventory_id')->with(['ticket.task:id,status'])->select('id','inventory_id');
+        return $this->hasMany(Incident::class, 'inventory_id')->with('ticket')->select('id','inventory_id');
     }
 
     public function quantities()

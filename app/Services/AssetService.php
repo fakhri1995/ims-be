@@ -928,9 +928,9 @@ class AssetService{
             if(count($inventory->associations)){
                 $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
                 foreach($inventory->associations as $association){
-                    if(isset($association->ticket->task->status)){
-                        $association->status_name = $statuses[$association->ticket->task->status];
-                        $association->status = $association->ticket->task->status;
+                    if(isset($association->ticket->status)){
+                        $association->status_name = $statuses[$association->ticket->status];
+                        $association->status = $association->ticket->status;
                         $association->ticket_id = $association->ticket->id;
                     } 
                     else {
