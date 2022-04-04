@@ -34,7 +34,7 @@ class Incident extends Model
 
     public function ticket()
     {
-        return $this->morphOne(Ticket::class, 'ticketable')->select('id', 'ticketable_id', 'ticketable_type', 'task_id')->with('type');
+        return $this->morphOne(Ticket::class, 'ticketable')->select('id', 'ticketable_id', 'ticketable_type', 'status')->with('type');
     }
 
     public function inventory()
