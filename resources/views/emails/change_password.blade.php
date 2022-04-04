@@ -6,7 +6,7 @@ Hi {{$data['username']}} <br>
 Anda menerima pemberitahuan email ini karena Anda baru terdaftar di Migsys. Silahkan melakukan aktivasi akun! <br>
 Abaikan email ini jika anda merasa tidak terdaftar di Migsys. <br> <br>  
 
-<a href="{{ 'https://migsys.herokuapp.com/changePassword?token='.$data['token'] }}" target="_blank" style="background-color: #35763B; /* Green */
+<a href="{{ env('APP_URL').'/changePassword?token='.$data['token'] }}" target="_blank" style="background-color: #35763B; /* Green */
   border: none;
   border-radius: 10px;
   color: white;
