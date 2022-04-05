@@ -170,7 +170,7 @@ class UserService
             $user->phone_number = $request->get('phone_number');
             $user->profile_image = $request->get('profile_image');
             $user->position = $request->get('position');
-            $user->is_enabled = false;
+            $user->is_enabled = true;
             $user->created_time = date("Y-m-d H:i:s");
             $user->save();
             $data_request = [
