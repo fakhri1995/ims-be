@@ -56,9 +56,13 @@ class LoginService
 
     public function logout(){
         try {
-            auth()->user()->tokens()->each(function ($token) {
-                $token->delete();
-            });
+            // Logout all token (all devices)
+            // auth()->user()->tokens()->each(function ($token) {
+            //     $token->delete();
+            // });
+
+            // Logout only one token 
+            auth()->user()->token()->delete();
 
             return [
                 "success" => true,
