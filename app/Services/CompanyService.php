@@ -110,7 +110,7 @@ class CompanyService
         
         $id = $request->get('company_id');
         if($id === null) $id = auth()->user()->company_id;
-        if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
+        if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 403];
         $company =  $this->getCompanyTreeSelect($id, 'subChild');
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $company, "status" => 200];
     }
@@ -121,7 +121,7 @@ class CompanyService
         
         $id = $request->get('company_id');
         if($id === null) $id = auth()->user()->company_id;
-        if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
+        if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 403];
         $company =  $this->getLocationTrees($id, 'noSubChild', true);
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $company, "status" => 200];
         
@@ -182,7 +182,7 @@ class CompanyService
             if($access["success"] === false) return $access;
 
             $id = $request->get('id', null);
-            if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
+            if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 403];
             $company = Company::with(['noSubChild.noSubChild.noSubChild', 'banks'])->find($id);
             if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
             $list_company = $this->checkCompanyList($company);
@@ -222,7 +222,7 @@ class CompanyService
             $access = $this->globalService->checkRoute($route_name);
             if($access["success"] === false) return $access;
             $id = $request->get('id', null);
-            if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
+            if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 403];
             $company = Company::with(['parent:id,name,parent_id,role', 'subChildren', 'subChild.subChild', 'noSubChild.noSubChild.noSubChild'])->find($id);
             if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
             $company->makeVisible('top_parent_id');
@@ -263,7 +263,7 @@ class CompanyService
             $access = $this->globalService->checkRoute($route_name);
             if($access["success"] === false) return $access;
             $id = $request->get('id', null);
-            if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
+            if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 403];
             $company = Company::with('parent')->select('id', 'name', 'phone_number', 'image_logo', 'parent_id')->find($id);
             if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
             $company_list = $this->checkSubCompanyList($company);
@@ -365,7 +365,7 @@ class CompanyService
         if($access["success"] === false) return $access;
 
         $id = $request->get('id');
-        if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
+        if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 403];
         $company = Company::find($id);
         if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
         try{
@@ -398,7 +398,7 @@ class CompanyService
         if($access["success"] === false) return $access;
 
         $id = $request->get('company_id', null);
-        if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
+        if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 403];
         $company = Company::find($id);
         if($company === null || $company->role === 4) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
         try{
@@ -428,9 +428,9 @@ class CompanyService
 
             $id = $request->get('id', null);
             $company_id = auth()->user()->company_id;
-            if($id == $company_id) return ["success" => false, "message" => "Tidak Dapat Menghapus Perusahaan User", "status" => 401];
+            if($id == $company_id) return ["success" => false, "message" => "Tidak Dapat Menghapus Perusahaan User", "status" => 403];
             if($id == 1) return ["success" => false, "message" => "Tidak Dapat Menghapus Perusahaan Mitramas Infosys Global", "status" => 400];
-            if(!$this->checkPermission($id, $company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
+            if(!$this->checkPermission($id, $company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 403];
             $company = Company::withCount('noSubChild', 'subChild')->find($id);
             if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
             $new_parent = $request->get('new_parent', null);

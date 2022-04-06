@@ -22,7 +22,7 @@ class GlobalService
             $feature_in_roles = $access_feature->roles->pluck('id')->toArray();
             $result = array_intersect($user_roles, $feature_in_roles);
             if(count($result)) return ["success" => true];
-            else return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Fitur Ini", "status" => 401];
+            else return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Fitur Ini", "status" => 403];
         }
         return $response;
     }    

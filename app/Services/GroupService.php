@@ -85,7 +85,7 @@ class GroupService{
         try{
             $group = Group::with('users')->find($id);
             if($group === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
-            if($group->is_agent != $is_agent) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
+            if($group->is_agent != $is_agent) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 403];
             $group_user = $group->users->pluck('id');
             $group->makeHidden('users');
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => ["group_detail" => $group, "group_user" => $group_user], "status" => 200];
@@ -149,7 +149,7 @@ class GroupService{
         $id = $data['id'];
         $group = Group::find($id);
         if($group === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
-        if($group->is_agent != $is_agent) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
+        if($group->is_agent != $is_agent) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 403];
         $group->name = $data['name'];
         $group->description = $data['description'];
         $group->group_head = $data['group_head'];
@@ -182,10 +182,10 @@ class GroupService{
 
     public function deleteGroup($id, $is_agent)
     {
-        if($id == 1) return ["success" => false, "message" => "Tidak Dapat Menghapus Group Engineer", "status" => 401];
+        if($id == 1) return ["success" => false, "message" => "Tidak Dapat Menghapus Group Engineer", "status" => 403];
         $group = Group::find($id);
         if($group === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
-        if($group->is_agent != $is_agent) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 401];
+        if($group->is_agent != $is_agent) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 403];
         try{
             $group->users()->detach();
             $group->delete();

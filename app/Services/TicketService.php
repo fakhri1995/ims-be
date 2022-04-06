@@ -571,7 +571,7 @@ class TicketService
             ->find($id);
             if($ticket === null) return ["success" => false, "message" => "Ticket Tidak Ditemukan", "status" => 400];
             $company_user_login_id = auth()->user()->company_id;
-            if(!$admin && $ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Tidak Memiliki Akses Tiket Ini", "status" => 401];
+            if(!$admin && $ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Tidak Memiliki Akses Tiket Ini", "status" => 403];
             $ticket->name = $ticket->type->code.'-'.$ticket->ticketable_id;
             $ticket->creator->location = $ticket->creator->location ?? $ticket->creator->company->fullName();
             $ticket->creator->company->makeHidden('topParent');
@@ -851,7 +851,7 @@ class TicketService
             $ticket = Ticket::with('creator')->find($id);
             $company_user_login_id = auth()->user()->company_id;
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
-            if(!$admin && $ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Tidak Memiliki Akses Tiket Ini", "status" => 401];
+            if(!$admin && $ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Tidak Memiliki Akses Tiket Ini", "status" => 403];
             if($ticket->status > 5) return ["success" => false, "message" => "Ticket Tidak Dapat Dicancel, Status Tidak Tepat", "status" => 400];
             $old_status = $ticket->status;
             $ticket->status = 7;
@@ -984,7 +984,7 @@ class TicketService
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
             if(!$admin){
                 $company_user_login_id = auth()->user()->company_id;
-                if($ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
+                if($ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 403];
             }
             $logService = new LogService;
             $causer_id = auth()->user()->id;
@@ -1020,7 +1020,7 @@ class TicketService
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
             if(!$admin){
                 $company_user_login_id = auth()->user()->company_id;
-                if($ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
+                if($ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 403];
             }
             $logService = new LogService;
             $causer_id = auth()->user()->id;
@@ -1054,7 +1054,7 @@ class TicketService
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
             if(!$admin){
                 $company_user_login_id = auth()->user()->company_id;
-                if($ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
+                if($ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 403];
             }
             $logService = new LogService;
             $causer_id = auth()->user()->id;
@@ -1127,7 +1127,7 @@ class TicketService
         if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
         if(!$admin){
             $company_user_login_id = auth()->user()->company_id;
-            if($ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 401];
+            if($ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 403];
         }
 
         $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
