@@ -293,7 +293,7 @@ class AccessService
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
-        if($id == 1) return ["success" => false, "message" => "Tidak Dapat Menghapus Role Super Admin", "status" => 401];
+        if($id == 1) return ["success" => false, "message" => "Tidak Dapat Menghapus Role Super Admin", "status" => 403];
         $role = Role::with('features')->find($id);
         if($role === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         try{

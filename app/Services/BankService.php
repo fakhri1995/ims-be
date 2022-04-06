@@ -60,7 +60,7 @@ class BankService{
         $id = $request->get('id');
         $bank = Bank::find($id);
         if($bank === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-        if($bank->company_id !== $session_company_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini", "status" => 401];
+        if($bank->company_id !== $session_company_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini", "status" => 403];
         
         $bank->name = $request->get('name');
         $bank->account_number = $request->get('account_number');
@@ -86,7 +86,7 @@ class BankService{
         $session_company_id = auth()->user()->company_id;
         $bank = Bank::find($id);
         if($bank === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-        if($bank->company_id !== $session_company_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini", "status" => 401];
+        if($bank->company_id !== $session_company_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini", "status" => 403];
         
         try{
             $bank->delete();
@@ -104,7 +104,7 @@ class BankService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         try{
-            if($id === 1) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini", "status" => 401];
+            if($id === 1) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini", "status" => 403];
             $banks = Bank::where('company_id', $id)->get();
             if($banks->isEmpty()) return ["success" => true, "message" => "Bank Account Belum Terdaftar", "data" => $banks, "status" => 200];
             return ["success" => true, "message" => "Data Berhasil Diambil", "status" => 200, "data" => $banks];
@@ -119,7 +119,7 @@ class BankService{
         if($access["success"] === false) return $access;
 
         $company_id = $request->get('company_id');
-        if($company_id === 1) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini", "status" => 401];
+        if($company_id === 1) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini", "status" => 403];
         
         $bank = new Bank;
         $bank->company_id = $company_id;
@@ -147,7 +147,7 @@ class BankService{
         $id = $request->get('id');
         $bank = Bank::find($id);
         if($bank === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-        if($bank->company_id === 1) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini", "status" => 401];
+        if($bank->company_id === 1) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini", "status" => 403];
         
         $bank->name = $request->get('name');
         $bank->account_number = $request->get('account_number');
@@ -172,7 +172,7 @@ class BankService{
 
         $bank = Bank::find($id);
         if($bank === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-        if($bank->company_id === 1) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini", "status" => 401];
+        if($bank->company_id === 1) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Bank Ini", "status" => 403];
         try{
             $bank->delete();
             $logService = new LogService;

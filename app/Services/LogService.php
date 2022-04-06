@@ -291,7 +291,7 @@ class LogService
         $ticket = Ticket::with('task.creator')->find($id);
         if($ticket === null) return ["success" => false, "message" => "Ticket Tidak Ditemukan", "status" => 400];
         $user_company_id = auth()->user()->company_id;
-        if($ticket->task->creator->company_id !== $user_company_id) return ["success" => false, "message" => "Tidak Memiliki Access untuk Ticket Ini", "status" => 401];
+        if($ticket->task->creator->company_id !== $user_company_id) return ["success" => false, "message" => "Tidak Memiliki Access untuk Ticket Ini", "status" => 403];
         $special_logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', 'Note Khusus')->orderBy('created_at','desc')->get();
         $logs = ActivityLogTicket::where('subject_id', $id)->where('is_for_client', true)->where('log_name', '<>', 'Note Khusus')->orderBy('created_at','desc')->get();
         $statuses = ['-','Dalam Proses', 'Menunggu Staff', 'Dalam Proses', 'Dalam Proses', 'Completed', 'Selesai', 'Dibatalkan'];
@@ -641,8 +641,8 @@ class LogService
             $log = ActivityLogTicket::find($log_id);
             if($log === null) return ["success" => false, "message" => "Log Tidak Ditemukan", "status" => 400];
             if($log->log_name !== "Note Khusus") return ["success" => false, "message" => "Log Tidak Ditemukan", "status" => 400];
-            if($log->subject_id !== $id && !$admin) return ["success" => false, "message" => "Log Bukan Milik Tiket Terhubung", "status" => 401];
-            if($log->causer_id !== $causer_id && !$admin) return ["success" => false, "message" => "Log Tidak Dibuat Oleh User Login!", "status" => 401];
+            if($log->subject_id !== $id && !$admin) return ["success" => false, "message" => "Log Bukan Milik Tiket Terhubung", "status" => 403];
+            if($log->causer_id !== $causer_id && !$admin) return ["success" => false, "message" => "Log Tidak Dibuat Oleh User Login!", "status" => 403];
             $log->created_at = date("Y-m-d H:i:s");
             $log->description = $notes;
             $log->save();
@@ -658,8 +658,8 @@ class LogService
             $log = ActivityLogTicket::find($log_id);
             if($log === null) return ["success" => false, "message" => "Log Tidak Ditemukan", "status" => 400];
             if($log->log_name !== "Note Khusus") return ["success" => false, "message" => "Log Tidak Ditemukan", "status" => 400];
-            if($log->subject_id !== $id && !$admin) return ["success" => false, "message" => "Log Bukan Milik Tiket Terhubung", "status" => 401];
-            if($log->causer_id !== $causer_id && !$admin) return ["success" => false, "message" => "Log Tidak Dibuat Oleh User Login!", "status" => 401];
+            if($log->subject_id !== $id && !$admin) return ["success" => false, "message" => "Log Bukan Milik Tiket Terhubung", "status" => 403];
+            if($log->causer_id !== $causer_id && !$admin) return ["success" => false, "message" => "Log Tidak Dibuat Oleh User Login!", "status" => 403];
             $log->delete();
             
             return ["success" => true, "message" => "Catatan berhasil dihapus", "status" => 200];

@@ -56,7 +56,7 @@ class UserService
         try{
             $user = User::with(['roles:id,name', 'company', 'attendanceForms:id,name'])->find($account_id);
             if($user === null) return ["success" => false, "message" => "Id Akun Tidak Ditemukan", "status" => 400];
-            if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 401];
+            if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 403];
             else {
                 $user->company->makeHidden('phone_number','address','role','is_enabled','parent_id','singkatan','tanggal_pkp','penanggung_jawab','npwp','fax','email','website','deleted_at');
                 $user->makeHidden('deleted_at');
@@ -217,7 +217,7 @@ class UserService
         $id = $request->get('id');
         $user = User::find($id);
         if($user === null) return ["success" => false, "message" => "Id Pengguna Tidak Ditemukan", "status" => 400];
-        if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 401];
+        if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 403];
         try{
             $user->name = $request->get('fullname');
             $user->nip = $request->get('nip');
@@ -256,7 +256,7 @@ class UserService
     public function changeUserPassword($data, $role_id){
         $user = User::find($data['id']);
         if($user === null) return ["success" => false, "message" => "Id Pengguna Tidak Ditemukan", "status" => 400];
-        if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 401];
+        if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 403];
         try{
             $user->password = Hash::make($data['password']);
             $user->save();
@@ -284,7 +284,7 @@ class UserService
     public function userActivation($data, $role_id){
         $user = User::find($data['id']);
         if($user === null) return ["success" => false, "message" => "Id Pengguna Tidak Ditemukan", "status" => 400];
-        if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 401];
+        if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 403];
         try{
             $user->is_enabled = $data['is_enabled'];
             $user->save();
@@ -314,7 +314,7 @@ class UserService
         $role_ids = $data['role_ids'];
         $user = User::find($data['id']);
         if($user === null) return ["success" => false, "message" => "Id Pengguna Tidak Ditemukan", "status" => 400];
-        if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 401];
+        if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 403];
         try{
             $user->roles()->sync($role_ids);
             return ["success" => true, "message" => "Berhasil Merubah Fitur Akun", "status" => 200];
@@ -339,11 +339,11 @@ class UserService
 
     public function deleteUser($id, $role_id){
         try{
-            if($id == auth()->user()->id) return ["success" => false, "message" => "Tidak Dapat Menghapus Akun Anda", "status" => 401];
-            if($id == 1) return ["success" => false, "message" => "Tidak Dapat Menghapus Akun Admin", "status" => 401];
+            if($id == auth()->user()->id) return ["success" => false, "message" => "Tidak Dapat Menghapus Akun Anda", "status" => 403];
+            if($id == 1) return ["success" => false, "message" => "Tidak Dapat Menghapus Akun Admin", "status" => 403];
             $user = User::find($id);
             if($user === null) return ["success" => false, "message" => "Id Pengguna Tidak Ditemukan", "status" => 400];
-            if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 401];
+            if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 403];
             $user->delete();
             $user->roles()->detach();
             return ["success" => true, "message" => "User Berhasil Dihapus", "status" => 200];
