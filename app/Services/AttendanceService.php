@@ -1,8 +1,10 @@
 <?php 
 
 namespace App\Services;
+use Excel;
 use App\User;
 use Exception;
+use App\LongLatList;
 use GuzzleHttp\Client;
 use App\AttendanceForm;
 use App\AttendanceUser;
@@ -10,10 +12,9 @@ use App\AttendanceProject;
 use App\AttendanceActivity;
 use Illuminate\Support\Str;
 use App\AttendanceProjectType;
-use App\Exports\AttendanceActivitiesExport;
 use App\AttendanceProjectStatus;
 use App\AttendanceProjectCategory;
-use Excel;
+use App\Exports\AttendanceActivitiesExport;
 
 class AttendanceService{
     public function __construct()
@@ -353,9 +354,18 @@ class AttendanceService{
         if($access["success"] === false) return $access;
 
         try{
-            $users_attendances = AttendanceUser::whereHas('user', function($q){
+            $users_attendances = AttendanceUser::select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'evidence', 'is_wfo', 'checked_out_by_system')
+            ->join('long_lat_lists AS check_in_list', function ($join) {
+                $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
+            })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
+                $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
+            })->whereHas('user', function($q){
                 $q->where('role', 1);
             })->with('user:id,name,profile_image')->whereDate('check_in', '=', date("Y-m-d"))->get();
+            foreach($users_attendances as $user_attendance){
+                $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
+                $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
+            }
             $attendance_user_ids = $users_attendances->pluck('user_id')->unique()->values();
             $absent_users = User::select('id','name', 'position', 'profile_image')->with('attendanceForms:id,name')->where('role', 1)->whereNotIn('id', $attendance_user_ids)->whereNull('deleted_at')->where('is_enabled', true)->get();
             $data = (object)[
@@ -377,7 +387,15 @@ class AttendanceService{
 
         try{
             $login_id = auth()->user()->id;
-            $user_attendances = AttendanceUser::where('user_id', $login_id)->whereDate('check_in', '>', date("Y-m-d", strtotime("-1 months")))->orderBy('check_in', 'asc')->get();
+            
+            // $user_attendances = AttendanceUser::where('user_id', $login_id)->whereDate('check_in', '>', date("Y-m-d", strtotime("-1 months")))->orderBy('check_in', 'asc')->get();
+            $user_attendances = AttendanceUser::select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'evidence', 'is_wfo', 'checked_out_by_system')
+            ->join('long_lat_lists AS check_in_list', function ($join) {
+                $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
+            })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
+                $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
+            })->where('user_id', $login_id)
+            ->whereDate('check_in', '>', date("Y-m-d", strtotime("-1 months")))->orderBy('check_in', 'asc')->get();
             
             $check_day = "00";
             $is_late = false;
@@ -397,6 +415,8 @@ class AttendanceService{
                         $on_time++;
                     } 
                 }
+                $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
+                $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
                 $user_attendance->is_late = $is_late;
                 $i++;
             }
@@ -420,10 +440,17 @@ class AttendanceService{
         try{
             $login_id = auth()->user()->id;
             $id = $request->get('id');
-            $user_attendance = AttendanceUser::find($id);
+            $user_attendance = AttendanceUser::select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'evidence', 'is_wfo', 'checked_out_by_system')
+            ->join('long_lat_lists AS check_in_list', function ($join) {
+                $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
+            })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
+                $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
+            })->find($id);
             if(!$user_attendance) return ["success" => false, "message" => "User Attendance Tidak Ditemukan" , "status" => 400];
             if($user_attendance->user_id !== $login_id && !$admin) return ["success" => false, "message" => "User Attendance Bukan Milik User Login" , "status" => 400];
             
+            $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
+            $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
             $attendance_activities = AttendanceActivity::with('attendanceForm:id,details')->where('user_id', $login_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
             $data = (object)[
                 "user_attendance" => $user_attendance,
@@ -452,19 +479,17 @@ class AttendanceService{
             $login_id = auth()->user()->id;
             $lat = $request->get('lat');
             $long = $request->get('long');
-            $geo_loc = $request->get('geo_loc');
             $evidence = $request->get('evidence');
             if(!$evidence) return ["success" => false, "message" => "Evidence belum diisi", "status" => 400];
+            if(!$lat) return ["success" => false, "message" => "Lat belum diisi", "status" => 400];
+            if(!$long) return ["success" => false, "message" => "Long belum diisi", "status" => 400];
             $user_attendance = AttendanceUser::where('user_id', $login_id)->orderBy('check_in', 'desc')->first();
+            $lat = number_format($lat, 4);
+            $long = number_format($long, 4);
             
-            if(!$geo_loc) {
-                $client = new Client();
-                $nominatim_response = $client->request('GET', "https://nominatim.openstreetmap.org/reverse.php?lat=$lat&lon=$long&zoom=18&format=jsonv2");
-                $response = json_decode((string) $nominatim_response->getBody());
-                if(isset($response->error)) $geo_loc = null;
-                else $geo_loc = $response->display_name;
-            }
-            
+            $long_lat = LongLatList::where('longitude', $long)->where('latitude', $lat)->first();
+            if(!$long_lat) $long_lat = LongLatList::create(['longitude' => $long, 'latitude' => $lat, 'attempts' => 0]);
+
             if(!$user_attendance || $user_attendance->check_out) {
                 $evidence = (object) [
                     "check_in_evidence" => $evidence,
@@ -474,7 +499,6 @@ class AttendanceService{
                 $user_attendance->user_id = $login_id;
                 $user_attendance->long_check_in = $long;
                 $user_attendance->lat_check_in = $lat;
-                $user_attendance->geo_loc_check_in = $geo_loc;
                 $user_attendance->check_in = date('Y-m-d H:i:s');
                 $user_attendance->is_wfo = $request->get('wfo', false);
                 $user_attendance->evidence = $evidence;
@@ -489,7 +513,6 @@ class AttendanceService{
                 $user_attendance->check_out = date('Y-m-d H:i:s');
                 $user_attendance->long_check_out = $long;
                 $user_attendance->lat_check_out = $lat;
-                $user_attendance->geo_loc_check_out = $geo_loc;
                 $user_attendance->evidence = $evidence_temp;
                 $user_attendance->save();
                 return ["success" => true, "message" => "Berhasil Check Out", "status" => 200];
