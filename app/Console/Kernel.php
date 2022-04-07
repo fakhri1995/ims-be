@@ -4,6 +4,7 @@ namespace App\Console;
 
 use App\Console\Commands\UnhideTasks;
 use App\Console\Commands\SetOverdueTasks;
+use App\Console\Commands\SearchGeoLocation;
 use App\Console\Commands\AutoCheckOutAttendance;
 use App\Console\Commands\GenerateDailyTask;
 use App\Console\Commands\GenerateWeeklyTask;
@@ -25,6 +26,7 @@ class Kernel extends ConsoleKernel
         UnhideTasks::class,
         SetOverdueTasks::class,
         AutoCheckOutAttendance::class,
+        SearchGeoLocation::class,
         GenerateDailyTask::class,
         GenerateWeeklyTask::class,
         GenerateTwicePerMonthTask::class,
@@ -43,6 +45,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command(UnhideTasks::class)->cron('* * * * *')->runInBackground();
         $schedule->command(SetOverdueTasks::class)->cron('* * * * *')->runInBackground();
+        $schedule->command(SearchGeoLocation::class)->cron('* * * * *')->runInBackground();
         $schedule->command(AutoCheckOutAttendance::class)->cron('59 23 * * *')->runInBackground();
         $schedule->command(GenerateDailyTask::class)->cron('0 0 * * *')->runInBackground();	
         $schedule->command(GenerateWeeklyTask::class)->cron('0 0 * * 1')->runInBackground();
