@@ -254,7 +254,26 @@ class TicketService
 
         if(count($attendance_forms)) foreach($attendance_forms as $form) $form->details = json_decode($form->details);
         if($last_check_in) $last_check_in->evidence = json_decode($last_check_in->evidence);
-        
+        else {
+            $last_check_in = (object)[
+                "id" => 0,
+                "user_id" => 0,
+                "check_in" => "0000-00-00 00:00:00",
+                "check_out" => "0000-00-00 00:00:00",
+                "long_check_in" => "0.0000",
+                "lat_check_in" => "0.0000",
+                "long_check_out" => null,
+                "lat_check_out" => null,
+                "geo_loc_check_in" => null,
+                "geo_loc_check_out" => null,
+                "evidence" => (object)[
+                    "check_in_evidence" => null,
+                    "check_out_evidence" => null
+                ],
+                "is_wfo" => null,
+                "checked_out_by_system" => 0
+            ];
+        }
         $data = (object)[
             "ticket" => $ticket_statuses,
             "task" => $task_statuses,
