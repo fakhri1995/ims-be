@@ -1,8 +1,5 @@
 <?php
 
-use App\Mail\ChangePasswordMail;
-use App\Mail\ForgetPasswordMail;
-
 /*
 |--------------------------------------------------------------------------
 | Application Routes
@@ -13,16 +10,6 @@ use App\Mail\ForgetPasswordMail;
 | and give it the Closure to call when that URI is requested.
 |
 */
-
-$router->get('/thankemail', function () use ($router){
-    $data = [
-        'url' => env('APP_URL_WEB'),
-        'username' => "ABC",
-        'token' => "I(JHQWDIOQWDQWDkojihioqiwfqwfoqinwofnqiwfnqwi",
-        'subject' => 'Reset Password MIG Token'
-    ];
-    return new ForgetPasswordMail($data); 
-});
 
 // ------------ Company Profile ------------ //
 
@@ -66,7 +53,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getAgentDetail', 'UserController@getAgentDetail');
     $router->get('/getAgentList', 'UserController@getAgentList');
     $router->post('/addAgentMember', 'UserController@addAgentMember');
-    $router->post('/updateAgentDetail', 'UserController@updateAgentDetail');
+    $router->put('/updateAgentDetail', 'UserController@updateAgentDetail');
     $router->put('/changeAgentPassword', 'UserController@changeAgentPassword');
     $router->put('/agentActivation', 'UserController@agentActivation');
     $router->delete('/deleteAgent', 'UserController@deleteAgent');
@@ -75,7 +62,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getRequesterDetail', 'UserController@getRequesterDetail');
     $router->get('/getRequesterList', 'UserController@getRequesterList');
     $router->post('/addRequesterMember', 'UserController@addRequesterMember');
-    $router->post('/updateRequesterDetail', 'UserController@updateRequesterDetail');
+    $router->put('/updateRequesterDetail', 'UserController@updateRequesterDetail');
     $router->put('/changeRequesterPassword', 'UserController@changeRequesterPassword');
     $router->put('/requesterActivation', 'UserController@requesterActivation');
     $router->delete('/deleteRequester', 'UserController@deleteRequester');
@@ -107,7 +94,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getCompanyDetail', 'CompanyController@getCompanyDetail');
     $router->get('/getSubCompanyDetail', 'CompanyController@getSubCompanyDetail');
     $router->get('/getSubCompanyProfile', 'CompanyController@getSubCompanyProfile');
-    $router->post('/updateCompany', 'CompanyController@updateCompany');
+    $router->put('/updateCompany', 'CompanyController@updateCompany');
     $router->put('/companyActivation', 'CompanyController@companyActivation');
     $router->delete('/deleteCompany', 'CompanyController@deleteCompany');
 
@@ -247,7 +234,6 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/setDeadline', 'TicketController@setDeadline');
     $router->delete('/deleteNoteTicket', 'TicketController@deleteNoteTicket');
     $router->delete('/clientDeleteNoteTicket', 'TicketController@clientDeleteNoteTicket');   
-    $router->delete('/deleteFileTicket', 'TicketController@deleteFileTicket');   
      
     $router->get('/getTicketDetailTypes', 'TicketController@getTicketDetailTypes');
     $router->post('/addTicketDetailType', 'TicketController@addTicketDetailType');
@@ -273,7 +259,7 @@ $router->group(['middleware' => 'auth'], function($router){
     // $router->post('/sendInInventoryTask', 'TaskController@sendInInventoryTask'); 
     // $router->post('/sendOutInventoryTask', 'TaskController@sendOutInventoryTask'); 
     $router->put('/updateTask', 'TaskController@updateTask');
-    $router->post('/saveFilesTask', 'TaskController@saveFilesTask');
+    $router->put('/saveFilesTask', 'TaskController@saveFilesTask');
     $router->put('/changeStatusToggle', 'TaskController@changeStatusToggle');
     $router->put('/changeAttendanceToggle', 'TaskController@changeAttendanceToggle');
     $router->put('/approveTask', 'TaskController@approveTask');
@@ -281,7 +267,6 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/declineTask', 'TaskController@declineTask');
     $router->put('/assignSelfTask', 'TaskController@assignSelfTask');
     $router->delete('/deleteTask', 'TaskController@deleteTask');
-    $router->delete('/deleteFileTask', 'TaskController@deleteFileTask');
     $router->delete('/cancelSendOutInventoryTask', 'TaskController@cancelSendOutInventoryTask');
     $router->delete('/cancelSendInInventoryTask', 'TaskController@cancelSendInInventoryTask');
 
