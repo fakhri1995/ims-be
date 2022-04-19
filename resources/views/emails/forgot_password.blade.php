@@ -6,7 +6,7 @@ Hi {{$data['username']}} <br>
 Anda menerima pemberitahuan email ini karena Anda telah lupa password Akun Migsys. Silahkan melakukan reset password! <br>
 Abaikan email ini jika anda merasa tidak menggunakan fitur reset password. <br> <br>  
 
-<a href="{{ env('APP_URL_WEB').'/resetPassword?token='.$data['token'] }}" target="_blank" style="background-color: #35763B; /* Green */
+<a href="{{ $data['url'].'/resetPassword?token='.$data['token'] }}" target="_blank" style="background-color: #35763B; /* Green */
   border: none;
   border-radius: 10px;
   color: white;
