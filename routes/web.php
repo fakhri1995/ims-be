@@ -94,6 +94,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getCompanyDetail', 'CompanyController@getCompanyDetail');
     $router->get('/getSubCompanyDetail', 'CompanyController@getSubCompanyDetail');
     $router->get('/getSubCompanyProfile', 'CompanyController@getSubCompanyProfile');
+    $router->put('/updateMainCompany', 'CompanyController@updateMainCompany');
     $router->put('/updateCompany', 'CompanyController@updateCompany');
     $router->put('/companyActivation', 'CompanyController@companyActivation');
     $router->delete('/deleteCompany', 'CompanyController@deleteCompany');
