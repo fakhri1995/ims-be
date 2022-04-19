@@ -329,6 +329,10 @@ class AccessFeatureSeeder extends Seeder
                 "description" => "Fitur untuk merubah aktivasi status perusahaan"
             ],
             [
+                "name" => "COMPANY_MAIN_UPDATE",
+                "description" => "Fitur untuk memperbarui data perusahaan user login"
+            ],
+            [
                 "name" => "COMPANY_UPDATE",
                 "description" => "Fitur untuk memperbarui data perusahaan"
             ],
@@ -1356,6 +1360,9 @@ class AccessFeatureSeeder extends Seeder
                         "name" => "COMPANY_STATUS"
                     ],
                     [
+                        "name" => "COMPANY_MAIN_UPDATE"
+                    ],
+                    [
                         "name" => "COMPANY_UPDATE"
                     ],
                     [
@@ -1432,6 +1439,9 @@ class AccessFeatureSeeder extends Seeder
                     ],
                     [
                         "name" => "COMPANY_STATUS"
+                    ],
+                    [
+                        "name" => "COMPANY_MAIN_UPDATE"
                     ],
                     [
                         "name" => "COMPANY_UPDATE"

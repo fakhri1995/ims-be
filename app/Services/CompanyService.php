@@ -5,6 +5,7 @@ use Exception;
 use App\Company;
 use App\Inventory;
 use App\Services\LogService;
+// use App\Services\FileService;
 use App\RelationshipInventory;
 use Illuminate\Support\Facades\DB;
 use App\Services\GlobalService;
@@ -184,6 +185,7 @@ class CompanyService
             $id = $request->get('id', null);
             if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 403];
             $company = Company::with(['noSubChild.noSubChild.noSubChild', 'banks'])->find($id);
+            // $company = Company::with(['companyLogo', 'noSubChild.noSubChild.noSubChild', 'banks'])->find($id);
             if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
             $list_company = $this->checkCompanyList($company);
 
@@ -347,6 +349,69 @@ class CompanyService
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
+    
+    // public function addCompany($request, $role_id, $route_name){
+    //     $access = $this->globalService->checkRoute($route_name);
+    //     if($access["success"] === false) return $access;
+
+    //     if($role_id === 4) $parent_id = $request->get('parent_id', null);
+    //     else $parent_id = $request->get('parent_id', auth()->user()->company->parent_id);
+        
+    //     if($parent_id === null) return ["success" => false, "message" => "Parent Id Tidak Boleh Null", "status" => 400];
+    //     try{
+    //         $parent_company = Company::find($parent_id);
+    //         if($parent_company === null) return ["success" => false, "message" => "Parent Company Tidak Ditemukan", "status" => 400];
+            
+    //         $company = new Company;
+    //         if($role_id === 4){
+    //             if($parent_company->role !== 4) $top_parent_id = $parent_id;
+    //             else $top_parent_id = $parent_company->top_parent_id;
+    //             $address_same = $request->get('address_same', false);
+    //             if($address_same) $company->address = $parent_company->address;
+    //             else $company->address = $request->get('address',null);
+    //         } else{
+    //             $top_parent_id = $parent_company->getTopParent()->id ?? null;  
+    //             $company->address = $request->get('address',null);
+    //         } 
+
+    //         $company->name = $request->get('name',null);
+    //         $company->parent_id = $request->get('parent_id',null);
+    //         $company->top_parent_id = $top_parent_id;
+    //         $company->phone_number = $request->get('phone_number',null);
+    //         // $company->image_logo = $request->get('image_logo',null);
+    //         $company->role = $role_id;
+    //         $company->created_time = date("Y-m-d H:i:s");
+    //         $company->is_enabled = false;
+            
+    //         $company->singkatan = '-';
+    //         $company->tanggal_pkp = $request->get('tanggal_pkp', null);
+    //         $company->penanggung_jawab = $request->get('penanggung_jawab', '-');
+    //         $company->npwp = $request->get('npwp', '-');
+    //         $company->fax = $request->get('fax', '-');
+    //         $company->email = $request->get('email', '-');
+    //         $company->website = $request->get('website', '-');
+    //         $company->save();
+
+    //         if($request->hasFile('image_logo')) {
+    //             $fileService = new FileService;
+    //             $file = $request->file('image_logo');
+    //             $table = 'App\Company';
+    //             $description = 'company_logo';
+    //             $folder_detail = 'Company';
+    //             $add_file_response = $fileService->addFile($company->id, $file, $table, $description, $folder_detail);
+    //         }
+
+    //         $logService = new LogService;
+    //         if($role_id !== 4) $logService->createCompany($company->parent_id, $company->id);
+    //         else $logService->createCompany($company->top_parent_id, $company->id, true);
+
+    //         if($role_id === 2) return ["success" => true, "message" => "Client Company Berhasil Dibentuk", "id" => $company->id, "status" => 200];
+    //         else if($role_id === 4) return ["success" => true, "message" => "Sub Company Berhasil Dibentuk", "id" => $company->id, "status" => 200];
+    //         else return ["success" => true, "message" => "Branch Company Berhasil Dibentuk", "id" => $company->id, "status" => 200];
+    //     } catch(Exception $err){
+    //         return ["success" => false, "message" => $err, "status" => 400];
+    //     }
+    // }
 
     public function addCompanyBranch($request, $route_name){
         return $this->addCompany($request, $this->branch_role_id, $route_name);
@@ -360,13 +425,16 @@ class CompanyService
         return $this->addCompany($request, $this->sub_role_id, $route_name);
     }
 
-    public function updateCompany($request, $route_name){
+    public function updateCompany($request, $route_name, $main = false){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $id = $request->get('id');
-        if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 403];
-        $company = Company::find($id);
+        if($main) $company = Company::find(auth()->user()->company_id);
+        else {
+            $id = $request->get('id');
+            if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 403];
+            $company = Company::find($id);
+        }
         if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
         try{
             $company->name = $request->get('name');
@@ -392,6 +460,59 @@ class CompanyService
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
+
+    public function updateMainCompany($request, $route_name){
+        return $this->updateCompany($request, $route_name, true);
+    }
+
+    public function updateSpecificCompany($request, $route_name){
+        return $this->updateCompany($request, $route_name);
+    }
+    
+    // public function updateCompany($request, $route_name){
+    //     $access = $this->globalService->checkRoute($route_name);
+    //     if($access["success"] === false) return $access;
+
+    //     $id = $request->get('id');
+    //     if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 403];
+    //     $company = Company::with('companyLogo')->find($id);
+    //     if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
+    //     try{
+    //         $company->name = $request->get('name');
+    //         $company->address = $request->get('address');
+    //         $company->phone_number = $request->get('phone_number');
+    //         // $company->image_logo = $request->get('image_logo');
+            
+    //         $company->singkatan = $request->get('singkatan', '-');
+    //         $company->tanggal_pkp = $request->get('tanggal_pkp', null);
+    //         $company->penanggung_jawab = $request->get('penanggung_jawab', '-');
+    //         $company->npwp = $request->get('npwp', '-');
+    //         $company->fax = $request->get('fax', '-');
+    //         $company->email = $request->get('email', '-');
+    //         $company->website = $request->get('website', '-');
+    //         $company->save();
+
+    //         if($request->hasFile('image_logo')) {
+    //             $fileService = new FileService;
+    //             $file = $request->file('image_logo');
+    //             $table = 'App\Company';
+    //             $description = 'company_logo';
+    //             $folder_detail = 'Company';
+    //             $add_file_response = $fileService->addFile($company->id, $file, $table, $description, $folder_detail);
+    //             if($company->companyLogo->id){
+    //                 $delete_file_response = $fileService->deleteForceFile($company->companyLogo->id);
+    //             }
+    //         }
+
+    //         $logService = new LogService;
+    //         if($company->role !== 4) $logService->updateCompany($company->id, $company->id);
+    //         else $logService->updateCompany($company->top_parent_id, $company->id, true);
+
+    //         return ["success" => true, "message" => "Detail Company Berhasil Diperbarui", "status" => 200];
+    //     } catch(Exception $err){
+    //         return ["success" => false, "message" => $err, "status" => 400];
+    //     }
+    // }
 
     public function companyActivation($request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
