@@ -85,11 +85,19 @@ class CompanyController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function updateMainCompany(Request $request)
+    {
+        $route_name = "COMPANY_MAIN_UPDATE";
+        
+        $response = $this->companyService->updateMainCompany($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function updateCompany(Request $request)
     {
         $route_name = "COMPANY_UPDATE";
         
-        $response = $this->companyService->updateCompany($request, $route_name);
+        $response = $this->companyService->updateSpecificCompany($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
