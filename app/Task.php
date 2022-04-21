@@ -55,4 +55,9 @@ class Task extends Model
     {
         return $this->hasMany(TaskDetail::class)->orderBy('id');
     }
+
+    public function files()
+    {
+        return $this->morphMany('App\File', 'fileable');
+    }
 }

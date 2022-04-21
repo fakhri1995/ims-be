@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use App\TaskDetail;
 use App\TaskTypeWork;
 use App\Services\LogService;
+use App\Services\FileService;
 use App\Services\CompanyService;
 use Illuminate\Support\Facades\DB;
 use App\Services\GlobalService;
@@ -659,7 +660,7 @@ class TaskService{
 
         try{
             $id = $request->get('id', null);
-            $task = Task::with(['reference.type', 'taskType:id,name', 'creator:id,name,profile_image,position', 'location:id,name,parent_id,top_parent_id,role','users', 'group:id,name', 'inventories:id,model_id,mig_id','inventories.modelInventory.asset', 'taskDetails'])->find($id);
+            $task = Task::with(['files', 'reference.type', 'taskType:id,name', 'creator:id,name,profile_image,position', 'location:id,name,parent_id,top_parent_id,role','users', 'group:id,name', 'inventories:id,model_id,mig_id','inventories.modelInventory.asset', 'taskDetails'])->find($id);
             if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
             $task->location->full_location = $task->location->fullSubNameWParentTopParent();
             $task->location->makeHidden(['parent', 'parent_id', 'role']);
@@ -719,7 +720,6 @@ class TaskService{
             $task->end_repeat_at = $request->get('end_repeat_at');
             $task->repeat = $request->get('repeat', 0);
             $task->is_from_ticket = false;
-            $task->files = [];
             $task->is_visible = true;
             $task->status = 2;
             
@@ -771,7 +771,7 @@ class TaskService{
         $is_group = $request->get('is_group', null);
         if($is_group === null) return ["success" => false, "message" => "Kolom Is Group Belum Diisi", "status" => 400];
         
-        if($task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Update Tidak Dimiliki", "status" => 401];
+        if($task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Update Tidak Dimiliki", "status" => 403];
         $inventory_ids = $request->get('inventory_ids', []);
         try{
             if($is_group){
@@ -874,13 +874,45 @@ class TaskService{
         if($access["success"] === false) return $access;
         
         $id = $request->get('id', null);
-        $files = $request->get('files', []);
         $task = Task::find($id);
         if($task === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         try{
-            $task->files = $files;
-            $task->save();
+            $files = $request->file('files', []);
+            if(!empty($files)){
+                $fileService = new FileService;
+                $table = 'App\Task';
+                $description = 'task_attachment';
+                $folder_detail = 'Tasks';
+                $list_file = [];
+                foreach($files as $file){
+                    $add_file_response = $fileService->addFile($id, $file, $table, $description, $folder_detail, true);
+                    $list_file[] = $add_file_response['id'];
+                }
+            }
             return ["success" => true, "message" => "Files Berhasil Diperbarui", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteFileTask($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $task_id = $request->get('task_id', null);
+            $id = $request->get('id', null);
+            $task = Task::with('files')->find($task_id);
+            if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
+            $search = $task->files->search(function ($item) use ($id) {
+                return $item->id == $id;
+            });
+            if($search === false) return ["success" => false, "message" => "File Bukan Milik Task", "status" => 400];
+            $fileService = new FileService;
+            $delete_file_response = $fileService->deleteFile($id);
+            if($delete_file_response['success']) return ["success" => true, "message" => "Berhasil Menghapus File", "status" => 200];
+            else return ["success" => false, "message" => $delete_file_response['message'], "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -1788,7 +1820,7 @@ class TaskService{
             $work = $request->get('work', []);
             $task = Task::find($task_id);
             if(!$task) return ["success" => false, "message" => "Task Id Tidak Ditemukan", "status" => 400];
-            if($task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Tambah Task Detail Tidak Dimiliki", "status" => 401];
+            if($task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Tambah Task Detail Tidak Dimiliki", "status" => 403];
             $check = $this->checkAddTaskDetail($work, $task_id);
             if(!$check['success']) return $check;
             $task_detail = new TaskDetail;
@@ -1811,7 +1843,7 @@ class TaskService{
         $work = $request->get('work', []);
         $task_detail = TaskDetail::with('task')->find($id);
         if($task_detail === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-        if($task_detail->task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Update Task Detail Tidak Dimiliki", "status" => 401];
+        if($task_detail->task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Update Task Detail Tidak Dimiliki", "status" => 403];
         if($task_detail->task_id !== $task_id) return ["success" => false, "message" => "Task Detail Bukan Milik Task", "status" => 400];
         if(!isset($work['name'])) return ["success" => false, "message" => "Nama Pekerjaan Masih Kosong", "status" => 400];
         if(!isset($work['type'])) return ["success" => false, "message" => "Tipe Pekerjaan Masih Kosong", "status" => 400];
@@ -1991,7 +2023,7 @@ class TaskService{
         $task_id = $request->get('task_id', null);
         $task_detail = TaskDetail::with('task')->find($id);
         if($task_detail === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-        if($task_detail->task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Delete Task Detail Tidak Dimiliki", "status" => 401];
+        if($task_detail->task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Delete Task Detail Tidak Dimiliki", "status" => 403];
         if($task_detail->task_id !== $task_id) return ["success" => false, "message" => "Task Detail Bukan Milik Task", "status" => 400];
         try{
             $task_detail->delete();
@@ -2011,7 +2043,7 @@ class TaskService{
         $assign_ids = $request->get('assign_ids', []);
         $task_detail = TaskDetail::with('task')->find($id);
         if($task_detail === null) return ["success" => false, "message" => "Id Pekerjaan Tidak Ditemukan", "status" => 400];
-        if($task_detail->task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Assign Task Detail Tidak Dimiliki", "status" => 401];
+        if($task_detail->task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Assign Task Detail Tidak Dimiliki", "status" => 403];
         try{
             $task_detail->users()->sync($assign_ids);
             return ["success" => true, "message" => "Berhasil Merubah Petugas Pekerjaan", "status" => 200];

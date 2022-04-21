@@ -260,7 +260,7 @@ $router->group(['middleware' => 'auth'], function($router){
     // $router->post('/sendInInventoryTask', 'TaskController@sendInInventoryTask'); 
     // $router->post('/sendOutInventoryTask', 'TaskController@sendOutInventoryTask'); 
     $router->put('/updateTask', 'TaskController@updateTask');
-    $router->put('/saveFilesTask', 'TaskController@saveFilesTask');
+    $router->post('/saveFilesTask', 'TaskController@saveFilesTask');
     $router->put('/changeStatusToggle', 'TaskController@changeStatusToggle');
     $router->put('/changeAttendanceToggle', 'TaskController@changeAttendanceToggle');
     $router->put('/approveTask', 'TaskController@approveTask');
@@ -268,6 +268,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/declineTask', 'TaskController@declineTask');
     $router->put('/assignSelfTask', 'TaskController@assignSelfTask');
     $router->delete('/deleteTask', 'TaskController@deleteTask');
+    $router->delete('/deleteFileTask', 'TaskController@deleteFileTask');
     $router->delete('/cancelSendOutInventoryTask', 'TaskController@cancelSendOutInventoryTask');
     $router->delete('/cancelSendInInventoryTask', 'TaskController@cancelSendInInventoryTask');
 

@@ -34,7 +34,6 @@ class CreateTasksTable extends Migration
             $table->boolean('is_uploadable');
             $table->boolean('is_from_ticket');
             $table->boolean('is_visible');
-            $table->text('files')->nullable();
             $table->index('location_id');
             $table->index('task_type_id');
             $table->index('status');
