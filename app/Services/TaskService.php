@@ -660,7 +660,7 @@ class TaskService{
 
         try{
             $id = $request->get('id', null);
-            $task = Task::with(['files', 'reference.type', 'taskType:id,name', 'creator:id,name,profile_image,position', 'location:id,name,parent_id,top_parent_id,role','users', 'group:id,name', 'inventories:id,model_id,mig_id','inventories.modelInventory.asset', 'taskDetails'])->find($id);
+            $task = Task::with(['attachments', 'reference.type', 'taskType:id,name', 'creator:id,name,profile_image,position', 'location:id,name,parent_id,top_parent_id,role','users', 'group:id,name', 'inventories:id,model_id,mig_id','inventories.modelInventory.asset', 'taskDetails'])->find($id);
             if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
             $task->location->full_location = $task->location->fullSubNameWParentTopParent();
             $task->location->makeHidden(['parent', 'parent_id', 'role']);
@@ -877,14 +877,14 @@ class TaskService{
         $task = Task::find($id);
         if($task === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         try{
-            $files = $request->file('files', []);
-            if(!empty($files)){
+            $attachments = $request->file('attachments', []);
+            if(!empty($attachments)){
                 $fileService = new FileService;
                 $table = 'App\Task';
                 $description = 'task_attachment';
                 $folder_detail = 'Tasks';
                 $list_file = [];
-                foreach($files as $file){
+                foreach($attachments as $file){
                     $add_file_response = $fileService->addFile($id, $file, $table, $description, $folder_detail, true);
                     $list_file[] = $add_file_response['id'];
                 }
@@ -903,9 +903,9 @@ class TaskService{
         try{
             $task_id = $request->get('task_id', null);
             $id = $request->get('id', null);
-            $task = Task::with('files')->find($task_id);
+            $task = Task::with('attachments')->find($task_id);
             if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
-            $search = $task->files->search(function ($item) use ($id) {
+            $search = $task->attachments->search(function ($item) use ($id) {
                 return $item->id == $id;
             });
             if($search === false) return ["success" => false, "message" => "File Bukan Milik Task", "status" => 400];
