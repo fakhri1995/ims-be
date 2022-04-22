@@ -49,7 +49,7 @@ class Inventory extends Model
 
     public function additionalAttributes()
     {
-        return $this->belongsToMany(ModelInventoryColumn::class, 'inventory_values', 'inventory_id', 'model_inventory_column_id')->select('model_inventory_columns.id as id', 'model_inventory_columns.name', 'inventory_values.value as value', 'model_inventory_columns.data_type')->withTrashed();
+        return $this->belongsToMany(ModelInventoryColumn::class, 'inventory_values', 'inventory_id', 'model_inventory_column_id')->select('model_inventory_columns.id as id', 'model_inventory_columns.name', 'inventory_values.value as value', 'model_inventory_columns.data_type', 'model_inventory_columns.required')->withTrashed();
     }
 
     public function inventoryPart()
