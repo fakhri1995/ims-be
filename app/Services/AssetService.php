@@ -25,6 +25,7 @@ use App\StatusConditionInventory;
 use App\Imports\InventoriesImport;
 use Illuminate\Support\Facades\DB;
 use App\Services\GlobalService;
+use Validator;
 
 class AssetService{
     public function __construct()
@@ -562,7 +563,26 @@ class AssetService{
         }
     }
 
-    public function createModelColumns($model_columns, $id)
+    private function checkModelColumns($model_columns, $update = false)
+    {
+        if(count($model_columns)) {
+            $index = 1;
+            if($update) $description = " update ";
+            else $description = " ";
+            foreach($model_columns as $model_column){
+                if($update){
+                    if(!$model_column['id']) return ["success" => false, "message" => "Model kolom$description$index belum memiliki id", "status" => 400];    
+                }
+                if(!$model_column['name']) return ["success" => false, "message" => "Model kolom$description$index belum memiliki nama", "status" => 400];
+                if(!$model_column['data_type']) return ["success" => false, "message" => "Model kolom$description$index belum memiliki data_type", "status" => 400];
+                if(!$model_column['required']) return ["success" => false, "message" => "Model kolom$description$index belum memiliki required", "status" => 400];
+                $index++;
+            }
+        }
+        return ["success" => true];
+    }
+
+    private function createModelColumns($model_columns, $id)
     {
         if(count($model_columns)) {
             foreach($model_columns as $model_column){
@@ -583,18 +603,36 @@ class AssetService{
         if($access["success"] === false) return $access;
 
         $name = $request->get('name');
+        $sku = $request->get('sku');
+        $model_columns = $request->get('model_columns',[]);
+
+        $validator = Validator::make($request->all(), [
+            'asset_id' => 'required',
+            'name' => 'required',
+            'description' => 'required',
+            'sku' => 'required',
+            'required_sn' => 'required',
+            'is_consumable' => 'required',
+        ]);
+        if($validator->fails()) return ["success" => false, "message" => "Gagal menyimpan model","errors" => $validator->errors(), "status" => 400];
+
+        $check = $this->checkModelColumns($model_columns);
+        if(!$check["success"]) return $check;
+        
         $check_name = ModelInventory::where('name', $name)->first();
-        if($check_name !== null) return ["success" => false, "message" => "Nama Model Telah Terdaftar", "status" => 200];
+        if($check_name !== null) return ["success" => false, "message" => "Nama Model Telah Terdaftar", "status" => 400];
+        $check_sku = ModelInventory::where('sku', $sku)->first();
+        if($check_sku !== null) return ["success" => false, "message" => "SKU Telah Terdaftar", "status" => 400];
         $model = new ModelInventory;
         $model->asset_id = $request->get('asset_id');
         $model->name = $name;
+        $model->sku = $sku;
         $model->description = $request->get('description');
         $model->is_consumable = $request->get('is_consumable', false);
         $model->manufacturer_id = $request->get('manufacturer_id');
         $model->required_sn = $request->get('required_sn');
         try{
             $model->save();
-            $model_columns = $request->get('model_columns',[]);
             $this->createModelColumns($model_columns, $model->id);
             $model_parts = $request->get('model_parts',[]);
             foreach($model_parts as $model_part){
@@ -654,21 +692,45 @@ class AssetService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
+        $name = $request->get('name');
+        $sku = $request->get('sku');
+        $add_columns = $request->get('add_columns',[]);
+        $update_columns = $request->get('update_columns',[]);
+        
+        $validator = Validator::make($request->all(), [
+            'id' => 'required',
+            'asset_id' => 'required',
+            'name' => 'required',
+            'description' => 'required',
+            'sku' => 'required',
+            'required_sn' => 'required',
+        ]);
+        if($validator->fails()) return ["success" => false, "message" => "Gagal menyimpan model","errors" => $validator->errors(), "status" => 400];
+        
+        $check_add_columns = $this->checkModelColumns($add_columns);
+        if(!$check_add_columns["success"]) return $check_add_columns;
+
+        $check_update_columns = $this->checkModelColumns($update_columns, true);
+        if(!$check_update_columns["success"]) return $check_update_columns;
+
         $id = $request->get('id');
         $model = ModelInventory::find($id);
         if($model === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status"=> 400];
+        $check_name = ModelInventory::where('name', $name)->first();
+        if($check_name && $check->id !== $id) return ["success" => false, "message" => "Nama Model Telah Terdaftar", "status" => 400];
+        $check_sku = ModelInventory::where('sku', $sku)->first();
+        if($check_sku && $check->id !== $id) return ["success" => false, "message" => "SKU Telah Terdaftar", "status" => 400];
         $model->asset_id = $request->get('asset_id');
-        $model->name = $request->get('name');
+        $model->name = $name;
+        $model->sku = $sku;
         $model->description = $request->get('description');
         $model->manufacturer_id = $request->get('manufacturer_id');
         $model->required_sn = $request->get('required_sn');
         try{
             $delete_column_ids = $request->get('delete_column_ids',[]);
-            $update_columns = $request->get('update_columns',[]);
             $check_update_delete_model_column = $this->updateDeleteModelColumn($id, $update_columns, $delete_column_ids);
             if(!$check_update_delete_model_column['success']) return $check_update_delete_model_column;
 
-            $add_columns = $request->get('add_columns',[]);
             $this->createModelColumns($add_columns, $id);
             
             $delete_model_ids = $request->get('delete_model_ids',[]);
@@ -1129,12 +1191,67 @@ class AssetService{
         return $list_ids;
     }
 
+    private function newRelationshipInventory($relationship_id, $relationship_type_id, $inventory_id, $connected_id)
+    {
+        $relationship_inventory = new RelationshipInventory;
+        $relationship_inventory->relationship_id = $relationship_id;
+        $relationship_inventory->type_id = $relationship_type_id;
+        $relationship_inventory->subject_id = $inventory_id;
+        $relationship_inventory->connected_id = $connected_id;
+        $relationship_inventory->is_inverse = false;
+        $relationship_inventory->save();
+
+        return $relationship_inventory;
+    }
+
+    private function checkFirstRelationship($relationship_type, $inverse_relationship_type)
+    {
+        return Relationship::where('inverse_relationship_type', $inverse_relationship_type)->firstOrCreate([
+            'relationship_type' => $relationship_type,
+            'inverse_relationship_type' => $inverse_relationship_type,
+            'description' => null,
+        ]);
+    }
+
+    private function autoAddRelationshipInventory($relationship_type, $inverse_relationship_type, $relationship_type_id, $inventory_id, $connected_id, $causer_id, $notes)
+    {
+        $relationship = $this->checkFirstRelationship($relationship_type, $inverse_relationship_type);
+        $relationship_inventory = $this->newRelationshipInventory($relationship->id, $relationship_type_id, $inventory_id, $connected_id);
+
+        $properties = [];
+        $properties['attributes'] = $relationship_inventory;
+        $logService = new LogService;
+        $logService->createLogInventoryRelationship($relationship_inventory->subject_id, $causer_id, $properties, $notes);
+    }
+
+    private function autoUpdateRelationshipInventory($relationship_type, $inverse_relationship_type, $relationship_type_id, $inventory_id, $connected_id, $causer_id, $notes)
+    {
+        $relationship = $this->checkFirstRelationship($relationship_type, $inverse_relationship_type);
+
+        $relationship_inventory = RelationshipInventory::where('relationship_id', $relationship->id)
+        ->where('subject_id', $inventory_id)->first();
+
+        if($relationship_inventory && in_array($relationship_inventory->type_id, [-1,-2])){
+            $relationship_inventory->type_id = $relationship_type_id;
+            $relationship_inventory->connected_id = $connected_id;
+            $relationship_inventory->save();
+        } else {
+            $relationship_inventory = $this->newRelationshipInventory($relationship->id, $relationship_type_id, $inventory_id, $connected_id);
+        }
+
+        $properties = [];
+        $properties['attributes'] = $relationship_inventory;
+        $logService = new LogService;
+        $logService->createLogInventoryRelationship($relationship_inventory->subject_id, $causer_id, $properties, $notes);
+    }
+
     public function addInventory($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $model_id = $request->get('model_id');
+        $owned_by = $request->get('owned_by', null);
         $model = ModelInventory::find($model_id);
         if($model === null) return ["success" => false, "message" => "Model Tidak Ditemukan", "status" => 400];
         $location = $request->get('location');
@@ -1175,6 +1292,7 @@ class AssetService{
         
         $inventory = new Inventory;
         $inventory->model_id = $model_id;
+        $inventory->owned_by = $owned_by;
         $inventory->vendor_id = $request->get('vendor_id');
         $inventory->status_condition = $request->get('status_condition');
         $inventory->status_usage = $request->get('status_condition');
@@ -1210,6 +1328,16 @@ class AssetService{
                 $properties['attributes']['list_parts'] = $list_id;
                 $logService->createLogInventoryPivotParts($inventory->id, $causer_id, $properties);
             }
+
+            // Add requester / agent relationship
+            $user_owned_by = User::find($owned_by);
+            if($user_owned_by){
+                $relationship_type = 'Memiliki';
+                $inverse_relationship_type = 'Dimiliki Oleh';
+                $notes = "Created when item creating process";
+                $this->autoAddRelationshipInventory($relationship_type, $inverse_relationship_type, $user_owned_by->role * -1, $inventory->id, $owned_by, $causer_id, $notes);
+            } 
+
             return ["success" => true, "message" => "Inventory Berhasil Ditambah", "id" => $inventory->id, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -1242,15 +1370,16 @@ class AssetService{
         return $properties;
     }
 
-    public function updateInventory($data, $route_name)
+    public function updateInventory($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $id = $data['id'];
-        $mig_id = $data['mig_id'];
-        $notes = $data['notes'];
-        $location = $data['location'];
+        $id = $request->get('id');
+        $mig_id = $request->get('mig_id');
+        $notes = $request->get('notes');
+        $location = $request->get('location');
+        $owned_by = $request->get('owned_by');
         $check_inventory = Inventory::select('id', 'mig_id')->where('mig_id', $mig_id)->first();
         if($check_inventory && $check_inventory->id !== $id) return ["success" => false, "message" => "MIG ID Sudah Terdaftar", "status" => 400];
         try{
@@ -1260,12 +1389,13 @@ class AssetService{
             $old_inventory = [];
             foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
 
-            $inventory->vendor_id = $data['vendor_id'];
             $inventory->location = $location;
-            $inventory->deskripsi = $data['deskripsi'];
-            $inventory->manufacturer_id = $data['manufacturer_id'];
             $inventory->mig_id = $mig_id;
-            $inventory->serial_number = $data['serial_number'];
+            $inventory->owned_by = $owned_by;
+            $inventory->vendor_id = $request->get('vendor_id');
+            $inventory->deskripsi = $request->get('deskripsi');
+            $inventory->manufacturer_id = $request->get('manufacturer_id');
+            $inventory->serial_number = $request->get('serial_number');
             $inventory->save();
             
             if($inventory->is_consumable){
@@ -1281,17 +1411,28 @@ class AssetService{
                 $old_inventory[$temp_inventory_value->name] = $temp_inventory_value->value;
             }
 
-            $new_inventory_values = $data['inventory_values'];
+            $new_inventory_values = $request->get('inventory_values', []);
             foreach($new_inventory_values as $inventory_value){
                 $model_inventory_column = ModelInventoryColumn::select('id', 'name')->find($inventory_value['id']);
                 $check = $inventory->additionalAttributes()->updateExistingPivot($inventory_value['id'], ['value' => $inventory_value['value']]);
                 if($check)$inventory[$model_inventory_column->name] = $inventory_value['value'];
             }
+            $causer_id = auth()->user()->id; 
             $properties = $this->checkUpdateProperties($old_inventory, $inventory);
             if($properties){
-                $causer_id = auth()->user()->id; 
                 $logService = new LogService;
                 $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
+            }
+
+            // Update requester / agent relationship
+            if($old_inventory['owned_by'] != $owned_by){
+                $user_owned_by = User::find($owned_by);
+                if($user_owned_by){
+                    $relationship_type = 'Memiliki';
+                    $inverse_relationship_type = 'Dimiliki Oleh';
+                    $notes = "Created when item updating process";
+                    $this->autoUpdateRelationshipInventory($relationship_type, $inverse_relationship_type, $user_owned_by->role * -1, $inventory->id, $owned_by, $causer_id, $notes);
+                } 
             }
             return ["success" => true, "message" => "Inventory Berhasil Diubah", "status" => 200];
         } catch(Exception $err){
@@ -1820,23 +1961,27 @@ class AssetService{
                 return ["success" => true, "message" => "Status Pemakaian Inventory Berhasil Diubah", "status" => 200];
             }
 
-            $relationship = Relationship::where('inverse_relationship_type', "Digunakan Oleh")->firstOrCreate([
-                'relationship_type' => 'Menggunakan',
-                'inverse_relationship_type' => 'Digunakan Oleh',
-                'description' => null,
-            ]);
+            $relationship_type = 'Menggunakan';
+            $inverse_relationship_type = 'Digunakan Oleh';
+            $this->autoAddRelationshipInventory($relationship_type, $inverse_relationship_type, $relationship_type_id, $inventory->id, $connected_id, $causer_id, $notes);
             
-            $relationship_inventory = new RelationshipInventory;
-            $relationship_inventory->relationship_id = $relationship->id;
-            $relationship_inventory->type_id = $relationship_type_id;
-            $relationship_inventory->subject_id = $inventory->id;
-            $relationship_inventory->connected_id = $connected_id;
-            $relationship_inventory->is_inverse = false;
-            $relationship_inventory->save();
+            // $relationship = Relationship::where('inverse_relationship_type', "Digunakan Oleh")->firstOrCreate([
+            //     'relationship_type' => 'Menggunakan',
+            //     'inverse_relationship_type' => 'Digunakan Oleh',
+            //     'description' => null,
+            // ]);
+            
+            // $relationship_inventory = new RelationshipInventory;
+            // $relationship_inventory->relationship_id = $relationship->id;
+            // $relationship_inventory->type_id = $relationship_type_id;
+            // $relationship_inventory->subject_id = $inventory->id;
+            // $relationship_inventory->connected_id = $connected_id;
+            // $relationship_inventory->is_inverse = false;
+            // $relationship_inventory->save();
 
-            $properties = [];
-            $properties['attributes'] = $relationship_inventory;
-            $logService->createLogInventoryRelationship($relationship_inventory->subject_id, $causer_id, $properties, $notes);
+            // $properties = [];
+            // $properties['attributes'] = $relationship_inventory;
+            // $logService->createLogInventoryRelationship($relationship_inventory->subject_id, $causer_id, $properties, $notes);
             
             return ["success" => true, "message" => "Status Pemakaian Inventory Berhasil Diubah", "status" => 200];
         } catch(Exception $err){

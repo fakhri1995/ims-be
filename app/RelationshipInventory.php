@@ -16,7 +16,7 @@ class RelationshipInventory extends Model
             'inverse_relationship_type' => 'Relationship Tidak Ditemukan',
             'description' => '-',
             'deleted_at' => null
-        ]);
+        ])->withTrashed();
     }
 
     public function inventory()

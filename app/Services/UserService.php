@@ -39,9 +39,11 @@ class UserService
 
         $name = $request->get('name', null);
         $type = $request->get('type', null);
+        $company_id = $request->get('company_id', null);
         $users = User::with(['company:id,name,top_parent_id', 'company.topParent', 'attendanceForms:id,name'])->select('id', 'name', 'company_id', 'profile_image', 'position');
         if($type) $users = $users->where('role', $type);
         if($name) $users = $users->where('name', 'like', "%".$name."%");
+        if($company_id) $users = $users->where('company_id', $company_id);
         $users = $users->limit(50)->get();
         foreach($users as $user){
             if($user->company->id !== 0){

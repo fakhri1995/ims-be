@@ -25,6 +25,7 @@ class CreateInventoriesTable extends Migration
             $table->string('mig_id')->nullable();
             $table->string('serial_number')->nullable();
             $table->boolean('is_consumable');
+            $table->unsignedBigInteger('owned_by')->nullable();
             $table->softDeletes();
 
             $table->index('model_id');

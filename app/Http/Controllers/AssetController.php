@@ -224,19 +224,7 @@ class AssetController extends Controller
     {
         $route_name = "INVENTORY_UPDATE";
         
-        $data_request = [
-            'id' => $request->get('id'),
-            'vendor_id' => $request->get('vendor_id'),
-            'location' => $request->get('location'),
-            'deskripsi' => $request->get('deskripsi'),
-            'manufacturer_id' => $request->get('manufacturer_id'),
-            'mig_id' => $request->get('mig_id'),
-            'serial_number' => $request->get('serial_number'),
-            'notes' => $request->get('notes', null),
-            'inventory_values' => $request->get('inventory_values',[])
-        ];
-        
-        $response = $this->assetService->updateInventory($data_request, $route_name);
+        $response = $this->assetService->updateInventory($request, $route_name);
         return response()->json($response, $response['status']);
     }    
 
