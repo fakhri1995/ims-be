@@ -40,36 +40,15 @@ class AssetController extends Controller
     {
         $route_name = "ASSET_ADD";
         
-        $data_request = [
-            'name' => $request->get('name'),
-            'parent' => $request->get('parent', null),
-            'description' => $request->get('description'),
-            'required_sn' => $request->get('required_sn'),
-            'asset_columns' => $request->get('asset_columns', [])
-        ];
-        
-        $response = $this->assetService->addAsset($data_request, $route_name);
+        $response = $this->assetService->addAsset($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function updateAsset(Request $request)
     {
         $route_name = "ASSET_UPDATE";
-
-        $data_request = [
-            'id' => $request->get('id', null),
-            'name' => $request->get('name'),
-            'parent' => $request->get('parent', null),
-            'description' => $request->get('description'),
-            'required_sn' => $request->get('required_sn'),
-            'action' => $request->get('action', false),
-            'is_deleted' => $request->get('is_deleted'),
-            'add_columns' => $request->get('add_columns', []),
-            'update_columns' => $request->get('update_columns', []),
-            'delete_column_ids' => $request->get('delete_column_ids', [])
-        ];
         
-        $response = $this->assetService->updateAsset($data_request, $route_name);
+        $response = $this->assetService->updateAsset($request, $route_name);
         return response()->json($response, $response['status']);
     }    
     

@@ -124,4 +124,12 @@ class Inventory extends Model
     {
         return $this->belongsTo(Manufacturer::class)->withTrashed();
     }
+
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'owned_by')->select('users.id','users.name')->withDefault([
+            'id' => 0,
+            'name' => '-'
+        ])->withTrashed();
+    }
 }
