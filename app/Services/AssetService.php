@@ -33,48 +33,7 @@ class AssetService{
         $this->globalService = new GlobalService;
     }
 
-    public function getData($parent)
-    {
-        $assets = Asset::where('code', 'like', $parent.".%")->where('code', 'not like', $parent.".___.%")->orderBy('code', 'asc')->get();
-        $new_assets = [];
-        foreach($assets as $asset){
-            $data = $this->getData($asset->code);
-            if($data !== []){
-                $temp = (object)[
-                    'id' => $asset->id,
-                    'title' => $asset->name,
-                    'key' => $asset->code,
-                    'value' => $asset->code,
-                    'children' => $data
-                ];
-            } else {
-                $temp = (object)[
-                    'id' => $asset->id,
-                    'title' => $asset->name,
-                    'key' => $asset->code,
-                    'value' => $asset->code
-                ];
-            }
-            $new_assets[] = $temp;
-        }
-        return $new_assets;
-    }
-
-    public function getTreeAssets(){
-        // $assets = Asset::where('code', 'not like', "%.%")->orderBy('code')->get();
-        // if($assets->isEmpty()) return $assets;
-        // $new_assets = [];
-        // foreach($assets as $asset){
-        //     $temp = (object)[
-        //         'id' => $asset->id,
-        //         'title' => $asset->name,
-        //         'key' => $asset->code,
-        //         'value' => $asset->code,
-        //         'children' => $this->getData($asset->code)
-        //     ];
-        //     $new_assets[] = $temp;
-        // }
-        // return $new_assets;
+    private function getTreeAssets(){
         $assets = Asset::with('children')->whereNull('parent_id')->select('id', 'name AS title', 'code AS key', 'code AS value', 'parent_id')->get();
         return $assets;
     }
@@ -108,7 +67,7 @@ class AssetService{
         if($access["success"] === false) return $access;
 
         try{
-            $asset = Asset::with('assetColumns:id,asset_id,name,data_type,default,required')->find($id);
+            $asset = Asset::with('assetColumns')->find($id);
             if($asset === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $asset, "status" => 200];
         } catch(Exception $err){
@@ -152,31 +111,119 @@ class AssetService{
         }
     }
 
-    public function createAssetColumns($asset_columns, $id)
+    private function checkColumnExist($column_ids, $is_asset)
     {
-        if(count($asset_columns)) {
-            foreach($asset_columns as $asset_column){
-                $new_asset_column = new AssetColumn;
-                $new_asset_column->asset_id = $id;
-                $new_asset_column->name = $asset_column['name'];
-                $new_asset_column->data_type = $asset_column['data_type'];
-                $new_asset_column->default = $asset_column['default'];
-                $new_asset_column->required = $asset_column['required'];
-                $new_asset_column->save();
+        if($is_asset) $check_columns = AssetColumn::select('id')->find($column_ids);
+        else $check_columns = ModelInventoryColumn::select('id')->find($column_ids);
+        $check_column_ids = $check_columns->pluck('id')->toArray();
+        $check_list_remaining = array_diff($column_ids, $check_column_ids);
+        if(count($check_list_remaining)) return ["success" => false, "message" => "ID Spesifikasi Tidak Ditemukan", "list_not_found_ids" => array_values($check_list_remaining), "status" => 400];
+        return ["success" => true];
+    }
+    
+    private function checkColumnPosession($column_ids, $id, $status, $is_asset)
+    {
+        if($is_asset){
+            $description = 'Asset';
+            $check_columns = AssetColumn::select('id', 'asset_id')->where('asset_id', $id)->get();
+        } else {
+            $description = 'Model';
+            $check_columns = ModelInventoryColumn::select('id', 'model_id')->where('model_id', $id)->get();
+        }
+        $check_column_ids = $check_columns->pluck('id')->toArray();
+        $check_list_remaining = array_diff($column_ids, $check_column_ids);
+        if(count($check_list_remaining)) return ["success" => false, "message" => "ID $status Spesifikasi Bukan Milik $description", "list_not_found_ids" => array_values($check_list_remaining), "status" => 400];
+        return ["success" => true];
+    }
+
+    private function checkColumns($columns, $update = false)
+    {
+        if($update) $column_ids = [];;
+        if(count($columns)) {
+            $index = 1;
+            if($update) $description = "update";
+            else $description = "add";
+            foreach($columns as $column){
+                if($update){
+                    if(!isset($column['id']) || !$column['id']) return ["success" => false, "message" => "Kolom $description spesifikasi $index belum memiliki id", "status" => 400];    
+                    $column_ids[] = $column['id'];
+                }
+                if(!isset($column['name']) || !$column['name']) return ["success" => false, "message" => "Kolom $description spesifikasi $index belum memiliki nama", "status" => 400];
+                if(!isset($column['data_type']) || !$column['data_type']) return ["success" => false, "message" => "Kolom $description spesifikasi $index belum memiliki data_type", "status" => 400];
+                if(!isset($column['required'])) return ["success" => false, "message" => "Kolom $description spesifikasi $index belum memiliki required", "status" => 400];
+                $index++;
+            }
+        }
+        if($update) return ["success" => true, "column_ids" => $column_ids];
+        return ["success" => true];
+    }
+    
+    public function createColumns($columns, $id, $is_asset)
+    {
+        if(count($columns)) {
+            foreach($columns as $column){
+                if($is_asset){
+                    $new_column = new AssetColumn;
+                    $new_column->asset_id = $id;
+                } else {
+                    $new_column = new ModelInventoryColumn;
+                    $new_column->model_id = $id;
+                }
+                $new_column->name = $column['name'];
+                $new_column->data_type = $column['data_type'];
+                $new_column->default = $column['default'];
+                $new_column->required = $column['required'];
+                $new_column->save();
             }
         }
     }
 
-    public function addAsset($data, $route_name)
+    private function updateColumns($update_columns, $is_asset)
+    {
+        if(count($update_columns)){
+            foreach($update_columns as $update_column){
+                if($is_asset) $new_updated_column = AssetColumn::where('id', $update_column['id'])->first();
+                else $new_updated_column = ModelInventoryColumn::where('id', $update_column['id'])->first();
+                $new_updated_column->name = $update_column['name'];
+                $new_updated_column->data_type = $update_column['data_type'];
+                $new_updated_column->default = $update_column['default'];
+                $new_updated_column->required = $update_column['required'];
+                $new_updated_column->save();
+            }
+        }
+    }
+
+    private function deleteColumns($delete_column_ids, $is_asset)
+    {
+        if(count($delete_column_ids)){
+            if($is_asset) $delete_list_column = AssetColumn::whereIn('id', $delete_column_ids)->delete();
+            else $delete_list_column = ModelInventoryColumn::whereIn('id', $delete_column_ids)->delete();
+        }
+    }
+
+    public function addAsset($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'required_sn' => 'required',
+        ]);
+        if($validator->fails()) return ["success" => false, "message" => "Gagal menyimpan model","errors" => $validator->errors(), "status" => 400];
+
+        $asset_columns = $request->get('asset_columns', []);
+        $check = $this->checkColumns($asset_columns);
+        if(!$check["success"]) return $check;
+
         $asset = new Asset;
-        $asset->name = $data['name'];
-        $asset->description = $data['description'];
-        $asset->required_sn = $data['required_sn'];
-        $parent = $data['parent'];
+        $name = $request->get('name');
+        $check_name = Asset::where('name', $name)->first();
+        if($check_name !== null) return ["success" => false, "message" => "Nama Asset Telah Terdaftar", "status" => 400];
+        $asset->name = $name;
+        $asset->description = $request->get('description');
+        $asset->required_sn = $request->get('required_sn');
+        $parent = $request->get('parent');
         if($parent === null) $parent_code = null;
         else {
             $parent_asset = Asset::find($parent);
@@ -186,12 +233,10 @@ class AssetService{
         try{
             $code = $this->registerCodeAsset($parent_code);
             if($code["success"] === false) return $code;
-            // return ["success" => true,  "id" => $code, "status" => 200];
             $asset->parent_id = $parent;
             $asset->code = $code["id"];
             $asset->save();
-            $asset_columns = $data['asset_columns'];
-            $this->createAssetColumns($asset_columns, $asset->id);
+            $this->createColumns($asset_columns, $asset->id, true);
             return ["success" => true, "message" => "Data Berhasil Disimpan", "id" => $asset->id, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -241,42 +286,35 @@ class AssetService{
         return ["success" => true, "new_code" => $new_code];
     }
 
-    public function checkColumnPosessionAsset($update_columns, $delete_column_ids, $id)
+    private function executeColumns($add_columns, $update_columns, $delete_column_ids, $id, $is_asset = true)
     {
-        $asset_columns = AssetColumn::where('asset_id', $id)->get();
-        if(count($update_columns)){
-            foreach($update_columns as $update_column){
-                $check_column = $asset_columns->where('id', $update_column['id'])->first();
-                if($check_column === null) return ["success" => false, "message" => "Kolom Tidak Bisa Diupdate, Id Kolom Tidak Dimiliki Asset", "id" => $update_column['id'], "status" => 400];
-            }
-        }
+        $this->createColumns($add_columns, $id, $is_asset);
+        $this->updateColumns($update_columns, $is_asset);
+        $this->deleteColumns($delete_column_ids, $is_asset);
+    }
+
+    private function checkSpecification($add_columns, $update_columns, $delete_column_ids, $id, $is_asset)
+    {
+        $check_add_columns = $this->checkColumns($add_columns);
+        if(!$check_add_columns["success"]) return $check_add_columns;
         
-        if(count($delete_column_ids)){
-            foreach($delete_column_ids as $delete_column_id){
-                $check_column = $asset_columns->where('id', $delete_column_id)->first();
-                if($check_column === null) return ["success" => false, "message" => "Kolom Tidak Bisa Didelete, Id Kolom Tidak Dimiliki Asset", "id" => $delete_column_id, "status" => 400];
-            }
-        }
+        $check_update_columns = $this->checkColumns($update_columns, true);
+        if(!$check_update_columns["success"]) return $check_update_columns;
+        $update_column_ids = $check_update_columns["column_ids"];
+        
+        $check_exist_update_columns = $this->checkColumnExist($update_column_ids, $is_asset);
+        if(!$check_exist_update_columns["success"]) return $check_exist_update_columns;
+        
+        $check_possesion_update_columns = $this->checkColumnPosession($update_column_ids, $id, 'Update', $is_asset);
+        if(!$check_possesion_update_columns["success"]) return $check_possesion_update_columns;
+        
+        $check_exist_delete_columns = $this->checkColumnExist($delete_column_ids, $is_asset);
+        if(!$check_exist_delete_columns["success"]) return $check_exist_delete_columns;
+        
+        $check_possesion_delete_columns = $this->checkColumnPosession($delete_column_ids, $id, 'Delete', $is_asset);
+        if(!$check_possesion_delete_columns["success"]) return $check_possesion_delete_columns;
 
-        if(count($update_columns)){
-            foreach($update_columns as $update_column){
-                $update_asset_column = $asset_columns->where('id', $update_column['id'])->first();
-                $update_asset_column->name = $update_column['name'];
-                $update_asset_column->data_type = $update_column['data_type'];
-                $update_asset_column->default = $update_column['default'];
-                $update_asset_column->required = $update_column['required'];
-                $update_asset_column->save();
-            }
-        }
-
-        if(count($delete_column_ids)){
-            foreach($delete_column_ids as $delete_column_id){
-                $deleted_asset_column = $asset_columns->where('id', $delete_column_id)->first();
-                $deleted_asset_column->delete();
-            }
-        }
-
-        return ["success" => true];
+        return ["success" => true]; 
     }
 
     public function processingUpdatedChild($is_deleted, $code, $check_old_code, $check_old_code_length)
@@ -298,20 +336,31 @@ class AssetService{
         }
     }
 
-    public function updateAsset($data, $route_name)
+    public function updateAsset($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $id = $data['id'];
-        $name = $data['name'];
-        $parent = $data['parent'];
-        $description = $data['description'];
-        $required_sn = $data['required_sn'];
-        $is_deleted = $data['is_deleted'];
-        $add_columns = $data['add_columns'];
-        $update_columns = $data['update_columns'];
-        $delete_column_ids = $data['delete_column_ids'];
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'required_sn' => 'required',
+            'is_deleted' => 'required',
+        ]);
+        if($validator->fails()) return ["success" => false, "message" => "Gagal menyimpan model", "errors" => $validator->errors(), "status" => 400];
+
+        $id = $request->get('id');
+        $add_columns = $request->get('add_columns', []);
+        $update_columns = $request->get('update_columns', []);
+        $delete_column_ids = $request->get('delete_column_ids', []);
+
+        $check_specification = $this->checkSpecification($add_columns, $update_columns, $delete_column_ids, $id, true);
+        if(!$check_specification["success"]) return $check_specification;
+        
+        $name = $request->get('name');
+        $parent = $request->get('parent');
+        $description = $request->get('description');
+        $required_sn = $request->get('required_sn');
+        $is_deleted = $request->get('is_deleted');
         $action = false;
         try{
             $asset = Asset::find($id);
@@ -335,9 +384,8 @@ class AssetService{
             $asset->name = $name;
             $asset->description = $description;
             $asset->required_sn = $required_sn;
-            $update_delete_columns = $this->checkColumnPosessionAsset($update_columns, $delete_column_ids, $id);
-            if(!$update_delete_columns["success"]) return $update_delete_columns;
-            $this->createAssetColumns($add_columns, $asset->id);
+            $this->executeColumns($add_columns, $update_columns, $delete_column_ids, $asset->id, true);
+            
             $asset->save();
             if($action) $this->processingUpdatedChild($is_deleted, $asset->code, $check_old_code, $check_old_code_length);
             return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
@@ -563,40 +611,6 @@ class AssetService{
         }
     }
 
-    private function checkModelColumns($model_columns, $update = false)
-    {
-        if(count($model_columns)) {
-            $index = 1;
-            if($update) $description = " update ";
-            else $description = " ";
-            foreach($model_columns as $model_column){
-                if($update){
-                    if(!$model_column['id']) return ["success" => false, "message" => "Model kolom$description$index belum memiliki id", "status" => 400];    
-                }
-                if(!$model_column['name']) return ["success" => false, "message" => "Model kolom$description$index belum memiliki nama", "status" => 400];
-                if(!$model_column['data_type']) return ["success" => false, "message" => "Model kolom$description$index belum memiliki data_type", "status" => 400];
-                if(!$model_column['required']) return ["success" => false, "message" => "Model kolom$description$index belum memiliki required", "status" => 400];
-                $index++;
-            }
-        }
-        return ["success" => true];
-    }
-
-    private function createModelColumns($model_columns, $id)
-    {
-        if(count($model_columns)) {
-            foreach($model_columns as $model_column){
-                $new_model_column = new ModelInventoryColumn;
-                $new_model_column->model_id = $id;
-                $new_model_column->name = $model_column['name'];
-                $new_model_column->data_type = $model_column['data_type'];
-                $new_model_column->default = $model_column['default'];
-                $new_model_column->required = $model_column['required'];
-                $new_model_column->save();
-            }
-        }
-    }
-
     public function addModel($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
@@ -609,14 +623,13 @@ class AssetService{
         $validator = Validator::make($request->all(), [
             'asset_id' => 'required',
             'name' => 'required',
-            'description' => 'required',
             'sku' => 'required',
             'required_sn' => 'required',
             'is_consumable' => 'required',
         ]);
         if($validator->fails()) return ["success" => false, "message" => "Gagal menyimpan model","errors" => $validator->errors(), "status" => 400];
 
-        $check = $this->checkModelColumns($model_columns);
+        $check = $this->checkColumns($model_columns);
         if(!$check["success"]) return $check;
         
         $check_name = ModelInventory::where('name', $name)->first();
@@ -633,7 +646,7 @@ class AssetService{
         $model->required_sn = $request->get('required_sn');
         try{
             $model->save();
-            $this->createModelColumns($model_columns, $model->id);
+            $this->createColumns($model_columns, $model->id, false);
             $model_parts = $request->get('model_parts',[]);
             foreach($model_parts as $model_part){
                 $model->modelParts()->attach($model_part['id'], ['quantity' => $model_part['quantity']]);
@@ -645,81 +658,36 @@ class AssetService{
         }
     }
 
-    public function updateDeleteModelColumn($id, $update_columns, $delete_column_ids)
-    {
-        $model_columns = ModelInventoryColumn::where('model_id', $id)->get();
-        if(count($update_columns)){
-            foreach($update_columns as $update_column){
-                $check_column = $model_columns->where('id', $update_column['id'])->first();
-                if($check_column === null) return ["success" => false, "message" => "Kolom Tidak Bisa Diupdate, Id Kolom Tidak Dimiliki Model", "id" => $update_column['id'], "status"=> 400];
-            }
-        }
-        
-        if(count($delete_column_ids)){
-            foreach($delete_column_ids as $delete_column_id){
-                $check_column = $model_columns->where('id', $delete_column_id)->first();
-                if($check_column === null) return ["success" => false, "message" => "Kolom Tidak Bisa Didelete, Id Kolom Tidak Dimiliki Model", "id" => $delete_column_id, "status"=> 400];
-            }
-        }
-        
-        if(count($update_columns)){
-            foreach($update_columns as $update_column){
-                $update_model_column = $model_columns->where('id', $update_column['id'])->first();
-                $update_model_column->name = $update_column['name'];
-                $update_model_column->data_type = $update_column['data_type'];
-                $update_model_column->default = $update_column['default'];
-                $update_model_column->required = $update_column['required'];
-                $update_model_column->save();
-            }
-        }
-
-        if(count($delete_column_ids)){
-            $inventory_values = InventoryValue::get();
-            foreach($delete_column_ids as $delete_column_id){
-                $inventory_value_models = $inventory_values->where('model_inventory_column_id', $delete_column_id);
-                foreach($inventory_value_models as $inventory_value_model){
-                    $inventory_value_model->delete();
-                }
-                $deleted_model_column = $model_columns->where('id', $delete_column_id)->first();
-                if($deleted_model_column !== null)$deleted_model_column->delete();
-            }
-        }
-        return ["success" => true];
-    }
-
     public function updateModel($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
+        $id = $request->get('id');
         $name = $request->get('name');
         $sku = $request->get('sku');
         $add_columns = $request->get('add_columns',[]);
         $update_columns = $request->get('update_columns',[]);
+        $delete_column_ids = $request->get('delete_column_ids',[]);
         
         $validator = Validator::make($request->all(), [
             'id' => 'required',
             'asset_id' => 'required',
             'name' => 'required',
-            'description' => 'required',
             'sku' => 'required',
             'required_sn' => 'required',
         ]);
         if($validator->fails()) return ["success" => false, "message" => "Gagal menyimpan model","errors" => $validator->errors(), "status" => 400];
         
-        $check_add_columns = $this->checkModelColumns($add_columns);
-        if(!$check_add_columns["success"]) return $check_add_columns;
+        $check_specification = $this->checkSpecification($add_columns, $update_columns, $delete_column_ids, $id, false);
+        if(!$check_specification["success"]) return $check_specification;
 
-        $check_update_columns = $this->checkModelColumns($update_columns, true);
-        if(!$check_update_columns["success"]) return $check_update_columns;
-
-        $id = $request->get('id');
         $model = ModelInventory::find($id);
         if($model === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status"=> 400];
         $check_name = ModelInventory::where('name', $name)->first();
-        if($check_name && $check->id !== $id) return ["success" => false, "message" => "Nama Model Telah Terdaftar", "status" => 400];
+        if($check_name && $check_name->id !== $id) return ["success" => false, "message" => "Nama Model Telah Terdaftar", "status" => 400];
         $check_sku = ModelInventory::where('sku', $sku)->first();
-        if($check_sku && $check->id !== $id) return ["success" => false, "message" => "SKU Telah Terdaftar", "status" => 400];
+        if($check_sku && $check_sku->id !== $id) return ["success" => false, "message" => "SKU Telah Terdaftar", "status" => 400];
         $model->asset_id = $request->get('asset_id');
         $model->name = $name;
         $model->sku = $sku;
@@ -727,11 +695,8 @@ class AssetService{
         $model->manufacturer_id = $request->get('manufacturer_id');
         $model->required_sn = $request->get('required_sn');
         try{
-            $delete_column_ids = $request->get('delete_column_ids',[]);
-            $check_update_delete_model_column = $this->updateDeleteModelColumn($id, $update_columns, $delete_column_ids);
-            if(!$check_update_delete_model_column['success']) return $check_update_delete_model_column;
-
-            $this->createModelColumns($add_columns, $id);
+            
+            $this->executeColumns($add_columns, $update_columns, $delete_column_ids, $id, false);
             
             $delete_model_ids = $request->get('delete_model_ids',[]);
             if(count($delete_model_ids)){
@@ -976,7 +941,7 @@ class AssetService{
         if($access["success"] === false) return $access;
 
         try{
-            $inventory = Inventory::with(['modelInventory.asset', 'vendor', 'manufacturer', 'locationInventory', 'additionalAttributes', 'inventoryParts', 'associations', 'quantities'])->find($id);
+            $inventory = Inventory::with(['modelInventory.asset', 'vendor', 'manufacturer', 'locationInventory', 'additionalAttributes', 'inventoryParts', 'associations', 'quantities', 'owner'])->find($id);
             if($inventory === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             $inventory->modelInventory->asset->asset_name = $inventory->modelInventory->asset->name;
             if(strlen($inventory->modelInventory->asset->code) > 3){
@@ -1252,6 +1217,15 @@ class AssetService{
         
         $model_id = $request->get('model_id');
         $owned_by = $request->get('owned_by', null);
+
+        $validator = Validator::make($request->all(), [
+            'model_id' => 'required',
+            'status_usage' => 'required',
+            'status_condition' => 'required',
+        ]);
+
+        if($validator->fails()) return ["success" => false, "message" => "Gagal menyimpan model","errors" => $validator->errors(), "status" => 400];
+
         $model = ModelInventory::find($model_id);
         if($model === null) return ["success" => false, "message" => "Model Tidak Ditemukan", "status" => 400];
         $location = $request->get('location');
@@ -1280,8 +1254,11 @@ class AssetService{
         
         $inventory_values = $request->get('inventory_values', []);
         if(count($inventory_values)){
+            $index = 1;
             foreach($inventory_values as $inventory_value){
                 $model_column_ids[] = $inventory_value['model_inventory_column_id'];
+                if(!isset($inventory_value['value']) || !$inventory_value['value']) return ["success" => false, "message" => "Kolom spesifikasi $index belum memiliki value", "status" => 400];
+                $index++;
             }
         }
 
@@ -1386,6 +1363,15 @@ class AssetService{
             $inventory = Inventory::with(['additionalAttributes', 'quantities'])->find($id);
             if($inventory === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         
+
+            $new_inventory_values = $request->get('inventory_values', []);
+            $index = 1;
+            foreach($new_inventory_values as $inventory_value){
+                if(!isset($inventory_value['id']) || !$inventory_value['id']) return ["success" => false, "message" => "Kolom spesifikasi $index belum memiliki id", "status" => 400];
+                if(!isset($inventory_value['value']) || !$inventory_value['value']) return ["success" => false, "message" => "Kolom spesifikasi $index belum memiliki value", "status" => 400];
+                $index++;
+            }
+
             $old_inventory = [];
             foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
 
@@ -1411,7 +1397,6 @@ class AssetService{
                 $old_inventory[$temp_inventory_value->name] = $temp_inventory_value->value;
             }
 
-            $new_inventory_values = $request->get('inventory_values', []);
             foreach($new_inventory_values as $inventory_value){
                 $model_inventory_column = ModelInventoryColumn::select('id', 'name')->find($inventory_value['id']);
                 $check = $inventory->additionalAttributes()->updateExistingPivot($inventory_value['id'], ['value' => $inventory_value['value']]);
