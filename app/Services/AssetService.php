@@ -2299,7 +2299,7 @@ class AssetService{
             if(count($relationship_inventories_from_inverse)){
 
                 foreach($relationship_inventories_from_inverse as $relationship_inventory){
-                    $relationship_inventory->relationship_name = $relationship_inventory->is_inverse ? $relationship_inventory->relationship->inverse_relationship_type : $relationship_inventory->relationship->relationship_type;
+                    $relationship_inventory->relationship_name = $relationship_inventory->is_inverse ? $relationship_inventory->relationship->relationship_type : $relationship_inventory->relationship->inverse_relationship_type;
                     $relationship_inventory->type = $relationship_inventory->type_id === -1 ? "Agent" : ($relationship_inventory->type_id === -2 ? "Requester" : ($relationship_inventory->type_id === -3 ? "Company" : "Inventory Type"));
                     $relationship_inventory->connected_detail_name = $relationship_inventory->inventory->modelInventory->name;
                     
