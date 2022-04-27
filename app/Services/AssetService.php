@@ -971,6 +971,10 @@ class AssetService{
                     $association->makeHidden('ticket');
                 }
             }
+            if($inventory->owner->id){
+                $inventory->owner->fullname = $inventory->owner->fullName();
+                $inventory->owner->makeHidden('topParent');
+            } 
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $inventory, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];

@@ -127,7 +127,7 @@ class Inventory extends Model
 
     public function owner()
     {
-        return $this->belongsTo(User::class, 'owned_by')->select('users.id','users.name')->withDefault([
+        return $this->belongsTo(Company::class, 'owned_by')->select('companies.id','companies.name', 'companies.top_parent_id')->withDefault([
             'id' => 0,
             'name' => '-'
         ])->withTrashed();

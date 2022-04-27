@@ -33,7 +33,7 @@ class CompanyController extends Controller
     {
         $route_name = "COMPANY_CLIENTS_GET";
         
-        $response = $this->companyService->getCompanyClientList($route_name);
+        $response = $this->companyService->getCompanyClientList($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
