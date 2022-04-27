@@ -168,11 +168,13 @@ class CompanyService
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $companies, "status" => 200];
     }
 
-    public function getCompanyClientList($route_name){
+    public function getCompanyClientList($request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $companies = Company::select('id','name','address','phone_number','image_logo','role','parent_id', 'is_enabled')->where('parent_id', 1)->where('role', 2)->get();
+        $with_mig = $request->get('with_mig', false);
+        if($with_mig) $companies = Company::select('id','name','address','phone_number','image_logo','role','parent_id', 'is_enabled')->where('parent_id', 1)->where('role', 2)->orWhere('id', 1)->get();
+        else $companies = Company::select('id','name','address','phone_number','image_logo','role','parent_id', 'is_enabled')->where('parent_id', 1)->where('role', 2)->get();
         $companies->makeHidden('parent_id');
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $companies, "status" => 200];
     }    
