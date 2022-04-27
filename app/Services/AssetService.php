@@ -1311,12 +1311,12 @@ class AssetService{
             }
 
             // Add requester / agent relationship
-            $user_owned_by = User::find($owned_by);
+            $user_owned_by = Company::find($owned_by);
             if($user_owned_by){
                 $relationship_type = 'Memiliki';
                 $inverse_relationship_type = 'Dimiliki Oleh';
                 $notes = "Created when item creating process";
-                $this->autoAddRelationshipInventory($relationship_type, $inverse_relationship_type, $user_owned_by->role * -1, $inventory->id, $owned_by, $causer_id, $notes);
+                $this->autoAddRelationshipInventory($relationship_type, $inverse_relationship_type, -3, $inventory->id, $owned_by, $causer_id, $notes);
             } 
 
             return ["success" => true, "message" => "Inventory Berhasil Ditambah", "id" => $inventory->id, "status" => 200];
@@ -1415,12 +1415,12 @@ class AssetService{
 
             // Update requester / agent relationship
             if($old_inventory['owned_by'] != $owned_by){
-                $user_owned_by = User::find($owned_by);
+                $user_owned_by = Company::find($owned_by);
                 if($user_owned_by){
                     $relationship_type = 'Memiliki';
                     $inverse_relationship_type = 'Dimiliki Oleh';
                     $notes = "Created when item updating process";
-                    $this->autoUpdateRelationshipInventory($relationship_type, $inverse_relationship_type, $user_owned_by->role * -1, $inventory->id, $owned_by, $causer_id, $notes);
+                    $this->autoUpdateRelationshipInventory($relationship_type, $inverse_relationship_type, -3, $inventory->id, $owned_by, $causer_id, $notes);
                 } 
             }
             return ["success" => true, "message" => "Inventory Berhasil Diubah", "status" => 200];
