@@ -540,6 +540,7 @@ class AssetService{
         
         $asset_id = $request->get('asset_id', null);
         $name = $request->get('name', null);
+        $sku = $request->get('sku', null);
         $rows = $request->get('rows', 10);
         $sort_by = $request->get('sort_by', null);
         $sort_type = $request->get('sort_type', 'desc');
@@ -554,8 +555,10 @@ class AssetService{
             $models = $models->whereIn('asset_id', $assetChildrenTreeList);
         } 
         if($name) $models = $models->where('name', 'like', "%".$name."%");
+        if($sku) $models = $models->where('sku', 'like', "%".$sku."%");
         if($sort_by){
             if($sort_by === 'name') $models = $models->orderBy('name', $sort_type);
+            if($sort_by === 'sku') $models = $models->orderBy('sku', $sort_type);
             else if($sort_by === 'count') $models = $models->orderBy('inventories_count', $sort_type);
         }
         
