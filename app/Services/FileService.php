@@ -19,7 +19,7 @@ class FileService
     {
         try{
             $new_file = new File;
-            $file_name = $file->getClientOriginalName();
+            $file_name = str_replace(" ","-",$file->getClientOriginalName());
             $filename = pathinfo($file_name, PATHINFO_FILENAME);
             $extension = pathinfo($file_name, PATHINFO_EXTENSION);
             $name = $filename.'_'.time().'.'.$extension;
