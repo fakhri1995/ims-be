@@ -2,25 +2,24 @@
 
 namespace App\Console\Commands;
 
-use App\Task;
 use Illuminate\Console\Command;
 use App\Services\TaskGeneratorService;
 
-class UnhideTasks extends Command
+class GenerateOneHourLeftTaskNotification extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'task:unhide';
+    protected $signature = 'notification:generate-one-hour-left-task';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Unhide tasks for passed created at time tasks';
+    protected $description = 'Generate notification for task which have one hour left before deadline reached';
 
     /**
      * Create a new command instance.
@@ -38,9 +37,10 @@ class UnhideTasks extends Command
      * @return mixed
      */
     public function handle()
-    {
+    {   
         $task_generator_service = new TaskGeneratorService;
-        $task_generator_service->unhideTasks();
-        // $task_unhide_count = Task::where('is_visible', false)->where('created_at', '<', date('Y-m-d H:i:s'))->update(['is_visible' => true]);
+        $task_generator_service->generateOneHourLeftTaskNotification();   
     }
 }
+
+

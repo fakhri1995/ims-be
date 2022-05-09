@@ -34,8 +34,13 @@ class CreateTasksTable extends Migration
             $table->boolean('is_uploadable');
             $table->boolean('is_from_ticket');
             $table->boolean('is_visible');
-            $table->index('location_id');
+            $table->boolean('need_one_hour_notification')->default(true);
+
+            $table->index('need_one_hour_notification');
             $table->index('task_type_id');
+            $table->index('location_id');
+            $table->index('is_visible');
+            $table->index('repeat');
             $table->index('status');
             $table->softDeletes();
         });
