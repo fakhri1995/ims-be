@@ -944,7 +944,7 @@ class AssetService{
         if($access["success"] === false) return $access;
 
         try{
-            $inventory = Inventory::with(['modelInventory.asset', 'vendor', 'manufacturer', 'locationInventory', 'additionalAttributes', 'inventoryParts', 'associations', 'quantities', 'owner'])->find($id);
+            $inventory = Inventory::with(['modelInventory.asset', 'vendor', 'manufacturer', 'locationInventory:id,role,top_parent_id,name', 'additionalAttributes', 'inventoryParts', 'associations', 'quantities', 'owner'])->find($id);
             if($inventory === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             $inventory->modelInventory->asset->asset_name = $inventory->modelInventory->asset->name;
             if(strlen($inventory->modelInventory->asset->code) > 3){
@@ -973,6 +973,9 @@ class AssetService{
                     else $association->ticket_name = '-';
                     $association->makeHidden('ticket');
                 }
+            }
+            if($inventory->locationInventory->id){
+                $inventory->locationInventory->makeVisible('top_parent_id');
             }
             if($inventory->owner->id){
                 $inventory->owner->fullname = $inventory->owner->fullName();
@@ -2240,7 +2243,7 @@ class AssetService{
 
         $companyService = new CompanyService;
         $list_company = $companyService->checkCompanyList($company);
-        $relationship_inventories = RelationshipInventory::with('relationship:id,relationship_type,inverse_relationship_type', 'inventory')
+        $relationship_inventories = RelationshipInventory::with('relationship:id,relationship_type,inverse_relationship_type', 'inventory.locationInventory')
             ->whereIn('connected_id', $list_company)->where('type_id',-3)->select('id', 'subject_id','relationship_id', 'connected_id', 'is_inverse')->paginate($rows);
 
         foreach($relationship_inventories as $relationship_inventory){
