@@ -17,6 +17,7 @@ use App\Services\FileService;
 use App\Services\CompanyService;
 use Illuminate\Support\Facades\DB;
 use App\Services\GlobalService;
+use App\Services\NotificationService;
 use Illuminate\Database\Eloquent\Collection;
 
 class TaskService{
@@ -685,6 +686,13 @@ class TaskService{
         }
     }
 
+    private function addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users)
+    {
+        $notification_service = new NotificationService;
+        $created_by = auth()->user()->id;
+        $notification_service->addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users, $created_by);
+    }
+
     public function addTask($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
@@ -706,12 +714,13 @@ class TaskService{
                 } 
                 else $task->group_id = null;
             }
+            $created_by = auth()->user()->id;
             $task->name = $request->get('name');
             $task->description = $request->get('description');
             $task->task_type_id = $task_type_id;
             $task->location_id = $request->get('location_id');
             $task->reference_id = $request->get('reference_id');
-            $task->created_by = auth()->user()->id;
+            $task->created_by = $created_by;
             $task->deadline = $request->get('deadline');
             $task->first_deadline = $request->get('deadline');
             $task->created_at = $request->get('created_at');
@@ -732,16 +741,28 @@ class TaskService{
             }
             $assign_id_count = count($assign_ids);
             if($assign_id_count){
-                if($is_group) $task->users()->attach($group->users->pluck('id'));
-                else{
-                    $task->users()->attach($assign_ids);
+                if($is_group) $assign_ids = $group->users->pluck('id');
+                else {
                     if($assign_id_count === 1){
                         foreach($task->taskDetails as $taskDetail){
                             $taskDetail->users()->attach($assign_ids);
                         }
                     }
                 } 
+                $task->users()->attach($assign_ids);
             }
+
+            $assign_ids[] = $created_by;
+            $description = "Task Baru Telah Terbuat"; 
+            $link = env('APP_URL_WEB')."/task/".$task->id;
+            $image_type = "task"; 
+            $color_type = "green"; 
+            $need_push_notification = false;
+            $notificationable_id = $task->id;
+            $notificationable_type = 'App\Task';
+            $users = $assign_ids;
+            $this->addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users);
+
             if(count($inventory_ids)){
                 $attach_inventories = [];
                 foreach($inventory_ids as $inventory_id){
@@ -753,6 +774,12 @@ class TaskService{
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
+    }
+
+    private function updateNotification($notificationable_id, $notificationable_type, $users)
+    {
+        $notification_service = new NotificationService;
+        $notification_service->updateNotification($notificationable_id, $notificationable_type, $users);
     }
 
     public function updateTask($request, $route_name)
@@ -798,16 +825,23 @@ class TaskService{
             $assign_id_count = count($assign_ids);
             if($assign_id_count){
                 if($is_group){
-                    if($old_group !== $task->group_id) $task->users()->sync($group->users->pluck('id'));
+                    $assign_ids = $group->users->pluck('id');
+                    // if($old_group !== $task->group_id) $task->users()->sync($group->users->pluck('id'));
                 } else {
-                    $task->users()->sync($assign_ids);
                     if($assign_id_count === 1){
                         foreach($task->taskDetails as $taskDetail){
                             $taskDetail->users()->sync($assign_ids);
                         }
                     }
                 } 
+                $task->users()->sync($assign_ids);
             }
+
+            $assign_ids[] = $task->created_by;
+            $notificationable_id = $task->id;
+            $notificationable_type = 'App\Task';
+            $users = $assign_ids;
+            $this->updateNotification($notificationable_id, $notificationable_type, $users);
 
             $attach_inventories = [];
             foreach($inventory_ids as $inventory_id){
@@ -1078,6 +1112,17 @@ class TaskService{
                             $logService->updateStatusLogTicket($task->reference_id, $login_id, 3, 6);
                         } else $task->status = 5;
                         $task->save();
+                        
+                        $assign_ids = [$task->created_by];
+                        $description = "Task Telah Disubmit"; 
+                        $link = env('APP_URL_WEB')."/task/".$task->id;
+                        $image_type = "task"; 
+                        $color_type = "green"; 
+                        $need_push_notification = false;
+                        $notificationable_id = $task->id;
+                        $notificationable_type = 'App\Task';
+                        $users = $assign_ids;
+                        $this->addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users);
                     }
                 }
                 return ["success" => true, "message" => "Berhasil Melakukan Submit Pada Task", "status" => 200];
@@ -1108,6 +1153,18 @@ class TaskService{
                     $task->notes = $notes;
                     $task->save();
                 } 
+
+                $assign_ids = $task->users->pluck('id');
+                $description = "Task Ditolak"; 
+                $link = env('APP_URL_WEB')."/task/".$task->id;
+                $image_type = "task"; 
+                $color_type = "red"; 
+                $need_push_notification = false;
+                $notificationable_id = $task->id;
+                $notificationable_type = 'App\Task';
+                $users = $assign_ids;
+                $this->addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users);
+
                 return ["success" => true, "message" => "Berhasil Melakukan Penolakan Pada Task", "status" => 200];
             } else return ["success" => false, "message" => "Anda Tidak Memiliki Izin Pada Task Ini", "status" => 400];
         } catch(Exception $err){
@@ -1287,6 +1344,7 @@ class TaskService{
             $login_id = auth()->user()->id;
 
             if($task->created_by === $login_id){
+                if($task->status === 6) return ["success" => false, "message" => "Task Sudah Disetujui", "status" => 400];
                 if($task->status !== 5) return ["success" => false, "message" => "Status Bukan Completed, Tidak Dapat Dilakukan Persetujuan", "status" => 400];
                 else {
                     $task->status = 6;
@@ -1300,6 +1358,22 @@ class TaskService{
                     $task->notes = null;
                     $task->save();
                 } 
+
+                $assign_ids = $task->users->pluck('id');
+                $description = "Task Telah Disetujui"; 
+                $link = env('APP_URL_WEB')."/task/".$task->id;
+                $image_type = "task"; 
+                $color_type = "green"; 
+                $need_push_notification = false;
+                $notificationable_id = $task->id;
+                $notificationable_type = 'App\Task';
+                $users = $assign_ids;
+                $this->addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users);
+
+                // Turn off one hour left deadline notification
+                $task->need_one_hour_notification = false;
+                $task->save();
+                
                 return ["success" => true, "message" => "Berhasil Melakukan Persetujuan Pada Task", "status" => 200];
             } else return ["success" => false, "message" => "Anda Tidak Memiliki Izin Pada Task Ini", "status" => 400];
         } catch(Exception $err){

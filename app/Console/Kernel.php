@@ -12,6 +12,7 @@ use App\Console\Commands\GenerateMonthlyTask;
 use App\Console\Commands\GenerateThricePerYearTask;
 use App\Console\Commands\GenerateTwicePerMonthTask;
 use App\Console\Commands\GenerateFourTimesPerYearTask;
+use App\Console\Commands\GenerateOneHourLeftTaskNotification;
 use Illuminate\Console\Scheduling\Schedule;
 use Laravel\Lumen\Console\Kernel as ConsoleKernel;
 
@@ -33,6 +34,7 @@ class Kernel extends ConsoleKernel
         GenerateMonthlyTask::class,
         GenerateThricePerYearTask::class,
         GenerateFourTimesPerYearTask::class,
+        GenerateOneHourLeftTaskNotification::class,
     ];
 
     /**
@@ -46,6 +48,7 @@ class Kernel extends ConsoleKernel
         $schedule->command(UnhideTasks::class)->cron('* * * * *')->runInBackground();
         $schedule->command(SetOverdueTasks::class)->cron('* * * * *')->runInBackground();
         $schedule->command(SearchGeoLocation::class)->cron('* * * * *')->runInBackground();
+        $schedule->command(GenerateOneHourLeftTaskNotification::class)->cron('* * * * *')->runInBackground();
         $schedule->command(AutoCheckOutAttendance::class)->cron('59 23 * * *')->runInBackground();
         $schedule->command(GenerateDailyTask::class)->cron('0 0 * * *')->runInBackground();	
         $schedule->command(GenerateWeeklyTask::class)->cron('0 0 * * 1')->runInBackground();

@@ -363,6 +363,10 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/updateAttendanceProjectStatus', 'AttendanceController@updateAttendanceProjectStatus');
     $router->delete('/deleteAttendanceProjectStatus', 'AttendanceController@deleteAttendanceProjectStatus');
 
+    //Notification Routes
+    $router->get('/getNotification', 'NotificationController@getNotification');
+    $router->get('/getNotifications', 'NotificationController@getNotifications');
+    $router->post('/readNotification', 'NotificationController@readNotification');
     
     
 });

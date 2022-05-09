@@ -4,6 +4,7 @@ namespace App\Services;
 use App\File;
 use App\Services\DOCdnService;
 use Illuminate\Support\Facades\Storage;
+use Exception;
 
 class FileService
 {

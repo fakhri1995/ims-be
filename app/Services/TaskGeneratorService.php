@@ -207,4 +207,52 @@ class TaskGeneratorService
             $this->generateTask($periodic_needed_generated_task, $times, $current_timestamp);
         }
     }
+
+    public function generateOneHourLeftTaskNotification()
+    {
+        $description = "Task akan mencapai waktu deadline pada satu jam dari sekarang"; 
+        $image_type = "exclamation"; 
+        $color_type = "red"; 
+        $need_push_notification = true;
+        $notificationable_type = 'App\Task';
+        $default_link = env('APP_URL_WEB')."/task/";
+
+        $next_one_hour = date('Y-m-d H:i:s', strtotime('+1 hour'));
+        $tasks = Task::with('users:id')->select('id', 'need_one_hour_notification', 'deadline')->where('need_one_hour_notification', true)->where('deadline', '<', $next_one_hour)->get();
+        if(count($tasks)){
+            $notification_service = new NotificationService;
+            foreach($tasks as $task){
+                $users = $task->users->pluck('id')->toArray();
+                // $users_without_creator = array_values(array_diff($users, [$task->created_by]));
+                $notificationable_id = $task->id;
+                $link = $default_link.$notificationable_id;
+                $notification_service->addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users, 0);
+                $task->need_one_hour_notification = false;
+                $task->save();
+            }
+        }
+    }
+
+    public function unhideTasks()
+    {
+        $tasks = Task::select('id', 'is_visible', 'created_at', 'created_by')->where('is_visible', false)->where('created_at', '<', date('Y-m-d H:i:s'))->get();        
+        $description = "Task Baru Telah Terbuat"; 
+        $color_type = "green";  
+        $image_type = "task"; 
+        $need_push_notification = false;
+        $notificationable_type = 'App\Task';
+        $default_link = env('APP_URL_WEB')."/task/";
+        if(count($tasks)){
+            $notification_service = new NotificationService;
+            foreach($tasks as $task){
+                $task->is_visible = true;
+                $task->save();
+                $users = $task->users->pluck('id')->toArray();
+                $users[] = $task->created_by;
+                $notificationable_id = $task->id;
+                $link = $default_link.$notificationable_id;
+                $notification_service->addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users, $task->created_by);
+            }
+        }
+    }
 }

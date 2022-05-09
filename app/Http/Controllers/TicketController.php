@@ -218,7 +218,6 @@ class TicketController extends Controller
 
         $response = $this->ticketService->addNoteTicket($request, $route_name);
         return response()->json($response, $response['status']);
-        
     }
 
     public function clientAddNoteTicket(Request $request)
@@ -227,7 +226,6 @@ class TicketController extends Controller
 
         $response = $this->ticketService->clientAddNoteTicket($request, $route_name);
         return response()->json($response, $response['status']);
-        
     }
 
     public function updateNoteTicket(Request $request)
@@ -236,7 +234,6 @@ class TicketController extends Controller
 
         $response = $this->ticketService->updateNoteTicket($request, $route_name);
         return response()->json($response, $response['status']);
-        
     }
 
     public function clientUpdateNoteTicket(Request $request)
@@ -245,7 +242,6 @@ class TicketController extends Controller
 
         $response = $this->ticketService->clientUpdateNoteTicket($request, $route_name);
         return response()->json($response, $response['status']);
-        
     }
     
     public function deleteNoteTicket(Request $request)
@@ -254,7 +250,6 @@ class TicketController extends Controller
 
         $response = $this->ticketService->deleteNoteTicket($request, $route_name);
         return response()->json($response, $response['status']);
-        
     }
 
     public function clientDeleteNoteTicket(Request $request)
@@ -263,7 +258,14 @@ class TicketController extends Controller
 
         $response = $this->ticketService->clientDeleteNoteTicket($request, $route_name);
         return response()->json($response, $response['status']);
-        
+    }
+
+    public function deleteFileTicket(Request $request)
+    {
+        $route_name = "TICKET_UPDATE";
+
+        $response = $this->ticketService->deleteFileTicket($request, $route_name);
+        return response()->json($response, $response['status']);
     }
 
     public function ticketsExport(Request $request)
