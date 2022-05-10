@@ -56,10 +56,10 @@ class FileService
         if(!$set_private) return ["success" => false, "message" => "File Gagal Didelete dari Space"];
         $file->delete();
         $this->purgeLink($file->link);
-        return ["success" => true];
-        $purge_response = $this->purgeLink($file->link);
-        if(!$purge_response) return ["success" => false, "message" => "Gagal Purge Data"];
-        return ["success" => true];
+        // return ["success" => true];
+        // $purge_response = $this->purgeLink($file->link);
+        // if(!$purge_response) return ["success" => false, "message" => "Gagal Purge Data"];
+        // return ["success" => true];
     }
 
     public function deleteForceFile($id)
