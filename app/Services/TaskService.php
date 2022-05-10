@@ -946,6 +946,7 @@ class TaskService{
             $fileService = new FileService;
             // return ["success" => false, "message" => $delete_file_response, "status" => 400];
             $delete_file_response = $fileService->deleteFile($id);
+            return ["success" => true, "message" => "Berhasil Menghapus File", "status" => 200];
             if($delete_file_response['success']) return ["success" => true, "message" => "Berhasil Menghapus File", "status" => 200];
             else return ["success" => false, "message" => $delete_file_response['message'], "status" => 400];
         } catch(Exception $err){
