@@ -943,6 +943,7 @@ class TaskService{
                 return $item->id == $id;
             });
             if($search === false) return ["success" => false, "message" => "File Bukan Milik Task", "status" => 400];
+            return ["success" => false, "message" => $search, "status" => 400];
             $fileService = new FileService;
             $delete_file_response = $fileService->deleteFile($id);
             if($delete_file_response['success']) return ["success" => true, "message" => "Berhasil Menghapus File", "status" => 200];
