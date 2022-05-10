@@ -52,11 +52,11 @@ class FileService
     {
         $file = File::find($id);
         if($file === null) return ["success" => false, "message" => "File Tidak Ditemukan"];
-        return ["success" => true];
         $set_private = Storage::disk('do')->setVisibility($file->link, 'private');
         if(!$set_private) return ["success" => false, "message" => "File Gagal Didelete dari Space"];
         $file->delete();
         $purge_response = $this->purgeLink($file->link);
+        return ["success" => true];
         if(!$purge_response) return ["success" => false, "message" => "Gagal Purge Data"];
         return ["success" => true];
     }
