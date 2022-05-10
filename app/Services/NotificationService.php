@@ -37,12 +37,14 @@ class NotificationService
 
         if($rows > 100) $rows = 100;
         if($rows < 1) $rows = 10;
+        $params = "?rows=$rows";
         
         $login_id = auth()->user()->id;
         $notifications = DB::table('notification_user')->where('user_id', $login_id)
         ->join('notifications', 'notifications.id', '=', 'notification_user.notification_id')
         ->orderBy('notifications.created_at', 'desc')
         ->paginate($rows); 
+        $notifications->withPath(env('APP_URL').'/getNotifications'.$params);
         if($notifications->isEmpty()) return ["success" => true, "message" => "Notifikasi Masih Kosong", "data" => $notifications, "status" => 200];
         return ["success" => true, "message" => "Notifikasi Berhasil Diambil", "data" => $notifications, "status" => 200];
     }
