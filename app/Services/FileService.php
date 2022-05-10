@@ -12,8 +12,8 @@ class FileService
     {
         $cdnService = new DOCdnService;
         $service_response = $cdnService->purge($link);
-        if(isset($service_response['message'])) return false;
-        return true;
+        // if(isset($service_response['message'])) return false;
+        // return true;
     }
 
     public function addFile($id, $file, $table, $description, $folder_detail, $detail = false)
@@ -55,8 +55,9 @@ class FileService
         $set_private = Storage::disk('do')->setVisibility($file->link, 'private');
         if(!$set_private) return ["success" => false, "message" => "File Gagal Didelete dari Space"];
         $file->delete();
-        $purge_response = $this->purgeLink($file->link);
+        $this->purgeLink($file->link);
         return ["success" => true];
+        $purge_response = $this->purgeLink($file->link);
         if(!$purge_response) return ["success" => false, "message" => "Gagal Purge Data"];
         return ["success" => true];
     }
