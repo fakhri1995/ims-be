@@ -944,15 +944,9 @@ class TaskService{
             });
             if($search === false) return ["success" => false, "message" => "File Bukan Milik Task", "status" => 400];
             $fileService = new FileService;
-            $fileService->deleteFile($id);
-            return ["success" => true, "message" => "Berhasil Menghapus File", "status" => 200];
             $delete_file_response = $fileService->deleteFile($id);
-            return ["success" => true, "message" => $delete_file_response, "status" => 200];
-            if($delete_file_response['success']){
-                return ["success" => true, "message" => "Berhasil Menghapus File", "status" => 200];
-            } else {
-                return ["success" => false, "message" => $delete_file_response['message'], "status" => 400];
-            } 
+            if($delete_file_response['success']) return ["success" => true, "message" => "Berhasil Menghapus File", "status" => 200];
+            else return ["success" => false, "message" => $delete_file_response['message'], "status" => 400];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
