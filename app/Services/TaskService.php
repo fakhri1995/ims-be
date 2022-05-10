@@ -945,7 +945,7 @@ class TaskService{
             if($search === false) return ["success" => false, "message" => "File Bukan Milik Task", "status" => 400];
             $fileService = new FileService;
             $delete_file_response = $fileService->deleteFile($id);
-            // return ["success" => true, "message" => "Berhasil Menghapus File", "status" => 200];
+            return ["success" => true, "message" => $delete_file_response, "status" => 200];
             if($delete_file_response['success']){
                 return ["success" => true, "message" => "Berhasil Menghapus File", "status" => 200];
             } else {
