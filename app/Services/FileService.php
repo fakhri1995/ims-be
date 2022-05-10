@@ -50,6 +50,7 @@ class FileService
 
     public function deleteFile($id)
     {
+        return ["success" => true];
         $file = File::find($id);
         if($file === null) return ["success" => false, "message" => "File Tidak Ditemukan"];
         $set_private = Storage::disk('do')->setVisibility($file->link, 'private');
