@@ -942,6 +942,7 @@ class TaskService{
             $search = $task->attachments->search(function ($item) use ($id) {
                 return $item->id == $id;
             });
+            return ["success" => false, "message" => "Test Error Android", "status" => 400];
             if($search === false) return ["success" => false, "message" => "File Bukan Milik Task", "status" => 400];
             $fileService = new FileService;
             $delete_file_response = $fileService->deleteFile($id);
