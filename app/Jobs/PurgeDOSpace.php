@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use Illuminate\Support\Facades\Http;
+use GuzzleHttp\Client;
 
 class PurgeDOSpace extends Job
 {
@@ -24,13 +25,31 @@ class PurgeDOSpace extends Job
      */
     public function handle()
     {
-        Http::asJson()
-        ->withToken(config('filesystems.disks.do.token_api'))
-        ->delete(
-            config('filesystems.disks.do.cdn_endpoint') . '/cache',
-            [
-                'files' => ["{$this->link}"],
-            ]
-        );
+        // new Client(['base_uri' => 'https://go.cgx.co.id/']);
+        // $this->client->request('DELETE', '/auth/v1/validate-feature', [
+        //             'headers'  => $headers,
+        //             'json' => $body
+        //     ]);
+
+        $body = [
+                'files' => [$this->link],
+        ];
+        $headers = [
+            'Authorization' => 'Bearer '.config('filesystems.disks.do.token_api'),
+            'content-type' => 'application/json'
+        ];
+        $client = new Client();
+        $client->request('DELETE', config('filesystems.disks.do.cdn_endpoint') . '/cache', [
+                    'headers'  => $headers,
+                    'json' => $body
+            ]);
+        // Http::asJson()
+        // ->withToken(config('filesystems.disks.do.token_api'))
+        // ->delete(
+        //     config('filesystems.disks.do.cdn_endpoint') . '/cache',
+        //     [
+        //         'files' => ["{$this->link}"],
+        //     ]
+        // );
     }
 }
