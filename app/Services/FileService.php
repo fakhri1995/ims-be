@@ -59,7 +59,7 @@ class FileService
         dispatch(new PurgeDOSpace($file->link));
         // $purge_response = $this->purgeLink($file->link);
         // if(!$purge_response) return ["success" => false, "message" => "Gagal Purge Data"];
-        return ["success" => true];
+        return ["success" => true, 'link' => $file->link];
     }
 
     public function deleteForceFile($id)
