@@ -25,12 +25,6 @@ class PurgeDOSpace extends Job
      */
     public function handle()
     {
-        // new Client(['base_uri' => 'https://go.cgx.co.id/']);
-        // $this->client->request('DELETE', '/auth/v1/validate-feature', [
-        //             'headers'  => $headers,
-        //             'json' => $body
-        //     ]);
-
         $body = [
                 'files' => [$this->link],
         ];
@@ -40,9 +34,9 @@ class PurgeDOSpace extends Job
         ];
         $client = new Client();
         $client->request('DELETE', config('filesystems.disks.do.cdn_endpoint') . '/cache', [
-                    'headers'  => $headers,
-                    'json' => $body
-            ]);
+                'headers'  => $headers,
+                'json' => $body
+        ]);
         // Http::asJson()
         // ->withToken(config('filesystems.disks.do.token_api'))
         // ->delete(
