@@ -2,9 +2,10 @@
 
 namespace App\Services;
 use App\File;
+use Exception;
+use App\Jobs\PurgeDOSpace;
 use App\Services\DOCdnService;
 use Illuminate\Support\Facades\Storage;
-use Exception;
 
 class FileService
 {
@@ -55,8 +56,9 @@ class FileService
         $set_private = Storage::disk('do')->setVisibility($file->link, 'private');
         if(!$set_private) return ["success" => false, "message" => "File Gagal Didelete dari Space"];
         $file->delete();
-        $purge_response = $this->purgeLink($file->link);
-        if(!$purge_response) return ["success" => false, "message" => "Gagal Purge Data"];
+        dispatch(new PurgeDOSpace($file->link));
+        // $purge_response = $this->purgeLink($file->link);
+        // if(!$purge_response) return ["success" => false, "message" => "Gagal Purge Data"];
         return ["success" => true];
     }
 
