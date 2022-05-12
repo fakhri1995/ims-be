@@ -917,13 +917,15 @@ class TaskService{
                 $table = 'App\Task';
                 $description = 'task_attachment';
                 $folder_detail = 'Tasks';
-                $list_file = [];
+                // $list_file = [];
+                $list_link = [];
                 foreach($attachments as $file){
                     $add_file_response = $fileService->addFile($id, $file, $table, $description, $folder_detail, true);
-                    $list_file[] = $add_file_response['id'];
+                    // $list_file[] = $add_file_response['id'];
+                    $list_link[] = $add_file_response['link'];
                 }
             }
-            return ["success" => true, "message" => "Files Berhasil Diperbarui", "status" => 200];
+            return ["success" => true, "message" => "Files Berhasil Diperbarui", "link" => $list_link, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }

@@ -40,7 +40,7 @@ class FileService
             $new_file->uploaded_by = auth()->user()->id;
             $new_file->description = $description;
             $new_file->save();
-            return ["success" => true, "id" => $new_file->id];
+            return ["success" => true, "id" => $new_file->id, "link" => $new_file->link];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -70,8 +70,10 @@ class FileService
         $delete_file = Storage::disk('do')->delete($file->link);
         if(!$delete_file) return ["success" => false, "message" => "File Gagal Didelete dari Space"];
         $file->forceDelete();
-        $purge_response = $this->purgeLink($file->link);
-        if(!$purge_response) return ["success" => false, "message" => "Gagal Purge Data"];
+        dispatch(new PurgeDOSpace($file->link));
+
+        // $purge_response = $this->purgeLink($file->link);
+        // if(!$purge_response) return ["success" => false, "message" => "Gagal Purge Data"];
         return ["success" => true];
     }
 }
