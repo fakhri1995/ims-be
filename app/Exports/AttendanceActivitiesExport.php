@@ -19,7 +19,7 @@ class AttendanceActivitiesExport implements WithMultipleSheets
             $from = date("Y-m-d", $last_month_timestamp_times);
         }
         if(!$to){
-            $current_timestamp_times = strtotime($current_timestamp);
+            $current_timestamp_times = strtotime('+1 day');
             $to = date("Y-m-d", $current_timestamp_times);
         }
         $this->from = $from;
