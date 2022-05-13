@@ -13,14 +13,11 @@ class AttendanceActivitiesExport implements WithMultipleSheets
     
     public function __construct($from = null, $to = null, $attendance_form, $multiple, $user_ids)
     {
-        $current_timestamp = date("Y-m-d");
         if(!$from){
-            $last_month_timestamp_times = strtotime($current_timestamp) - 2592000;
-            $from = date("Y-m-d", $last_month_timestamp_times);
+            $from = date("Y-m-d", strtotime("-1 months"));
         }
         if(!$to){
-            $current_timestamp_times = strtotime('+1 day');
-            $to = date("Y-m-d", $current_timestamp_times);
+            $to = date("Y-m-d", strtotime('+1 day'));
         }
         $this->from = $from;
         $this->to = $to;
