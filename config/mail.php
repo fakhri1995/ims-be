@@ -36,22 +36,11 @@ return [
     'mailers' => [
         'smtp' => [
             'transport' => 'smtp',
-            'host' => env('MAIL_HOST', 'smtppro.zoho.com'),
+            'host' => env('MAIL_HOST', 'smtp.googlemail.com'),
             'port' => env('MAIL_PORT', 465),
             'encryption' => env('MAIL_ENCRYPTION', 'SSL'),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
-            'timeout' => null,
-            'auth_mode' => null,
-        ],
-
-        'admin' => [
-            'transport' => 'smtp',
-            'host' => env('MAIL_HOST', 'smtppro.zoho.com'),
-            'port' => env('MAIL_PORT', 465),
-            'encryption' => env('MAIL_ENCRYPTION', 'SSL'),
-            'username' => env('ADMIN_USERNAME'),
-            'password' => env('ADMIN_PASSWORD'),
             'timeout' => null,
             'auth_mode' => null,
         ],
