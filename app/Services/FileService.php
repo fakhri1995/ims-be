@@ -40,7 +40,11 @@ class FileService
             $new_file->uploaded_by = auth()->user()->id;
             $new_file->description = $description;
             $new_file->save();
-            return ["success" => true, "id" => $new_file->id, "link" => $new_file->link];
+            $new_data = (object)[
+                "id" => $new_file->id, 
+                "link" => $new_file->link
+            ];
+            return ["success" => true, "new_data" => $new_data];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
