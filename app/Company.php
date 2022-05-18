@@ -17,6 +17,15 @@ class Company extends Model
 
     public $timestamps = false;
 
+    public function companyLogo()
+    {
+        return $this->morphOne(File::class, 'fileable')->withDefault([
+            'id' => 0,
+            'link' => env('APP_ENV').'/Companies/default_company.png',
+            'description' => "company_logo"
+        ]);;
+    }
+
 
     public function child()
     {
@@ -30,7 +39,7 @@ class Company extends Model
 
     public function subChild()
     {
-        return $this->hasMany(self::class, 'parent_id')->select('id', 'name as title', 'id as key', 'id as value', 'parent_id', 'role', 'image_logo')->where('role', 4);
+        return $this->hasMany(self::class, 'parent_id')->select('id', 'name as title', 'id as key', 'id as value', 'parent_id', 'role')->with('companyLogo')->where('role', 4);
     }
 
     public function noSubChild()
