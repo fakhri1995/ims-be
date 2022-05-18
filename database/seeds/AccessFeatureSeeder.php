@@ -742,7 +742,11 @@ class AccessFeatureSeeder extends Seeder
             ],
             [
                 "name" => "TASK_FILES_SAVE",
-                "description" => "Fitur untuk menyimpan link data attachment task"
+                "description" => "Fitur untuk menyimpan attachment task"
+            ],
+            [
+                "name" => "TASK_FILES_DELETE",
+                "description" => "Fitur untuk menghapus attachment task"
             ],
             [
                 "name" => "TASK_STATUS_TOGGLE",
@@ -1817,6 +1821,9 @@ class AccessFeatureSeeder extends Seeder
                     ],
                     [
                         "name" => "TASK_FILES_SAVE"
+                    ],
+                    [
+                        "name" => "TASK_FILES_DELETE"
                     ],
                     [
                         "name" => "TASK_STATUS_TOGGLE"

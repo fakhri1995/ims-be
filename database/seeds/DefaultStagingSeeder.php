@@ -35,7 +35,6 @@ class DefaultStagingSeeder extends Seeder
             $user->password = Hash::make($data['password']);
             $user->role = 1;
             $user->phone_number = "-";
-            $user->profile_image = "-";
             $user->position = $data['position'];
             $user->is_enabled = true;
             $user->created_time = "2022-02-09 09:37:19";
@@ -61,7 +60,6 @@ class DefaultStagingSeeder extends Seeder
                 $user->password = Hash::make("123456789");
                 $user->role = 2;
                 $user->phone_number = "-";
-                $user->profile_image = "-";
                 $user->position = $positions[random_int(0, 5)];
                 $user->is_enabled = true;
                 $user->created_time = "2022-02-09 09:37:19";
@@ -88,7 +86,6 @@ class DefaultStagingSeeder extends Seeder
                 $user->password = Hash::make("123456789");
                 $user->role = 1;
                 $user->phone_number = "-";
-                $user->profile_image = "-";
                 $user->position = $positions[random_int(0, 5)];
                 $user->is_enabled = true;
                 $user->created_time = "2022-02-09 09:37:19";
@@ -107,7 +104,6 @@ class DefaultStagingSeeder extends Seeder
         $company->top_parent_id = $top_parent_id;
         $company->address = "-";
         $company->phone_number = "-";
-        $company->image_logo = "-";
         $company->role = $role;
         $company->created_time = "2022-02-09 19:37:19";
         if($role === 4) $company->is_enabled = false;
@@ -191,6 +187,13 @@ class DefaultStagingSeeder extends Seeder
 
     public function run()
     {
+        $this->call(AccessFeatureSeeder::class);
+        $this->call(AssetManagementSeeder::class);
+        $this->call(ModelInventorySeeder::class);
+        $this->call(TaskSeeder::class);
+        $this->call(PolymorphicCodeSeeder::class);
+        $this->call(TicketManagementSeeder::class);
+        $this->call(TicketSeeder::class);
         $this->addDefaultUsers();
         $this->addDefaultCompanies();
         $this->addDefaultGroup();
