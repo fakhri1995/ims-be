@@ -34,7 +34,6 @@ class DefaultProductionSeeder extends Seeder
             $user->password = Hash::make($data['password']);
             $user->role = 1;
             $user->phone_number = "-";
-            $user->profile_image = "-";
             $user->position = $data['position'];
             $user->is_enabled = true;
             $user->created_time = "2022-02-09 09:37:19";
@@ -52,7 +51,6 @@ class DefaultProductionSeeder extends Seeder
         $company->top_parent_id = $top_parent_id;
         $company->address = "-";
         $company->phone_number = "-";
-        $company->image_logo = "-";
         $company->role = $role;
         $company->created_time = "2022-02-09 19:37:19";
         if($role === 4) $company->is_enabled = false;

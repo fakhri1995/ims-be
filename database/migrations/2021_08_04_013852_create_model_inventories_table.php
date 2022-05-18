@@ -18,7 +18,7 @@ class CreateModelInventoriesTable extends Migration
             $table->unsignedBigInteger('asset_id');
             $table->string('name');
             $table->string('description')->nullable();
-            $table->string('sku');
+            $table->string('sku')->nullable();
             $table->integer('manufacturer_id')->nullable();
             $table->boolean('required_sn');
             $table->boolean('is_consumable');
