@@ -23,7 +23,6 @@ class CreateIncidentsTable extends Migration
             $table->unsignedBigInteger('inventory_id')->nullable();
             $table->string('problem')->nullable();
             $table->dateTime('incident_time')->nullable();
-            $table->jsonb('files')->nullable();
             $table->text('description')->nullable();
             $table->softDeletes();
         });
