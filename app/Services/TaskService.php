@@ -479,7 +479,7 @@ class TaskService{
         $to = $request->get('to', null);
         $rows = $request->get('rows', 10);
 
-        $users = DB::table('users')->select('id', 'name', 'profile_image')->where('role', 1);
+        $users = DB::table('users')->select('id', 'name')->where('role', 1);
         if($name) $users = $users->where('name', 'like', "%$name%");
         if($rows > 100) $rows = 100;
         if($rows < 1) $rows = 10;
@@ -558,7 +558,7 @@ class TaskService{
 
         }
         $data = (object)[
-            "image_profile" => auth()->user()->profile_image,
+            "image_profile" => auth()->user()->profileImage,
             "name" => auth()->user()->name,
             "status_list" => $list,
             "sum_task" => $sum_task,
@@ -661,7 +661,7 @@ class TaskService{
 
         try{
             $id = $request->get('id', null);
-            $task = Task::with(['attachments', 'reference.type', 'taskType:id,name', 'creator:id,name,profile_image,position', 'location:id,name,parent_id,top_parent_id,role','users', 'group:id,name', 'inventories:id,model_id,mig_id','inventories.modelInventory.asset', 'taskDetails'])->find($id);
+            $task = Task::with(['attachments', 'reference.type', 'taskType:id,name', 'creator:id,name,position', 'location:id,name,parent_id,top_parent_id,role','users', 'group:id,name', 'inventories:id,model_id,mig_id','inventories.modelInventory.asset', 'taskDetails'])->find($id);
             if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
             $task->location->full_location = $task->location->fullSubNameWParentTopParent();
             $task->location->makeHidden(['parent', 'parent_id', 'role']);

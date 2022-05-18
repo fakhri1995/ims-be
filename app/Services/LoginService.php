@@ -3,6 +3,7 @@
 namespace App\Services;
 use App\User;
 use Exception;
+use App\Services\FileService;
 use App\Mail\ForgetPasswordMail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -95,7 +96,6 @@ class LoginService
             if($password === '' || $password === null) {
                 auth()->user()->name = $request->get('name');
                 auth()->user()->phone_number = $request->get('phone_number');
-                auth()->user()->profile_image = $request->get('profile_image');
                 auth()->user()->save();
             } else {
                 if(strlen($password) < 8) return ["success" => false, "data" => "Password Minimal 8 Karakter", "status" => 400];
@@ -103,9 +103,20 @@ class LoginService
                 if($password !== $confirm_password) return ["success" => false, "data" => "Password Tidak Sama!", "status" => 400];
                 auth()->user()->name = $request->get('name');
                 auth()->user()->phone_number = $request->get('phone_number');
-                auth()->user()->profile_image = $request->get('profile_image');
                 auth()->user()->password = Hash::make($password);
                 auth()->user()->save();
+            }
+
+            if($request->hasFile('profile_image')) {
+                $fileService = new FileService;
+                $file = $request->file('profile_image');
+                $table = 'App\User';
+                $description = 'profile_image';
+                $folder_detail = 'Users';
+                if(auth()->user()->profileImage->id){
+                    $delete_file_response = $fileService->deleteForceFile(auth()->user()->profileImage->id);
+                }
+                $add_file_response = $fileService->addFile(auth()->user()->id, $file, $table, $description, $folder_detail);
             }
             return ["success" => true, "message" => "Berhasil Memperbarui Data Profile", "status" => 200];
         } catch(Exception $err){
@@ -119,6 +130,7 @@ class LoginService
         auth()->user()->makeHidden(['deleted_at', 'is_enabled', 'company_id']);
         auth()->user()->groups;
         auth()->user()->groups->makeHidden(['pivot']);
+        auth()->user()->profileImage;
         auth()->user()->attendanceForms;
         auth()->user()->attendanceForms->makeHidden(['updated_at', 'deleted_at', 'created_by']);
         $list_feature = [];

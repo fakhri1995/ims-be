@@ -34,7 +34,7 @@ $router->group(['middleware' => 'auth'], function($router){
     //User Routes
     $router->post('/logout', 'LoginController@logout');
     $router->get('/detailProfile', 'LoginController@detailProfile');
-    $router->put('/updateProfile', 'LoginController@updateProfile');
+    $router->post('/updateProfile', 'LoginController@updateProfile');
     $router->post('/changePassword', 'LoginController@changePassword');
 
     //Message Routes

@@ -243,10 +243,10 @@ class UserService
                 $table = 'App\User';
                 $description = 'profile_image';
                 $folder_detail = 'Users';
-                $add_file_response = $fileService->addFile($user->id, $file, $table, $description, $folder_detail);
                 if($user->profileImage->id){
                     $delete_file_response = $fileService->deleteForceFile($user->profileImage->id);
                 }
+                $add_file_response = $fileService->addFile($user->id, $file, $table, $description, $folder_detail);
             }
             
             $data_request = [

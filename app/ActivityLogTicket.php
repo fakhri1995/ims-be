@@ -12,11 +12,10 @@ class ActivityLogTicket extends Model
 
     public function causer()
     {
-        return $this->belongsTo(User::class, 'causer_id')->withDefault([
+        return $this->belongsTo(User::class, 'causer_id')->with('profileImage')->withDefault([
             'id' => 0,
             'name' => 'User Tidak Ditemukan',
-            'profile_image' => 'User Tidak Ditemukan',
             'role' => 2,
-        ])->select('id', 'name', 'profile_image', 'role');
+        ])->select('id', 'name', 'role');
     }
 }
