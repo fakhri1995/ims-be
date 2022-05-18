@@ -17,6 +17,7 @@ use App\TicketDetailType;
 use App\Services\LogService;
 use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
+use App\Services\FileService;
 use App\Exports\TicketsExport;
 use App\Services\CompanyService;
 use Illuminate\Support\Facades\DB;
@@ -279,7 +280,7 @@ class TicketService
             "task" => $task_statuses,
             "user" => (object)[
                 "id" => auth()->user()->id,
-                "image_profile" => auth()->user()->profile_image,
+                "image_profile" => auth()->user()->profileImage,
                 "name" => auth()->user()->name,
                 "company_id" => auth()->user()->company_id,
                 "company_name" => auth()->user()->company->name,
@@ -586,7 +587,7 @@ class TicketService
         try{
             $id = $request->get('id');
             $ticket = Ticket::select('tickets.id', 'tickets.ticketable_id', 'tickets.ticketable_type', 'tickets.created_by', 'tickets.status', 'tickets.raised_at', 'tickets.closed_at', 'tickets.resolved_times', 'tickets.deadline')
-            ->with(['tasks:id,name,reference_id,status,group_id,deadline', 'tasks.users:id,name,profile_image', 'tasks.group:id,name', 'creator:id,name,company_id', 'creator.company:id,name,top_parent_id', 'type', 'ticketable.location', 'ticketable.assetType', 'ticketable.inventory'])
+            ->with(['tasks:id,name,reference_id,status,group_id,deadline', 'tasks.users:id,name', 'tasks.group:id,name', 'creator:id,name,company_id', 'creator.company:id,name,top_parent_id', 'type', 'ticketable.location', 'ticketable.assetType', 'ticketable.inventory'])
             ->find($id);
             if($ticket === null) return ["success" => false, "message" => "Ticket Tidak Ditemukan", "status" => 400];
             $company_user_login_id = auth()->user()->company_id;
@@ -602,24 +603,20 @@ class TicketService
             //         $ticket->assignment_type = "Engineer";
             //         $ticket->assignment_operator_id = $ticket->task->users[0]->id;
             //         $ticket->assignment_operator_name = $ticket->task->users[0]->name;
-            //         $ticket->assignment_profile_image = $ticket->task->users[0]->profile_image;
             //     } else {
             //         $ticket->assignment_type = "-";
             //         $ticket->assignment_operator_id = 0;
             //         $ticket->assignment_operator_name = "-";
-            //         $ticket->assignment_profile_image = "-";
             //     }
             // } else {
             //     if(!$ticket->task->group){
             //         $ticket->assignment_type = "-";
             //         $ticket->assignment_operator_id = -1;
             //         $ticket->assignment_operator_name = "-";
-            //         $ticket->assignment_profile_image = "-";
             //     } else {
             //         $ticket->assignment_type = "Group";
             //         $ticket->assignment_operator_id = $ticket->task->group->id;
             //         $ticket->assignment_operator_name = $ticket->task->group->name;
-            //         $ticket->assignment_profile_image = "-";
             //     }
             // }
             if($admin){
@@ -665,6 +662,20 @@ class TicketService
         return $this->getTicket($request, false);
     }
 
+    private function addTicketFile($id, $files)
+    {
+        $fileService = new FileService;
+        $table = 'App\Incident';
+        $description = 'incident_attachment';
+        $folder_detail = 'Tickets/Incidents';
+        $new_file_list = [];
+        foreach($files as $file){
+            $add_file_response = $fileService->addFile($id, $file, $table, $description, $folder_detail, true);
+            $new_file_list[] = $add_file_response['new_data'];
+        }
+        return $new_file_list;
+    }
+
     public function addTicket($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
@@ -681,8 +692,8 @@ class TicketService
             $location_id = $request->get('location_id');
             // $ticket_detail_type = TicketDetailType::with('taskType.works','ticketType')->find($ticket_detail_type_id);
             // if($ticket_detail_type === null) return ["success" => false, "message" => "Id Tipe Task Ticket Tidak Ditemukan", "status" => 400];
-            if($type_id === 1){
-                $files = $request->get('files', []);
+            if($type_id == 1){
+                // $files = $request->get('files', []);
                 // $names = [];
                 // if(!empty($files)){
                 //     foreach($files as $file){
@@ -697,7 +708,6 @@ class TicketService
                 // $new_task_reponse = $this->addTask($ticket_detail_type, $location_id, $causer_id);
                 // if(!$new_task_reponse['success']) return $new_task_reponse;
                 $incident = new Incident;
-                // $incident->product_type = $request->get('ticket_detail_type_id');
                 $incident->product_type = $request->get('ticket_detail_type_id');
                 $incident->product_id = $request->get('product_id');
                 $incident->pic_name = $request->get('pic_name');
@@ -705,9 +715,13 @@ class TicketService
                 $incident->location_id = $location_id;
                 $incident->problem = $request->get('problem');
                 $incident->incident_time = $request->get('incident_time');
-                $incident->files = $files;
                 $incident->description = $request->get('description');
                 $incident->save();
+                
+                $files = $request->file('attachments', []);
+                if(!empty($files)){
+                    $new_file_list = $this->addTicketFile($incident->id, $files);
+                }
                 
                 $ticketable_type = 'App\Incident';
                 $ticketable_id = $incident->id;
@@ -735,7 +749,7 @@ class TicketService
             
             $logService->createLogTicket($ticket->id, $causer_id);
 
-            return ["success" => true, "message" => "Ticket Berhasil Diterbitkan", "id" => $ticket->id, "status" => 200];
+            return ["success" => true, "message" => "Ticket Berhasil Diterbitkan", "id" => $ticket->id, "new_file_list" => $new_file_list, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -769,12 +783,16 @@ class TicketService
                 $incident->location_id = $location_id;
                 $incident->problem = $request->get('problem');
                 $incident->incident_time = $request->get('incident_time');
-                $incident->files = $request->get('files');
                 $incident->description = $request->get('description');
                 $incident->save();
                 if($old_incident_time !== $incident->incident_time){
                     if($request->get('incident_time') !== null) $logService->updateIncidentLogTicket($id, $incident->incident_time);
                 } 
+                
+                $files = $request->file('attachments', []);
+                if(!empty($files)){
+                    $list_file = $this->addTicketFile($incident->id, $files);
+                }
             }
             $closed_at = $request->get('closed_at');
             if($ticket->closed_at !== $closed_at){
@@ -788,6 +806,29 @@ class TicketService
             $logService->updateLogTicket($id, $causer_id);
 
             return ["success" => true, "message" => "Ticket Berhasil Diperbarui", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteFileTicket($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $ticket_id = $request->get('ticket_id', null);
+            $id = $request->get('id', null);
+            $ticket = Ticket::with('ticketable')->find($ticket_id);
+            if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
+            $search = $ticket->ticketable->attachments->search(function ($item) use ($id) {
+                return $item->id == $id;
+            });
+            if($search === false) return ["success" => false, "message" => "File Bukan Milik Ticket", "status" => 400];
+            $fileService = new FileService;
+            $delete_file_response = $fileService->deleteFile($id);
+            if($delete_file_response['success']) return ["success" => true, "message" => "Berhasil Menghapus File", "status" => 200];
+            else return ["success" => false, "message" => $delete_file_response['message'], "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -1334,7 +1375,6 @@ class TicketService
             $task->end_repeat_at = null;
             $task->repeat = null;
             $task->is_from_ticket = true;
-            $task->files = [];
             $task->is_visible = true;
             $task->status = 2;
             

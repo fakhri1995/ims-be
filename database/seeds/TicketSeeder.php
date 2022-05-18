@@ -35,7 +35,6 @@ class TicketSeeder extends Seeder
             $task->end_repeat_at = null;
             $task->repeat = null;
             $task->is_from_ticket = true;
-            $task->files = [];
             $task->is_visible = true;
             $task->status = 2;
             
@@ -61,7 +60,6 @@ class TicketSeeder extends Seeder
             $random_status = random_int(1,6);
             $product_id = 900 + $location_id;
             
-            $files = [];
             $incident = new Incident;
             $incident->product_type = $random_int;
             $incident->product_id = $product_id;
@@ -70,7 +68,6 @@ class TicketSeeder extends Seeder
             $incident->location_id = $location_id;
             $incident->problem = "Problem $i";
             $incident->incident_time = $current_timestamp;
-            $incident->files = $files;
             $incident->description = "Description $i";
             $incident->save();
             

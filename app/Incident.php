@@ -10,9 +10,7 @@ class Incident extends Model
     use SoftDeletes;
 
     public $timestamps = false;
-    protected $casts = [
-        'files' => 'array'
-    ];
+    public $with = ['attachments'];
 
     public function location()
     {
@@ -40,5 +38,10 @@ class Incident extends Model
     public function inventory()
     {
         return $this->belongsTo(Inventory::class)->with(['statusCondition', 'statusUsage', 'modelInventory.asset', 'additionalAttributes', 'locationInventory']);
+    }
+    
+    public function attachments()
+    {
+        return $this->morphMany('App\File', 'fileable');
     }
 }

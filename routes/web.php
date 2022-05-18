@@ -224,7 +224,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addTicket', 'TicketController@addTicket');
     $router->post('/addNoteTicket', 'TicketController@addNoteTicket');
     $router->post('/clientAddNoteTicket', 'TicketController@clientAddNoteTicket');
-    $router->put('/updateTicket', 'TicketController@updateTicket');
+    $router->post('/updateTicket', 'TicketController@updateTicket');
     $router->put('/setItemTicket', 'TicketController@setItemTicket');
     $router->put('/cancelTicket', 'TicketController@cancelTicket');
     $router->put('/cancelClientTicket', 'TicketController@cancelClientTicket');
@@ -234,7 +234,8 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/clientUpdateNoteTicket', 'TicketController@clientUpdateNoteTicket');
     $router->put('/setDeadline', 'TicketController@setDeadline');
     $router->delete('/deleteNoteTicket', 'TicketController@deleteNoteTicket');
-    $router->delete('/clientDeleteNoteTicket', 'TicketController@clientDeleteNoteTicket');   
+    $router->delete('/clientDeleteNoteTicket', 'TicketController@clientDeleteNoteTicket');  
+    $router->delete('/deleteFileTicket', 'TicketController@deleteFileTicket'); 
      
     $router->get('/getTicketDetailTypes', 'TicketController@getTicketDetailTypes');
     $router->post('/addTicketDetailType', 'TicketController@addTicketDetailType');
