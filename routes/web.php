@@ -368,6 +368,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getNotification', 'NotificationController@getNotification');
     $router->get('/getNotifications', 'NotificationController@getNotifications');
     $router->post('/readNotification', 'NotificationController@readNotification');
+    $router->post('/readAllNotifications', 'NotificationController@readAllNotifications');
     
     
 });

@@ -61,6 +61,17 @@ class NotificationService
         return ["success" => true, "message" => "Notifikasi Berhasil Dibaca", "status" => 200];
     }
 
+    public function readAllNotifications($request, $route_name)
+    {
+        // $access = $this->globalService->checkRoute($route_name);
+        // if($access["success"] === false) return $access;
+        
+        $login_id = auth()->user()->id;
+        $notifications = DB::table('notification_user')->where('user_id', $login_id)->where('is_read', false)->update(['is_read' => DB::raw( true )]);
+        if(!$notifications) return ["success" => false, "message" => "Notifikasi Tidak Ditemukan", "status" => 400];
+        return ["success" => true, "message" => "Notifikasi Berhasil Dibaca", "status" => 200];
+    }
+
     public function addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users, $created_by)
     {
         try{

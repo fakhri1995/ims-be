@@ -41,4 +41,12 @@ class NotificationController extends Controller
         $response = $this->notificationService->readNotification($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    public function readAllNotifications(Request $request)
+    {
+        $route_name = "NOTIFICATIONS_READ";
+
+        $response = $this->notificationService->readAllNotifications($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }
