@@ -18,7 +18,6 @@ class CreateCompaniesTable extends Migration
             $table->unsignedBigInteger("parent_id")->nullable();
             $table->unsignedBigInteger("top_parent_id")->nullable();
             $table->string("name");
-            $table->string("image_logo")->nullable();
             $table->string("phone_number");
             $table->string("address");
             $table->tinyInteger("role");
