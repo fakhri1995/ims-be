@@ -45,7 +45,7 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     {
         return $this->morphOne(File::class, 'fileable')->select('id', 'link', 'description', 'fileable_id', 'fileable_type')->withDefault([
             'id' => 0,
-            'link' => "-",
+            'link' => env('APP_ENV').'/Users/default_user.png',
             'description' => "profile_image"
         ]);
     }
