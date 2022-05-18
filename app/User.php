@@ -41,6 +41,14 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
         ]);
     }
 
+    public function profileImage()
+    {
+        return $this->morphOne(File::class, 'fileable')->select('link', 'description', 'fileable_id', 'fileable_type')->withDefault([
+            'link' => "-",
+            'description' => "profile_image"
+        ]);;
+    }
+
     public function roles()
     {
         return $this->belongsToMany(Role::class, 'user_role_pivots');

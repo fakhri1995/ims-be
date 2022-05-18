@@ -53,7 +53,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getAgentDetail', 'UserController@getAgentDetail');
     $router->get('/getAgentList', 'UserController@getAgentList');
     $router->post('/addAgentMember', 'UserController@addAgentMember');
-    $router->put('/updateAgentDetail', 'UserController@updateAgentDetail');
+    $router->post('/updateAgentDetail', 'UserController@updateAgentDetail');
     $router->put('/changeAgentPassword', 'UserController@changeAgentPassword');
     $router->put('/agentActivation', 'UserController@agentActivation');
     $router->delete('/deleteAgent', 'UserController@deleteAgent');
@@ -62,7 +62,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getRequesterDetail', 'UserController@getRequesterDetail');
     $router->get('/getRequesterList', 'UserController@getRequesterList');
     $router->post('/addRequesterMember', 'UserController@addRequesterMember');
-    $router->put('/updateRequesterDetail', 'UserController@updateRequesterDetail');
+    $router->post('/updateRequesterDetail', 'UserController@updateRequesterDetail');
     $router->put('/changeRequesterPassword', 'UserController@changeRequesterPassword');
     $router->put('/requesterActivation', 'UserController@requesterActivation');
     $router->delete('/deleteRequester', 'UserController@deleteRequester');
