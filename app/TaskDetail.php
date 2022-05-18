@@ -13,7 +13,7 @@ class TaskDetail extends Model
     
     public function users()
     {
-        return $this->belongsToMany(User::class)->select('users.id','users.name','users.profile_image');
+        return $this->belongsToMany(User::class)->with('profileImage')->select('users.id','users.name');
     }
 
     public function task()
