@@ -3,6 +3,7 @@
 namespace App\Services;
 use App\User;
 use Exception;
+use App\Services\FileService;
 use App\Services\LoginService;
 use App\Mail\ChangePasswordMail;
 use App\Services\CompanyService;
@@ -40,7 +41,7 @@ class UserService
         $name = $request->get('name', null);
         $type = $request->get('type', null);
         $company_id = $request->get('company_id', null);
-        $users = User::with(['company:id,name,top_parent_id', 'company.topParent', 'attendanceForms:id,name'])->select('id', 'name', 'company_id', 'profile_image', 'position');
+        $users = User::with(['company:id,name,top_parent_id', 'profileImage', 'company.topParent', 'attendanceForms:id,name'])->select('id', 'name', 'company_id', 'position');
         if($type) $users = $users->where('role', $type);
         if($name) $users = $users->where('name', 'like', "%".$name."%");
         if($company_id) $users = $users->where('company_id', $company_id);
@@ -56,7 +57,7 @@ class UserService
 
     public function getUserDetail($account_id, $role_id){
         try{
-            $user = User::with(['roles:id,name', 'company', 'attendanceForms:id,name'])->find($account_id);
+            $user = User::with(['roles:id,name', 'company', 'attendanceForms:id,name', 'profileImage'])->find($account_id);
             if($user === null) return ["success" => false, "message" => "Id Akun Tidak Ditemukan", "status" => 400];
             if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 403];
             else {
@@ -111,8 +112,8 @@ class UserService
 
     public function getUserList($request, $role_id){
         $company_id = auth()->user()->company_id;
-        $users = User::with(['company:id,parent_id,name,top_parent_id', 'company.topParent'])
-        ->select('id','name', 'nip', 'email','role','company_id', 'position','profile_image','phone_number','created_time','is_enabled')
+        $users = User::with(['company:id,parent_id,name,top_parent_id', 'company.topParent', 'profileImage'])
+        ->select('id','name', 'nip', 'email','role','company_id', 'position','phone_number','created_time','is_enabled')
         ->where('users.role', $role_id);
         if($company_id !== 1){
             $company_service = new CompanyService;
@@ -170,7 +171,6 @@ class UserService
             $user->password = Hash::make($password);
             $user->role = $role_id;
             $user->phone_number = $request->get('phone_number');
-            $user->profile_image = $request->get('profile_image');
             $user->position = $request->get('position');
             $user->is_enabled = true;
             $user->created_time = date("Y-m-d H:i:s");
@@ -183,6 +183,15 @@ class UserService
             $set_role = $this->updateRoleUser($data_request, $role_id);
             $attendance_form_ids = $request->get('attendance_form_ids', []);
             $user->attendanceForms()->attach($attendance_form_ids);
+            if($request->hasFile('profile_image')) {
+                $fileService = new FileService;
+                $file = $request->file('profile_image');
+                $table = 'App\User';
+                $description = 'profile_image';
+                $folder_detail = 'Users';
+                $add_file_response = $fileService->addFile($user->id, $file, $table, $description, $folder_detail);
+            }
+
             $loginService = new LoginService;
             $token = $loginService->generate_token($email, $password);
             if(!isset($token['error'])){
@@ -218,7 +227,7 @@ class UserService
 
     public function updateUserDetail($request, $role_id){
         $id = $request->get('id');
-        $user = User::find($id);
+        $user = User::with('profileImage')->find($id);
         if($user === null) return ["success" => false, "message" => "Id Pengguna Tidak Ditemukan", "status" => 400];
         if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 403];
         try{
@@ -227,6 +236,19 @@ class UserService
             $user->phone_number = $request->get('phone_number');
             $user->position = $request->get('position');
             $user->save();
+
+            if($request->hasFile('profile_image')) {
+                $fileService = new FileService;
+                $file = $request->file('profile_image');
+                $table = 'App\User';
+                $description = 'profile_image';
+                $folder_detail = 'Users';
+                $add_file_response = $fileService->addFile($user->id, $file, $table, $description, $folder_detail);
+                if($user->profileImage->id){
+                    $delete_file_response = $fileService->deleteForceFile($user->profileImage->id);
+                }
+            }
+            
             $data_request = [
                 "id" => $id,
                 "role_ids" => $request->get('role_ids', [])
