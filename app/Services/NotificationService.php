@@ -108,6 +108,21 @@ class NotificationService
         }
     }
 
+    public function updateCreatorNotification($notificationable_id, $notificationable_type, $old_creator_id, $new_creator_id)
+    {
+        try{
+            $notification_ids = Notification::where('notificationable_id', $notificationable_id)->where('notificationable_type', $notificationable_type)->pluck('id');
+            if($notification_ids){
+                $update_creator_id_notifications = DB::table('notification_user')->whereIn('notification_id', $notification_ids)->where('user_id', $old_creator_id)->update(['user_id' => $new_creator_id, 'is_read' => false]);
+                return ["success" => true, "id" => $notification->id];
+            } else {
+                return ["success" => false, "id" => 0];
+            }
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     // public function generateOneHourLeftTask()
     // {
     //     $description = "Task akan mencapai waktu deadline pada satu jam dari sekarang"; 

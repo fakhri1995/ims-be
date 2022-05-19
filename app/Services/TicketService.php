@@ -23,6 +23,7 @@ use App\Services\CompanyService;
 use Illuminate\Support\Facades\DB;
 use App\Services\GlobalService;
 use App\AttendanceUser;
+use App\Services\NotificationService;
 
 class TicketService
 {
@@ -690,18 +691,6 @@ class TicketService
             // $ticket_detail_type = TicketDetailType::with('taskType.works','ticketType')->find($ticket_detail_type_id);
             // if($ticket_detail_type === null) return ["success" => false, "message" => "Id Tipe Task Ticket Tidak Ditemukan", "status" => 400];
             if($type_id == 1){
-                // $files = $request->get('files', []);
-                // $names = [];
-                // if(!empty($files)){
-                //     foreach($files as $file){
-                //         $file_name = $file->getClientOriginalName();
-                //         $filename = pathinfo($file_name, PATHINFO_FILENAME);
-                //         $extension = pathinfo($file_name, PATHINFO_EXTENSION);
-                //         $name = $filename.'_'.time().'.'.$extension;
-                //         Storage::disk('local')->putFileAs('incidents', $file, $name);
-                //         array_push($names, $name);
-                //     }
-                // }
                 // $new_task_reponse = $this->addTask($ticket_detail_type, $location_id, $causer_id);
                 // if(!$new_task_reponse['success']) return $new_task_reponse;
                 $incident = new Incident;
@@ -718,7 +707,7 @@ class TicketService
                 $files = $request->file('attachments', []);
                 if(!empty($files)){
                     $new_file_list = $this->addTicketFile($incident->id, $files);
-                }
+                } else $new_file_list = [];
                 
                 $ticketable_type = 'App\Incident';
                 $ticketable_id = $incident->id;
@@ -734,7 +723,6 @@ class TicketService
             $ticket->ticketable_id = $ticketable_id;
             $ticket->ticketable_type = $ticketable_type;
             $ticket->save();
-
             // $new_task->reference_id = $ticket->id;
             // $new_task->save();
 
@@ -745,6 +733,18 @@ class TicketService
             
             
             $logService->createLogTicket($ticket->id, $causer_id);
+            // return ["success" => false, "message" => "MASUK", "status" => 400];
+
+            $assign_ids = [$causer_id];
+            $description = "Tiket Telah Dibuat"; 
+            $link = env('APP_URL_WEB')."/ticket/".$ticket->id;
+            $image_type = "ticket"; 
+            $color_type = "green"; 
+            $need_push_notification = false;
+            $notificationable_id = $ticket->id;
+            $notificationable_type = 'App\Ticket';
+            $users = $assign_ids;
+            $this->addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users);
 
             return ["success" => true, "message" => "Ticket Berhasil Diterbitkan", "id" => $ticket->id, "new_file_list" => $new_file_list, "status" => 200];
         } catch(Exception $err){
@@ -789,20 +789,21 @@ class TicketService
                 $files = $request->file('attachments', []);
                 if(!empty($files)){
                     $list_file = $this->addTicketFile($incident->id, $files);
-                }
+                } else $new_file_list = [];
             }
             $closed_at = $request->get('closed_at');
             if($ticket->closed_at !== $closed_at){
                 $ticket->resolved_times = strtotime($closed_at) - strtotime($ticket->raised_at);
             } 
+            $old_creator_id = $ticket->created_by;
             $ticket->created_by = $requester_id;
             $ticket->raised_at = $raised_at;
             $ticket->closed_at = $closed_at;
             $ticket->save();
 
             $logService->updateLogTicket($id, $causer_id);
-
-            return ["success" => true, "message" => "Ticket Berhasil Diperbarui", "status" => 200];
+            $this->updateCreatorNotification($ticket->id, $old_creator_id, $requester_id);
+            return ["success" => true, "message" => "Ticket Berhasil Diperbarui", "new_file_list" => $new_file_list, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -855,6 +856,18 @@ class TicketService
             $logService = new LogService;
             $logService->updateStatusLogTicket($ticket->id, $causer_id, $old_status, $status, $notes);
 
+            if($status === 6){
+                $assign_ids = [$ticket->created_by];
+                $description = "Tiket Telah Ditutup"; 
+                $link = env('APP_URL_WEB')."/ticket/".$ticket->id;
+                $image_type = "ticket"; 
+                $color_type = "green"; 
+                $need_push_notification = false;
+                $notificationable_id = $ticket->id;
+                $notificationable_type = 'App\Ticket';
+                $users = $assign_ids;
+                $this->addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users);
+            }
 
             return ["success" => true, "message" => "Status Ticket Berhasil Diperbarui", "status" => 200];
         } catch(Exception $err){
@@ -1046,6 +1059,17 @@ class TicketService
             $logService = new LogService;
             $causer_id = auth()->user()->id;
             $log = $logService->addNoteLogTicket($id, $causer_id, $notes);
+
+            $assign_ids = [$ticket->created_by];
+            $description = "Catatan Tiket Telah Dibuat"; 
+            $link = env('APP_URL_WEB')."/ticket/".$ticket->id;
+            $image_type = "ticket"; 
+            $color_type = "green"; 
+            $need_push_notification = false;
+            $notificationable_id = $ticket->id;
+            $notificationable_type = 'App\Ticket';
+            $users = $assign_ids;
+            $this->addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users);
             
             return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "id" => $log->id, "status" => 200];
         } catch(Exception $err){
@@ -1463,5 +1487,19 @@ class TicketService
             if($splits_start[0] !== $splits_end[0]) return $splits_start[2].' '.$splits_start[1].' '.$splits_start[0].' - '.$splits_end[2].' '.$splits_end[1].' '.$splits_end[0];
             else return $splits_start[2].' '.$splits_start[1].' - '.$splits_end[2].' '.$splits_end[1].' '.$splits_end[0];
         } else return $splits_start[2].' - '.$splits_end[2].' '.$splits_end[1].' '.$splits_end[0];
+    }
+
+    private function addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users)
+    {
+        $notification_service = new NotificationService;
+        $created_by = auth()->user()->id;
+        $notification_service->addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users, $created_by);
+    }
+
+    private function updateCreatorNotification($notificationable_id, $old_creator_id, $new_creator_id)
+    {
+        $notification_service = new NotificationService;
+        $notificationable_type = 'App\Ticket';
+        $notification_service->updateCreatorNotification($notificationable_id, $notificationable_type, $old_creator_id, $new_creator_id);
     }
 }
