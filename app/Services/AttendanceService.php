@@ -500,17 +500,12 @@ class AttendanceService{
 
             $file = $request->file('evidence');
             if(!$user_attendance || $user_attendance->check_out) {
-                $evidence = (object) [
-                    "check_in_evidence" => null,
-                    "check_out_evidence" => null
-                ];
                 $user_attendance = new AttendanceUser;
                 $user_attendance->user_id = $login_id;
                 $user_attendance->long_check_in = $long;
                 $user_attendance->lat_check_in = $lat;
                 $user_attendance->check_in = date('Y-m-d H:i:s');
                 $user_attendance->is_wfo = $request->get('wfo', false);
-                $user_attendance->evidence = $evidence;
                 $user_attendance->checked_out_by_system = false;
                 $user_attendance->save();
                 $this->addCheckEvidence($user_attendance->id, $file, "check_in_evidence");
