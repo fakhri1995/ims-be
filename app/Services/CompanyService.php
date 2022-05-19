@@ -226,7 +226,7 @@ class CompanyService
             if($access["success"] === false) return $access;
             $id = $request->get('id', null);
             if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 403];
-            $company = Company::with(['parent:id,name,parent_id,role', 'subChildren', 'subChild.subChild', 'noSubChild.noSubChild.noSubChild'])->find($id);
+            $company = Company::with(['companyLogo', 'parent:id,name,parent_id,role', 'subChildren', 'subChild.subChild', 'noSubChild.noSubChild.noSubChild'])->find($id);
             if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
             $company->makeVisible('top_parent_id');
             $company->sub_location_level_1_count = count($company->subChild);
