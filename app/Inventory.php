@@ -11,7 +11,7 @@ class Inventory extends Model
     use SoftDeletes;
     public $timestamps = false;
     protected $hidden = ['pivot'];
-    protected $fillable = ['model_id', 'vendor_id', 'status_condition', 'status_usage', 'location', 'deskripsi', 'manufacturer_id', 'mig_id', 'serial_number'];
+    protected $fillable = ['model_id', 'vendor_id', 'status_condition', 'status_usage', 'location', 'deskripsi', 'manufacturer_id', 'mig_id', 'serial_number', 'owned_by'];
     
     public function modelInventory()
     {
