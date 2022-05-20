@@ -28,6 +28,7 @@ class InventoriesImport implements ToModel, WithHeadingRow, WithValidation
             'manufacturer_id' => $row['manufacturer_id'],
             'mig_id'     => $row['mig_id'],
             'serial_number'    => $row['serial_number'],
+            'owned_by'    => $row['owned_by'],
             'is_consumable' => false
         ]);
 
@@ -50,8 +51,9 @@ class InventoriesImport implements ToModel, WithHeadingRow, WithValidation
             'location' => 'integer|nullable',
             'deskripsi'    => 'string|max:255|nullable',
             'manufacturer_id' => 'integer|nullable',
-            'mig_id'     => 'required|max:255',
-            'serial_number'    => 'string|max:255|nullable'
+            'mig_id'     => 'max:255|nullable',
+            'serial_number'    => 'max:255|nullable',
+            'owned_by' => 'integer|nullable'
         ];
     }
 }
