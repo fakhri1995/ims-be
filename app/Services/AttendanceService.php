@@ -1,7 +1,7 @@
 <?php 
 
 namespace App\Services;
-use Excel;
+use Maatwebsite\Excel\Facades\Excel;
 use App\User;
 use Exception;
 use App\LongLatList;

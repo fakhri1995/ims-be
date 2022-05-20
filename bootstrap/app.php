@@ -123,8 +123,8 @@ $app->register(Illuminate\Mail\MailServiceProvider::class);
 |
 */
 
-class_alias('Maatwebsite\Excel\Facades\Excel', 'Excel');
-class_alias('Barryvdh\DomPDF\Facade', 'PDF');
+// class_alias('Maatwebsite\Excel\Facades\Excel', 'Excel');
+// class_alias('Barryvdh\DomPDF\Facade', 'PDF');
 
 \Dusterio\LumenPassport\LumenPassport::routes($app, ['prefix' => 'v1/oauth']);
 
