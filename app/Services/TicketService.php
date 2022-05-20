@@ -788,7 +788,7 @@ class TicketService
                 
                 $files = $request->file('attachments', []);
                 if(!empty($files)){
-                    $list_file = $this->addTicketFile($incident->id, $files);
+                    $new_file_list = $this->addTicketFile($incident->id, $files);
                 } else $new_file_list = [];
             }
             $closed_at = $request->get('closed_at');
