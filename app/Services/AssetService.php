@@ -1,7 +1,7 @@
 <?php 
 
 namespace App\Services;
-use Excel;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Role;
 use App\User;
 use App\Asset;

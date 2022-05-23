@@ -1,8 +1,8 @@
 <?php
 
 namespace App\Services;
-use PDF;
-use Excel;
+use Barryvdh\DomPDF\Facade as PDF;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Task;
 use App\User;
 use App\Group;
