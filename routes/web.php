@@ -420,7 +420,7 @@ $router->post('/addDepreciation', 'DepreciationController@addDepreciation');
 $router->put('/updateDepreciation', 'DepreciationController@updateDepreciation');
 $router->delete('/deleteDepreciation', 'DepreciationController@deleteDepreciation');
 
-$router->get('/', function () use ($router){ phpinfo(); });
+// $router->get('/', function () use ($router){ phpinfo(); });
 
 
 
