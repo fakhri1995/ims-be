@@ -274,6 +274,8 @@ class AttendanceService{
         $id = $request->get('id');
         $attendance_activity = AttendanceActivity::find($id);
         if($attendance_activity === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        if($attendance_activity->user_id !== auth()->user()->id) return ["success" => false, "message" => "Aktivitas bukan milik user login", "status" => 400];
+        if(date('Y-m-d', strtotime($attendance_activity->updated_at)) !== date('Y-m-d')) return ["success" => false, "message" => "Aktivitas selain hari ini tidak dapat dihapus", "status" => 400];
         $attendance_form = AttendanceForm::find($attendance_activity->attendance_form_id);
         if($attendance_form === null) return ["success" => false, "message" => "Id Form Tidak Ditemukan", "status" => 400];
         $activity_details = $request->get('details', []);
