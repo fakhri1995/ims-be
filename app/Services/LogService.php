@@ -154,14 +154,14 @@ class LogService
                 }
 
                 if(isset($properties->attributes->owned_by)){
-                    $owner = User::find($properties->attributes->owned_by);
+                    $owner = Company::find($properties->attributes->owned_by);
                     if($owner) $properties->attributes->owner_name = $owner->name;
-                    else $properties->attributes->owner_name = "User Tidak Ditemukan";
+                    else $properties->attributes->owner_name = "Company Tidak Ditemukan";
                 } 
                 if(isset($properties->old->owned_by)){
-                    $owner = User::find($properties->old->owned_by);
+                    $owner = Company::find($properties->old->owned_by);
                     if($owner) $properties->old->owner_name = $owner->name;
-                    else $properties->old->owner_name = "User Tidak Ditemukan";
+                    else $properties->old->owner_name = "Company Tidak Ditemukan";
                 }
 
                 if(isset($properties->attributes->manufacturer_id)){
