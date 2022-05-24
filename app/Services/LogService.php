@@ -8,6 +8,7 @@ use App\Vendor;
 use App\Company;
 use App\Incident;
 use App\Inventory;
+use App\Manufacturer;
 use App\Relationship;
 use App\TicketStatus;
 use App\ModelInventory;
@@ -16,10 +17,10 @@ use App\ActivityLogCompany;
 use App\ActivityLogInventory;
 use App\ModelInventoryColumn;
 use App\StatusUsageInventory;
+use App\Services\GlobalService;
 use App\ActivityLogPurchaseOrder;
 use App\StatusConditionInventory;
 use App\ActivityLogInventoryPivot;
-use App\Services\GlobalService;
 use App\ActivityLogInventoryRelationship;
 
 class LogService
@@ -150,6 +151,28 @@ class LogService
                     $vendor = Vendor::find($properties->old->vendor_id);
                     if($vendor) $properties->old->vendor_name = $vendor->name;
                     else $properties->old->vendor_name = "Vendor Tidak Ditemukan";
+                }
+
+                if(isset($properties->attributes->owned_by)){
+                    $owner = User::find($properties->attributes->owned_by);
+                    if($owner) $properties->attributes->owner_name = $owner->name;
+                    else $properties->attributes->owner_name = "User Tidak Ditemukan";
+                } 
+                if(isset($properties->old->owned_by)){
+                    $owner = User::find($properties->old->owned_by);
+                    if($owner) $properties->old->owner_name = $owner->name;
+                    else $properties->old->owner_name = "User Tidak Ditemukan";
+                }
+
+                if(isset($properties->attributes->manufacturer_id)){
+                    $manufacturer = Manufacturer::find($properties->attributes->manufacturer_id);
+                    if($manufacturer) $properties->attributes->manufacturer_name = $manufacturer->name;
+                    else $properties->attributes->manufacturer_name = "Manufacturer Tidak Ditemukan";
+                } 
+                if(isset($properties->old->manufacturer_id)){
+                    $manufacturer = Manufacturer::find($properties->old->manufacturer_id);
+                    if($manufacturer) $properties->old->manufacturer_name = $manufacturer->name;
+                    else $properties->old->manufacturer_name = "Manufacturer Tidak Ditemukan";
                 }
 
                 if(isset($properties->attributes->location)){
