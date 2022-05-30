@@ -202,7 +202,7 @@ class AccessFeatureSeeder extends Seeder
             ],
             [
                 "name" => "AGENT_RELATIONSHIP_INVENTORY_GET",
-                "description" => "Fitur untuk AGENT_RELATIONSHIP_INVENTORY_GET"
+                "description" => "Fitur untuk mengambil list relationship inventory pada agent"
             ],
             [
                 "name" => "REQUESTER_GET",
@@ -234,7 +234,7 @@ class AccessFeatureSeeder extends Seeder
             ],
             [
                 "name" => "REQUESTER_RELATIONSHIP_INVENTORY_GET",
-                "description" => "Fitur untuk REQUESTER_RELATIONSHIP_INVENTORY_GET"
+                "description" => "Fitur untuk mengambil list relationship inventory pada requester"
             ],
             [
                 "name" => "GROUPS_GET",
@@ -354,7 +354,7 @@ class AccessFeatureSeeder extends Seeder
             ],
             [
                 "name" => "COMPANY_RELATIONSHIP_INVENTORY_GET",
-                "description" => "Fitur untuk COMPANY_RELATIONSHIP_INVENTORY_GET"
+                "description" => "Fitur untuk mengambil list relationship inventory pada company"
             ],
             [
                 "name" => "COMPANY_MAIN_BANKS_GET",
@@ -442,263 +442,263 @@ class AccessFeatureSeeder extends Seeder
             ],
             [
                 "name" => "ASSETS_GET",
-                "description" => "Fitur untuk ASSETS_GET"
+                "description" => "Fitur untuk mengambil list asset"
             ],
             [
                 "name" => "ASSET_GET",
-                "description" => "Fitur untuk ASSET_GET"
+                "description" => "Fitur untuk mengambil detail asset"
             ],
             [
                 "name" => "ASSET_ADD",
-                "description" => "Fitur untuk ASSET_ADD"
+                "description" => "Fitur untuk membuat asset"
             ],
             [
                 "name" => "ASSET_UPDATE",
-                "description" => "Fitur untuk ASSET_UPDATE"
+                "description" => "Fitur untuk memperbarui asset"
             ],
             [
                 "name" => "ASSET_DELETE",
-                "description" => "Fitur untuk ASSET_DELETE"
+                "description" => "Fitur untuk menghapus asset"
             ],
             [
                 "name" => "MODELS_GET",
-                "description" => "Fitur untuk MODELS_GET"
+                "description" => "Fitur untuk mengambil list model"
             ],
             [
                 "name" => "MODEL_GET",
-                "description" => "Fitur untuk MODEL_GET"
+                "description" => "Fitur untuk mengambil detail model"
             ],
             [
                 "name" => "MODEL_ADD",
-                "description" => "Fitur untuk MODEL_ADD"
+                "description" => "Fitur untuk membuat model"
             ],
             [
                 "name" => "MODEL_UPDATE",
-                "description" => "Fitur untuk MODEL_UPDATE"
+                "description" => "Fitur untuk memperbarui model"
             ],
             [
                 "name" => "MODEL_DELETE",
-                "description" => "Fitur untuk MODEL_DELETE"
+                "description" => "Fitur untuk menghapus model"
             ],
             [
                 "name" => "INVENTORIES_GET",
-                "description" => "Fitur untuk INVENTORIES_GET"
+                "description" => "Fitur untuk mengambil list inventory"
             ],
             [
                 "name" => "INVENTORY_GET",
-                "description" => "Fitur untuk INVENTORY_GET"
+                "description" => "Fitur untuk mengambil detail inventory"
             ],
             [
                 "name" => "INVENTORY_ADD",
-                "description" => "Fitur untuk INVENTORY_ADD"
+                "description" => "Fitur untuk membuat inventory"
             ],
             [
                 "name" => "INVENTORY_UPDATE",
-                "description" => "Fitur untuk INVENTORY_UPDATE"
+                "description" => "Fitur untuk memperbarui inventory"
             ],
             [
                 "name" => "INVENTORY_DELETE",
-                "description" => "Fitur untuk INVENTORY_DELETE"
+                "description" => "Fitur untuk menghapus inventory"
             ],
             [
                 "name" => "INVENTORY_NOTES_ADD",
-                "description" => "Fitur untuk INVENTORY_NOTES_ADD"
+                "description" => "Fitur untuk membuat catatan pada inventory"
             ],
             [
                 "name" => "INVENTORY_STATUS_CONDITION",
-                "description" => "Fitur untuk INVENTORY_STATUS_CONDITION"
+                "description" => "Fitur untuk memperbarui status kondisi inventory"
             ],
             [
                 "name" => "INVENTORY_STATUS_USAGE",
-                "description" => "Fitur untuk INVENTORY_STATUS_USAGE"
+                "description" => "Fitur untuk memperbarui status penggunaan inventory"
             ],
             [
                 "name" => "INVENTORY_PARTS_ADD",
-                "description" => "Fitur untuk INVENTORY_PARTS_ADD"
+                "description" => "Fitur untuk menambah part inventory"
             ],
             [
                 "name" => "INVENTORY_PART_REMOVE",
-                "description" => "Fitur untuk INVENTORY_PART_REMOVE"
+                "description" => "Fitur untuk mengeluarkan part inventory"
             ],
             [
                 "name" => "INVENTORY_PART_REPLACE",
-                "description" => "Fitur untuk INVENTORY_PART_REPLACE"
+                "description" => "Fitur untuk menukar part inventory"
             ],
             [
                 "name" => "INVENTORY_LOG_GET",
-                "description" => "Fitur untuk INVENTORY_LOG_GET"
+                "description" => "Fitur untuk mengambil list log inventory"
             ],
             [
                 "name" => "INVENTORY_IMPORT",
-                "description" => "Fitur untuk INVENTORY_IMPORT"
+                "description" => "Fitur untuk import inventory"
             ],
             [
                 "name" => "RELATIONSHIP_INVENTORY_GET",
-                "description" => "Fitur untuk RELATIONSHIP_INVENTORY_GET"
+                "description" => "Fitur untuk mengambil list relationship inventory(item)"
             ],
             [
                 "name" => "RELATIONSHIP_INVENTORY_ADD",
-                "description" => "Fitur untuk RELATIONSHIP_INVENTORY_ADD"
+                "description" => "Fitur untuk membuat relationship inventory(item)"
             ],
             [
                 "name" => "RELATIONSHIP_INVENTORY_UPDATE",
-                "description" => "Fitur untuk RELATIONSHIP_INVENTORY_UPDATE"
+                "description" => "Fitur untuk memperbarui relationship inventory(item)"
             ],
             [
                 "name" => "RELATIONSHIP_INVENTORY_DELETE",
-                "description" => "Fitur untuk RELATIONSHIP_INVENTORY_DELETE"
+                "description" => "Fitur untuk menghapus relationship inventory(item)"
             ],
             [
                 "name" => "VENDORS_GET",
-                "description" => "Fitur untuk VENDORS_GET"
+                "description" => "Fitur untuk mengambil list vendor"
             ],
             [
                 "name" => "VENDOR_ADD",
-                "description" => "Fitur untuk VENDOR_ADD"
+                "description" => "Fitur untuk membuat vendor"
             ],
             [
                 "name" => "VENDOR_UPDATE",
-                "description" => "Fitur untuk VENDOR_UPDATE"
+                "description" => "Fitur untuk memperbarui vendor"
             ],
             [
                 "name" => "VENDOR_DELETE",
-                "description" => "Fitur untuk VENDOR_DELETE"
+                "description" => "Fitur untuk menghapus vendor"
             ],
             [
                 "name" => "MANUFACTURERS_GET",
-                "description" => "Fitur untuk MANUFACTURERS_GET"
+                "description" => "Fitur untuk mengambil list manufaktur"
             ],
             [
                 "name" => "MANUFACTURER_ADD",
-                "description" => "Fitur untuk MANUFACTURER_ADD"
+                "description" => "Fitur untuk membuat manufaktur"
             ],
             [
                 "name" => "MANUFACTURER_UPDATE",
-                "description" => "Fitur untuk MANUFACTURER_UPDATE"
+                "description" => "Fitur untuk memperbarui manufaktur"
             ],
             [
                 "name" => "MANUFACTURER_DELETE",
-                "description" => "Fitur untuk MANUFACTURER_DELETE"
+                "description" => "Fitur untuk menghapus manufaktur"
             ],
             [
                 "name" => "RELATIONSHIPS_GET",
-                "description" => "Fitur untuk RELATIONSHIPS_GET"
+                "description" => "Fitur untuk mengambil list relationship"
             ],
             [
                 "name" => "RELATIONSHIP_ADD",
-                "description" => "Fitur untuk RELATIONSHIP_ADD"
+                "description" => "Fitur untuk membuat relationship"
             ],
             [
                 "name" => "RELATIONSHIP_UPDATE",
-                "description" => "Fitur untuk RELATIONSHIP_UPDATE"
+                "description" => "Fitur untuk memperbarui relationship"
             ],
             [
                 "name" => "RELATIONSHIP_DELETE",
-                "description" => "Fitur untuk RELATIONSHIP_DELETE"
+                "description" => "Fitur untuk menghapus relationship"
             ],
             [
                 "name" => "TICKET_TASK_STATUS_COUNTS_GET",
-                "description" => "Fitur untuk TICKET_TASK_STATUS_COUNTS_GET"
+                "description" => "Fitur untuk mengambil list data tiket dan task pada user login"
             ],
             [
                 "name" => "TICKETS_CLIENT_GET",
-                "description" => "Fitur untuk TICKETS_CLIENT_GET"
+                "description" => "Fitur untuk mengambil list tiket khusus client"
             ],
             [
                 "name" => "TICKETS_CLIENT_CLOSED_GET",
-                "description" => "Fitur untuk TICKETS_CLIENT_CLOSED_GET"
+                "description" => "Fitur untuk mengambil list tiket yang sudah closed khusus client"
             ],
             [
                 "name" => "TICKET_CLIENT_GET",
-                "description" => "Fitur untuk TICKET_CLIENT_GET"
+                "description" => "Fitur untuk mengambil detail tiket khusus client"
             ],
             [
                 "name" => "TICKET_CLIENT_CANCEL",
-                "description" => "Fitur untuk TICKET_CLIENT_CANCEL"
+                "description" => "Fitur untuk membatalkan tiket khusus client"
             ],
             [
                 "name" => "TICKET_CLIENT_LOG_GET",
-                "description" => "Fitur untuk TICKET_CLIENT_LOG_GET"
+                "description" => "Fitur untuk mengambil list tiket khusus client "
             ],
             [
                 "name" => "TICKET_CLIENT_NOTE_ADD",
-                "description" => "Fitur untuk TICKET_CLIENT_NOTE_ADD"
+                "description" => "Fitur untuk membuat catatan tiket khusus client"
             ],
             [
                 "name" => "TICKET_CLIENT_NOTE_UPDATE",
-                "description" => "Fitur untuk TICKET_CLIENT_NOTE_UPDATE"
+                "description" => "Fitur untuk memperbarui catatan tiket khusus client"
             ],
             [
                 "name" => "TICKET_CLIENT_NOTE_DELETE",
-                "description" => "Fitur untuk TICKET_CLIENT_NOTE_UPDATE"
+                "description" => "Fitur untuk menghapus catatan tiket khusus client"
             ],
             [
                 "name" => "TICKET_CLIENT_EXPORT",
-                "description" => "Fitur untuk TICKET_CLIENT_EXPORT"
+                "description" => "Fitur untuk mengekspor pdf tiket khusus client"
             ],
             [
                 "name" => "TICKETS_GET",
-                "description" => "Fitur untuk TICKETS_GET"
+                "description" => "Fitur untuk mengambil list tiket"
             ],
             [
                 "name" => "TICKETS_CLOSED_GET",
-                "description" => "Fitur untuk TICKETS_CLOSED_GET"
+                "description" => "Fitur untuk mengambil list tiket yang sudah closed"
             ],
             [
                 "name" => "TICKET_GET",
-                "description" => "Fitur untuk TICKET_GET"
+                "description" => "Fitur untuk mengambil detil tiket"
             ],
             [
                 "name" => "TICKET_LOG_GET",
-                "description" => "Fitur untuk TICKET_LOG_GET"
+                "description" => "Fitur untuk mengambil list log tiket"
             ],
             [
                 "name" => "TICKET_CANCEL",
-                "description" => "Fitur untuk TICKET_CANCEL"
+                "description" => "Fitur untuk membatalkan tiket"
             ],
             [
                 "name" => "TICKET_ADD",
-                "description" => "Fitur untuk TICKET_ADD"
+                "description" => "Fitur untuk membuat tiket"
             ],
             [
                 "name" => "TICKET_UPDATE",
-                "description" => "Fitur untuk TICKET_UPDATE"
+                "description" => "Fitur untuk memperbarui tiket"
             ],
             [
                 "name" => "TICKET_NOTE_UPDATE",
-                "description" => "Fitur untuk TICKET_NOTE_UPDATE"
+                "description" => "Fitur untuk memperbarui catatan tiket"
             ],
             [
                 "name" => "TICKET_NOTE_DELETE",
-                "description" => "Fitur untuk TICKET_NOTE_DELETE"
+                "description" => "Fitur untuk menghapus catatan tiket"
             ],
             [
                 "name" => "TICKET_STATUS_UPDATE",
-                "description" => "Fitur untuk menghapus TICKET_STATUS_UPDATE"
+                "description" => "Fitur untuk memperbarui status tiket"
             ],
             [
                 "name" => "TICKET_DEADLINE_SET",
-                "description" => "Fitur untuk TICKET_DEADLINE_SET"
+                "description" => "Fitur untuk mengatur waktu deadline tiket"
             ],
             [
                 "name" => "TICKET_ASSIGN",
-                "description" => "Fitur untuk TICKET_ASSIGN"
+                "description" => "Fitur untuk menugaskan tiket"
             ],
             [
                 "name" => "TICKET_ITEM_SET",
-                "description" => "Fitur untuk TICKET_ITEM_SET"
+                "description" => "Fitur untuk menyambungkan item dengan tiket"
             ],
             [
                 "name" => "TICKET_NOTE_ADD",
-                "description" => "Fitur untuk TICKET_NOTE_ADD"
+                "description" => "Fitur untuk menulis catatan pada tiket"
             ],
             [
                 "name" => "TICKETS_EXPORT",
-                "description" => "Fitur untuk TICKETS_EXPORT"
+                "description" => "Fitur untuk mengekspor excel tiket"
             ],
             [
                 "name" => "TICKET_EXPORT",
-                "description" => "Fitur untuk TICKET_EXPORT"
+                "description" => "Fitur untuk mengekspor pdf tiket"
             ],
             [
                 "name" => "TICKET_DETAIL_TYPES_GET",
@@ -1305,6 +1305,45 @@ class AccessFeatureSeeder extends Seeder
                     ],
                     [
                         "name" => "REQUESTER_RELATIONSHIP_INVENTORY_GET"
+                    ],
+                    [
+                        "name" => "REQUESTER_GROUPS_GET"
+                    ],
+                    [
+                        "name" => "REQUESTER_GROUP_ADD"
+                    ],
+                    [
+                        "name" => "REQUESTER_GROUP_GET"
+                    ],
+                    [
+                        "name" => "REQUESTER_GROUP_UPDATE"
+                    ],
+                    [
+                        "name" => "REQUESTER_GROUP_DELETE"
+                    ],
+                ]
+            ],
+            [
+                "name" => "Group",
+                "description" => "Modul yang berisi fitur-fitur untuk group",
+                "features" => [
+                    [
+                        "name" => "GROUPS_GET"
+                    ],
+                    [
+                        "name" => "AGENT_GROUPS_GET"
+                    ],
+                    [
+                        "name" => "AGENT_GROUP_ADD"
+                    ],
+                    [
+                        "name" => "AGENT_GROUP_GET"
+                    ],
+                    [
+                        "name" => "AGENT_GROUP_UPDATE"
+                    ],
+                    [
+                        "name" => "AGENT_GROUP_DELETE"
                     ],
                     [
                         "name" => "REQUESTER_GROUPS_GET"
