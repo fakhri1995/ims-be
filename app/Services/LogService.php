@@ -311,10 +311,10 @@ class LogService
         $access = $GlobalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $ticket = Ticket::with('task.creator')->find($id);
+        $ticket = Ticket::with('creator')->find($id);
         if($ticket === null) return ["success" => false, "message" => "Ticket Tidak Ditemukan", "status" => 400];
         $user_company_id = auth()->user()->company_id;
-        if($ticket->task->creator->company_id !== $user_company_id) return ["success" => false, "message" => "Tidak Memiliki Access untuk Ticket Ini", "status" => 403];
+        if($ticket->creator->company_id !== $user_company_id) return ["success" => false, "message" => "Tidak Memiliki Access untuk Ticket Ini", "status" => 403];
         $special_logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', 'Note Khusus')->orderBy('created_at','desc')->get();
         $logs = ActivityLogTicket::where('subject_id', $id)->where('is_for_client', true)->where('log_name', '<>', 'Note Khusus')->orderBy('created_at','desc')->get();
         $statuses = ['-','Dalam Proses', 'Menunggu Staff', 'Dalam Proses', 'Dalam Proses', 'Completed', 'Selesai', 'Dibatalkan'];
