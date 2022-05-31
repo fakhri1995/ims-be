@@ -199,7 +199,7 @@ class UserService
                     'url' => env('APP_URL_WEB'),
                     'username' => $user->name,
                     'token' => $token['access_token'],
-                    'subject' => 'Ubah Password Akun MIGSYS'
+                    'subject' => 'Ubah Password Akun MIG'
                 ];
                 Mail::to($email)->send(new ChangePasswordMail($email_data));
             } 

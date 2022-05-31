@@ -164,7 +164,7 @@ class LoginService
             'url' => env('APP_URL_WEB'),
             'username' => $user->name,
             'token' => $token_reset,
-            'subject' => 'Reset Password MIG Token'
+            'subject' => 'Reset Password Akun MIG'
         ];
         Mail::to($email)->send(new ForgetPasswordMail($data));
         return ["success" => true, "data" => "Email Token Lupa Password Telah Dikirim Ke Email Anda", "status" => 200];
