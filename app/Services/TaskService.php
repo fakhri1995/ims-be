@@ -323,7 +323,7 @@ class TaskService{
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
             
-            $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role', 'users']);
+            $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role', 'users', 'reference:id,ticketable_type,ticketable_id', 'reference.type:id,code,table_name']);
 
             if($location > 0){
                 $company = Company::find($location);
@@ -422,7 +422,7 @@ class TaskService{
             if($rows < 1) $rows = 10;
             
             $task_ids = DB::table('task_user')->where('user_id', $login_id)->pluck('task_id');
-            $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role', 'users']);
+            $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role', 'users', 'reference:id,ticketable_type,ticketable_id', 'reference.type:id,code,table_name']);
             if($assigned_only){
                 $tasks = $tasks->whereIn('id', $task_ids);
             } else {
