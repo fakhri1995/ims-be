@@ -622,11 +622,11 @@ class AssetService{
         $name = $request->get('name');
         $sku = $request->get('sku');
         $model_columns = $request->get('model_columns',[]);
+        $is_consumable = $request->get('is_consumable', false);
 
         $validator = Validator::make($request->all(), [
             'asset_id' => 'required',
             'name' => 'required',
-            'sku' => 'required',
             'required_sn' => 'required',
             'is_consumable' => 'required',
         ]);
@@ -637,22 +637,26 @@ class AssetService{
         
         $check_name = ModelInventory::where('name', $name)->first();
         if($check_name !== null) return ["success" => false, "message" => "Nama Model Telah Terdaftar", "status" => 400];
-        $check_sku = ModelInventory::where('sku', $sku)->first();
-        if($check_sku !== null) return ["success" => false, "message" => "SKU Telah Terdaftar", "status" => 400];
+        if($sku){
+            $check_sku = ModelInventory::where('sku', $sku)->first();
+            if($check_sku !== null) return ["success" => false, "message" => "SKU Telah Terdaftar", "status" => 400];
+        }
         $model = new ModelInventory;
         $model->asset_id = $request->get('asset_id');
         $model->name = $name;
         $model->sku = $sku;
         $model->description = $request->get('description');
-        $model->is_consumable = $request->get('is_consumable', false);
+        $model->is_consumable = $is_consumable;
         $model->manufacturer_id = $request->get('manufacturer_id');
         $model->required_sn = $request->get('required_sn');
         try{
             $model->save();
             $this->createColumns($model_columns, $model->id, false);
-            $model_parts = $request->get('model_parts',[]);
-            foreach($model_parts as $model_part){
-                $model->modelParts()->attach($model_part['id'], ['quantity' => $model_part['quantity']]);
+            if(!$is_consumable){
+                $model_parts = $request->get('model_parts',[]);
+                foreach($model_parts as $model_part){
+                    $model->modelParts()->attach($model_part['id'], ['quantity' => $model_part['quantity']]);
+                }
             }
             
             return ["success" => true, "message" => "Data Berhasil Disimpan", "id" => $model->id, "status" => 200];
@@ -677,7 +681,6 @@ class AssetService{
             'id' => 'required',
             'asset_id' => 'required',
             'name' => 'required',
-            'sku' => 'required',
             'required_sn' => 'required',
         ]);
         if($validator->fails()) return ["success" => false, "message" => "Gagal menyimpan model","errors" => $validator->errors(), "status" => 400];
@@ -689,8 +692,10 @@ class AssetService{
         if($model === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status"=> 400];
         $check_name = ModelInventory::where('name', $name)->first();
         if($check_name && $check_name->id !== $id) return ["success" => false, "message" => "Nama Model Telah Terdaftar", "status" => 400];
-        $check_sku = ModelInventory::where('sku', $sku)->first();
-        if($check_sku && $check_sku->id !== $id) return ["success" => false, "message" => "SKU Telah Terdaftar", "status" => 400];
+        if($sku){
+            $check_sku = ModelInventory::where('sku', $sku)->first();
+            if($check_sku && $check_sku->id !== $id) return ["success" => false, "message" => "SKU Telah Terdaftar", "status" => 400];
+        }
         $model->asset_id = $request->get('asset_id');
         $model->name = $name;
         $model->sku = $sku;
