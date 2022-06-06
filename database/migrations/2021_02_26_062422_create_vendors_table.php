@@ -29,7 +29,6 @@ class CreateVendorsTable extends Migration
             $table->string('email')->nullable();
             $table->string('website')->nullable();
             $table->softDeletes();
-            $table->timestamps();
         });
     }
 
