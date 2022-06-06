@@ -69,11 +69,11 @@ class AssetManagementSeeder extends Seeder
     private function makeRelationships()
     {
         $defaults = [
-            ["name" => "Menggunakan", "inverse_name" => "Digunakan"],
-            ["name" => "Memiliki", "inverse_name" => "Dimiliki"],
-            ["name" => "Meminjam", "inverse_name" => "Dipinjam"],
-            ["name" => "Memesan", "inverse_name" => "Dipesan"],
-            ["name" => "Membeli", "inverse_name" => "Dibeli"]
+            ["name" => "Menggunakan", "inverse_name" => "Digunakan Oleh"],
+            ["name" => "Memiliki", "inverse_name" => "Dimiliki Oleh"],
+            ["name" => "Meminjam", "inverse_name" => "Dipinjam Oleh"],
+            ["name" => "Memesan", "inverse_name" => "Dipesan Oleh"],
+            ["name" => "Membeli", "inverse_name" => "Dibeli Oleh"]
         ];
 
         foreach($defaults as $default){
@@ -187,252 +187,81 @@ class AssetManagementSeeder extends Seeder
                 "parent_id" => 6,
                 "name" => "GRG SECURED CARD SLOT MODULE (SCM-001)",
                 "code" => "001.001.001.011"
+            ],
+            [
+                "parent_id" => 2,
+                "name" => "ATM",
+                "code" => "002.001"
+            ],
+            [
+                "parent_id" => 2,
+                "name" => "PC",
+                "code" => "002.002"
+            ],
+            [
+                "parent_id" => 2,
+                "name" => "UPS",
+                "code" => "002.003"
+            ],
+            [
+                "parent_id" => 18,
+                "name" => "GRG",
+                "code" => "002.001.001"
+            ],
+            [
+                "parent_id" => 18,
+                "name" => "Diebold",
+                "code" => "002.001.002"
+            ],
+            [
+                "parent_id" => 19,
+                "name" => "Lenovo",
+                "code" => "002.002.001"
+            ],
+            [
+                "parent_id" => 19,
+                "name" => "HP",
+                "code" => "002.002.002"
+            ],
+            [
+                "parent_id" => 20,
+                "name" => "Enerplus",
+                "code" => "002.003.001"
+            ],
+            [
+                "parent_id" => 20,
+                "name" => "Delta",
+                "code" => "002.003.002"
+            ],
+            [
+                "parent_id" => null,
+                "name" => "Consumable",
+                "code" => "005"
+            ],
+            [
+                "parent_id" => 27,
+                "name" => "ATM Consumable Part",
+                "code" => "005.001"
+            ],
+            [
+                "parent_id" => 28,
+                "name" => "GRG Dispenser Flat Belt",
+                "code" => "005.001.001"
+            ],
+            [
+                "parent_id" => 28,
+                "name" => "Feed Shaft",
+                "code" => "005.001.002"
+            ],
+            [
+                "parent_id" => 28,
+                "name" => "Take Away Wheel",
+                "code" => "005.001.003"
             ]
         ];
         return $assets;
     }
 
-    private function defaultModels()
-    {
-        $models = [
-            [
-                "asset_id" => 7,
-                "name" => "GRG CDM CONTROLLER YT7.820.0677",
-                "model_parts" => []
-            ],
-            [
-                "asset_id" => 8,
-                "name" => "GRG CASESETTE FRAME YT4.029.0782",
-                "model_parts" => []
-            ],
-            [
-                "asset_id" => 9,
-                "name" => "GRG CASH DISPENSER MODULE YT2.291.2088",
-                "model_parts" => [
-                    [
-                        "id" => 8,
-                        "quantity" => 1
-                    ],
-                    [
-                        "id" => 4,
-                        "quantity" => 1
-                    ],
-                    [
-                        "id" => 1,
-                        "quantity" => 1
-                    ],
-                    [
-                        "id" => 5,
-                        "quantity" => 1
-                    ],
-                    [
-                        "id" => 6,
-                        "quantity" => 4
-                    ],
-                    [
-                        "id" => 2,
-                        "quantity" => 4
-                    ],
-                    [
-                        "id" => 7,
-                        "quantity" => 4
-                    ]
-                ]
-            ],
-            [
-                "asset_id" => 10,
-                "name" => "GRG NOTE PRESENTER YT4.029.0783",
-                "model_parts" => []
-            ],
-            [
-                "asset_id" => 11,
-                "name" => "GRG REJECT VAULT CASSETTE YT4.100.2172",
-                "model_parts" => []
-            ],
-            [
-                "asset_id" => 12,
-                "name" => "GRG NOTE CASSETTE YT4.100.2158",
-                "model_parts" => []
-            ],
-            [
-                "asset_id" => 13,
-                "name" => "GRG NOTE FEEDER YT4.029.0778",
-                "model_parts" => []
-            ],
-            [
-                "asset_id" => 14,
-                "name" => "GRG NOTE TRANSPORT YT4.109.3409",
-                "model_parts" => []
-            ],
-            [
-                "asset_id" => 15,
-                "name" => "GRG EPP004 KEY PAD YT2.232.0301",
-                "model_parts" => []
-            ],
-            [
-                "asset_id" => 16,
-                "name" => "GRG RECEIPT PRINTER YT2.241.0311",
-                "model_parts" => []
-            ]
-        ];
-        return $models;
-    }
-
-    private function defaultInventories()
-    {
-        $inventories = [
-            [
-                "model_id" => 3,
-                "inventory_parts" => [
-                    [
-                        "model_id" => 8,
-                        "quantity" => 1,
-                        "inventory_values" => [
-                            [
-                                "id" => 15,
-                                "value" => "Processor"
-                            ],
-                            [
-                                "id" => 16,
-                                "value" => "Kapasitas"
-                            ]
-                        ],
-                        "inventory_parts" => []
-                    ],
-                    [
-                        "model_id" => 4,
-                        "quantity" => 1,
-                        "inventory_values" => [
-                            [
-                                "id" => 7,
-                                "value" => "Processor"
-                            ],
-                            [
-                                "id" => 8,
-                                "value" => "Kapasitas"
-                            ]
-                        ],
-                        "inventory_parts" => []
-                    ],
-                    [
-                        "model_id" => 1,
-                        "quantity" => 1,
-                        "inventory_values" => [
-                            [
-                                "id" => 1,
-                                "value" => "Processor"
-                            ],
-                            [
-                                "id" => 2,
-                                "value" => "Kapasitas"
-                            ]
-                        ],
-                        "inventory_parts" => []
-                    ],
-                    [
-                        "model_id" => 5,
-                        "quantity" => 1,
-                        "inventory_values" => [
-                            [
-                                "id" => 9,
-                                "value" => "Processor"
-                            ],
-                            [
-                                "id" => 10,
-                                "value" => "Kapasitas"
-                            ]
-                        ],
-                        "inventory_parts" => []
-                    ],
-                    [
-                        "model_id" => 6,
-                        "quantity" => 4,
-                        "inventory_values" => [
-                            [
-                                "id" => 11,
-                                "value" => "Processor"
-                            ],
-                            [
-                                "id" => 12,
-                                "value" => "Kapasitas"
-                            ]
-                        ],
-                        "inventory_parts" => []
-                    ],
-                    [
-                        "model_id" => 2,
-                        "quantity" => 4,
-                        "inventory_values" => [
-                            [
-                                "id" => 3,
-                                "value" => "Processor"
-                            ],
-                            [
-                                "id" => 4,
-                                "value" => "Kapasitas"
-                            ]
-                        ],
-                        "inventory_parts" => []
-                    ],
-                    [
-                        "model_id" => 7,
-                        "quantity" => 4,
-                        "inventory_values" => [
-                            [
-                                "id" => 13,
-                                "value" => "Processor"
-                            ],
-                            [
-                                "id" => 14,
-                                "value" => "Kapasitas"
-                            ]
-                        ],
-                        "inventory_parts" => []
-                    ]
-                    
-                ],
-                "inventory_values" => [
-                    [
-                        "id" => 5,
-                        "value" => "Processor"
-                    ],
-                    [
-                        "id" => 6,
-                        "value" => "Kapasitas"
-                    ]
-                ]
-            ],
-            [
-                "model_id" => 9,
-                "inventory_parts" => [],
-                "inventory_values" => [
-                    [
-                        "id" => 17,
-                        "value" => "Processor"
-                    ],
-                    [
-                        "id" => 18,
-                        "value" => "Kapasitas"
-                    ]
-                ]
-            ],
-            [
-                "model_id" => 10,
-                "inventory_parts" => [],
-                "inventory_values" => [
-                    [
-                        "id" => 19,
-                        "value" => "Processor"
-                    ],
-                    [
-                        "id" => 20,
-                        "value" => "Kapasitas"
-                    ]
-                ]
-            ]
-        ];
-        return $inventories;
-    }
 
     // private function makeBulkAssets()
     // {

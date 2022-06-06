@@ -1,6 +1,5 @@
 <?php
 
-use App\Role;
 use App\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -15,11 +14,6 @@ class UserSeeder extends Seeder
 
     private function addDefaultUsers()
     {
-        $super_admin_role = Role::where('name', 'Super Admin')->firstOrCreate([
-            'name' => 'Super Admin',
-            'description' => 'The Highest Role Access for Users'
-        ]);
-        
         $datas = $this->defaultUsers();
         foreach($datas as $data){
             $user = new User;
@@ -35,7 +29,7 @@ class UserSeeder extends Seeder
             $user->created_time = "2022-02-09 09:37:19";
             $user->save();
 
-            $user->roles()->syncWithoutDetaching([$super_admin_role->id]);
+            $user->roles()->syncWithoutDetaching([1]);
         }
     }
 
