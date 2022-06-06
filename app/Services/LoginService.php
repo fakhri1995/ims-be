@@ -26,6 +26,30 @@ class LoginService
     }
 
     public function login($email, $password){
+        $user = User::with('company:id,is_enabled')->where('email', $email)->first();
+        if($user){
+            if(!$user->company->is_enabled){
+                return [
+                    "success" => false, 
+                    "message" => "Perusahaan user sedang dinonaktifkan",
+                    "status" => 400, 
+                ];
+            }
+
+            if(!$user->is_enabled){
+                return [
+                    "success" => false, 
+                    "message" => "User sedang dinonaktifkan",
+                    "status" => 400, 
+                ];
+            }
+        } else {
+            return [
+                "success" => false, 
+                "message" => "Email Belum Terdaftar!",
+                "status" => 400
+            ];
+        }
         $login = $this->generate_token($email, $password);
 
         if(isset($login['error'])){
