@@ -582,6 +582,16 @@ class AssetService{
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $models, "status" => 200];
     }
 
+    private function showQuantityModelParts($model)
+    {
+        if(count($model->modelParts)){
+            foreach($model->modelParts as $part){
+                $part->quantity = $part->pivot->quantity;
+                $this->showQuantityModelParts($part);
+            } 
+        }
+    }
+
     public function getModel($id, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
@@ -590,9 +600,7 @@ class AssetService{
         try{
             $model = ModelInventory::withCount('inventories')->with(['asset:id,name,code,required_sn,deleted_at','manufacturer','modelColumns','modelParts'])->find($id);
             if($model === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
-            if(count($model->modelParts)){
-                foreach($model->modelParts as $part) $part->quantity = $part->pivot->quantity;
-            }
+            $this->showQuantityModelParts($model);
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $model, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -1270,17 +1278,22 @@ class AssetService{
         $inventory_values = $request->get('inventory_values', []);
         if(count($inventory_values)){
             $index = 1;
+            foreach($inventory_values as $inventory_value) $model_column_ids[] = $inventory_value['model_inventory_column_id'];
+
+            $model_inventory_columns = ModelInventoryColumn::select('id', 'name', 'required')->whereIn('id', $model_column_ids)->get();
+            $model_inventory_column_ids = $model_inventory_columns->pluck('id')->toArray();
+            $check_list_remaining = array_diff($model_column_ids, $model_inventory_column_ids);
+            if(count($check_list_remaining)) return ["success" => false, "message" => "ID ".array_values($check_list_remaining)[0]." Kolom Model Inventori Tidak Ditemukan", "status" => 400];
+
             foreach($inventory_values as $inventory_value){
-                $model_column_ids[] = $inventory_value['model_inventory_column_id'];
-                if(!isset($inventory_value['value']) || !$inventory_value['value']) return ["success" => false, "message" => "Kolom spesifikasi $index belum memiliki value", "status" => 400];
+                $model_inventory_column_id = $inventory_value['model_inventory_column_id'];
+                $search = $model_inventory_columns->search(function($query) use($model_inventory_column_id){
+                    return $query->id == $model_inventory_column_id;
+                });
+                if($model_inventory_columns[$search]->required && (!isset($inventory_value['value']) || !$inventory_value['value'])) return ["success" => false, "message" => "Kolom spesifikasi $index belum memiliki value", "status" => 400];
                 $index++;
             }
         }
-
-        $model_inventory_columns = ModelInventoryColumn::select('id', 'name')->whereIn('id', $model_column_ids)->get();
-        $model_inventory_column_ids = $model_inventory_columns->pluck('id')->toArray();
-        $check_list_remaining = array_diff($model_column_ids, $model_inventory_column_ids);
-        if(count($check_list_remaining)) return ["success" => false, "message" => "ID ".array_values($check_list_remaining)[0]." Kolom Model Inventori Tidak Ditemukan", "status" => 400];
         
         $inventory = new Inventory;
         $inventory->model_id = $model_id;
