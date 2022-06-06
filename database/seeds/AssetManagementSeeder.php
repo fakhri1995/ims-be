@@ -30,19 +30,19 @@ class AssetManagementSeeder extends Seeder
             $asset->required_sn = true;
             $asset->code = $data['code'];
             $asset->save();
-            $asset_column_a = new AssetColumn([
-                'name' => 'Kapasitas', 
-                'data_type' => 'String',
-                'default' => '4 GB',
-                'required' => false
-            ]);
-            $asset_column_b = new AssetColumn([
-                'name' => 'Processor', 
-                'data_type' => 'String',
-                'default' => null,
-                'required' => false
-            ]);
-            $asset->assetColumns()->saveMany([$asset_column_a, $asset_column_b]);
+            // $asset_column_a = new AssetColumn([
+            //     'name' => 'Kapasitas', 
+            //     'data_type' => 'String',
+            //     'default' => '4 GB',
+            //     'required' => false
+            // ]);
+            // $asset_column_b = new AssetColumn([
+            //     'name' => 'Processor', 
+            //     'data_type' => 'String',
+            //     'default' => null,
+            //     'required' => false
+            // ]);
+            // $asset->assetColumns()->saveMany([$asset_column_a, $asset_column_b]);
         }
     }
 
@@ -120,7 +120,7 @@ class AssetManagementSeeder extends Seeder
             ],
             [
                 "parent_id" => null,
-                "name" => "Component",
+                "name" => "Consumable",
                 "code" => "004"
             ],
             [
@@ -234,29 +234,24 @@ class AssetManagementSeeder extends Seeder
                 "code" => "002.003.002"
             ],
             [
-                "parent_id" => null,
-                "name" => "Consumable",
-                "code" => "005"
+                "parent_id" => 4,
+                "name" => "ATM Consumable Part",
+                "code" => "004.001"
             ],
             [
                 "parent_id" => 27,
-                "name" => "ATM Consumable Part",
-                "code" => "005.001"
-            ],
-            [
-                "parent_id" => 28,
                 "name" => "GRG Dispenser Flat Belt",
-                "code" => "005.001.001"
+                "code" => "004.001.001"
             ],
             [
-                "parent_id" => 28,
+                "parent_id" => 27,
                 "name" => "Feed Shaft",
-                "code" => "005.001.002"
+                "code" => "004.001.002"
             ],
             [
-                "parent_id" => 28,
+                "parent_id" => 27,
                 "name" => "Take Away Wheel",
-                "code" => "005.001.003"
+                "code" => "004.001.003"
             ]
         ];
         return $assets;
