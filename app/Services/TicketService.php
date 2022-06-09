@@ -253,10 +253,19 @@ class TicketService
         
         $user_attendance_form_ids = DB::table('attendance_form_user')->where('user_id', $login_id)->pluck('attendance_form_id');
         $attendance_forms = DB::table('attendance_forms')->select('id', 'name', 'description', 'details', 'updated_at')->whereIn('id', $user_attendance_form_ids)->get();
-        $last_check_in = AttendanceUser::with('evidence')->where('user_id', $login_id)->orderBy('check_in', 'desc')->first();
+        $last_check_in = AttendanceUser::with('evidence')->where('user_id', $login_id)->orderBy('check_in', 'desc')->select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'checked_out_by_system')
+        ->join('long_lat_lists AS check_in_list', function ($join) {
+            $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
+        })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
+            $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
+        })->where('user_id', $login_id)
+        ->whereDate('check_in', '>', date("Y-m-d", strtotime("-1 months")))->orderBy('check_in', 'asc')->first();
 
         if(count($attendance_forms)) foreach($attendance_forms as $form) $form->details = json_decode($form->details);
-        if(!$last_check_in) {
+        if($last_check_in) {
+            $last_check_in->geo_loc_check_in = json_decode($last_check_in->geo_loc_check_in);
+            $last_check_in->geo_loc_check_out = json_decode($last_check_in->geo_loc_check_out);
+        } else {
             $last_check_in = (object)[
                 "id" => 0,
                 "user_id" => 0,
