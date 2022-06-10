@@ -126,12 +126,12 @@ class LogService
                 }
                 $properties = $inventory_log->properties;
                 if($inventory_log->log_name === 'Created'){
-                    $model = ModelInventory::find($properties->attributes->model_id);
+                    $model = ModelInventory::withTrashed()->find($properties->attributes->model_id);
                     if($model) $properties->attributes->model_name = $model->name;
                     else $properties->attributes->model_name = "Model Tidak Ditemukan";
                 } 
                 if($inventory_log->log_name === 'Deleted'){
-                    $model = ModelInventory::find($properties->old->model_id);
+                    $model = ModelInventory::withTrashed()->find($properties->old->model_id);
                     if($model) $properties->old->model_name = $model->name;
                     else $properties->old->model_name = "Model Tidak Ditemukan";
                 } 
@@ -143,45 +143,45 @@ class LogService
                 if(isset($properties->old->status_condition)) $properties->old->status_condition_name = StatusConditionInventory::find($properties->old->status_condition)->name;
 
                 if(isset($properties->attributes->vendor_id)){
-                    $vendor = Vendor::find($properties->attributes->vendor_id);
+                    $vendor = Vendor::withTrashed()->find($properties->attributes->vendor_id);
                     if($vendor) $properties->attributes->vendor_name = $vendor->name;
                     else $properties->attributes->vendor_name = "Vendor Tidak Ditemukan";
                 } 
                 if(isset($properties->old->vendor_id)){
-                    $vendor = Vendor::find($properties->old->vendor_id);
+                    $vendor = Vendor::withTrashed()->find($properties->old->vendor_id);
                     if($vendor) $properties->old->vendor_name = $vendor->name;
                     else $properties->old->vendor_name = "Vendor Tidak Ditemukan";
                 }
 
                 if(isset($properties->attributes->owned_by)){
-                    $owner = Company::find($properties->attributes->owned_by);
+                    $owner = Company::withTrashed()->find($properties->attributes->owned_by);
                     if($owner) $properties->attributes->owner_name = $owner->name;
                     else $properties->attributes->owner_name = "Company Tidak Ditemukan";
                 } 
                 if(isset($properties->old->owned_by)){
-                    $owner = Company::find($properties->old->owned_by);
+                    $owner = Company::withTrashed()->find($properties->old->owned_by);
                     if($owner) $properties->old->owner_name = $owner->name;
                     else $properties->old->owner_name = "Company Tidak Ditemukan";
                 }
 
                 if(isset($properties->attributes->manufacturer_id)){
-                    $manufacturer = Manufacturer::find($properties->attributes->manufacturer_id);
+                    $manufacturer = Manufacturer::withTrashed()->find($properties->attributes->manufacturer_id);
                     if($manufacturer) $properties->attributes->manufacturer_name = $manufacturer->name;
                     else $properties->attributes->manufacturer_name = "Manufacturer Tidak Ditemukan";
                 } 
                 if(isset($properties->old->manufacturer_id)){
-                    $manufacturer = Manufacturer::find($properties->old->manufacturer_id);
+                    $manufacturer = Manufacturer::withTrashed()->find($properties->old->manufacturer_id);
                     if($manufacturer) $properties->old->manufacturer_name = $manufacturer->name;
                     else $properties->old->manufacturer_name = "Manufacturer Tidak Ditemukan";
                 }
 
                 if(isset($properties->attributes->location)){
-                    $location = Company::find($properties->attributes->location);
+                    $location = Company::withTrashed()->find($properties->attributes->location);
                     if($location) $properties->attributes->location_name = $location->name;
                     else $properties->attributes->location_name = "Location Tidak Ditemukan";
                 } 
                 if(isset($properties->old->location)){
-                    $location = Company::find($properties->old->location);
+                    $location = Company::withTrashed()->find($properties->old->location);
                     if($location) $properties->old->location_name = $location->name;
                     else $properties->old->location_name = "Location Tidak Ditemukan";
                 }
