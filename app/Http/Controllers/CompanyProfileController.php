@@ -54,7 +54,7 @@ class CompanyProfileController extends Controller
 
     public function addCareer(Request $request)
     {
-        $route_name = "CAREERS_ADD";
+        $route_name = "CAREER_ADD";
 
         $response = $this->companyProfileService->addCareer($request, $route_name);
         return response()->json($response, $response['status']);
