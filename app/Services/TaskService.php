@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use App\Services\GlobalService;
 use App\Services\NotificationService;
 use Illuminate\Database\Eloquent\Collection;
+use Validator;
 
 class TaskService{
 
@@ -702,6 +703,25 @@ class TaskService{
         $assign_ids = $request->get('assign_ids', []);
         $inventory_ids = $request->get('inventory_ids', []);
         $task_type_id = $request->get('task_type_id');
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'task_type_id' => 'required|numeric',
+            'location_id' => 'required|numeric',
+            'reference_id' => 'nullable|numeric',
+            'created_at' => 'required|date',
+            'deadline' => 'nullable|date',
+            'is_group' => 'nullable|boolean',
+            'is_replaceable' => 'required|boolean',
+            'assign_ids' => 'nullable|array',
+            'inventory_ids' => 'nullable|array',
+            'repeat' => 'required|numeric',
+            'is_uploadable' => 'required|boolean',
+            'end_repeat_at' => 'nullable|date',
+        ]);
+        if($validator->fails()) return ["success" => false, "message" => "Gagal menyimpan model","errors" => $validator->errors(), "status" => 400];
+
+
         try{
             $task_type = TaskType::with('works')->find($task_type_id);
             if($task_type === null) return ["success" => false, "message" => "Id Tipe Task Tidak Ditemukan", "status" => 400];
@@ -793,6 +813,24 @@ class TaskService{
             $query->wherePivot('is_from_task', true);
         }])->find($id);
         if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|numeric',
+            'name' => 'required',
+            'location_id' => 'required|numeric',
+            'reference_id' => 'nullable|numeric',
+            'created_at' => 'required|date',
+            'deadline' => 'nullable|date',
+            'is_group' => 'nullable|boolean',
+            'is_replaceable' => 'required|boolean',
+            'assign_ids' => 'nullable|array',
+            'inventory_ids' => 'nullable|array',
+            'repeat' => 'required|numeric',
+            'is_uploadable' => 'required|boolean',
+            'end_repeat_at' => 'nullable|date',
+        ]);
+        if($validator->fails()) return ["success" => false, "message" => "Gagal menyimpan model","errors" => $validator->errors(), "status" => 400];
+
         $old_inventory_ids = [];
         if(count($task->inventories)) $old_inventory_ids = $task->inventories->pluck('id')->toArray();
         $is_group = $request->get('is_group', null);
