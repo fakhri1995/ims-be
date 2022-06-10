@@ -801,8 +801,8 @@ class TicketService
                 } else $new_file_list = [];
             }
             $closed_at = $request->get('closed_at');
-            if($ticket->closed_at !== $closed_at){
-                $ticket->resolved_times = strtotime($closed_at) - strtotime($ticket->raised_at);
+            if($ticket->closed_at !== null || $ticket->raised_at !== $raised_at){
+                $ticket->resolved_times = strtotime($closed_at) - strtotime($raised_at);
             } 
             $old_creator_id = $ticket->created_by;
             $ticket->created_by = $requester_id;
