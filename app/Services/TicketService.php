@@ -433,7 +433,7 @@ class TicketService
             }
             if($status_id){
                 if(!$admin){
-                    if($status_id == 2 || $status_id == 3 || $status_id == 4) $tickets = $tickets->whereIn('status', [2,3,4]);
+                    if($status_id == 1 || $status_id == 3 || $status_id == 4) $tickets = $tickets->whereIn('status', [1,3,4]);
                     else $tickets = $tickets->where('status', $status_id);
                 } else {
                     $tickets = $tickets->where('status', $status_id);
