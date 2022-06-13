@@ -801,6 +801,7 @@ class TicketService
                 } else $new_file_list = [];
             }
             $closed_at = $request->get('closed_at');
+            if($closed_at === "0000-00-00 00:00:00") $closed_at = null;
             if($ticket->closed_at !== null || $ticket->raised_at !== $raised_at){
                 $ticket->resolved_times = strtotime($closed_at) - strtotime($raised_at);
             } 
