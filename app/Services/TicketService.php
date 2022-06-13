@@ -1294,7 +1294,7 @@ class TicketService
                 else if($sort_by === 'description') $ticket_detail_types = $ticket_detail_types->orderBy('description', $sort_type);
             }
             
-            if($keyword) $ticket_detail_types = $ticket_detail_types->where('ticket_detail_types.name', 'like', "%".$keyword."%")->orWhere('ticket_types.name', 'like', "%".$keyword."%")->orWhere('ticket_detail_types.description', 'like', "%".$keyword."%");
+            if($keyword) $ticket_detail_types = $ticket_detail_types->orWhere('ticket_detail_types.name', 'like', "%".$keyword."%")->orWhere('ticket_types.name', 'like', "%".$keyword."%")->orWhere('ticket_detail_types.description', 'like', "%".$keyword."%");
             $ticket_detail_types = $ticket_detail_types->paginate($rows);
             if($ticket_detail_types->isEmpty()) return ["success" => true, "message" => "Ticket Detail Type Masih Kosong", "data" => $ticket_detail_types, "status" => 200];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $ticket_detail_types, "status" => 200];
