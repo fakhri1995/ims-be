@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\DB;
 use App\Services\GlobalService;
 use App\AttendanceUser;
 use App\Services\NotificationService;
+use Validator;
 
 class TicketService
 {
@@ -688,9 +689,21 @@ class TicketService
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         try{
+            $validator = Validator::make($request->all(), [
+                'type_id' => 'required|numeric',
+                'ticket_detail_type_id' => 'required|numeric',
+                'product_id' => 'required',
+                'location_id' => 'nullable|numeric',
+                'incident_time' => 'nullable|date',
+                'closed_at' => 'nullable|date',
+                'attachments.*' => 'file|nullable',
+            ]);
+            if($validator->fails()) return ["success" => false, "message" => "Gagal menyimpan ticket","errors" => $validator->errors(), "status" => 400];
+            
             $type_id = $request->get('type_id');
             if($type_id === null) return ["success" => false, "message" => "Field Tipe Ticket Belum Terisi", "status" => 400];
             
+
             $ticketable_id = 0;
             $ticketable_type = '-';
             $causer_id = auth()->user()->id;
@@ -742,7 +755,6 @@ class TicketService
             
             
             $logService->createLogTicket($ticket->id, $causer_id);
-            // return ["success" => false, "message" => "MASUK", "status" => 400];
 
             $assign_ids = [$causer_id];
             $description = "Tiket Telah Dibuat"; 
@@ -766,11 +778,25 @@ class TicketService
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         try{
+            $validator = Validator::make($request->all(), [
+                'id' => 'required|numeric',
+                'ticket_detail_type_id' => 'required|numeric',
+                'product_id' => 'required',
+                'requester_id' => 'required|numeric',
+                'raised_at' => 'required|date',
+                'closed_at' => 'nullable|date',
+                'location_id' => 'nullable|numeric',
+                'incident_time' => 'nullable|date',
+                'closed_at' => 'nullable|date',
+                'attachments.*' => 'file|nullable',
+            ]);
+            if($validator->fails()) return ["success" => false, "message" => "Gagal menyimpan ticket","errors" => $validator->errors(), "status" => 400];
+
             $id = $request->get('id');
             $ticket = Ticket::find($id);
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
             if($ticket->status > 4) return ["success" => false, "message" => "Update Ticket Tidak Dapat Dilakukan, Status Ticket Tidak Tepat", "status" => 400];
-            
+
             $logService = new LogService;
             $causer_id = auth()->user()->id;
             $location_id = $request->get('location_id');
@@ -801,7 +827,6 @@ class TicketService
                 } else $new_file_list = [];
             }
             $closed_at = $request->get('closed_at');
-            if($closed_at === "0000-00-00 00:00:00") $closed_at = null;
             if($ticket->closed_at !== null || $ticket->raised_at !== $raised_at){
                 $ticket->resolved_times = strtotime($closed_at) - strtotime($raised_at);
             } 
