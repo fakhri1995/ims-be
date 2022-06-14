@@ -2184,7 +2184,7 @@ class TaskService{
                 if($task_detail->task->users[$search_task]->check_in === null) return ["success" => false, "message" => "Anda Perlu Melakukan Check In Terlebih Dahulu", "status" => 400];
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
             
-            if($task_detail->task->status !== 3) return ["success" => false, "message" => "Status Task Bukan On Progress", "status" => 400];
+            if(!in_array($task_detail->task->status, [1,3])) return ["success" => false, "message" => "Status Task Bukan On Progress", "status" => 400];
             
             if(!count($task_detail->users)) return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Pekerjaan Ini", "status" => 400];
             $search_task_detail = $task_detail->users->search(function ($item) use ($login_id) {
