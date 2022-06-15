@@ -884,7 +884,8 @@ class TaskService{
 
             if(!$is_group){
                 $task->load('users');
-                $all_check_out = true;
+                if(count($task->users)) $all_check_out = true;
+                else $all_check_out = false;
                 foreach($task->users as $user){
                     if($user->check_out === null){
                         $all_check_out = false;
