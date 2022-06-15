@@ -123,6 +123,18 @@ class NotificationService
         }
     }
 
+    public function deleteNotification($description, $notificationable_id, $notificationable_type)
+    {
+        try{
+            $notification = Notification::where('notificationable_id', $notificationable_id)->where('notificationable_type', $notificationable_type)->where('description', $description)->first();
+            $notification->users()->detach();
+            $notification->delete();
+            return ["success" => true];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     // public function generateOneHourLeftTask()
     // {
     //     $description = "Task akan mencapai waktu deadline pada satu jam dari sekarang"; 
