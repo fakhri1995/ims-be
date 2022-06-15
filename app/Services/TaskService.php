@@ -5,20 +5,21 @@ namespace App\Services;
 use App\Task;
 use App\User;
 use App\Group;
-use Exception;
 use App\Company;
 use App\TaskType;
 use App\Inventory;
-use Carbon\Carbon;
 use App\TaskDetail;
 use App\TaskTypeWork;
+use App\LongLatList;
 use App\Services\LogService;
 use App\Services\FileService;
 use App\Services\CompanyService;
-use Illuminate\Support\Facades\DB;
 use App\Services\GlobalService;
 use App\Services\NotificationService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Collection;
+use Carbon\Carbon;
+use Exception;
 use Validator;
 
 class TaskService{
@@ -687,6 +688,12 @@ class TaskService{
         }
     }
 
+    private function deleteNotification($description, $notificationable_id, $notificationable_type)
+    {
+        $notification_service = new NotificationService;
+        $notification_service->deleteNotification($description, $notificationable_id, $notificationable_type);
+    }
+
     private function addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users)
     {
         $notification_service = new NotificationService;
@@ -874,6 +881,23 @@ class TaskService{
                 } 
                 $task->users()->sync($assign_ids);
             }
+
+            if(!$is_group){
+                $task->load('users');
+                $all_check_out = true;
+                foreach($task->users as $user){
+                    if($user->check_out === null){
+                        $all_check_out = false;
+                        break;
+                    }
+                }
+
+                if($all_check_out){
+                    if($task->status !== 5) $this->changeSubmitStatus($task);
+                } else {
+                    if($task->status === 5) $this->rollBackSubmitStatus($task);
+                }
+            } 
 
             $assign_ids[] = $task->created_by;
             $notificationable_id = $task->id;
@@ -1063,6 +1087,14 @@ class TaskService{
         }
     }
 
+    private function addingLatLongList($latitude, $longitude){
+        $lat = number_format($latitude, 4);
+        $long = number_format($longitude, 4);
+        
+        $long_lat = LongLatList::where('longitude', $long)->where('latitude', $lat)->first();
+        if(!$long_lat) $long_lat = LongLatList::create(['longitude' => $long, 'latitude' => $lat, 'attempts' => 0]);
+    }
+
     public function changeAttendanceToggle($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
@@ -1090,6 +1122,7 @@ class TaskService{
                             $logService->updateStatusLogTicket($task->reference_id, $login_id, 2, 3);
                         }
                     }
+                    $this->addingLatLongList($lat, $long);
                     return ["success" => true, "message" => "Berhasil Melakukan Check In", "status" => 200];
                 } 
                 return ["success" => false, "message" => "Anda Sudah Melakukan Check In", "status" => 400];
@@ -1097,6 +1130,48 @@ class TaskService{
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
+    }
+
+    private function rollBackSubmitStatus($task){
+        $task->status = 3;
+        $task->save();
+        $description = "Task Telah Disubmit";
+        $notificationable_id = $task->id;
+        $notificationable_type = 'App\Task';
+        $this->deleteNotification($description, $notificationable_id, $notificationable_type);
+    }
+
+    private function changeSubmitStatus($task){
+        // if($task->is_from_ticket){
+        //     if(count($task->inventories)){
+        //         foreach($task->inventories as $inventory_task){
+        //             $user = DB::table('users')->select('id', 'company_id')->where('id', $inventory_task->pivot->user_id)->first();
+        //             if($inventory_task->pivot->is_in) $this->addInventoryPart($inventory_task->pivot->connect_id, $inventory_task->pivot->inventory_id, $user->id, $task->location_id);
+        //             else $this->removeInventoryPart($inventory_task->pivot->inventory_id, $user->id, $user->company_id);
+        //         }
+        //     }
+        //     $current_timestamp = date("Y-m-d H:i:s");
+        //     $task->reference->closed_at = $current_timestamp;
+        //     $task->reference->resolved_times = strtotime($current_timestamp) - strtotime($task->created_at);
+        //     $task->reference->save();
+        //     $task->status = 6;
+
+        //     $logService = new LogService;
+        //     $logService->updateStatusLogTicket($task->reference_id, $login_id, 3, 6);
+        // } else $task->status = 5;
+        $task->status = 5;
+        $task->save();
+        
+        $assign_ids = [$task->created_by];
+        $description = "Task Telah Disubmit"; 
+        $link = env('APP_URL_WEB')."/task/".$task->id;
+        $image_type = "task"; 
+        $color_type = "green"; 
+        $need_push_notification = false;
+        $notificationable_id = $task->id;
+        $notificationable_type = 'App\Task';
+        $users = $assign_ids;
+        $this->addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users);
     }
 
     public function submitTask($request, $route_name)
@@ -1132,37 +1207,10 @@ class TaskService{
                     }
 
                     if($all_check_out){
-                        if($task->is_from_ticket){
-                            if(count($task->inventories)){
-                                foreach($task->inventories as $inventory_task){
-                                    $user = DB::table('users')->select('id', 'company_id')->where('id', $inventory_task->pivot->user_id)->first();
-                                    if($inventory_task->pivot->is_in) $this->addInventoryPart($inventory_task->pivot->connect_id, $inventory_task->pivot->inventory_id, $user->id, $task->location_id);
-                                    else $this->removeInventoryPart($inventory_task->pivot->inventory_id, $user->id, $user->company_id);
-                                }
-                            }
-                            $current_timestamp = date("Y-m-d H:i:s");
-                            $task->reference->closed_at = $current_timestamp;
-                            $task->reference->resolved_times = strtotime($current_timestamp) - strtotime($task->created_at);
-                            $task->reference->save();
-                            $task->status = 6;
-
-                            $logService = new LogService;
-                            $logService->updateStatusLogTicket($task->reference_id, $login_id, 3, 6);
-                        } else $task->status = 5;
-                        $task->save();
-                        
-                        $assign_ids = [$task->created_by];
-                        $description = "Task Telah Disubmit"; 
-                        $link = env('APP_URL_WEB')."/task/".$task->id;
-                        $image_type = "task"; 
-                        $color_type = "green"; 
-                        $need_push_notification = false;
-                        $notificationable_id = $task->id;
-                        $notificationable_type = 'App\Task';
-                        $users = $assign_ids;
-                        $this->addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users);
+                        $this->changeSubmitStatus($task);
                     }
                 }
+                $this->addingLatLongList($lat, $long);
                 return ["success" => true, "message" => "Berhasil Melakukan Submit Pada Task", "status" => 200];
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Task Ini.", "status" => 400];
         } catch(Exception $err){
