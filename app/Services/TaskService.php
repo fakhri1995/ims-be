@@ -376,7 +376,7 @@ class TaskService{
             $tasks = Task::where(function ($query) use($login_id, $task_ids){
                 $query->where('created_by', $login_id)
                 ->orWhereIn('id', $task_ids);
-            })->where('status', '<', 4)->orderBy('deadline', 'asc')->limit(2)->get();
+            })->where('status', '<', 4)->whereNotNull('deadline')->orderBy('deadline', 'asc')->limit(2)->get();
 
             if(count($tasks)){
                 foreach($tasks as $task){
