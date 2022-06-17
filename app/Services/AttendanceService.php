@@ -391,6 +391,7 @@ class AttendanceService{
         try{
             $login_id = auth()->user()->id;
             $rows = $request->get('rows', 10);
+            $is_all = $request->get('is_all', 0);
             $is_wfo = $request->get('is_wfo', null);
             $is_late = $request->get('is_late', null);
             $sort_type = $request->get('sort_type', 0);
@@ -406,18 +407,23 @@ class AttendanceService{
             })->where('user_id', $login_id)
             ->whereDate('check_in', '>', date("Y-m-d", strtotime("-1 months")));
 
-            $params = "?rows=$rows";
-            if($is_wfo) $params = "$params&is_wfo=$is_wfo";
-            if($is_late) $params = "$params&is_late=$is_late";
-            if($sort_type) $params = "$params&sort_type=$sort_type";
+            if($is_all){
+                $user_attendances = $user_attendances->orderBy('check_in', 'desc')->get();
+            } else {
+                $params = "?rows=$rows";
+                if($is_wfo) $params = "$params&is_wfo=$is_wfo";
+                if($is_late) $params = "$params&is_late=$is_late";
+                if($sort_type) $params = "$params&sort_type=$sort_type";
+    
+                if($is_wfo !== null) $user_attendances = $user_attendances->where('is_wfo', $is_wfo);
+                if($is_late !== null) $user_attendances = $user_attendances->where('is_late', $is_late);
+                if($sort_type) $user_attendances = $user_attendances->orderBy('check_in', 'asc');
+                else $user_attendances = $user_attendances->orderBy('check_in', 'desc');
+    
+                $user_attendances = $user_attendances->paginate($rows);
+                $user_attendances->withPath(env('APP_URL').'/getAttendanceForms'.$params);
+            }
 
-            if($is_wfo !== null) $user_attendances = $user_attendances->where('is_wfo', $is_wfo);
-            if($is_late !== null) $user_attendances = $user_attendances->where('is_late', $is_late);
-            if($sort_type) $user_attendances = $user_attendances->orderBy('check_in', 'asc');
-            else $user_attendances = $user_attendances->orderBy('check_in', 'desc');
-
-            $user_attendances = $user_attendances->paginate($rows);
-            $user_attendances->withPath(env('APP_URL').'/getAttendanceForms'.$params);
             $is_late_count = 0;
             $on_time_count = 0;
             if($user_attendances->isEmpty()){
