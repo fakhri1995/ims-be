@@ -23,6 +23,7 @@ class CreateAttendanceUsersTable extends Migration
             $table->string('long_check_out')->nullable();
             $table->string('lat_check_out')->nullable();
             $table->boolean('is_wfo');
+            $table->boolean('is_late');
             $table->boolean('checked_out_by_system');
 
             $table->index('user_id');
