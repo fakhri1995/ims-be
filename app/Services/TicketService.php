@@ -539,6 +539,8 @@ class TicketService
                 $tickets = $tickets->where('resolved_times', '<', $to_res);
             }
             if($from && $to){
+                $add_one_day_date_seconds = strtotime($to) + 86400;
+                $to = date("Y-m-d H:i:s", $add_one_day_date_seconds);
                 $tickets = $tickets->whereBetween('raised_at', [$from, $to]);
             }
             if($location_id){
@@ -787,7 +789,6 @@ class TicketService
                 'closed_at' => 'nullable|date',
                 'location_id' => 'nullable|numeric',
                 'incident_time' => 'nullable|date',
-                'closed_at' => 'nullable|date',
                 'attachments.*' => 'file|nullable',
             ]);
             if($validator->fails()) return ["success" => false, "message" => "Gagal menyimpan ticket","errors" => $validator->errors(), "status" => 400];
@@ -795,7 +796,7 @@ class TicketService
             $id = $request->get('id');
             $ticket = Ticket::find($id);
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
-            if($ticket->status > 4) return ["success" => false, "message" => "Update Ticket Tidak Dapat Dilakukan, Status Ticket Tidak Tepat", "status" => 400];
+            // if($ticket->status > 4) return ["success" => false, "message" => "Update Ticket Tidak Dapat Dilakukan, Status Ticket Tidak Tepat", "status" => 400];
 
             $logService = new LogService;
             $causer_id = auth()->user()->id;
@@ -882,8 +883,15 @@ class TicketService
             $status = $request->get('status');
             if($status < 1 || $status > 7) return ["success" => false, "message" => "Status Tidak Tepat", "status" => 400];
             $notes = $request->get('notes');
-            if($status === 6) $ticket->resolved_times = strtotime(date("Y-m-d H:i:s")) - strtotime($ticket->raised_at);
-            else $ticket->resolved_times = null;
+            if(in_array($status, [6,7])){
+                $current_timestamp = date("Y-m-d H:i:s");
+                $ticket->closed_at = $current_timestamp;
+                if($status === 6) $ticket->resolved_times = strtotime($current_timestamp) - strtotime($ticket->raised_at);
+            } 
+            else{
+                $ticket->closed_at = null;
+                $ticket->resolved_times = null;
+            } 
             
             $ticket->status = $status;
             $ticket->save();
