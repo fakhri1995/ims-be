@@ -77,6 +77,11 @@ class Inventory extends Model
         return $this->belongsToMany(Inventory::class, 'inventory_inventory_pivots', 'child_id', 'parent_id')->select('inventories.id', 'inventories.model_id', 'inventories.mig_id', 'inventories.status_condition', 'inventories.status_usage', 'inventories.location');
     }
 
+    public function inventoryParents()
+    {
+        return $this->inventoryParent()->with('inventoryParents')->withTrashed();
+    }
+
     public function inventoryRelationshipsWithoutInventory()
     {
         return $this->hasMany(RelationshipInventory::class, 'subject_id')->where('type_id', '<>', -4);

@@ -701,6 +701,41 @@ class TaskService{
         $notification_service->addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users, $created_by);
     }
 
+    private function listParentInventory($list, $inventory)
+    {
+        if(count($inventory->inventoryParents)){
+            $list = $this->listParentInventory($list, $inventory->inventoryParents[0]);
+            $list[] = $inventory->id;
+            return $list;
+        }
+        $list[] = $inventory->id; 
+        return $list;
+    }
+
+    private function checkInventoryIdsNeccesity($inventory_ids)
+    {
+        if(count($inventory_ids)){
+            $inventories = Inventory::with('inventoryParents')->select('id', 'model_id')->find($inventory_ids);
+            $check_inventory_ids = $inventories->pluck('id')->toArray();
+            $check_list_remaining = array_diff($inventory_ids, $check_inventory_ids);
+            if(count($check_list_remaining)) return ["success" => false, "message" => "ID Inventory Tidak Ditemukan", "list_not_found_ids" => array_values($check_list_remaining), "status" => 400];
+            foreach($inventories as $inventory){
+                $list_parent_ids = $this->listParentInventory([], $inventory);
+                // Excluding its own id
+                unset($list_parent_ids[count($list_parent_ids) - 1]);
+
+                // Compare list parent with list inventory_ids whether its redundance or not
+                $parent_inventory_id_comparation = array_intersect($list_parent_ids, $inventory_ids);
+                if($parent_inventory_id_comparation){
+                    $failed_inventory_id = $inventory->id;
+                    $failed_parent_inventory_id = $parent_inventory_id_comparation[0];
+                    return ["success" => false, "message" => "ID Inventory $failed_inventory_id adalah part dari Inventory dengan id $failed_parent_inventory_id", "status" => 400];
+                } 
+            }
+        }
+        return ["success" => true];
+    }
+
     public function addTask($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
@@ -732,6 +767,9 @@ class TaskService{
         try{
             $task_type = TaskType::with('works')->find($task_type_id);
             if($task_type === null) return ["success" => false, "message" => "Id Tipe Task Tidak Ditemukan", "status" => 400];
+            $check_inventory_ids_neccesity = $this->checkInventoryIdsNeccesity($inventory_ids);
+            if(!$check_inventory_ids_neccesity["success"]) return $check_inventory_ids_neccesity;
+            
             $task = new Task;
             if($is_group){
                 if(count($assign_ids)){
@@ -845,6 +883,9 @@ class TaskService{
         
         if($task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Update Tidak Dimiliki", "status" => 403];
         $inventory_ids = $request->get('inventory_ids', []);
+        $check_inventory_ids_neccesity = $this->checkInventoryIdsNeccesity($inventory_ids);
+        if(!$check_inventory_ids_neccesity["success"]) return $check_inventory_ids_neccesity;
+
         try{
             if($is_group){
                 if(count($assign_ids)){
