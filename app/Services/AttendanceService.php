@@ -478,7 +478,7 @@ class AttendanceService{
             
             $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
             $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
-            $attendance_activities = AttendanceActivity::with('attendanceForm:id,details')->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
+            $attendance_activities = AttendanceActivity::with('attendanceForm:id,name,details')->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
             $data = (object)[
                 "user_attendance" => $user_attendance,
                 "attendance_activities" => $attendance_activities
