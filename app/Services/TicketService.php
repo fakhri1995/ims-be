@@ -1054,10 +1054,11 @@ class TicketService
             $log_id = $request->get('log_id');
             $ticket = Ticket::find($id);
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
-            if(!$admin){
+            // Uncomment if admin able to bypass company restriction
+            // if(!$admin){
                 $company_user_login_id = auth()->user()->company_id;
                 if($ticket->creator->company_id !== $company_user_login_id) return ["success" => false, "message" => "Ticket Bukan Milik Perusahaan User Login", "status" => 403];
-            }
+            // }
             $logService = new LogService;
             $causer_id = auth()->user()->id;
             $response = $logService->deleteNoteLogTicket($id, $causer_id, $log_id, $admin);
