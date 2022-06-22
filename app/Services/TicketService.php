@@ -520,7 +520,7 @@ class TicketService
             $ticket->ticketable->original_incident_time = date("Y-m-d H:i:s" ,strtotime($ticket->ticketable->incident_time));
             $ticket->ticketable->incident_time = date("d F Y - H:i:s" ,strtotime($ticket->ticketable->incident_time));
             $ticket->ticketable->location->full_location = $ticket->ticketable->location->fullSubNameWParentTopParent();
-            $ticket->ticketable->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
+            $ticket->ticketable->location->makeHidden(['parent', 'topParent']);
             $ticket->makeHidden('type');
             if($ticket->ticketable_type === 'App\Incident'){
                 if($ticket->ticketable->inventory !== null){
