@@ -421,7 +421,7 @@ class AttendanceService{
                 else $user_attendances = $user_attendances->orderBy('check_in', 'desc');
     
                 $user_attendances = $user_attendances->paginate($rows);
-                $user_attendances->withPath(env('APP_URL').'/getAttendanceForms'.$params);
+                $user_attendances->withPath(env('APP_URL').'/getAttendancesUser'.$params);
             }
 
             $is_late_count = 0;
