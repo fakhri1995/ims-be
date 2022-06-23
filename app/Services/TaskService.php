@@ -1534,6 +1534,7 @@ class TaskService{
 
     private function checkParent($id, $check_id){
         $inventory = Inventory::with('inventoryParent')->select('id')->find($id);
+        if(!$inventory) return false;
         if(count($inventory->inventoryParent)){
             if($inventory->inventoryParent[0]->id === $check_id) return true;
             return $this->checkParent($inventory->inventoryParent[0]->id, $check_id);
