@@ -16,6 +16,7 @@ class CreateTicketDetailTypesTable extends Migration
         Schema::create('ticket_detail_types', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('ticket_type_id');
+            $table->unsignedBigInteger('task_type_id');
             $table->string('name');
             $table->string('description')->nullable();
             $table->softDeletes();

@@ -521,7 +521,7 @@ class TicketService
             $ticket->ticketable->incident_time = date("d F Y - H:i:s" ,strtotime($ticket->ticketable->incident_time));
             $ticket->ticketable->location->full_location = $ticket->ticketable->location->fullSubNameWParentTopParent();
             $ticket->ticketable->location->makeHidden(['parent', 'topParent']);
-            $ticket->makeHidden('type');
+            // $ticket->makeHidden('type');
             if($ticket->ticketable_type === 'App\Incident'){
                 if($ticket->ticketable->inventory !== null){
                     if($ticket->ticketable->inventory->modelInventory->id !== 0 || $ticket->ticketable->inventory->modelInventory->asset->id !== 0){
@@ -1170,13 +1170,20 @@ class TicketService
             if($rows < 1) $rows = 10;
 
             $ticket_detail_types = DB::table('ticket_detail_types')
-            ->select('ticket_detail_types.id', 'ticket_types.name as ticket_type_name', 'ticket_detail_types.name', 'ticket_detail_types.description','ticket_detail_types.ticket_type_id')
-            ->join('ticket_types', 'ticket_detail_types.ticket_type_id', '=', 'ticket_types.id')
+            ->select('ticket_detail_types.id', 'ticket_types.name as ticket_type_name', 'task_types.name as task_type_name', 'ticket_detail_types.name', 'ticket_detail_types.description', 'ticket_detail_types.ticket_type_id', 'ticket_detail_types.task_type_id')
+            ->leftJoin('ticket_types', 'ticket_detail_types.ticket_type_id', '=', 'ticket_types.id')
+            ->leftJoin('task_types', 'ticket_detail_types.task_type_id', '=', 'task_types.id')
             ->whereNull('ticket_detail_types.deleted_at');
+
+            $params = "?rows=$rows";
+            if($keyword) $params = "$params&keyword=$keyword";
+            if($sort_by) $params = "$params&sort_by=$sort_by";
+            if($sort_type) $params = "$params&sort_type=$sort_type";
 
             if($sort_by){
                 if($sort_by === 'name') $ticket_detail_types = $ticket_detail_types->orderBy('name', $sort_type);
                 else if($sort_by === 'ticket_type_name') $ticket_detail_types = $ticket_detail_types->orderBy('ticket_type_name', $sort_type);
+                else if($sort_by === 'task_type_name') $ticket_detail_types = $ticket_detail_types->orderBy('task_type_name', $sort_type);
                 else if($sort_by === 'id') $ticket_detail_types = $ticket_detail_types->orderBy('id', $sort_type);
                 else if($sort_by === 'description') $ticket_detail_types = $ticket_detail_types->orderBy('description', $sort_type);
             }
@@ -1185,11 +1192,13 @@ class TicketService
                 $ticket_detail_types = $ticket_detail_types->where(function($query) use ($keyword) {
                     $query->where('ticket_detail_types.name', 'like', "%".$keyword."%")
                     ->orWhere('ticket_types.name', 'like', "%".$keyword."%")
+                    ->orWhere('task_types.name', 'like', "%".$keyword."%")
                     ->orWhere('ticket_detail_types.description', 'like', "%".$keyword."%");
                 });
             } 
 
             $ticket_detail_types = $ticket_detail_types->paginate($rows);
+            $ticket_detail_types->withPath(env('APP_URL').'/getTicketDetailTypes'.$params);
             if($ticket_detail_types->isEmpty()) return ["success" => true, "message" => "Ticket Detail Type Masih Kosong", "data" => $ticket_detail_types, "status" => 200];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $ticket_detail_types, "status" => 200];
         } catch(Exception $err){
@@ -1202,6 +1211,13 @@ class TicketService
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
+        $validator = Validator::make($request->all(), [
+            'ticket_type_id' => 'required|numeric',
+            'task_type_id' => 'required|numeric',
+            'name' => 'required',
+        ]);
+        if($validator->fails()) return ["success" => false, "message" => "Gagal menyimpan ticket","errors" => $validator->errors(), "status" => 400];
+            
         $ticket_detail_type = new TicketDetailType;
         $req_ticket_type_id = $request->get('ticket_type_id');
         $req_name = $request->get('name');
@@ -1209,6 +1225,7 @@ class TicketService
         if($check) return ["success" => false, "message" => "Nama Detail Tipe Ticket pada Tipe Tiket Tersebut Sudah Ada", "status" => 400];
         $ticket_detail_type->name = $req_name;
         $ticket_detail_type->ticket_type_id = $req_ticket_type_id;
+        $ticket_detail_type->task_type_id = $request->get('task_type_id');
         $ticket_detail_type->description = $request->get('description');
         try{
             $ticket_detail_type->save();
@@ -1223,6 +1240,14 @@ class TicketService
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|numeric',
+            'ticket_type_id' => 'required|numeric',
+            'task_type_id' => 'required|numeric',
+            'name' => 'required',
+        ]);
+        if($validator->fails()) return ["success" => false, "message" => "Gagal menyimpan ticket","errors" => $validator->errors(), "status" => 400];
+        
         $id = $request->get('id');
         $ticket_detail_type = TicketDetailType::find($id);
         if($ticket_detail_type === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
@@ -1234,6 +1259,7 @@ class TicketService
         
         $ticket_detail_type->name = $req_name;
         $ticket_detail_type->ticket_type_id = $req_ticket_type_id;
+        $ticket_detail_type->task_type_id = $request->get('task_type_id');
         $ticket_detail_type->description = $request->get('description');
         try{
             $ticket_detail_type->save();
