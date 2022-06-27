@@ -663,7 +663,8 @@ class TaskService{
 
         try{
             $id = $request->get('id', null);
-            $task = Task::with(['attachments', 'reference.type', 'taskType:id,name', 'creator:id,name,position', 'location:id,name,parent_id,top_parent_id,role','users', 'group:id,name', 'inventories:id,model_id,mig_id','inventories.modelInventory.asset', 'taskDetails'])->find($id);
+            $task = Task::with(['attachments', 'taskType:id,name', 'creator:id,name,position', 'location:id,name,parent_id,top_parent_id,role','users', 'group:id,name', 'inventories:id,model_id,mig_id','inventories.modelInventory.asset', 'taskDetails', 
+            'reference', 'reference.creator:id,name,company_id', 'reference.creator.company:id,name,top_parent_id', 'reference.type', 'reference.ticketable.location', 'reference.ticketable.assetType', 'reference.ticketable.inventory'])->find($id);
             if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
             $task->location->full_location = $task->location->fullSubNameWParentTopParent();
             $task->location->makeHidden(['parent', 'parent_id', 'role']);
@@ -677,7 +678,30 @@ class TaskService{
                     $inventory->connect_id = $inventory->pivot->connect_id;
                 }
             }
-            if($task->reference !== null) $task->reference->name = $task->reference->type->code.'-'.sprintf('%03d', $task->reference->ticketable_id);
+            if($task->reference !== null){
+                $task->reference->name = $task->reference->type->code.'-'.$task->reference->ticketable_id;
+                $task->reference->creator->location = $task->reference->creator->location ?? $task->reference->creator->company->fullName();
+                $task->reference->creator->company->makeHidden('topParent');
+                // return ["success" => true, "message" => "MASUK", "status" => 200];
+                $task->reference->resolved_times = $this->globalService->diffForHuman($task->reference->resolved_times);
+                $task->reference->deadline = $task->reference->deadline ? date("d M Y, H:i", strtotime($task->reference->deadline)) : "-";
+                $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
+                $task->reference->status_name = $statuses[$task->reference->status];
+                $task->reference->ticketable->asset_type_name = $task->reference->ticketable->assetType->name ?? "-";
+                $task->reference->ticketable->original_incident_time = date("Y-m-d H:i:s" ,strtotime($task->reference->ticketable->incident_time));
+                $task->reference->ticketable->incident_time = date("d F Y - H:i:s" ,strtotime($task->reference->ticketable->incident_time));
+                $task->reference->ticketable->location->full_location = $task->reference->ticketable->location->fullSubNameWParentTopParent();
+                $task->reference->ticketable->location->makeHidden(['parent', 'topParent']);
+                // $task->reference->makeHidden('type');
+                if($task->reference->ticketable_type === 'App\Incident'){
+                    if($task->reference->ticketable->inventory !== null){
+                        if($task->reference->ticketable->inventory->modelInventory->id !== 0 || $task->reference->ticketable->inventory->modelInventory->asset->id !== 0){
+                            $task->reference->ticketable->inventory->modelInventory->asset->full_name = $task->reference->ticketable->inventory->modelInventory->asset->fullName();
+                        }
+                    }
+                }
+                $task->reference->name = $task->reference->type->code.'-'.sprintf('%03d', $task->reference->ticketable_id);
+            } 
             
             if($task->status === 4) $task->time_left = date_diff(date_create($task->deadline), date_create($task->on_hold_at)); 
             else $task->time_left = date_diff(date_create($task->deadline), date_create(date("Y-m-d H:i:s"))); 
