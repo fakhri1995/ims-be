@@ -14,4 +14,9 @@ class TicketDetailType extends Model
     {
         return $this->belongsTo(TicketType::class);
     }
+
+    public function taskType()
+    {
+        return $this->belongsTo(TaskType::class)->select('id', 'name')->withTrashed();
+    }
 }

@@ -1,3 +1,5 @@
+<!-- Dont use php's echo, it doesn't fully support for maatwebsite and will get some errors for some cases -->
+
 <table>
     <thead>
     <tr>
@@ -22,7 +24,9 @@
 
                 if($search !== false){
                     $value = $activity->details[$search]['value'];
-                    if($detail['type'] !== 3) echo "<td> $value </td>";
+                    if($detail['type'] !== 3){ ?>
+                        <td> {{ $value }} </td>
+                    <?php } 
                     else {
                         if(count($value)){
                             $checklist_value = "";
@@ -32,10 +36,14 @@
                                 $checklist_value .= $detail['list'][$item];
                                 $index_checklist++;
                             }
-                            echo "<td> $checklist_value </td>";
-                        } else echo "<td> - </td>";
+                            ?> <td> {{ $checklist_value }} </td> <?php
+                        } else {
+                            ?> <td> - </td> <?php 
+                        } 
                     } 
-                } else echo "<td> - </td>";
+                } else {
+                    ?> <td> - </td> <?php 
+                } 
             }
             ?>
         </tr>

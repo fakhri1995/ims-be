@@ -2,8 +2,10 @@
 
 namespace App\Services;
 use Exception;
+use App\Task;
 use App\Ticket;
 use App\AttendanceUser;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -16,13 +18,6 @@ class AndroidService{
     public function getMainAndroid($request)
     {
         $status_tickets = Ticket::select(DB::raw('status, count(*) as status_count'));
-        // if(!$admin){
-        //     $company_user_login_id = auth()->user()->company_id;
-        //     $status_tickets = $status_tickets->whereHas('creator', function($query) use ($company_user_login_id){
-        //         $query->where('users.company_id', $company_user_login_id);
-        //     });
-        //     $statuses = ['-','Dalam Proses', 'Menunggu Staff', 'Dalam Proses', 'Dalam Proses', 'Completed', 'Selesai', 'Dibatalkan'];
-        // } else 
         $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
         $status_tickets = $status_tickets->groupBy('status')->get();
         $sum_ticket = $status_tickets->sum('status_count');
@@ -46,11 +41,18 @@ class AndroidService{
             "sum_ticket" => $sum_ticket
         ];
 
-        $from = $request->get('from', null);
-        $to = $request->get('to', null);
-        $assigned_only = $request->get('assigned_only', null);
-        $location = $request->get('location', null);
-            
+        $last_three_tickets = Ticket::select("*")->with(['type', 'ticketable:id,location_id', 'ticketable.location'])->where('status', '<', 5)->whereNotNull('deadline')->orderBy('deadline', 'asc')->limit(3)->get();
+        foreach($last_three_tickets as $ticket){
+            $ticket->status_name = $statuses[$ticket->status];
+            $ticket->name = $ticket->type->code.'-'.$ticket->ticketable_id;
+            $ticket->ticketable->location->full_location = $ticket->ticketable->location->fullSubNameWParentTopParent();
+            $ticket->time_left = ucwords(Carbon::parse($ticket->deadline)->diffForHumans(null, true, false, 2));
+            $ticket->makeHidden('type');
+            $ticket->ticketable->location->makeHidden('topParent', 'role', 'parent', 'parent_id');
+            if($ticket->deadline > date("Y-m-d H:i:s")) $ticket->passed_deadline = false;
+            else $ticket->passed_deadline = true;
+        }
+
         $login_id = auth()->user()->id;
         $task_ids = DB::table('task_user')->where('user_id', $login_id)->pluck('task_id');
         
@@ -81,6 +83,23 @@ class AndroidService{
             "sum_task" => $sum_task,
             "active_task" => $active_task,
         ];
+
+        $last_three_tasks = Task::select('id', 'name', 'status', 'reference_id', 'created_at', 'deadline')->with(['reference:id,ticketable_id,ticketable_type', 'reference.type'])->where(function ($query) use($login_id, $task_ids){
+            $query->where('created_by', $login_id)
+            ->orWhereIn('id', $task_ids);
+        })->where('status', '<', 5)->whereNotNull('deadline')->orderBy('deadline', 'asc')->limit(3)->get();
+
+        if(count($last_three_tasks)){
+            foreach($last_three_tasks as $task){
+                $task->status_name = $statuses[$task->status];
+                $task->time_left = ucwords(Carbon::parse($task->deadline)->diffForHumans(null, true, false, 2));
+                if($task->reference) $task->reference_name = $task->reference->type->code.'-'.$task->reference->ticketable_id;
+                else $task->reference_name = "-";
+                if($task->deadline > date("Y-m-d H:i:s")) $task->passed_deadline = false;
+                else $task->passed_deadline = true;
+                $task->makeHidden('reference');
+            } 
+        }
         
         $user_attendance_form_ids = DB::table('attendance_form_user')->where('user_id', $login_id)->pluck('attendance_form_id');
         $attendance_forms = DB::table('attendance_forms')->select('id', 'name', 'description', 'details', 'updated_at')->whereIn('id', $user_attendance_form_ids)->get();
@@ -117,7 +136,9 @@ class AndroidService{
         $attendance_activity_count = DB::table('attendance_activities')->where('user_id', $login_id)->whereDate('updated_at', date('Y-m-d'))->count();
         $data = (object)[
             "ticket" => $ticket_statuses,
+            "last_three_tickets" => $last_three_tickets,
             "task" => $task_statuses,
+            "last_three_tasks" => $last_three_tasks,
             "user" => (object)[
                 "id" => auth()->user()->id,
                 "image_profile" => auth()->user()->profileImage,
