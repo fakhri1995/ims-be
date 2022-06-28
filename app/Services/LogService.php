@@ -257,13 +257,9 @@ class LogService
     }
 
     // Get Ticket Log
-    
-    public function getTicketLog($id, $route_name)
-    {
-        $GlobalService = new GlobalService;
-        $access = $GlobalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
 
+    public function getTicketLogFunction($id)
+    {
         $special_logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', 'Note Khusus')->orderBy('created_at','desc')->get();
         $logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', '<>', 'Note Khusus')->orderBy('created_at','desc')->get();
         $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
@@ -302,6 +298,16 @@ class LogService
             "normal_logs" => $normal_logs,
             "special_logs" => $special_logs
         ];
+        return $data;
+    }
+    
+    public function getTicketLog($id, $route_name)
+    {
+        $GlobalService = new GlobalService;
+        $access = $GlobalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $data = $this->getTicketLogFunction($id);    
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
     }
     

@@ -682,7 +682,6 @@ class TaskService{
                 $task->reference->name = $task->reference->type->code.'-'.$task->reference->ticketable_id;
                 $task->reference->creator->location = $task->reference->creator->location ?? $task->reference->creator->company->fullName();
                 $task->reference->creator->company->makeHidden('topParent');
-                // return ["success" => true, "message" => "MASUK", "status" => 200];
                 $task->reference->resolved_times = $this->globalService->diffForHuman($task->reference->resolved_times);
                 $task->reference->deadline = $task->reference->deadline ? date("d M Y, H:i", strtotime($task->reference->deadline)) : "-";
                 $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
@@ -701,6 +700,8 @@ class TaskService{
                     }
                 }
                 $task->reference->name = $task->reference->type->code.'-'.sprintf('%03d', $task->reference->ticketable_id);
+                $logService = new LogService;
+                $task->reference->logs = $logService->getTicketLogFunction($task->reference->id);
             } 
             
             if($task->status === 4) $task->time_left = date_diff(date_create($task->deadline), date_create($task->on_hold_at)); 
