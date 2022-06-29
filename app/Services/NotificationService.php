@@ -24,8 +24,21 @@ class NotificationService
         ->join('notifications', 'notifications.id', '=', 'notification_user.notification_id')
         ->orderBy('notifications.created_at', 'desc')
         ->limit(10)->get();
-        if($notifications->isEmpty()) return ["success" => true, "message" => "Notifikasi Masih Kosong", "data" => $notifications, "status" => 200];
-        return ["success" => true, "message" => "Notifikasi Berhasil Diambil", "data" => $notifications, "status" => 200];
+
+        $check_is_unread_exist = DB::table('notification_user')->where('user_id', $login_id)
+        ->select('id')
+        ->join('notifications', 'notifications.id', '=', 'notification_user.notification_id')
+        ->where('is_read', false)
+        ->limit(1)->get();
+
+        if(count($check_is_unread_exist)) $is_unread_exist = true;
+        else $is_unread_exist = false;
+        $data = (object)[
+            "is_unread_exist" => $is_unread_exist,
+            "notifications" => $notifications
+        ];
+        if($notifications->isEmpty()) return ["success" => true, "message" => "Notifikasi Masih Kosong", "data" => $data, "status" => 200];
+        return ["success" => true, "message" => "Notifikasi Berhasil Diambil", "data" => $data, "status" => 200];
     }
 
     public function getNotifications($request, $route_name)
