@@ -47,16 +47,28 @@ class NotificationService
         // if($access["success"] === false) return $access;
 
         $rows = $request->get('rows', 10);
+        $keyword = $request->get('keyword');
+        $is_read = $request->get('is_read');
 
         if($rows > 100) $rows = 100;
         if($rows < 1) $rows = 10;
+
         $params = "?rows=$rows";
+        if($keyword) $params = "?keyword=$keyword";
+        if($is_read) $params = "?is_read=$is_read";
         
         $login_id = auth()->user()->id;
         $notifications = DB::table('notification_user')->where('user_id', $login_id)
-        ->join('notifications', 'notifications.id', '=', 'notification_user.notification_id')
-        ->orderBy('notifications.created_at', 'desc')
-        ->paginate($rows); 
+        ->join('notifications', 'notifications.id', '=', 'notification_user.notification_id');
+
+        if($is_read !== null) $notifications = $notifications->where('notification_user.is_read', $is_read);
+        if($keyword) $notifications = $notifications->where(function($query) use ($keyword) {
+            $query->where('notifications.description', 'like', "%".$keyword."%")
+            ->orWhere('notifications.notificationable_id', $keyword)
+            ->orWhere('notifications.notificationable_type', 'like', "%".$keyword."%");
+        });
+
+        $notifications = $notifications->orderBy('notifications.created_at', 'desc')->paginate($rows); 
         $notifications->withPath(env('APP_URL').'/getNotifications'.$params);
         if($notifications->isEmpty()) return ["success" => true, "message" => "Notifikasi Masih Kosong", "data" => $notifications, "status" => 200];
         return ["success" => true, "message" => "Notifikasi Berhasil Diambil", "data" => $notifications, "status" => 200];
