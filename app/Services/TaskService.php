@@ -879,6 +879,7 @@ class TaskService{
         
         $id = $request->get('id', null);
         $assign_ids = $request->get('assign_ids', []);
+        $deadline = $request->get('deadline');
         $task = Task::with(['taskDetails','inventories' => function ($query) {
             $query->wherePivot('is_from_task', true);
         }])->find($id);
@@ -906,7 +907,8 @@ class TaskService{
         $is_group = $request->get('is_group', null);
         if($is_group === null) return ["success" => false, "message" => "Kolom Is Group Belum Diisi", "status" => 400];
         
-        if($task->created_by !== auth()->user()->id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Update Tidak Dimiliki", "status" => 403];
+        $login_id = auth()->user()->id;
+        if($task->created_by !== $login_id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Update Tidak Dimiliki", "status" => 403];
         $inventory_ids = $request->get('inventory_ids', []);
         $check_inventory_ids_neccesity = $this->checkInventoryIdsNeccesity($inventory_ids);
         if(!$check_inventory_ids_neccesity["success"]) return $check_inventory_ids_neccesity;
@@ -925,12 +927,27 @@ class TaskService{
             $task->description = $request->get('description');
             $task->location_id = $request->get('location_id');
             $task->reference_id = $request->get('reference_id');
-            $task->deadline = $request->get('deadline');
+            $task->deadline = $deadline;
             $task->created_at = $request->get('created_at');
             $task->is_replaceable = $request->get('is_replaceable');
             $task->is_uploadable = $request->get('is_uploadable', false);
             $task->end_repeat_at = $request->get('end_repeat_at');
             $task->repeat = $request->get('repeat', 0);
+
+            if($task->created_at > $deadline && $task->status === 1){
+                $check_in = false;
+                if(count($task->users)){
+                    foreach($task->users as $user){
+                        if($user->check_in !== null){
+                            $check_in = true;
+                            break;
+                        }
+                    }
+                }
+                if($check_in) $task->status = 3;
+                else $task->status = 2;
+            }
+
             $task->save();
             
             $assign_id_count = count($assign_ids);
@@ -1130,10 +1147,12 @@ class TaskService{
                     if($task->deadline < date("Y-m-d H:i:s")) $task->status = 1;
                     else {
                         $check_in = false;
-                        foreach($task->users as $user){
-                            if($user->check_in !== null){
-                                $check_in = true;
-                                break;
+                        if(count($task->users)){
+                            foreach($task->users as $user){
+                                if($user->check_in !== null){
+                                    $check_in = true;
+                                    break;
+                                }
                             }
                         }
                         if($check_in) $task->status = 3;
