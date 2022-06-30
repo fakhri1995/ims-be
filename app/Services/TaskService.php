@@ -934,7 +934,7 @@ class TaskService{
             $task->end_repeat_at = $request->get('end_repeat_at');
             $task->repeat = $request->get('repeat', 0);
 
-            if($task->created_at > $deadline && $task->status === 1){
+            if(date("Y-m-d H:i:s") > $deadline && $task->status === 1){
                 $check_in = false;
                 if(count($task->users)){
                     foreach($task->users as $user){
