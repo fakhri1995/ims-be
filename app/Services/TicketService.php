@@ -806,7 +806,7 @@ class TicketService
             $inventory_id = $data['inventory_id'];
             $ticket = Ticket::find($id);
             if($ticket === null) return ["success" => false, "message" => "Id Ticket Tidak Ditemukan", "status" => 400];
-            if($ticket->closed_at !== null) return ["success" => false, "message" => "Status Ticket Sudah Closed", "status" => 400];
+            if($ticket->status > 4) return ["success" => false, "message" => "Status Ticket Sudah Closed", "status" => 400];
             if($ticket->ticketable_type !== 'App\Incident') return ["success" => false, "message" => "Tipe Tiket Tidak Sesuai", "status" => 400];
             $incident = Incident::find($ticket->ticketable_id);
             if($incident === null) return ["success" => false, "message" => "Incident pada Ticket Tidak Ditemukan", "status" => 400];
