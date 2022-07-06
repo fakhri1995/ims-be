@@ -21,10 +21,11 @@ class FileService
     {
         try{
             $new_file = new File;
+            $random_number = random_int(1, 999);
             $file_name = str_replace(" ","-",$file->getClientOriginalName());
             $filename = pathinfo($file_name, PATHINFO_FILENAME);
             $extension = pathinfo($file_name, PATHINFO_EXTENSION);
-            $name = $filename.'_'.time().'.'.$extension;
+            $name = $filename.'_'.time().$random_number.'.'.$extension;
             if($detail){
                 $year_month = date("Y m");
                 $year_month_split = explode(' ', $year_month);
