@@ -93,10 +93,11 @@ class TicketSeeder extends Seeder
             "PC", "ATM", "UPS"
         ];
 
-        foreach($default_incident_types as $data){
+        foreach($default_incident_types as $key => $data){
             $ticket_detail_type = new TicketDetailType;
             $ticket_detail_type->name = $data;
             $ticket_detail_type->ticket_type_id = 1;
+            $ticket_detail_type->task_type_id = $key + 1;
             $ticket_detail_type->description = "Deksripsi $data";
             $ticket_detail_type->save();
         }
