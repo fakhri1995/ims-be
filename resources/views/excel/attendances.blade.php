@@ -20,7 +20,7 @@
             <td>{{ $attendance->check_out ?? "-"}}</td>
             <td>{{ $attendance->geo_loc_check_in->display_name ?? "-" }}</td>
             <td>{{ $attendance->geo_loc_check_out->display_name ?? "-" }}</td>
-            <td>{{ $attendance->is_who == 1 ? "Work From Office" : "Work From Home" }}</td>
+            <td>{{ $attendance->is_wfo ? "Work From Office" : "Work From Home" }}</td>
         </tr>
         <?php $i++; ?>
     @endforeach
