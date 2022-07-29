@@ -106,20 +106,20 @@ class DefaultStagingSeeder extends Seeder
 
     public function run()
     {
-        $this->call(AccessFeatureSeeder::class);
-        $this->call(AssetManagementSeeder::class);
-        $this->call(VendorSeeder::class);
-        $this->call(ManufacturerSeeder::class);
-        $this->call(ModelInventorySeeder::class);
-        $this->call(TaskSeeder::class);
-        $this->call(PolymorphicCodeSeeder::class);
-        $this->call(TicketManagementSeeder::class);
-        $this->call(TicketSeeder::class);
-        $this->call(RoleSeeder::class);
-        $this->call(UserSeeder::class);
-        $this->call(CompanySeeder::class);
-        $this->call(GroupSeeder::class);
-        $this->addDefaultAgentsRequesters();
-        $this->addDefaultSubLocations();
+        // $this->call(AccessFeatureSeeder::class);
+        // $this->call(AssetManagementSeeder::class);
+        // $this->call(VendorSeeder::class);
+        // $this->call(ManufacturerSeeder::class);
+        // $this->call(ModelInventorySeeder::class);
+        // $this->call(TaskSeeder::class);
+        // $this->call(PolymorphicCodeSeeder::class);
+        // $this->call(TicketManagementSeeder::class);
+        // $this->call(TicketSeeder::class);
+        // $this->call(RoleSeeder::class);
+        // $this->call(UserSeeder::class);
+        // $this->call(CompanySeeder::class);
+        // $this->call(GroupSeeder::class);
+        // $this->addDefaultAgentsRequesters();
+        // $this->addDefaultSubLocations();
     }
 }

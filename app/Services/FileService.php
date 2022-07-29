@@ -16,7 +16,12 @@ class FileService
         if(isset($service_response['message'])) return false;
         return true;
     }
-
+    
+    /*
+        public function addFile($id, $file, $table, $description, $folder_detail, $detail = false)
+        $detail = true -> multiple file
+        $detail = false -> single file
+    */
     public function addFile($id, $file, $table, $description, $folder_detail, $detail = false)
     {
         try{
@@ -38,7 +43,7 @@ class FileService
             $new_file->link = $folder.'/'.$name;
             $new_file->fileable_id = $id;
             $new_file->fileable_type = $table;
-            $new_file->uploaded_by = auth()->user()->id;
+            $new_file->uploaded_by = isset(auth()->user()->id) ? auth()->user()->id : 0;
             $new_file->description = $description;
             $new_file->save();
             $new_data = (object)[
