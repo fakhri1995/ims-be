@@ -11,6 +11,7 @@ class CareerV2Seeder extends Seeder
      * @return void
      */
 
+    // just use this for local / testing
     public function addCareerDummy(){
         $data = [
             [
@@ -80,7 +81,11 @@ class CareerV2Seeder extends Seeder
 
 
     public function run()
-    {
-        $this->addCareerDummy();
+    {   
+        $this->call(CareerV2ApplyStatusSeeder::class);
+        $this->call(CareerV2ExperienceSeeder::class);
+        $this->call(CareerV2RoleTypeSeeder::class);
+        
+        // $this->addCareerDummy(); // not for server
     }
 }
