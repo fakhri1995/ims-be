@@ -10,7 +10,10 @@ class DatabaseSeeder extends Seeder
      * @return void
      */
     public function run()
-    {
+    {   
+
+        // syntax dibawah di comment untuk mengantisipasi kesalahan saat menjalankan command php artisan db:seed
+
         // $this->call(AccessFeatureSeeder::class);
         // $this->call(AssetManagementSeeder::class);
         // $this->call(ModelInventorySeeder::class);
@@ -21,3 +24,5 @@ class DatabaseSeeder extends Seeder
         // $this->call(DefaultStagingSeeder::class);
     }
 }
+
+
