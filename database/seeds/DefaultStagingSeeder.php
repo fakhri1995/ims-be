@@ -105,7 +105,9 @@ class DefaultStagingSeeder extends Seeder
     }
 
     public function run()
-    {
+    {   
+        // syntax dibawah di comment untuk mengantisipasi kesalahan command php artisan db:seed pada staging
+
         // $this->call(AccessFeatureSeeder::class);
         // $this->call(AssetManagementSeeder::class);
         // $this->call(VendorSeeder::class);
