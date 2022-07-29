@@ -369,7 +369,31 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getNotifications', 'NotificationController@getNotifications');
     $router->post('/readNotification', 'NotificationController@readNotification');
     $router->post('/readAllNotifications', 'NotificationController@readAllNotifications');
+   
     
+
+
+    //Career V2 Routes
+    $router->group(['prefix' => 'v2'] , function () use ($router) {
+        $router->get('/getCareer', 'CareerV2Controller@getCareer');
+        $router->get('/getCareers', 'CareerV2Controller@getCareers');
+        $router->post('/addCareer', 'CareerV2Controller@addCareer');
+        $router->put('/updateCareer', 'CareerV2Controller@updateCareer');
+        $router->delete('/deleteCareer', 'CareerV2Controller@deleteCareer');
+        
+        $router->get('/getCountCareerApplicant', 'CareerV2Controller@getCountCareerApplicant');
+        $router->get('/getCountCareersApplicant', 'CareerV2Controller@getCountCareersApplicant');
+        $router->get('/getMostCareersApplicant', 'CareerV2Controller@getMostCareersApplicant');
+        $router->get('/getCountCareerPosted', 'CareerV2Controller@getCountCareerPosted');
+        $router->get('/getCountCareer', 'CareerV2Controller@getCountCareerPosted');
+        $router->post('/exportCareersApplicant', 'CareerV2Controller@exportCareersApplicant');
+
+
+        $router->get('/getCareerApply', 'CareerV2Controller@getCareerApply');
+        $router->get('/getCareerApplys', 'CareerV2Controller@getCareerApplys');
+        $router->post('/updateCareerApply', 'CareerV2Controller@updateCareerApply');
+        $router->delete('/deleteCareerApply', 'CareerV2Controller@deleteCareerApply');
+    });
     
 });
 
@@ -419,6 +443,15 @@ $router->get('/getDepreciations', 'DepreciationController@getDepreciations');
 $router->post('/addDepreciation', 'DepreciationController@addDepreciation');
 $router->put('/updateDepreciation', 'DepreciationController@updateDepreciation');
 $router->delete('/deleteDepreciation', 'DepreciationController@deleteDepreciation');
+
+
+//Career V2 Routes
+$router->group(['prefix' => 'v2'] , function () use ($router) {
+
+    $router->post('/addCareerApply', 'CareerV2Controller@addCareerApply');
+    $router->get('/getPostedCareer', 'CareerV2Controller@getPostedCareer');
+    $router->get('/getPostedCareers', 'CareerV2Controller@getPostedCareers');
+});
 
 // $router->get('/', function () use ($router){ phpinfo(); });
 

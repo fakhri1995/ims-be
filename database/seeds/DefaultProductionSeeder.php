@@ -12,16 +12,16 @@ class DefaultProductionSeeder extends Seeder
 
     public function run()
     {
-        $this->call(AccessFeatureSeeder::class);
-        $this->call(AssetManagementSeeder::class);
-        $this->call(VendorSeeder::class);
-        $this->call(ManufacturerSeeder::class);
-        $this->call(PolymorphicCodeSeeder::class);
-        $this->call(TicketManagementSeeder::class);
-        $this->call(TaskTypeSeeder::class);
-        $this->call(RoleSeeder::class);
-        $this->call(UserSeeder::class);
-        $this->call(CompanySeeder::class);
-        $this->call(GroupSeeder::class);
+        // $this->call(AccessFeatureSeeder::class);
+        // $this->call(AssetManagementSeeder::class);
+        // $this->call(VendorSeeder::class);
+        // $this->call(ManufacturerSeeder::class);
+        // $this->call(PolymorphicCodeSeeder::class);
+        // $this->call(TicketManagementSeeder::class);
+        // $this->call(TaskTypeSeeder::class);
+        // $this->call(RoleSeeder::class);
+        // $this->call(UserSeeder::class);
+        // $this->call(CompanySeeder::class);
+        // $this->call(GroupSeeder::class);
     }
 }
