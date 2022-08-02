@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Console\Commands\SendAndroidPushNotifications;
 use App\Console\Commands\UnhideTasks;
 use App\Console\Commands\SetOverdueTasks;
 use App\Console\Commands\SearchGeoLocation;
@@ -24,6 +25,7 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
+        SendAndroidPushNotifications::class,
         UnhideTasks::class,
         SetOverdueTasks::class,
         AutoCheckOutAttendance::class,
@@ -45,6 +47,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
+        // $schedule->command(SendAndroidPushNotifications::class)->cron('* * * * *')->runInBackground();
         $schedule->command(UnhideTasks::class)->cron('* * * * *')->runInBackground();
         $schedule->command(SetOverdueTasks::class)->cron('* * * * *')->runInBackground();
         $schedule->command(SearchGeoLocation::class)->cron('* * * * *')->runInBackground();
