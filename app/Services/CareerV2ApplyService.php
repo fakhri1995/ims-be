@@ -46,10 +46,12 @@ class CareerV2ApplyService{
         }
         
         $id = $request->get("career_apply_id");
-        $career = CareerV2Apply::with(["resume"])->find($id);
+        $career = CareerV2Apply::with(["resume","role","role.experience","role.roleType","status"])->find($id);
         if(!$career) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
-        // $career->experience->makeHidden("id");
-        // $career->roleType->makeHidden("id");
+        $career->role->makeHidden(["id","created_at","created_by","updated_at"]);
+        $career->role->experience->makeHidden("id");
+        $career->role->roleType->makeHidden("id");    
+        $career->status->makeHidden(["id","display_order"]);    
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $career, "status" => 200];
         }catch(Exception $err){
@@ -208,7 +210,7 @@ class CareerV2ApplyService{
 
             $id = $request->get("career_apply_id");
             $careerApply = CareerV2Apply::find($id);
-            if(!$careerApply) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 4];
+            if(!$careerApply) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
             foreach($request->all() as $key => $value){
                 if(in_array($key,$fillable)){

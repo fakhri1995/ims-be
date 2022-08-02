@@ -275,7 +275,7 @@ class CareerV2Service{
 
         $id = $request->get("career_id");
         $career = CareerV2::find($id);
-        if(!$career) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 4];
+        if(!$career) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
 
         foreach($request->all() as $key => $value){
@@ -329,7 +329,7 @@ class CareerV2Service{
         if(!$career) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
         try{
-            return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $career, "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $career, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
