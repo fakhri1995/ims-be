@@ -143,6 +143,6 @@ class CareerV2Controller extends Controller
 
         $response = $this->careerV2ApplyService->exportCareersApplicant($request, $route_name);
         if(!$response['success']) return response()->json($response, $response['status']);
-        return $response['data'];
+        return ($response['data']);
     }
 }

@@ -386,7 +386,7 @@ $router->group(['middleware' => 'auth'], function($router){
         $router->get('/getMostCareersApplicant', 'CareerV2Controller@getMostCareersApplicant');
         $router->get('/getCountCareerPosted', 'CareerV2Controller@getCountCareerPosted');
         $router->get('/getCountCareer', 'CareerV2Controller@getCountCareerPosted');
-        $router->post('/exportCareersApplicant', 'CareerV2Controller@exportCareersApplicant');
+        $router->get('/exportCareersApplicant', 'CareerV2Controller@exportCareersApplicant');
 
 
         $router->get('/getCareerApply', 'CareerV2Controller@getCareerApply');
