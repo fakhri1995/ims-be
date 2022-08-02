@@ -38,7 +38,7 @@ class AuthServiceProvider extends ServiceProvider
         //     }
         // });
 
-        // LumenPassport::tokensExpireIn(Carbon::now()->addDays(1));
+        LumenPassport::tokensExpireIn(Carbon::now()->addYears(10));
         LumenPassport::allowMultipleTokens();
         Carbon::setLocale('id');
     }

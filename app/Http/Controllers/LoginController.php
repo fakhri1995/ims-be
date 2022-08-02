@@ -32,7 +32,7 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
-        $response = $this->loginService->logout();
+        $response = $this->loginService->logout($request);
         return response()->json($response, $response['status']);
         
         // $headers = [
@@ -58,6 +58,11 @@ class LoginController extends Controller
         // }
     }
 
+    public function addAndroidToken(Request $request)
+    {
+        $response = $this->loginService->addAndroidToken($request);
+        return response()->json($response, $response['status']);
+    }
     
     public function changePassword(Request $request)
     {

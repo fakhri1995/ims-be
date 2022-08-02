@@ -34,6 +34,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getCompanyLog', 'ActivityLogController@getCompanyLog');
 
     //User Routes
+    $router->post('/addAndroidToken', 'LoginController@addAndroidToken');
     $router->post('/logout', 'LoginController@logout');
     $router->get('/detailProfile', 'LoginController@detailProfile');
     $router->post('/updateProfile', 'LoginController@updateProfile');

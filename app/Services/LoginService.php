@@ -3,9 +3,10 @@
 namespace App\Services;
 use App\User;
 use Exception;
+use Illuminate\Support\Str;
+use App\FirebaseAndroidToken;
 use App\Services\FileService;
 use App\Mail\ForgetPasswordMail;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
@@ -79,7 +80,7 @@ class LoginService
         return $response;
     }
 
-    public function logout(){
+    public function logout($request){
         try {
             // Logout all token (all devices)
             // auth()->user()->tokens()->each(function ($token) {
@@ -88,6 +89,11 @@ class LoginService
 
             // Logout only one token 
             auth()->user()->token()->delete();
+
+            $token = $request->get('token');
+            if($token){
+                FirebaseAndroidToken::where('token', $token)->delete();
+            }
 
             return [
                 "success" => true,
@@ -101,6 +107,24 @@ class LoginService
                 "status" => 400
             ];
         }
+    }
+
+    public function addAndroidToken($request)
+    {
+        $token = $request->get('token');
+        if(!$token) return ["success" => false, "message" => "Token Masih Kosong", "status" => 400];
+        $firebase_android_token = FirebaseAndroidToken::where('token', $token)->first();
+        $expires_at = date("Y-m-d H:i:s", strtotime("+10 years"));
+        if($firebase_android_token) {
+            $firebase_android_token->user_id = auth()->user()->id;
+        } else {
+            $firebase_android_token = new FirebaseAndroidToken;
+            $firebase_android_token->token = $token;
+            $firebase_android_token->user_id = auth()->user()->id;
+        }
+        $firebase_android_token->expires_at = $expires_at;
+        $firebase_android_token->save();
+        return ["success" => true, "message" => "Token android berhasil dimasukkan", "status" => 200];
     }
 
     public function changePassword($password){
