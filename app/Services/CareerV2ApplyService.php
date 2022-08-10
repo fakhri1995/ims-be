@@ -137,7 +137,7 @@ class CareerV2ApplyService{
             "email" => "required|email",
             "phone" => "required|numeric",
             "career_id" => "required|exists:career_v2,id|numeric",
-            "resume" => "mimes:pdf|mimetypes:application/pdf|file|max:5120"
+            "resume" => "required|mimes:pdf|mimetypes:application/pdf|file|max:5120"
         ]);
         
         if($validator->fails()){
@@ -145,7 +145,7 @@ class CareerV2ApplyService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
         try{
-            $file = $request->file('resume');
+            $file = $request->file('resume',NULL);
             $current_timestamp = date('Y-m-d H:i:s');
 
             $career = CareerV2::find($request->career_id);
@@ -161,7 +161,8 @@ class CareerV2ApplyService{
             $careerApply->updated_at = $current_timestamp;
             $careerApply->created_by = isset(auth()->user()->id) ? auth()->user()->id : NULL;
             $careerApply->save();
-            $addResume = $this->addResume($careerApply->id, $file, "resume");
+
+            if($file) $addResume = $this->addResume($careerApply->id, $file, "resume");
 
             $data = (object) array(
                 'name' => $request->name,
@@ -215,7 +216,9 @@ class CareerV2ApplyService{
                 $oldFile = File::where(['fileable_id' => $careerApply->id, 'fileable_type' => $this->table])->first(); //using first() because resume just single file
                 $addResume = $this->addResume($careerApply->id, $file, "resume");
                 $fileService = new FileService;
-                $deleteResume = $fileService->deleteForceFile($oldFile->id);
+                if($oldFile){
+                    $deleteResume = $fileService->deleteForceFile($oldFile->id);
+                }
             }
             $careerApply->save();
             return ["success" => true, "message" => "Career Apply Berhasil Diubah", "id" => $careerApply->id, "status" => 200];

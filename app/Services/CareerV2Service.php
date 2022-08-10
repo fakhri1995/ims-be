@@ -34,8 +34,9 @@ class CareerV2Service{
         
         $id = $request->get("id",NULL);
         $slug = $request->get("slug",NULL);
-        if($slug) $career = CareerV2::with(["roleType","experience"])->where("slug",$slug)->first();
-        else $career = CareerV2::with(["roleType","experience"])->find($id);
+        
+        if($id) $career = CareerV2::with(["roleType","experience"])->find($id);
+        else $career = CareerV2::with(["roleType","experience"])->where("slug",$slug)->first();
         
         if(!$career) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         try{
@@ -195,8 +196,8 @@ class CareerV2Service{
         
         $id = $request->get("id",NULL);
         $slug = $request->get("slug",NULL);
-        if($slug) $career = CareerV2::with(["roleType","experience"])->where(['slug' => $slug,'is_posted' => 1])->first();
-        else $career = CareerV2::with(["roleType","experience"])->where(['id' => $id,'is_posted' => 1])->first();
+        if($id) $career = CareerV2::with(["roleType","experience"])->where(['id' => $id,'is_posted' => 1])->first();
+        else $career = CareerV2::with(["roleType","experience"])->where(['slug' => $slug,'is_posted' => 1])->first();
 
         
         
