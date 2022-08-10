@@ -395,6 +395,15 @@ $router->group(['middleware' => 'auth'], function($router){
         $router->post('/updateCareerApply', 'CareerV2Controller@updateCareerApply');
         $router->delete('/deleteCareerApply', 'CareerV2Controller@deleteCareerApply');
     });
+
+
+    $router->group(['prefix' => 'recruitment'] , function () use ($router) {
+        $router->get('/getResumes', 'RecruitmentController@getResumes');
+        $router->get('/getResume', 'RecruitmentController@getResume');
+        $router->post('/addResume', 'RecruitmentController@addResume');
+        $router->put('/updateResume', 'RecruitmentController@updateResume');
+        $router->delete('/deleteResume', 'RecruitmentController@deleteResume');
+    });
     
 });
 
