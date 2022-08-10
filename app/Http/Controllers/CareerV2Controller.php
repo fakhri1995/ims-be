@@ -145,4 +145,37 @@ class CareerV2Controller extends Controller
         if(!$response['success']) return response()->json($response, $response['status']);
         return ($response['data']);
     }
+
+    public function getCareerApplyStatuses(Request $request){
+        $route_name = "CAREERS_V2_APPLY_STATUSES";
+
+        $response = $this->careerV2Service->getCareerApplyStatuses($request, $route_name);
+        if(!$response['success']) return response()->json($response, $response['status']);
+        return ($response['data']);
+    }
+
+    public function getCareerExperiences(Request $request){
+        $route_name = "CAREERS_V2_EXPERIENCES";
+
+        $response = $this->careerV2Service->getCareerExperiences($request, $route_name);
+        if(!$response['success']) return response()->json($response, $response['status']);
+        return ($response['data']);
+    }
+
+    public function getCareerRoleTypes(Request $request){
+        $route_name = "CAREERS_V2_ROLE_TYPES";
+
+        $response = $this->careerV2Service->getCareerRoleTypes($request, $route_name);
+        if(!$response['success']) return response()->json($response, $response['status']);
+        return ($response['data']);
+    }
+
+    public function recaptcha(Request $request)
+    {
+        $route_name = "RECAPTCHA";
+
+        $response = $this->careerV2ApplyService->reCaptcha($request, $route_name);
+        if(!$response['success']) return response()->json($response, $response['status']);
+        return ($response['data']);
+    }
 }
