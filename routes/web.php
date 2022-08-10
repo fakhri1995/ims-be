@@ -461,7 +461,12 @@ $router->group(['prefix' => 'v2'] , function () use ($router) {
     $router->post('/addCareerApply', 'CareerV2Controller@addCareerApply');
     $router->get('/getPostedCareer', 'CareerV2Controller@getPostedCareer');
     $router->get('/getPostedCareers', 'CareerV2Controller@getPostedCareers');
+    $router->get('/getCareerApplyStatuses', 'CareerV2Controller@getCareerApplyStatuses');
+    $router->get('/getCareerExperiences', 'CareerV2Controller@getCareerExperiences');
+    $router->get('/getCareerRoleTypes', 'CareerV2Controller@getCareerRoleTypes');
 });
+
+$router->post('/recaptcha', 'CareerV2Controller@recaptcha');
 
 // $router->get('/', function () use ($router){ phpinfo(); });
 
