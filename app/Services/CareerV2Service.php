@@ -11,6 +11,7 @@ use App\Services\GlobalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class CareerV2Service{
     public function __construct()
@@ -23,7 +24,7 @@ class CareerV2Service{
         if($access["success"] === false) return $access;
 
         $validator = Validator::make($request->all(), [
-            "id" => "required|exists:career_v2,id"
+            "id" => "required_without:slug|exists:career_v2,id"
         ]);
 
         if($validator->fails()){
@@ -31,8 +32,11 @@ class CareerV2Service{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
         
-        $id = $request->get("id");
-        $career = CareerV2::with(["roleType","experience"])->find($id);
+        $id = $request->get("id",NULL);
+        $slug = $request->get("slug",NULL);
+        if($slug) $career = CareerV2::with(["roleType","experience"])->where("slug",$slug)->first();
+        else $career = CareerV2::with(["roleType","experience"])->find($id);
+        
         if(!$career) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $career, "status" => 200];
@@ -180,7 +184,7 @@ class CareerV2Service{
 
     public function getPostedCareer(Request $request, $route_name){
         $validator = Validator::make($request->all(), [
-            "id" => "required|exists:career_v2,id"
+            "id" => "required_without:slug|exists:career_v2,id"
         ]);
 
         if($validator->fails()){
@@ -188,8 +192,13 @@ class CareerV2Service{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
         
-        $id = $request->get("id");
-        $career = CareerV2::with(["roleType","experience"])->where(['id' => $id,'is_posted' => 1])->first();
+        
+        $id = $request->get("id",NULL);
+        $slug = $request->get("slug",NULL);
+        if($slug) $career = CareerV2::with(["roleType","experience"])->where(['slug' => $slug,'is_posted' => 1])->first();
+        else $career = CareerV2::with(["roleType","experience"])->where(['id' => $id,'is_posted' => 1])->first();
+
+        
         
         if(!$career) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         try{
@@ -220,8 +229,12 @@ class CareerV2Service{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
+        $random = random_int(0000,9999);
+
+
         $career = new CareerV2();
         $career->name = $request->name;
+        $career->slug = Str::slug($request->name, '-').'-'.$random;
         $career->career_role_type_id = $request->career_role_type_id;
         $career->career_experience_id = $request->career_experience_id;
         $career->salary_min = $request->salary_min;
@@ -274,6 +287,11 @@ class CareerV2Service{
             }
         }
         $career->updated_at = Date('Y-m-d H:i:s');
+        
+        if($request->get('name',NULL)){
+            $random = random_int(0000,9999);
+            $career->slug = Str::slug($request->name, '-').'-'.$random;
+        } 
 
         try{
             $career->save();

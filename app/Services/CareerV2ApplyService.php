@@ -252,13 +252,12 @@ class CareerV2ApplyService{
         }
     }
 
-    public function getCountCareerApplicant($request, $route_name){
+    public function getCountCareerApplicant($request, $route_name, $is_all = false){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
         $career_id = $request->career_id ?? NULL;
-        $is_all = true;
-        if($career_id == NULL || $career_id != "all"){
+        if(!$is_all){
             $validator = Validator::make($request->all(), [
                 "career_id" => "required|exists:career_v2,id"
             ]);
@@ -267,7 +266,7 @@ class CareerV2ApplyService{
                 $errors = $validator->errors()->all();
                 return ["success" => false, "message" => $errors, "status" => 400];
             }
-            $is_all = false;
+            
         }
         
        

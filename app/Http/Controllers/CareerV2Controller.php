@@ -118,8 +118,7 @@ class CareerV2Controller extends Controller
 
     public function getCountCareersApplicant(Request $request){
         $route_name = "CAREERS_V2_COUNT_APPLICANT_GET";
-        $request->career_id = 'all';
-        $response = $this->careerV2ApplyService->getCountCareerApplicant($request, $route_name);
+        $response = $this->careerV2ApplyService->getCountCareerApplicant($request, $route_name, true);
         return response()->json($response, $response['status']);
     }
 
