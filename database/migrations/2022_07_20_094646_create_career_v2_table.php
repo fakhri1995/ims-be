@@ -16,6 +16,7 @@ class CreateCareerV2Table extends Migration
         Schema::create('career_v2', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('slug')->unique();
             $table->unsignedBigInteger('career_role_type_id');
             $table->unsignedBigInteger('career_experience_id');
             $table->integer('salary_min'); // gaji minimal;
@@ -28,8 +29,7 @@ class CreateCareerV2Table extends Migration
             $table->dateTime('created_at');
             $table->dateTime('updated_at');
 
-            $table->index('career_role_type_id');
-            $table->index('career_experience_id');
+            $table->index('slug');
             $table->index('created_by');
             $table->softDeletes();
         });

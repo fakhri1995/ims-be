@@ -17,7 +17,17 @@ class CareerV2Apply extends Model
 
     public function role()
     {
-        return $this->belongsTo(CareerV2::class, 'career_id');
+        return $this->belongsTo(CareerV2::class, 'career_id')->select([
+            "id",
+            "career_role_type_id",
+            "career_experience_id",
+            "salary_min",
+            "salary_max",
+            "overview",
+            "description",
+            "qualification",
+            "is_posted"
+        ]);
     }
 
     public function status(){

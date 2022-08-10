@@ -26,8 +26,6 @@ class CreateCareerV2ApplysTable extends Migration
             $table->softDeletes();
 
             $table->index('career_id');
-            $table->index('career_apply_status_id');
-            $table->index('created_by');
         });
     }
 
