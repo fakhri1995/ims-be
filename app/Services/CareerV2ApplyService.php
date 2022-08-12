@@ -141,7 +141,7 @@ class CareerV2ApplyService{
 
         if(!isset(auth()->user()->id) || empty($auth)){
             try{
-                $gCaptchaResponse = $request->get('g_captcha_response', NULL);
+                $gCaptchaResponse = $request->get('g-recaptcha-response', NULL);
                 $validate = $this->globalService->validateGoogleReCaptcha($gCaptchaResponse);
                 if(!$validate["success"]){
                     return ["success" => false, "message" => "Error captcha validation", "data" => $validate["error-codes"], "status" => 400];
