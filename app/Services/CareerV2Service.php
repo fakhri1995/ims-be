@@ -71,7 +71,7 @@ class CareerV2Service{
         }
 
         $keyword = $request->keyword ?? NULL;
-        $role_id = $request->role_id ? explode(",",$request->role_id) : NULL;
+        $role_type_id = $request->role_type_id ? explode(",",$request->role_type_id) : NULL;
         $experience_id = $request->experience_id ? explode(",",$request->experience_id) : NULL;
         $from = $request->from ?? NULL;
         $to = $request->to ?? NULL;
@@ -82,7 +82,7 @@ class CareerV2Service{
         
         // filter
         if($keyword) $career = $career->where("name","LIKE", "%$keyword%");
-        if($role_id) $career = $career->whereIn("career_role_type_id", $role_id);
+        if($role_type_id) $career = $career->whereIn("career_role_type_id", $role_type_id);
         if($experience_id) $career = $career->whereIn("career_experience_id", $experience_id);
         if($from) $career = $career->where("created_at", ">=", $from);
         if($to) $career = $career->where("created_at", "<=", $to);
@@ -140,7 +140,7 @@ class CareerV2Service{
         }
 
         $keyword = $request->keyword ?? NULL;
-        $role_id = $request->role_id ? explode(",",$request->role_id) : NULL;
+        $role_type_id = $request->role_type_id ? explode(",",$request->role_type_id) : NULL;
         $experience_id = $request->experience_id ? explode(",",$request->experience_id) : NULL;
         $from = $request->from ?? NULL;
         $to = $request->to ?? NULL;
@@ -151,7 +151,7 @@ class CareerV2Service{
         
         // filter
         if($keyword) $career = $career->where("name","LIKE", "%$keyword%");
-        if($role_id) $career = $career->whereIn("career_role_type_id", $role_id);
+        if($role_type_id) $career = $career->whereIn("career_role_type_id", $role_type_id);
         if($experience_id) $career = $career->whereIn("career_experience_id", $experience_id);
         if($from) $career = $career->where("created_at", ">=", $from);
         if($to) $career = $career->where("created_at", "<=", $to);
