@@ -46,7 +46,7 @@ class CareerV2ApplyService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
         
-        $id = $request->get("id");
+        $id = $request->id;
         $career = CareerV2Apply::with(["resume","role","role.experience","role.roleType","status"])->find($id);
         if(!$career) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];   
         try{
@@ -64,15 +64,15 @@ class CareerV2ApplyService{
             "page" => "numeric",
             "limit" => "numeric|between:1,100",
             "career_id" => "filled|numeric|exists:career_v2,id",
-            "date_from" => "date",
-            "date_to" => "date",
-            "sort" => "in:apply_date,apply_status",
-            "order" => "in:asc,desc"
+            "from" => "date",
+            "to" => "date",
+            "sort_by" => "in:apply_date,apply_status",
+            "sort_type" => "in:asc,desc"
         ];
 
-        if($request->date_to && $request->date_from){
-            $rules["date_from"] = "date|before:date_to";
-            $rules["date_to"] = "date|after:date_from";
+        if($request->to && $request->from){
+            $rules["from"] = "date|before:to";
+            $rules["to"] = "date|after:from";
         }
 
         $validator = Validator::make($request->all(), $rules);
@@ -81,29 +81,29 @@ class CareerV2ApplyService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        $search = $request->search ?? NULL;
+        $keyword = $request->keyword ?? NULL;
         $career_id = $request->career_id ?? NULL;
-        $date_from = $request->date_from ?? NULL;
-        $date_to = $request->date_to ?? NULL;
+        $from = $request->from ?? NULL;
+        $to = $request->to ?? NULL;
         $limit = $request->limit ?? 5;
         $career_apply_status_id = isset($request->career_apply_status_id) ? $request->career_apply_status_id : NULL;
         
         $careerApply = CareerV2Apply::with(["resume","role","role.experience","role.roleType","status"]);
         if($career_id) $careerApply = $careerApply->where('career_id',$career_id);
-        if($date_from) $careerApply = $careerApply->where("created_at", ">=", $date_from);
-        if($date_to) $careerApply = $careerApply->where("created_at", "<=", $date_to);
-        if($search) $careerApply = $careerApply->where(function($q) use ($search){
-            $q->where("name","LIKE", "%$search%")
-            ->orWhere("email","LIKE", "%$search%")
-            ->orWhere("phone","LIKE", "%$search%");
+        if($from) $careerApply = $careerApply->where("created_at", ">=", $from);
+        if($to) $careerApply = $careerApply->where("created_at", "<=", $to);
+        if($keyword) $careerApply = $careerApply->where(function($q) use ($keyword){
+            $q->where("name","LIKE", "%$keyword%")
+            ->orWhere("email","LIKE", "%$keyword%")
+            ->orWhere("phone","LIKE", "%$keyword%");
         });
         if($career_apply_status_id != NULL) $careerApply = $careerApply->where("career_apply_status_id", $career_apply_status_id);
 
-        // sort
-        $order = $request->get('order','asc');
-        $sort = $request->sort ?? NULL;
-        if($sort == "apply_date") $careerApply = $careerApply->orderBy('created_at',$order);
-        if($sort == "apply_status") $careerApply = $careerApply->orderBy('career_apply_status_id',$order);
+        // sort_by
+        $sort_type = $request->sort_type ?? 'asc';
+        $sort_by = $request->sort_by ?? NULL;
+        if($sort_by == "apply_date") $careerApply = $careerApply->orderBy('created_at',$sort_type);
+        if($sort_by == "apply_status") $careerApply = $careerApply->orderBy('career_apply_status_id',$sort_type);
 
         $careerApply = $careerApply->paginate($limit);
         if($careerApply->count() == 0){
@@ -120,9 +120,29 @@ class CareerV2ApplyService{
     public function addCareerApply(Request $request, $route_name){
         $auth = $request->headers->get('Authorization',NULL);
         $request->headers->set('Authorization', "Bearer ".$auth);
-        if(!isset(auth()->user()->id) && $auth){
+        $rules = [
+            "name" => "required",
+            "email" => "required|email",
+            "phone" => "required|numeric",
+            "career_id" => "required|exists:career_v2,id|numeric",
+            "resume" => "required|mimes:pdf|mimetypes:application/pdf|file|max:5120",
+        ];
+        
+        if(!isset(auth()->user()->id) || empty($auth)){
+            $rules["g-recaptcha-response"] = "required";
+        }
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        if(!isset(auth()->user()->id) || empty($auth)){
             try{
-                $validate = $this->globalService->validateGoogleReCaptcha($request->get('g-recaptcha-response',NULL));
+                $gCaptchaResponse = $request->get('g_captcha_response', NULL);
+                $validate = $this->globalService->validateGoogleReCaptcha($gCaptchaResponse);
                 if(!$validate["success"]){
                     return ["success" => false, "message" => "Error captcha validation", "data" => $validate["error-codes"], "status" => 400];
                 }
@@ -132,24 +152,12 @@ class CareerV2ApplyService{
             }
         }
 
-        $validator = Validator::make($request->all(), [
-            "name" => "required",
-            "email" => "required|email",
-            "phone" => "required|numeric",
-            "career_id" => "required|exists:career_v2,id|numeric",
-            "resume" => "required|mimes:pdf|mimetypes:application/pdf|file|max:5120"
-        ]);
-        
-        if($validator->fails()){
-            $errors = $validator->errors()->all();
-            return ["success" => false, "message" => $errors, "status" => 400];
-        }
         try{
             $file = $request->file('resume',NULL);
             $current_timestamp = date('Y-m-d H:i:s');
 
             $career = CareerV2::find($request->career_id);
-            if(!$career) return ["success" => true, "message" => "Data Tidak Tersedia", "status" => 200];
+            if(!$career) return ["success" => false, "message" => "Role Tidak Tersedia", "status" => 400];
 
             $careerApply = new CareerV2Apply();
             $careerApply->name = $request->name;
@@ -200,7 +208,7 @@ class CareerV2ApplyService{
 
             $fillable = ["career_id","name","email","phone","career_apply_status_id"];
 
-            $id = $request->get("id");
+            $id = $request->id;
             $careerApply = CareerV2Apply::find($id);
             if(!$careerApply) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
@@ -241,7 +249,7 @@ class CareerV2ApplyService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
         try{
-            $id = $request->get("id");
+            $id = $request->id;
             $careerApply = CareerV2Apply::find($id);
             if(!$careerApply) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         
@@ -273,7 +281,7 @@ class CareerV2ApplyService{
         }
         
        
-        $career_id = $request->get("career_id");
+        $career_id = $request->career_id;
         $careerV2ApplyStatus = CareerV2ApplyStatus::withCount(['applicants' => function ($query) use ($career_id,$is_all) {
             if(!$is_all) return $query->where('career_id','=',$career_id);
             return $query;
@@ -330,8 +338,8 @@ class CareerV2ApplyService{
         
         $rules = [
             "career_id" => "filled|numeric|exists:career_v2,id",
-            "date_from" => "date",
-            "date_to" => "date",
+            "from" => "date",
+            "to" => "date",
             "career_apply_status_id" => "array|exists:career_v2_apply_statuses,id",
             "column" => "array|in:0,1|min:4|max:4",
             "column.*" => "boolean"
@@ -340,9 +348,9 @@ class CareerV2ApplyService{
         // column filled by boolean array ['1','1','1','1']
         // boolean for select filter column -> ['name','email','phone','created_at']
 
-        if($request->date_to && $request->date_from){
-            $rules["date_from"] = "date|before:date_to";
-            $rules["date_to"] = "date|after:date_from";
+        if($request->to && $request->from){
+            $rules["from"] = "date|before:to";
+            $rules["to"] = "date|after:from";
         }
 
         $validator = Validator::make($request->all(), $rules);
@@ -352,15 +360,15 @@ class CareerV2ApplyService{
         }
 
         $career_id = $request->career_id ?? NULL;
-        $date_from = $request->date_from ?? NULL;
-        $date_to = $request->date_to ?? NULL;
+        $from = $request->from ?? NULL;
+        $to = $request->to ?? NULL;
         $career_apply_status_id =  $request->career_apply_status_id ?? NULL;
         $column = $request->column ?? ['1','1','1','1'];
 
         $careerApply = CareerV2Apply::select(['id','name','email','phone','created_at','career_id','career_apply_status_id'])->with(["status"]);
         if($career_id) $careerApply = $careerApply->where('career_id',$career_id);
-        if($date_from) $careerApply = $careerApply->where("created_at", ">=", $date_from);
-        if($date_to) $careerApply = $careerApply->where("created_at", "<=", $date_to);
+        if($from) $careerApply = $careerApply->where("created_at", ">=", $from);
+        if($to) $careerApply = $careerApply->where("created_at", "<=", $to);
         if($career_apply_status_id) $careerApply = $careerApply->whereIn('career_apply_status_id',$career_apply_status_id);
         
         $careerApply = $careerApply->get();

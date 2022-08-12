@@ -19,6 +19,8 @@ class CareerV2Apply extends Model
     {
         return $this->belongsTo(CareerV2::class, 'career_id')->select([
             "id",
+            "name",
+            "slug",
             "career_role_type_id",
             "career_experience_id",
             "salary_min",
