@@ -63,7 +63,7 @@ class CareerV2ApplyService{
         $rules = [
             "page" => "numeric",
             "limit" => "numeric|between:1,100",
-            "career_id" => "filled|numeric|exists:career_v2,id",
+            "career_id" => "numeric|exists:career_v2,id|nullable",
             "from" => "date",
             "to" => "date",
             "sort_by" => "in:apply_date,apply_status",
