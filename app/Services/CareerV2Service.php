@@ -221,7 +221,7 @@ class CareerV2Service{
             "salary_max" => "required|numeric",
             "overview" => "required",
             "description" => "required",
-            "is_posted" => "required",
+            "is_posted" => "required|boolean",
             "qualification" => "required"
         ]);
         
@@ -266,7 +266,7 @@ class CareerV2Service{
             "salary_max" => "filled|numeric",
             "overview" => "filled",
             "description" => "filled",
-            "is_posted" => "filled",
+            "is_posted" => "filled|boolean",
             "qualification" => "filled"
         ]);
         
