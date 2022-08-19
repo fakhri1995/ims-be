@@ -2368,7 +2368,7 @@ class TaskService{
         }
     }
 
-    public function fillTasksDetail($request, $route_name)
+    public function fillTaskDetails($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
@@ -2376,7 +2376,7 @@ class TaskService{
 
         $validator = Validator::make($request->all(), [
             "fills" => "required|array",
-            // "fills.*.id" => "required|numeric|exists:App\TaskDetail,id",
+            "fills.*.id" => "required|numeric|exists:App\TaskDetail,id",
             "fills*.values" => "required"
         ]);
 
@@ -2401,7 +2401,6 @@ class TaskService{
             $task_details = TaskDetail::with(['users', 'task.users'  => function($query) use ($login_id){
                 $query->where('id',$login_id);
             }])->findMany($ids);
-            // return ["success" => true, "message" => $task_details, "status" => 200];
             
             $ids_task_detail = [];
             foreach($task_details as $task_detail){

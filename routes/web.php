@@ -279,7 +279,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/updateTaskDetail', 'TaskController@updateTaskDetail');
     $router->put('/assignTaskDetail', 'TaskController@assignTaskDetail');
     $router->put('/fillTaskDetail', 'TaskController@fillTaskDetail');
-    $router->put('/fillTasksDetail', 'TaskController@fillTasksDetail');
+    $router->put('/fillTaskDetails', 'TaskController@fillTaskDetails');
     $router->delete('/deleteTaskDetail', 'TaskController@deleteTaskDetail');
 
     //Type Task Routes
