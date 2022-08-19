@@ -293,6 +293,14 @@ class TaskController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function fillTasksDetail(Request $request)
+    {
+        $route_name = "TASK_DETAILS_FILL";
+
+        $response = $this->taskService->fillTasksDetail($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     // Type Task
 
     public function getTaskTypeCounts(Request $request)
