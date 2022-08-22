@@ -325,7 +325,15 @@ class TaskService{
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
             
-            $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role', 'users', 'reference:id,ticketable_type,ticketable_id', 'reference.type:id,code,table_name']);
+            $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role', 'users' => function($join){
+                $join->addSelect("check_in_list.geo_location as geo_loc_check_in", "check_out_list.geo_location as geo_loc_check_out")
+                ->leftjoin('long_lat_lists AS check_in_list', function ($join) {
+                    $join->on('task_user.long_check_in', '=', 'check_in_list.longitude')->on('task_user.lat_check_in', '=', 'check_in_list.latitude');
+                })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
+                    $join->on('task_user.long_check_out', '=', 'check_out_list.longitude')->on('task_user.lat_check_out', '=', 'check_out_list.latitude');
+                });
+            }, 'reference:id,ticketable_type,ticketable_id', 'reference.type:id,code,table_name']);
+
 
             if($location > 0){
                 $company = Company::find($location);
@@ -356,6 +364,11 @@ class TaskService{
             foreach($tasks as $task){
                 $task->location->full_location = $task->location->fullSubNameWParentTopParent();
                 $task->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
+
+                foreach($task->users as $user){
+                    $user->geo_loc_check_in = json_decode($user->geo_loc_check_in);
+                    $user->geo_loc_check_out = json_decode($user->geo_loc_check_out);
+                }
             }
             if($tasks->isEmpty()) return ["success" => true, "message" => "Task Masih Kosong", "data" => $tasks, "status" => 200];
             return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $tasks, "status" => 200];
@@ -663,11 +676,25 @@ class TaskService{
 
         try{
             $id = $request->get('id', null);
-            $task = Task::with(['attachments', 'taskType:id,name', 'creator:id,name,position', 'location:id,name,parent_id,top_parent_id,role','users', 'group:id,name', 'inventories:id,model_id,mig_id','inventories.modelInventory.asset', 'taskDetails', 
+            $task = Task::with(['attachments', 'taskType:id,name', 'creator:id,name,position', 'location:id,name,parent_id,top_parent_id,role','users' => function($join){
+                $join->addSelect("check_in_list.geo_location as geo_loc_check_in", "check_out_list.geo_location as geo_loc_check_out")
+                ->leftjoin('long_lat_lists AS check_in_list', function ($join) {
+                    $join->on('task_user.long_check_in', '=', 'check_in_list.longitude')->on('task_user.lat_check_in', '=', 'check_in_list.latitude');
+                })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
+                    $join->on('task_user.long_check_out', '=', 'check_out_list.longitude')->on('task_user.lat_check_out', '=', 'check_out_list.latitude');
+                });
+            } , 'group:id,name', 'inventories:id,model_id,mig_id','inventories.modelInventory.asset', 'taskDetails', 
             'reference', 'reference.creator:id,name,company_id', 'reference.creator.company:id,name,top_parent_id', 'reference.type', 'reference.ticketable.location', 'reference.ticketable.assetType', 'reference.ticketable.inventory'])->find($id);
+            
             if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
             $task->location->full_location = $task->location->fullSubNameWParentTopParent();
             $task->location->makeHidden(['parent', 'parent_id', 'role']);
+
+            foreach($task->users as $user){
+                $user->geo_loc_check_in = json_decode($user->geo_loc_check_in);
+                $user->geo_loc_check_out = json_decode($user->geo_loc_check_out);
+            }
+
             if(count($task->inventories)){
                 foreach($task->inventories as $inventory){
                     $inventory->model_name = $inventory->modelInventory->name;
@@ -1190,6 +1217,8 @@ class TaskService{
         $lat = $request->get('lat', null);
         $long = $request->get('long', null);
         $task = Task::with('users')->find($id);
+        
+        
         if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
         try{
             $login_id = auth()->user()->id;
@@ -1199,7 +1228,12 @@ class TaskService{
 
             if($search !== false){
                 if($task->users[$search]->check_in === null){
+                    $lat = number_format($lat, 4);
+                    $long = number_format($long, 4);
                     $task->users()->updateExistingPivot($login_id, ['check_in' => date("Y-m-d H:i:s"), 'lat_check_in' => $lat, 'long_check_in' => $long]);
+                    $long_lat = LongLatList::where('longitude', $long)->where('latitude', $lat)->first();
+                    if(!$long_lat) $long_lat = LongLatList::create(['longitude' => $long, 'latitude' => $lat, 'attempts' => 0]);
+                    
                     if($task->status === 2){
                         $task->status = 3;
                         $task->save();
