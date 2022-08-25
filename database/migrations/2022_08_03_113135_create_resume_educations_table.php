@@ -19,7 +19,7 @@ class CreateResumeEducationsTable extends Migration
             $table->string("major");
             $table->decimal("gpa",3,2);
             $table->date('graduation_year');
-            $table->unsignedBigInteger("cv_id");
+            $table->unsignedBigInteger("resume_id");
 
         });
     }

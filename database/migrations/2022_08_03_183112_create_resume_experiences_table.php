@@ -19,8 +19,8 @@ class CreateResumeExperiencesTable extends Migration
             $table->string("company");
             $table->date('start_date');
             $table->date('end_date')->nullable();
-            $table->date('description');
-            $table->unsignedBigInteger("cv_id");
+            $table->text('description');
+            $table->unsignedBigInteger("resume_id");
 
         });
     }

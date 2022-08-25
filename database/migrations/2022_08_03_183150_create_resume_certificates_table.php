@@ -18,7 +18,7 @@ class CreateResumeCertificatesTable extends Migration
             $table->string("name");
             $table->string("organizer");
             $table->date("year");
-            $table->unsignedBigInteger("cv_id");
+            $table->unsignedBigInteger("resume_id");
         });
     }
 

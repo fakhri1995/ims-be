@@ -23,7 +23,7 @@ class CreateResumesTable extends Migration
 
             $table->string("city");
             $table->string("province");
-
+            $table->unsignedBigInteger("assessment_id")->nullable();
             $table->dateTime('created_at');
             $table->dateTime('updated_at');
             $table->unsignedBigInteger('created_by');

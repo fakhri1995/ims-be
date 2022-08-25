@@ -397,13 +397,25 @@ $router->group(['middleware' => 'auth'], function($router){
     });
 
 
-    $router->group(['prefix' => 'recruitment'] , function () use ($router) {
-        $router->get('/getResumes', 'RecruitmentController@getResumes');
-        $router->get('/getResume', 'RecruitmentController@getResume');
-        $router->post('/addResume', 'RecruitmentController@addResume');
-        $router->put('/updateResume', 'RecruitmentController@updateResume');
-        $router->delete('/deleteResume', 'RecruitmentController@deleteResume');
-    });
+    // $router->group(['prefix' => 'recruitment'] , function () use ($router) {
+    //     $router->get('/getResumes', 'ResumeController@getResumes');
+    //     $router->get('/getResume', 'ResumeController@getResume');
+    //     $router->post('/addResume', 'ResumeController@addResume');
+    //     $router->put('/updateResume', 'ResumeController@updateResume');
+    //     $router->delete('/deleteResume', 'ResumeController@deleteResume');
+    // });
+
+        $router->get('/getResumes', 'ResumeController@getResumes');
+        $router->get('/getResume', 'ResumeController@getResume');
+        $router->post('/addResume', 'ResumeController@addResume');
+        $router->post('/addResumeSection', 'ResumeController@addResumeSection');
+        $router->put('/updateResume', 'ResumeController@updateResume');
+        $router->delete('/deleteResume', 'ResumeController@deleteResume');
+
+        $router->post('/addAssessment', 'ResumeController@addAssessment');
+        $router->post('/updateAssessmentDetail', 'ResumeController@updateAssessmentDetail');
+        $router->post('/addResumeAssessment', 'ResumeController@addResumeAssessment');
+        $router->delete('/deleteResumeAssessment', 'ResumeController@deleteResumeAssessment');
     
 });
 

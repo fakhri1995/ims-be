@@ -16,8 +16,9 @@ class CreateResumeProjectsTable extends Migration
         Schema::create('resume_projects', function (Blueprint $table) {
             $table->id();
             $table->string("name");
-            $table->integer("year");
-            $table->unsignedBigInteger("cv_id");
+            $table->date("year");
+            $table->text("description");
+            $table->unsignedBigInteger("resume_id");
 
         });
     }

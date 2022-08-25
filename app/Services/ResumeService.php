@@ -1,0 +1,787 @@
+<?php 
+
+namespace App\Services;
+
+use App\Assessment;
+use App\AssessmentDetail;
+use App\Resume;
+use App\ResumeAchievement;
+use App\ResumeAssessment;
+use App\ResumeAssessmentDetail;
+use App\ResumeAssessmentResult;
+use App\ResumeCertificate;
+use App\ResumeEducation;
+use App\ResumeExperience;
+use App\ResumeProject;
+use App\ResumeSkill;
+use App\ResumeTraining;
+use Exception;
+use App\Services\GlobalService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+
+class ResumeService{
+    public function __construct()
+    {
+        $this->globalService = new GlobalService;
+    }  
+
+    
+    public function getResumes(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $resume = Resume::get();
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $resume, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getResume(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+            "id" => "exists:App\Resume,id|numeric|required"
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        
+        $id = $request->id;
+        $resume = resume::with(['educations', 'experiences', 'projects', 'skills', 'trainings', 'certificates', 'achievements', 'assessmentResults'])->find($id);
+        if(!$resume) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $resume, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addResume(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+            "name" => "required",
+            "telp" => "required|numeric",
+            "email" => "required|email",
+            "role" => "required",
+            "city" => "required",
+            "province" => "required",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        
+        try{ 
+            // Resume Basic Information
+            $resume = new Resume();
+            $resume->name = $request->name;
+            $resume->telp = $request->telp;
+            $resume->email = $request->email;
+            $resume->role = $request->role;
+            $resume->city = $request->city;
+            $resume->province = $request->province;
+            $resume->created_at = Date('Y-m-d H:i:s');
+            $resume->updated_at = Date('Y-m-d H:i:s');
+            $resume->created_by = auth()->user()->id;
+            if(!$resume->save()) return ["success" => false, "message" => "Gagal Menambah Resume", "status" => 400];
+
+            return ["success" => true, "message" => "Data Berhasil Ditambahkan", "id" => $resume->id, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addResumeSection(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+            "id" => "required|exists:App\Resume,id",
+
+            "education" => "filled|array",
+            "education.university" => "required_with:education",
+            "education.university" => "required_with:education",
+            "education.major" => "required_with:education",
+            "education.gpa" => "required_with:education|numeric|between:0.00,4.00",
+            "education.graduation_year" => "required_with:education|date",
+            
+            "experience" => "filled|array",
+            "experience.role" => "required_with:experience",
+            "experience.company" => "required_with:experience",
+            "experience.start_date" => "required_with:experience|date",
+            "experience.end_date" => "required_with:experience|date",
+            "experience.description" => "required_with:experience",
+            
+            "project" => "filled|array",
+            "project.name" => "required_with:project",
+            "project.year" => "required_with:project|date",
+            
+            "skill" => "filled|array",
+            "skill.name" => "required_with:skill",
+            
+            "training" => "filled|array",
+            "training.name" => "required_with:training",
+            "training.organizer" => "required_with:training",
+            "training.year" => "required_with:training|date",
+            
+            "certificate" => "filled|array",
+            "certificate.name" => "required_with:certificate",
+            "certificate.organizer" => "required_with:certificate",
+            "certificate.year" => "required_with:certificate|date",
+            
+            "achievement" => "filled|array",
+            "achievement.achievement" => "required_with:achievement",
+            "achievement.name" => "required_with:achievement",
+            "achievement.organizer" => "required_with:achievement",
+            "achievement.year" => "required_with:achievement|date"
+        ]);
+        
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        
+        $resume_id = $request->id;
+        $resume = Resume::find($resume_id);
+        if(!$resume) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+
+        if($request->education){
+            $requestEducation = (object)$request->education;
+            $education = new ResumeEducation();
+            $education->university = $requestEducation->university;
+            $education->major = $requestEducation->major;
+            $education->gpa = $requestEducation->gpa;
+            $education->graduation_year = $requestEducation->graduation_year;
+            if(!$resume->educations()->save($education)) return ["success" => false, "message" => "Gagal Mengubah Education Resume", "status" => 400];
+            return ["success" => true, "message" => "Data Education Berhasil Ditambah",  "status" => 200];
+        }
+        else if($request->experience){
+            $requestExperience = (object)$request->experience;
+            $experience = new ResumeExperience();
+            $experience->role = $requestExperience->role;
+            $experience->company = $requestExperience->company;
+            $experience->start_date = $requestExperience->start_date;
+            $experience->end_date = $requestExperience->end_date;
+            $experience->description = $requestExperience->description;
+            if(!$resume->experiences()->save($experience)) return ["success" => false, "message" => "Gagal Mengubah Experience Resume", "status" => 400];
+            return ["success" => true, "message" => "Data Experience Berhasil Ditambah", "status" => 200];
+        }  
+        else if($request->project){
+            $requestProject = (object)$request->project;
+            $project = new ResumeProject();
+            $project->name = $requestProject->name;
+            $project->year = $requestProject->year;
+            if(!$resume->projects()->save($project)) return ["success" => false, "message" => "Gagal Mengubah Project Resume", "status" => 400];
+            return ["success" => true, "message" => "Data Project Berhasil Ditambah", "status" => 200];
+        }  
+        else if($request->skill){
+            $requestSkill = (object)$request->skill;
+            $skill = new ResumeSkill();
+            $skill->name = $requestSkill->name;
+            if(!$resume->skills()->save($skill)) return ["success" => false, "message" => "Gagal Mengubah Skill Resume", "status" => 400];
+            return ["success" => true, "message" => "Data Skill Berhasil Ditambah", "status" => 200];
+        }  
+        else if($request->training){
+            $requestTraining = (object)$request->training;
+            $training = new ResumeTraining();
+            $training->name = $requestTraining->name;
+            $training->organizer = $requestTraining->organizer;
+            $training->year = $requestTraining->year;
+            if(!$resume->trainings()->save($training)) return ["success" => false, "message" => "Gagal Mengubah Training Resume", "status" => 400];
+            return ["success" => true, "message" => "Data Training Berhasil Ditambah", "status" => 200];
+        }  
+        else if($request->certificate){
+            $requestCertificates = (object)$request->certificate;
+            $certificate = new ResumeCertificate();
+            $certificate->name = $requestCertificates->name;
+            $certificate->organizer = $requestCertificates->organizer;
+            $certificate->year = $requestCertificates->year;
+            if(!$resume->certificates()->save($certificate)) return ["success" => false, "message" => "Gagal Mengubah Certificate Resume", "status" => 400];
+            return ["success" => true, "message" => "Data Certificate Berhasil Ditambah", "status" => 200];
+        }     
+        else if($request->achievement){
+            $requestAchievement = (object)$request->achievement;
+            $achievement = new ResumeAchievement();
+            $achievement->achievement = $requestAchievement->achievement;
+            $achievement->name = $requestAchievement->name;
+            $achievement->organizer = $requestAchievement->organizer;
+            $achievement->year = $requestAchievement->year;
+            if(!$resume->achievements()->save($achievement)) return ["success" => false, "message" => "Gagal Mengubah Achievement Resume", "status" => 400];
+            return ["success" => true, "message" => "Data Achievement Berhasil Ditambah", "status" => 200];
+        }  
+        
+        try{
+            return ["success" => true, "message" => "Data Berhasil Ditambah", "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+        
+    }
+
+    public function updateResume(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+            "id" => "required|exists:App\Resume,id",
+            "basic_information" => "filled|array",
+            "basic_information.name" => "required_with:basic_information|filled",
+            "basic_information.telp" => "required_with:basic_information|filled|numeric",
+            "basic_information.email" => "required_with:basic_information|filled|email",
+            "basic_information.role" => "required_with:basic_information|filled",
+            "basic_information.city" => "required_with:basic_information|filled",
+            "basic_information.province" => "required_with:basic_information|filled",
+
+            "education" => "filled|array",
+            "education.id" => "required_with:education|exists:App\ResumeEducation,id",
+            "education.university" => "required_with:education",
+            "education.university" => "required_with:education",
+            "education.major" => "required_with:education",
+            "education.gpa" => "required_with:education|numeric|between:0.00,4.00",
+            "education.graduation_year" => "required_with:education|date",
+            
+            "experience" => "filled|array",
+            "experience.id" => "required_with:experienc|exists:App\ResumeExperience,id",
+            "experience.role" => "required_with:experience",
+            "experience.company" => "required_with:experience",
+            "experience.start_date" => "required_with:experience|date",
+            "experience.end_date" => "required_with:experience|date",
+            "experience.description" => "required_with:experience",
+            
+            "project" => "filled|array",
+            "project.id" => "required_with:project|exists:App\ResumeProject,id",
+            "project.name" => "required_with:project",
+            "project.year" => "required_with:project|date",
+            
+            "skill" => "filled|array",
+            "skill.id" => "required_with:skill|exists:App\ResumeSkill,id",
+            "skill.name" => "required_with:skill",
+            
+            "training" => "filled|array",
+            "training.id" => "required_with:training|exists:App\ResumeTraining,id",
+            "training.name" => "required_with:training",
+            "training.organizer" => "required_with:training",
+            "training.year" => "required_with:training|date",
+            
+            "certificate" => "filled|array",
+            "certificate.id" => "required_with:certificate|exists:App\ResumeCertificate,id",
+            "certificate.name" => "required_with:certificate",
+            "certificate.organizer" => "required_with:certificate",
+            "certificate.year" => "required_with:certificate|date",
+            
+            "achievement" => "filled|array",
+            "achievement.id" => "required_with:achievement|exists:App\ResumeAchievement,id",
+            "achievement.achievement" => "required_with:achievement",
+            "achievement.name" => "required_with:achievement",
+            "achievement.organizer" => "required_with:achievement",
+            "achievement.year" => "required_with:achievement|date"
+        ]);
+        
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        
+        $resume_id = $request->id;
+        $resume = Resume::find($resume_id);
+        if(!$resume) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+
+        // resume basic information
+        if($request->basic_information){
+            $requestBasicInformation = (object)$request->basic_information;
+            $resume->name = $requestBasicInformation->name;
+            $resume->telp = $requestBasicInformation->telp;
+            $resume->email = $requestBasicInformation->email;
+            $resume->role = $requestBasicInformation->role;
+            $resume->city = $requestBasicInformation->city;
+            $resume->province = $requestBasicInformation->province;
+            $resume->updated_at = Date('Y-m-d H:i:s');
+            if(!$resume->save()) return ["success" => false, "message" => "Gagal Mengubah Resume", "status" => 400];
+            return ["success" => true, "message" => "Data Berhasil Diubah", "status" => 200];
+        }
+        else if($request->education){
+            $requestEducation = (object)$request->education;
+            $id = $requestEducation->id;
+            $education = $resume->educations()->find($id);
+            if(!$education) return ["success" => false, "message" => "Education ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
+            $education->university = $requestEducation->university;
+            $education->major = $requestEducation->major;
+            $education->gpa = $requestEducation->gpa;
+            $education->graduation_year = $requestEducation->graduation_year;
+            if(!$education->save()) return ["success" => false, "message" => "Gagal Mengubah Education Resume", "status" => 400];
+            return ["success" => true, "message" => "Data Education Berhasil Diubah", "id" => $resume->id, "status" => 200];
+        }
+        else if($request->experience){
+            $requestExperience = (object)$request->experience;
+            $id = $requestExperience->id;
+            $experience = $resume->experiences()->find($id);
+            if(!$experience) return ["success" => false, "message" => "Experience ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
+            $experience->role = $requestExperience->role;
+            $experience->company = $requestExperience->company;
+            $experience->start_date = $requestExperience->start_date;
+            $experience->end_date = $requestExperience->end_date;
+            $experience->description = $requestExperience->description;
+            if(!$experience->save()) return ["success" => false, "message" => "Gagal Mengubah Experience Resume", "status" => 400];
+            return ["success" => true, "message" => "Data Experience Berhasil Diubah", "status" => 200];
+        }  
+        else if($request->project){
+            $requestProject = (object)$request->project;
+            $id = $requestProject->id;
+            $project = $resume->projects()->find($id);
+            if(!$project) return ["success" => false, "message" => "Project ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
+            $project->name = $requestProject->name;
+            $project->year = $requestProject->year;
+            if(!$project->save()) return ["success" => false, "message" => "Gagal Mengubah Project Resume", "status" => 400];
+            return ["success" => true, "message" => "Data Project Berhasil Diubah", "status" => 200];
+        }  
+        else if($request->skill){
+            $requestSkill = (object)$request->skill;
+            $id = $requestSkill->id;
+            $skill = $resume->skills()->find($id);
+            if(!$skill) return ["success" => false, "message" => "Skill ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
+            $skill->name = $requestSkill->name;
+            if(!$skill->save()) return ["success" => false, "message" => "Gagal Mengubah Skill Resume", "status" => 400];
+            return ["success" => true, "message" => "Data Skill Berhasil Diubah", "status" => 200];
+        }  
+        else if($request->training){
+            $requestTraining = (object)$request->training;
+            $id = $requestTraining->id;
+            $training = $resume->trainings()->find($id);
+            if(!$training) return ["success" => false, "message" => "Training ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
+            $training->name = $requestTraining->name;
+            $training->organizer = $requestTraining->organizer;
+            $training->year = $requestTraining->year;
+            if(!$training->save()) return ["success" => false, "message" => "Gagal Mengubah Training Resume", "status" => 400];
+            return ["success" => true, "message" => "Data Training Berhasil Diubah", "status" => 200];
+        }  
+        else if($request->certificate){
+            $requestCertificates = (object)$request->certificate;
+            $id = $requestCertificates->id;
+            $certificate = $resume->certificates()->find($id);
+            if(!$certificate) return ["success" => false, "message" => "Certificate ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
+            $certificate->name = $requestCertificates->name;
+            $certificate->organizer = $requestCertificates->organizer;
+            $certificate->year = $requestCertificates->year;
+            if(!$certificate->save()) return ["success" => false, "message" => "Gagal Mengubah Certificate Resume", "status" => 400];
+            return ["success" => true, "message" => "Data Certificate Berhasil Diubah", "status" => 200];
+        }     
+        else if($request->achievement){
+            $requestAchievement = (object)$request->achievement;
+            $id = $requestAchievement->id;
+            $achievement = $resume->achievements()->find($id);
+            if(!$achievement) return ["success" => false, "message" => "Achievement ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
+            $achievement->achievement = $requestAchievement->achievement;
+            $achievement->name = $requestAchievement->name;
+            $achievement->organizer = $requestAchievement->organizer;
+            $achievement->year = $requestAchievement->year;
+            if(!$achievement->save()) return ["success" => false, "message" => "Gagal Mengubah Achievement Resume", "status" => 400];
+            return ["success" => true, "message" => "Data Achievement Berhasil Diubah", "status" => 200];
+        }  
+        
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diubah", "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+        
+    }
+
+    public function deleteResume(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+            "id" => "exists:App\Resume,id|numeric|required"
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        
+        $id = $request->id;
+        $resume = resume::find($id);
+        if(!$resume) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        
+        try{
+            $resume->delete();
+            return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $resume, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+        
+    }
+
+    public function deleteResumeSection(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+            "id" => "exists:App\Resume,id|numeric|required",
+            "education_id" => "filled|exists:App\ResumeEducation,id",
+            "experience_id" => "filled|exists:App\ResumeExperience,id",
+            "project_id" => "filled|exists:App\ResumeProject,id",
+            "skill_id" => "filled|exists:App\ResumeSkill,id",
+            "training_id" => "filled|exists:App\ResumeTraining,id",
+            "certificate_id" => "filled|exists:App\ResumeCertificate,id",
+            "achievement_id" => "filled|exists:App\ResumeAchievement,id",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        
+        try{
+            $resume_id = $request->id;
+            $resume = resume::find($resume_id);
+            if(!$resume) return ["success" => false, "message" => "Data Resume Tidak Ditemukan", "status" => 400];
+        
+            if($request->education_id){
+                $model = $resume->educations()->find($request->education_id);
+                if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Education Resume", "status" => 400];
+                return ["success" => true, "message" => "Data Achievement Education Dihapus", "status" => 200];
+            }else if($request->experience_id){
+                $model = $resume->experiencs()->find($request->experience_id);
+                if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Experience Resume", "status" => 400];
+                return ["success" => true, "message" => "Data Achievement Experience Dihapus", "status" => 200];
+            }
+            else if($request->project_id){
+                $model = $resume->projects()->find($request->project_id);
+                if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Project Resume", "status" => 400];
+                return ["success" => true, "message" => "Data Achievement Project Dihapus", "status" => 200];
+            }
+            else if($request->skill_id){
+                $model = $resume->skills()->find($request->skill_id);
+                if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Skill Resume", "status" => 400];
+                return ["success" => true, "message" => "Data Achievement Skill Dihapus", "status" => 200];
+            }
+            else if($request->training_id){
+                $model = $resume->trainings()->find($request->training_id);
+                if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Training Resume", "status" => 400];
+                return ["success" => true, "message" => "Data Achievement Training Dihapus", "status" => 200];
+            }
+            else if($request->certificate_id){
+                $model = $resume->certificates()->find($request->certificate_id);
+                if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Certificate Resume", "status" => 400];
+                return ["success" => true, "message" => "Data Achievement Certificate Dihapus", "status" => 200];
+            }
+            else if($request->achievement_id){
+                $model = $resume->achievements()->find($request->achievement_id);
+                if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Achievement Resume", "status" => 400];
+                return ["success" => true, "message" => "Data Achievement Achievement Dihapus", "status" => 200];
+            }
+
+            return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $resume, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+
+    // Assessment Management
+    public function getAssessment(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+    }
+
+    public function getAssessments(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+            "id" => "exists:App\Resume,id|numeric|required",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+    }
+
+    public function addAssessment(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+            "name" => "required",
+            "add" => "required|array",
+            "add.*.criteria" => "required"
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        try{
+            $assessment = new ResumeAssessment();
+            $assessment->name = $request->name;
+            if(!$assessment->save()) return ["success" => false, "message" => "Gagal Menambah Assessment", "status" => 400];
+
+            $adds = [];
+            if($request->add){
+                foreach($request->add as $requestAdd){
+                    $requestAdd = (object)$requestAdd;
+                    $add = new ResumeAssessmentDetail();
+                    $add->criteria = $requestAdd->criteria;
+                    $adds[] = $add;
+                }
+            }
+            if(!$assessment->details()->saveMany($adds)) return ["success" => false, "message" => "Gagal Menambah Criteria Assessment", "status" => 400];;
+
+            return ["success" => true, "message" => "Data Berhasil Ditambahkan", "id" => $assessment->id, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+
+    public function updateAssessment(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+            "id" => "numeric",
+            "name" => "required"
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        try{
+            $id = $request->id;
+            $assessment = ResumeAssessment::find($id);
+            if(!$assessment) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+            $assessment->name = $request->name;
+            if(!$assessment->save()) return ["success" => false, "message" => "Gagal Mengubah Assessment", "status" => 400];
+
+            return ["success" => true, "message" => "Data Berhasil Diubah", "id" => $assessment->id, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+
+    }
+
+    public function deleteAssessment(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "id" => "numeric|required",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+            $id = $request->id;
+            $assessment = ResumeAssessment::find($id);
+            if(!$assessment) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+            if(!$assessment->delete()) return ["success" => false, "message" => "Gagal Menghapus Assessment", "status" => 400];
+
+            return ["success" => true, "message" => "Data Berhasil Dihapus", "id" => $assessment->id, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateAssessmentDetail(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+            "assessment_id" => "numeric|required",
+            "name" => "required",
+            "add" => "array",
+            "update" => "array",
+            "delete" => "array",
+            "add.*.criteria" => "required",
+            "update.*.id" => "numeric",
+            "update.*.criteria" => "required_with:update.*.id",
+            "delete.*" => "numeric",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+            $assessment_id = $request->assessment_id;
+            $assessment = ResumeAssessment::find($assessment_id);
+            if(!$assessment) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+            
+            $assessment->name = $request->name;
+
+            $adds = [];
+            if($request->add){
+                foreach($request->add as $requestAdd){
+                    $requestAdd = (object)$requestAdd;
+                    $add = new ResumeAssessmentDetail();
+                    $add->criteria = $requestAdd->criteria;
+                    $adds[] = $add;
+                }
+            }
+
+            $updates = [];
+            if($request->update){
+                $assessmentDetails = $assessment->details();
+                // dd($assessmentDetails->find(1));
+                $assessmentDetailsId = $assessmentDetails->pluck('id')->toArray();
+                $assessmentUpdatesId = [];
+                
+                foreach($request->update as $requestUpdate){
+                    $requestUpdate = (object)$requestUpdate;
+                    if(!isset($requestUpdate->id)) continue;
+                    $assessmentUpdatesId[] = $requestUpdate->id;
+                }
+                $updateDiffId = array_diff($assessmentUpdatesId,$assessmentDetailsId);
+                if($updateDiffId != []) return ["success" => false, "message" => "ID : [".implode(", ",$updateDiffId)."] yang akan di update bukan detail dari resume", "status" => 400]; 
+                foreach($request->update as $requestUpdate){
+                    $requestUpdate = (object)$requestUpdate;
+                    if(!isset($requestUpdate->id)) continue;
+                    $update = ResumeAssessmentDetail::find($requestUpdate->id);
+                    $update->criteria = $requestUpdate->criteria;
+                    $updates[] = $update;
+                }
+            }
+
+            $deletes = $request->delete ?? [];
+            $deleteDiffId = array_diff($deletes,$assessmentDetailsId);
+            if($deleteDiffId != []) return ["success" => false, "message" => "ID : [".implode(", ",$deletes )."] yang akan di delete bukan detail dari resume", "status" => 400];
+
+            
+            $batch = DB::transaction(function() use($assessment,$adds,$updates,$deletes){
+                try{
+                    $stepMessage = [
+                        "assessment" => "Terjadi error saat mengubah data assesment",
+                        "adds" => "Terjadi error saat menambah data criteria",
+                        "deletes" => "Terjadi error saat menghapus data criteria",
+                        "updates" => "Terjadi error saat mengupdate data criteria"
+                    ];
+                    $step = "assessment";
+                    $assessment->save();
+                    $step = "adds";
+                    $assessment->details()->saveMany($adds);
+                    $step = "deletes";
+                    $assessment->details()->whereIn("id",$deletes)->delete();
+                    $step = "updates";
+                    $assessment->details()->saveMany($updates);
+                    return true;
+                }catch(Exception $e){
+                    return ["error" => [$e,$stepMessage[$step]]];
+                }
+            }); 
+            
+            if(isset($batch['error'])){
+                return ["success" => false, "message" => $batch['error'], "status" => 400];
+            }
+
+        
+            
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diubah", "id" => $assessment->id, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addResumeAssessment(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        
+        $validator = Validator::make($request->all(), [
+            "id" => "required|exists:App\Resume,id",
+            "assessment_id" => "required",
+            "assessment_result_values" => "required|array"
+        ]);
+        
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        
+        try{
+            $id = $request->id;
+            $resume = Resume::with("assessmentResults")->find($id);
+            if(!$resume) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+            if(count($resume->assessmentResults) > 0) return ["success" => false, "message" => "Assessment sudah ada, silahkan edit resume untuk mengubah", "status" => 400];
+
+            $assessment_id = $request->assessment_id;
+            $assessment = ResumeAssessment::with("details")->find($assessment_id);
+            if(!$assessment) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+            
+            $assessmentDetailsId = $assessment->details->pluck("id")->toArray();
+            $values = $request->assessment_result_values;
+            $valueLen = count($values);
+            $criteriaLen = count($assessmentDetailsId);
+            if($valueLen != $criteriaLen) return ["success" => false, "message" => "Jumlah criteria dan value tidak sesuai", "status" => 400];  
+
+            
+            $resumeAssessmentResultsObjArr = [];
+            $count = 0;
+            foreach($assessment->details as $ad){
+                $resumeAssessmentResult = new ResumeAssessmentResult();
+                $resumeAssessmentResult->criteria = $ad->criteria;
+                $resumeAssessmentResult->value = $values[$count];
+                $resumeAssessmentResultsObjArr[] = $resumeAssessmentResult;
+                $count++;
+            }
+
+            if(!$resume->assessmentResults()->saveMany($resumeAssessmentResultsObjArr)) return ["success" => false, "message" => "Gagal Menambah Resume Assessment Result", "status" => 400];
+
+            return ["success" => true, "message" => "Data Berhasil Ditambahkan", "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    } 
+
+    public function deleteResumeAssessment(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "id" => "numeric|required",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+
+            $id = $request->id;
+            $resume = Resume::find($id);
+            if(!$resume) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+            $assessmentResults = $resume->assessmentResults();
+            if(count($assessmentResults->get()) > 0){
+                if(!$assessmentResults->delete()) return ["success" => false, "message" => "Gagal Menghapus Assessment", "status" => 400];
+            }
+            $resume->assessment_id = NULL;
+            $resume->save();
+
+            return ["success" => true, "message" => "Data Assessment Berhasil Dihapus", "id" => $resume->id, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+}
