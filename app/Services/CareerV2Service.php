@@ -32,8 +32,8 @@ class CareerV2Service{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
         
-        $id = $request->get("id",NULL);
-        $slug = $request->get("slug",NULL);
+        $id = $request->id ?? NULL;
+        $slug = $request->slug ?? NULL;
         
         if($id) $career = CareerV2::with(["roleType","experience"])->find($id);
         else $career = CareerV2::with(["roleType","experience"])->where("slug",$slug)->first();
@@ -51,16 +51,16 @@ class CareerV2Service{
         if($access["success"] === false) return $access;
         $rules = [
             "page" => "numeric",
-            "limit" => "numeric|between:1,100",
-            "date_from" => "date",
-            "date_to" => "date",
-            "sort" => "in:name,role_type,experience,created_at,is_posted,total",
-            "order" => "in:asc,desc"
+            "rows" => "numeric|between:1,100",
+            "from" => "date",
+            "to" => "date",
+            "sort_by" => "in:name,role_type,experience,created_at,is_posted,total",
+            "sort_type" => "in:asc,desc"
         ];
 
-        if($request->date_to && $request->date_from){
-            $rules["date_from"] = "date|before:date_to";
-            $rules["date_to"] = "date|after:date_from";
+        if($request->to && $request->from){
+            $rules["from"] = "date|before:to";
+            $rules["to"] = "date|after:from";
         }
 
         $validator = Validator::make($request->all(), $rules);
@@ -70,38 +70,38 @@ class CareerV2Service{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        $search = $request->search ?? NULL;
-        $role = $request->role ? explode(",",$request->role) : NULL;
-        $experience = $request->experience ? explode(",",$request->experience) : NULL;
-        $date_from = $request->date_from ?? NULL;
-        $date_to = $request->date_to ?? NULL;
+        $keyword = $request->keyword ?? NULL;
+        $role_type_id = $request->role_type_id ? explode(",",$request->role_type_id) : NULL;
+        $experience_id = $request->experience_id ? explode(",",$request->experience_id) : NULL;
+        $from = $request->from ?? NULL;
+        $to = $request->to ?? NULL;
         $is_posted = isset($request->is_posted) ? $request->is_posted : NULL;
         
-        $limit = $request->limit ?? 5;
+        $rows = $request->rows ?? 5;
         $career = CareerV2::with(["roleType" ,"experience"])->withCount("apply");
         
         // filter
-        if($search) $career = $career->where("name","LIKE", "%$search%");
-        if($role) $career = $career->whereIn("career_role_type_id", $role);
-        if($experience) $career = $career->whereIn("career_experience_id", $experience);
-        if($date_from) $career = $career->where("created_at", ">=", $date_from);
-        if($date_to) $career = $career->where("created_at", "<=", $date_to);
+        if($keyword) $career = $career->where("name","LIKE", "%$keyword%");
+        if($role_type_id) $career = $career->whereIn("career_role_type_id", $role_type_id);
+        if($experience_id) $career = $career->whereIn("career_experience_id", $experience_id);
+        if($from) $career = $career->where("created_at", ">=", $from);
+        if($to) $career = $career->where("created_at", "<=", $to);
         if($is_posted != NULL) $career = $career->where("is_posted", $is_posted);
         
-        // sort
-        $order = $request->get('order','asc');
-        $sort = $request->sort ?? NULL;
-        if($sort == "name") $career = $career->orderBy('name',$order);
-        if($sort == "created_at") $career = $career->orderBy('created_at',$order);
-        if($sort == "is_posted") $career = $career->orderBy('is_posted',$order);
-        if($sort == "total") $career = $career->orderBy('apply_count',$order);
-        if($sort == "experience") $career = $career->orderBy(CareerV2Experience::select('min')->whereColumn('career_v2_experiences.id', 'career_v2.career_experience_id'),$order);
-        if($sort == "role_type") $career = $career->orderBy(CareerV2RoleType::select('name')->whereColumn('career_v2_role_types.id', 'career_v2.career_role_type_id'),$order);
+        // sort_by
+        $sort_type = $request->sort_type ?? 'asc';
+        $sort_by = $request->sort_by ?? NULL;
+        if($sort_by == "name") $career = $career->orderBy('name',$sort_type);
+        if($sort_by == "created_at") $career = $career->orderBy('created_at',$sort_type);
+        if($sort_by == "is_posted") $career = $career->orderBy('is_posted',$sort_type);
+        if($sort_by == "total") $career = $career->orderBy('apply_count',$sort_type);
+        if($sort_by == "experience") $career = $career->orderBy(CareerV2Experience::select('min')->whereColumn('career_v2_experiences.id', 'career_v2.career_experience_id'),$sort_type);
+        if($sort_by == "role_type") $career = $career->orderBy(CareerV2RoleType::select('name')->whereColumn('career_v2_role_types.id', 'career_v2.career_role_type_id'),$sort_type);
 
 
 
 
-        $career = $career->paginate($limit);
+        $career = $career->paginate($rows);
         
         if($career->count() == 0){
             return ["success" => true, "message" => "Data Tidak Tersedia", "data" => $career, "status" => 200];
@@ -120,16 +120,16 @@ class CareerV2Service{
 
         $rules = [
             "page" => "numeric",
-            "limit" => "numeric|between:1,100",
-            "date_from" => "date",
-            "date_to" => "date",
-            "sort" => "in:name,role_type,experience,created_at,is_posted,total",
-            "order" => "in:asc,desc"
+            "rows" => "numeric|between:1,100",
+            "from" => "date",
+            "to" => "date",
+            "sort_by" => "in:name,role_type,experience,created_at,is_posted,total",
+            "sort_type" => "in:asc,desc"
         ];
 
-        if($request->date_to && $request->date_from){
-            $rules["date_from"] = "date|before:date_to";
-            $rules["date_to"] = "date|after:date_from";
+        if($request->to && $request->from){
+            $rules["from"] = "date|before:to";
+            $rules["to"] = "date|after:from";
         }
 
         $validator = Validator::make($request->all(), $rules);
@@ -139,38 +139,38 @@ class CareerV2Service{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        $search = $request->search ?? NULL;
-        $role = $request->role ? explode(",",$request->role) : NULL;
-        $experience = $request->experience ? explode(",",$request->experience) : NULL;
-        $date_from = $request->date_from ?? NULL;
-        $date_to = $request->date_to ?? NULL;
+        $keyword = $request->keyword ?? NULL;
+        $role_type_id = $request->role_type_id ? explode(",",$request->role_type_id) : NULL;
+        $experience_id = $request->experience_id ? explode(",",$request->experience_id) : NULL;
+        $from = $request->from ?? NULL;
+        $to = $request->to ?? NULL;
         $is_posted = 1;
         
-        $limit = $request->limit ?? 5;
+        $rows = $request->rows ?? 5;
         $career = CareerV2::with(["roleType" ,"experience"])->withCount("apply");
         
         // filter
-        if($search) $career = $career->where("name","LIKE", "%$search%");
-        if($role) $career = $career->whereIn("career_role_type_id", $role);
-        if($experience) $career = $career->whereIn("career_experience_id", $experience);
-        if($date_from) $career = $career->where("created_at", ">=", $date_from);
-        if($date_to) $career = $career->where("created_at", "<=", $date_to);
+        if($keyword) $career = $career->where("name","LIKE", "%$keyword%");
+        if($role_type_id) $career = $career->whereIn("career_role_type_id", $role_type_id);
+        if($experience_id) $career = $career->whereIn("career_experience_id", $experience_id);
+        if($from) $career = $career->where("created_at", ">=", $from);
+        if($to) $career = $career->where("created_at", "<=", $to);
         if($is_posted != NULL) $career = $career->where("is_posted", $is_posted);
         
-        // sort
-        $order = $request->get('order','asc');
-        $sort = $request->sort ?? NULL;
-        if($sort == "name") $career = $career->orderBy('name',$order);
-        if($sort == "created_at") $career = $career->orderBy('created_at',$order);
-        if($sort == "is_posted") $career = $career->orderBy('is_posted',$order);
-        if($sort == "total") $career = $career->orderBy('apply_count',$order);
-        if($sort == "experience") $career = $career->orderBy(CareerV2Experience::select('min')->whereColumn('career_v2_experiences.id', 'career_v2.career_experience_id'),$order);
-        if($sort == "role_type") $career = $career->orderBy(CareerV2RoleType::select('name')->whereColumn('career_v2_role_types.id', 'career_v2.career_role_type_id'),$order);
+        // sort_by
+        $sort_type = $request->sort_type ?? 'asc';
+        $sort_by = $request->sort_by ?? NULL;
+        if($sort_by == "name") $career = $career->orderBy('name',$sort_type);
+        if($sort_by == "created_at") $career = $career->orderBy('created_at',$sort_type);
+        if($sort_by == "is_posted") $career = $career->orderBy('is_posted',$sort_type);
+        if($sort_by == "total") $career = $career->orderBy('apply_count',$sort_type);
+        if($sort_by == "experience") $career = $career->orderBy(CareerV2Experience::select('min')->whereColumn('career_v2_experiences.id', 'career_v2.career_experience_id'),$sort_type);
+        if($sort_by == "role_type") $career = $career->orderBy(CareerV2RoleType::select('name')->whereColumn('career_v2_role_types.id', 'career_v2.career_role_type_id'),$sort_type);
 
 
 
 
-        $career = $career->paginate($limit);
+        $career = $career->paginate($rows);
         if($career->count() == 0){
             return ["success" => true, "message" => "Data Tidak Tersedia", "data" => $career, "status" => 200];
         }
@@ -194,8 +194,8 @@ class CareerV2Service{
         }
         
         
-        $id = $request->get("id",NULL);
-        $slug = $request->get("slug",NULL);
+        $id = $request->id ?? NULL;
+        $slug = $request->slug ?? NULL;
         if($id) $career = CareerV2::with(["roleType","experience"])->where(['id' => $id,'is_posted' => 1])->first();
         else $career = CareerV2::with(["roleType","experience"])->where(['slug' => $slug,'is_posted' => 1])->first();
 
@@ -221,7 +221,7 @@ class CareerV2Service{
             "salary_max" => "required|numeric",
             "overview" => "required",
             "description" => "required",
-            "is_posted" => "required",
+            "is_posted" => "required|boolean",
             "qualification" => "required"
         ]);
         
@@ -266,7 +266,7 @@ class CareerV2Service{
             "salary_max" => "filled|numeric",
             "overview" => "filled",
             "description" => "filled",
-            "is_posted" => "filled",
+            "is_posted" => "filled|boolean",
             "qualification" => "filled"
         ]);
         
@@ -277,7 +277,7 @@ class CareerV2Service{
 
         $fillable = ["name","career_role_type_id","career_experience_id","salary_min","salary_max", "overview","description","is_posted"];
 
-        $id = $request->get("id");
+        $id = $request->id;
         $career = CareerV2::find($id);
         if(!$career) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
@@ -289,7 +289,7 @@ class CareerV2Service{
         }
         $career->updated_at = Date('Y-m-d H:i:s');
         
-        if($request->get('name',NULL)){
+        if($request->name ?? NULL){
             $random = random_int(0000,9999);
             $career->slug = Str::slug($request->name, '-').'-'.$random;
         } 
@@ -317,7 +317,7 @@ class CareerV2Service{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        $id = $request->get("id");
+        $id = $request->id;
         $career = CareerV2::find($id);
         if(!$career) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 

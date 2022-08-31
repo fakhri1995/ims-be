@@ -325,7 +325,15 @@ class TaskService{
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
             
-            $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role', 'users', 'reference:id,ticketable_type,ticketable_id', 'reference.type:id,code,table_name']);
+            $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role', 'users' => function($join){
+                $join->addSelect("check_in_list.geo_location as geo_loc_check_in", "check_out_list.geo_location as geo_loc_check_out")
+                ->leftjoin('long_lat_lists AS check_in_list', function ($join) {
+                    $join->on('task_user.long_check_in', '=', 'check_in_list.longitude')->on('task_user.lat_check_in', '=', 'check_in_list.latitude');
+                })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
+                    $join->on('task_user.long_check_out', '=', 'check_out_list.longitude')->on('task_user.lat_check_out', '=', 'check_out_list.latitude');
+                });
+            }, 'reference:id,ticketable_type,ticketable_id', 'reference.type:id,code,table_name']);
+
 
             if($location > 0){
                 $company = Company::find($location);
@@ -356,6 +364,11 @@ class TaskService{
             foreach($tasks as $task){
                 $task->location->full_location = $task->location->fullSubNameWParentTopParent();
                 $task->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
+
+                foreach($task->users as $user){
+                    $user->geo_loc_check_in = json_decode($user->geo_loc_check_in);
+                    $user->geo_loc_check_out = json_decode($user->geo_loc_check_out);
+                }
             }
             if($tasks->isEmpty()) return ["success" => true, "message" => "Task Masih Kosong", "data" => $tasks, "status" => 200];
             return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $tasks, "status" => 200];
@@ -663,11 +676,25 @@ class TaskService{
 
         try{
             $id = $request->get('id', null);
-            $task = Task::with(['attachments', 'taskType:id,name', 'creator:id,name,position', 'location:id,name,parent_id,top_parent_id,role','users', 'group:id,name', 'inventories:id,model_id,mig_id','inventories.modelInventory.asset', 'taskDetails', 
+            $task = Task::with(['attachments', 'taskType:id,name', 'creator:id,name,position', 'location:id,name,parent_id,top_parent_id,role','users' => function($join){
+                $join->addSelect("check_in_list.geo_location as geo_loc_check_in", "check_out_list.geo_location as geo_loc_check_out")
+                ->leftjoin('long_lat_lists AS check_in_list', function ($join) {
+                    $join->on('task_user.long_check_in', '=', 'check_in_list.longitude')->on('task_user.lat_check_in', '=', 'check_in_list.latitude');
+                })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
+                    $join->on('task_user.long_check_out', '=', 'check_out_list.longitude')->on('task_user.lat_check_out', '=', 'check_out_list.latitude');
+                });
+            } , 'group:id,name', 'inventories:id,model_id,mig_id','inventories.modelInventory.asset', 'taskDetails', 
             'reference', 'reference.creator:id,name,company_id', 'reference.creator.company:id,name,top_parent_id', 'reference.type', 'reference.ticketable.location', 'reference.ticketable.assetType', 'reference.ticketable.inventory'])->find($id);
+            
             if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
             $task->location->full_location = $task->location->fullSubNameWParentTopParent();
             $task->location->makeHidden(['parent', 'parent_id', 'role']);
+
+            foreach($task->users as $user){
+                $user->geo_loc_check_in = json_decode($user->geo_loc_check_in);
+                $user->geo_loc_check_out = json_decode($user->geo_loc_check_out);
+            }
+
             if(count($task->inventories)){
                 foreach($task->inventories as $inventory){
                     $inventory->model_name = $inventory->modelInventory->name;
@@ -1190,6 +1217,8 @@ class TaskService{
         $lat = $request->get('lat', null);
         $long = $request->get('long', null);
         $task = Task::with('users')->find($id);
+        
+        
         if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
         try{
             $login_id = auth()->user()->id;
@@ -1199,7 +1228,12 @@ class TaskService{
 
             if($search !== false){
                 if($task->users[$search]->check_in === null){
+                    $lat = number_format($lat, 4);
+                    $long = number_format($long, 4);
                     $task->users()->updateExistingPivot($login_id, ['check_in' => date("Y-m-d H:i:s"), 'lat_check_in' => $lat, 'long_check_in' => $long]);
+                    $long_lat = LongLatList::where('longitude', $long)->where('latitude', $lat)->first();
+                    if(!$long_lat) $long_lat = LongLatList::create(['longitude' => $long, 'latitude' => $lat, 'attempts' => 0]);
+                    
                     if($task->status === 2){
                         $task->status = 3;
                         $task->save();
@@ -2368,6 +2402,121 @@ class TaskService{
         }
     }
 
+    public function fillTaskDetails($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+
+        $validator = Validator::make($request->all(), [
+            "fills" => "required|array",
+            "fills.*.id" => "required|numeric|exists:App\TaskDetail,id",
+            "fills*.values" => "required"
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $fills = $request->fills;
+        $ids = [];
+        $values = [];
+        
+        foreach($fills as $fill){
+            $ids[] = $fill["id"];
+            $values[] = $fill["values"];
+        }
+        
+        array_multisort($ids, $values);  
+        $taskDetailsArr = [];
+        try{
+            $login_id = auth()->user()->id;
+            $task_details = TaskDetail::with(['users', 'task.users'  => function($query) use ($login_id){
+                $query->where('id',$login_id);
+            }])->findMany($ids);
+            
+            $ids_task_detail = [];
+            foreach($task_details as $task_detail){
+                $ids_task_detail[] = $task_detail->id;
+            }
+            $ids_diff = array_diff($ids,$ids_task_detail);
+            if($ids_diff != null) return ["success" => false, "message" => "ID : [". implode(", ",$ids_diff) ."] pada Pekerjaan Tidak Ditemukan", "status" => 400];
+            $i = -1;
+            foreach($task_details as $task_detail){
+                $i++;
+                if(!count($task_detail->task->users)) return ["success" => false, "message" => "ID : [$task_detail->id], Anda Tidak Ditugaskan Pada Tugas ini", "status" => 400];
+                $search_task = $task_detail->task->users->search(function ($item) use ($login_id) {
+                    return $item->id === $login_id;
+                });
+                if($search_task !== false){
+                    if($task_detail->task->users[$search_task]->check_in === null) return ["success" => false, "message" => "Anda Perlu Melakukan Check In Terlebih Dahulu", "status" => 400];
+                } else return ["success" => false, "message" => "ID : [$task_detail->id], Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
+                
+                if(!in_array($task_detail->task->status, [1,3])) return ["success" => false, "message" => "ID : [$task_detail->id], Status Task Bukan On Progress", "status" => 400];
+                
+                if(!count($task_detail->users)) return ["success" => false, "message" => "ID : [$task_detail->id], Anda Tidak Ditugaskan Pada Pekerjaan Ini", "status" => 400];
+                $search_task_detail = $task_detail->users->search(function ($item) use ($login_id) {
+                    return $item->id === $login_id;
+                });
+                
+                if($search_task_detail !== false){
+                    $type = $task_detail->component->type;
+                    $component  = $task_detail->component;
+                    if($type !== 5){
+                        if($type === 3){
+                            if(!is_array($values[$i])) return ["success" => false, "message" => "ID : [$task_detail->id], Values Harus Bertipe Data Array of Boolean", "status" => 400];
+                            if(count($component->lists) !== count($values[$i])) return ["success" => false, "message" => "ID : [$task_detail->id], Jumlah List Check Box dan Values Check Box Tidak Cocok", "status" => 400];
+                            foreach($values[$i] as $value){
+                                if(!is_bool($value)) return ["success" => false, "message" => "ID : [$task_detail->id], Isi Values Pada Array Terdapat Bukan Boolean", "status" => 400];
+                            }
+                        } else if($type === 4) {
+                            if(!is_array($values[$i])) return ["success" => false, "message" => "ID : [$task_detail->id], Values Harus Bertipe Data Array of Boolean", "status" => 400];
+                            if(!count($values[$i])) return ["success" => false, "message" => "ID : [$task_detail->id], Array Tidak Boleh Kosong", "status" => 400];
+                            $row_count = count($component->rows);
+                            $column_count = count($component->columns);
+                            $row_edge = $row_count - 1;
+                            $column_edge = $column_count - 1;
+                            if(!isset($values[$i][0][$row_edge])) return ["success" => false, "message" => "ID : [$task_detail->id], Jumlah Values Array Pada Rownya Masih Kurang", "status" => 400];
+                            if(!isset($values[$i][$column_edge][0])) return ["success" => false, "message" => "ID : [$task_detail->id], Jumlah Values Array Pada Columnnya Masih Kurang", "status" => 400];
+                            if(isset($values[$i][0][$row_count])) return ["success" => false, "message" => "ID : [$task_detail->id], Terdapat Values Array Pada Row Yang Berlebih", "status" => 400];
+                            if(isset($values[$i][$column_count][0])) return ["success" => false, "message" => "ID : [$task_detail->id], Terdapat Values Array Pada Column Yang Berlebih", "status" => 400];
+                        } else {
+                            if(!is_string($values[$i])) return ["success" => false, "message" => "ID : [$task_detail->id], Values Harus Bertipe Data String", "status" => 400];
+                        }
+                        $component->values = $values[$i];
+                    } else {
+                        
+                        if(!is_array($values[$i])) return ["success" => false, "message" => "ID : [$task_detail->id], Values Harus Bertipe Data Array of String", "status" => 400];
+                        $count_list = count($component->lists);
+                        if($count_list !== count($values[$i])) return ["success" => false, "message" => "ID : [$task_detail->id], Jumlah List Numeral dan Values Numeral Harus Sama", "status" => 400];
+                        for($index = 0; $index < $count_list; $index++){
+                            if(!is_string($values[$i][$index])) return ["success" => false, "message" => "ID : [$task_detail->id], Isi Values Pada Array Terdapat Bukan String", "status" => 400];
+                            $component->lists[$index]->values = $values[$i][$index];
+                        }
+                    }
+                    $task_detail->component = $component;
+                    $taskDetailsArr[] = $task_detail;
+                } else return ["success" => false, "message" => "ID : [$task_detail->id], Anda Tidak Ditugaskan Pada Pekerjaan Ini", "status" => 400];
+            }
+
+            $batchTaskDetailUpdate = DB::transaction(function () use ($taskDetailsArr) {
+                try{    
+                    foreach($taskDetailsArr as $td){
+                        $td->save();
+                    }
+                    return true;
+                }catch(Exception $err){
+                    return false;
+                }
+            }, 10);
+
+            if($batchTaskDetailUpdate) return ["success" => true, "message" => "Berhasil Merubah Isi Pekerjaan", "status" => 200];
+            else return ["success" => false, "message" => "Error Database Transaction", "status" => 400];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
     // Task Type
 
     public function getFilterTaskTypes($request, $route_name)
