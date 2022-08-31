@@ -411,11 +411,17 @@ $router->group(['middleware' => 'auth'], function($router){
         $router->post('/addResumeSection', 'ResumeController@addResumeSection');
         $router->put('/updateResume', 'ResumeController@updateResume');
         $router->delete('/deleteResume', 'ResumeController@deleteResume');
-
-        $router->post('/addAssessment', 'ResumeController@addAssessment');
-        $router->post('/updateAssessmentDetail', 'ResumeController@updateAssessmentDetail');
-        $router->post('/addResumeAssessment', 'ResumeController@addResumeAssessment');
+        $router->get('/getCountResume', 'ResumeController@getCountResume');
         $router->delete('/deleteResumeAssessment', 'ResumeController@deleteResumeAssessment');
+
+        $router->get('/getAssessment', 'ResumeController@getAssessment');
+        $router->get('/getAssessments', 'ResumeController@getAssessments');
+        $router->get('/getCountAssessment', 'ResumeController@getCountAssessment');
+        $router->post('/addAssessment', 'ResumeController@addAssessment');
+        $router->put('/updateAssessment', 'ResumeController@updateAssessment');
+        $router->post('/addResumeAssessment', 'ResumeController@addResumeAssessment');
+        $router->put('/updateResumeAssessment', 'ResumeController@updateResumeAssessment');
+        $router->delete('/deleteAssessment', 'ResumeController@deleteAssessment');
     
 });
 

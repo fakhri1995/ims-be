@@ -38,6 +38,10 @@ class Resume extends Model
         return $this->hasMany(ResumeTraining::class,'resume_id');
     }
 
+    public function assessment(){
+        return $this->belongsTo(ResumeAssessment::class, 'assessment_id');
+    }
+
     public function assessmentResults(){
         return $this->hasMany(ResumeAssessmentResult::class, 'resume_id');
     }

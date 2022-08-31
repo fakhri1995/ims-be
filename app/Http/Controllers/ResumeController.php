@@ -68,18 +68,24 @@ class ResumeController extends Controller
         return response()->json($response, $response['status']);
     }
 
-    
+    public function getCountResume(Request $request)
+    {
+        $route_name = "RESUME_COUNT_GET";
+
+        $response = $this->recruitmentService->getCountResume($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 
     // Assessment Management
     public function getAssessment(Request $request){
-        $route_name = "ASSESSMENTS_GET";
+        $route_name = "ASSESSMENT_GET";
 
         $response = $this->recruitmentService->getAssessment($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function getAssessments(Request $request){
-        $route_name = "ASSESSMENT_GET";
+        $route_name = "ASSESSMENTS_GET";
 
         $response = $this->recruitmentService->getAssessments($request, $route_name);
         return response()->json($response, $response['status']);
@@ -92,7 +98,6 @@ class ResumeController extends Controller
         return response()->json($response, $response['status']);
     }
 
-
     public function updateAssessment(Request $request){
         $route_name = "ASSESSMENT_UPDATE";
 
@@ -104,13 +109,6 @@ class ResumeController extends Controller
         $route_name = "ASSESSMENT_DELETE";
 
         $response = $this->recruitmentService->deleteAssessment($request, $route_name);
-        return response()->json($response, $response['status']);
-    }
-
-    public function updateAssessmentDetail(Request $request){
-        $route_name = "ASSESSMENT_DETAIL_UPDATE";
-
-        $response = $this->recruitmentService->updateAssessmentDetail($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -130,6 +128,21 @@ class ResumeController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getCountAssessment(Request $request)
+    {
+        $route_name = "ASSESSMENT_COUNT_GET";
+
+        $response = $this->recruitmentService->getCountAssessment($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateResumeAssessment(Request $request)
+    {
+        $route_name = "RESUME_ASSESSMENT_UPDATE";
+
+        $response = $this->recruitmentService->updateResumeAssessment($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
     
 
 }
