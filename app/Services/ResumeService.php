@@ -576,7 +576,7 @@ class ResumeService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
-            "id" => "exists:App\Resume,id|numeric|required",
+            "id" => "numeric|required",
         ]);
 
         if($validator->fails()){
