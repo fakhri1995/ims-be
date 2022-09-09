@@ -1300,7 +1300,7 @@ class AssetService{
         $inventory->owned_by = $owned_by;
         $inventory->vendor_id = $request->get('vendor_id');
         $inventory->status_condition = $request->get('status_condition');
-        $inventory->status_usage = $request->get('status_condition');
+        $inventory->status_usage = $request->get('status_usage');
         $inventory->location = $location;
         $inventory->deskripsi = $request->get('deskripsi');
         $inventory->manufacturer_id = $request->get('manufacturer_id');
