@@ -682,6 +682,8 @@ class ResumeService{
             if(!$assessment) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             
             $assessment->name = $request->name;
+            $assessmentDetails = $assessment->details();
+            $assessmentDetailsId = $assessmentDetails->pluck('id')->toArray();
 
             $adds = [];
             if($request->add){
@@ -695,9 +697,6 @@ class ResumeService{
 
             $updates = [];
             if($request->update){
-                $assessmentDetails = $assessment->details();
-                // dd($assessmentDetails->find(1));
-                $assessmentDetailsId = $assessmentDetails->pluck('id')->toArray();
                 $assessmentUpdatesId = [];
                 
                 foreach($request->update as $requestUpdate){
