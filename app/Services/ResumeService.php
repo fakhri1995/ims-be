@@ -599,7 +599,7 @@ class ResumeService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
-            "name" => "required",
+            "name" => "required|unique:App\ResumeAssessment",
             "add" => "required|array",
             "add.*.criteria" => "required"
         ]);
@@ -680,8 +680,18 @@ class ResumeService{
             $id = $request->id;
             $assessment = ResumeAssessment::find($id);
             if(!$assessment) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
-            
-            $assessment->name = $request->name;
+
+            if($assessment->name != $request->name){
+                //check assessment name
+                $checkAssessmentName = ResumeAssessment::where([
+                    ["name", "=", $request->name],
+                    ["id", "!=", $id]
+                ])->count();
+                if($checkAssessmentName > 0){
+                    return ["success" => false, "message" => "The name has already been taken.", "status" => 400];
+                }
+                $assessment->name = $request->name;
+            }
             $assessmentDetails = $assessment->details();
             $assessmentDetailsId = $assessmentDetails->pluck('id')->toArray();
 
