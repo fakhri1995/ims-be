@@ -60,9 +60,9 @@ class ResumeService{
             $sort_by = $request->sort_by ?? NULL;
             $sort_type = $request->get('sort_type','asc');
             if($sort_by == "name") $resumes = $resumes->orderBy('name',$sort_type);
-            if($sort_by == "role") $resumes = $resumes->orderBy('details_count',$sort_type);
-            if($sort_by == "email") $resumes = $resumes->orderBy('resumes_count',$sort_type);
-            if($sort_by == "telp") $resumes = $resumes->orderBy('resumes_count',$sort_type);
+            if($sort_by == "role") $resumes = $resumes->orderBy('role',$sort_type);
+            if($sort_by == "email") $resumes = $resumes->orderBy('email',$sort_type);
+            if($sort_by == "telp") $resumes = $resumes->orderBy('telp',$sort_type);
 
             $resumes = $resumes->paginate($rows);
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $resumes, "status" => 200];
