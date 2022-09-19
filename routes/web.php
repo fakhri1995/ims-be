@@ -414,6 +414,7 @@ $router->group(['middleware' => 'auth'], function($router){
         $router->delete('/deleteResume', 'ResumeController@deleteResume');
         $router->get('/getCountResume', 'ResumeController@getCountResume');
         $router->delete('/deleteResumeAssessment', 'ResumeController@deleteResumeAssessment');
+        $router->delete('deleteResumeSection', 'ResumeController@deleteResumeSection');
 
         $router->get('/getAssessment', 'ResumeController@getAssessment');
         $router->get('/getAssessments', 'ResumeController@getAssessments');
