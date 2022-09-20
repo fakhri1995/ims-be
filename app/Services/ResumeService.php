@@ -483,37 +483,44 @@ class ResumeService{
         
             if($request->education_id){
                 $model = $resume->educations()->find($request->education_id);
+                if(!$model) return ["success" => false, "message" => "Data Education yang dihapus tidak valid", "status" => 400];
                 if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Education Resume", "status" => 400];
-                return ["success" => true, "message" => "Data Achievement Education Dihapus", "status" => 200];
+                return ["success" => true, "message" => "Data Resume Education Dihapus", "status" => 200];
             }else if($request->experience_id){
                 $model = $resume->experiencs()->find($request->experience_id);
+                if(!$model) return ["success" => false, "message" => "Data Experience yang dihapus tidak valid", "status" => 400];
                 if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Experience Resume", "status" => 400];
-                return ["success" => true, "message" => "Data Achievement Experience Dihapus", "status" => 200];
+                return ["success" => true, "message" => "Data Resume Experience Dihapus", "status" => 200];
             }
             else if($request->project_id){
                 $model = $resume->projects()->find($request->project_id);
+                if(!$model) return ["success" => false, "message" => "Data Project yang dihapus tidak valid", "status" => 400];
                 if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Project Resume", "status" => 400];
-                return ["success" => true, "message" => "Data Achievement Project Dihapus", "status" => 200];
+                return ["success" => true, "message" => "Data Resume Project Dihapus", "status" => 200];
             }
             else if($request->skill_id){
                 $model = $resume->skills()->find($request->skill_id);
+                if(!$model) return ["success" => false, "message" => "Data Skill yang dihapus tidak valid", "status" => 400];
                 if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Skill Resume", "status" => 400];
-                return ["success" => true, "message" => "Data Achievement Skill Dihapus", "status" => 200];
+                return ["success" => true, "message" => "Data Resume Skill Dihapus", "status" => 200];
             }
             else if($request->training_id){
                 $model = $resume->trainings()->find($request->training_id);
+                if(!$model) return ["success" => false, "message" => "Data Training yang dihapus tidak valid", "status" => 400];
                 if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Training Resume", "status" => 400];
-                return ["success" => true, "message" => "Data Achievement Training Dihapus", "status" => 200];
+                return ["success" => true, "message" => "Data Resume Training Dihapus", "status" => 200];
             }
             else if($request->certificate_id){
                 $model = $resume->certificates()->find($request->certificate_id);
+                if(!$model) return ["success" => false, "message" => "Data Certificate yang dihapus tidak valid", "status" => 400];
                 if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Certificate Resume", "status" => 400];
-                return ["success" => true, "message" => "Data Achievement Certificate Dihapus", "status" => 200];
+                return ["success" => true, "message" => "Data Resume Certificate Dihapus", "status" => 200];
             }
             else if($request->achievement_id){
                 $model = $resume->achievements()->find($request->achievement_id);
+                if(!$model) return ["success" => false, "message" => "Data Achievement yang dihapus tidak valid", "status" => 400];
                 if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Achievement Resume", "status" => 400];
-                return ["success" => true, "message" => "Data Achievement Achievement Dihapus", "status" => 200];
+                return ["success" => true, "message" => "Data Resume Achievement Dihapus", "status" => 200];
             }
 
             return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $resume, "status" => 200];
