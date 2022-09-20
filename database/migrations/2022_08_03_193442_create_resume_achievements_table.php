@@ -15,7 +15,6 @@ class CreateResumeAchievementsTable extends Migration
     {
         Schema::create('resume_achievements', function (Blueprint $table) {
             $table->id();
-            $table->string("achievement");
             $table->string("name");
             $table->string("organizer");
             $table->date('year');

@@ -173,7 +173,6 @@ class ResumeService{
             "certificate.year" => "required_with:certificate|date",
             
             "achievement" => "filled|array",
-            "achievement.achievement" => "required_with:achievement",
             "achievement.name" => "required_with:achievement",
             "achievement.organizer" => "required_with:achievement",
             "achievement.year" => "required_with:achievement|date"
@@ -247,7 +246,6 @@ class ResumeService{
         else if($request->achievement){
             $requestAchievement = (object)$request->achievement;
             $achievement = new ResumeAchievement();
-            $achievement->achievement = $requestAchievement->achievement;
             $achievement->name = $requestAchievement->name;
             $achievement->organizer = $requestAchievement->organizer;
             $achievement->year = $requestAchievement->year;
@@ -317,7 +315,6 @@ class ResumeService{
             
             "achievement" => "filled|array",
             "achievement.id" => "required_with:achievement|exists:App\ResumeAchievement,id",
-            "achievement.achievement" => "required_with:achievement",
             "achievement.name" => "required_with:achievement",
             "achievement.organizer" => "required_with:achievement",
             "achievement.year" => "required_with:achievement|date"
@@ -418,7 +415,6 @@ class ResumeService{
             $id = $requestAchievement->id;
             $achievement = $resume->achievements()->find($id);
             if(!$achievement) return ["success" => false, "message" => "Achievement ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
-            $achievement->achievement = $requestAchievement->achievement;
             $achievement->name = $requestAchievement->name;
             $achievement->organizer = $requestAchievement->organizer;
             $achievement->year = $requestAchievement->year;
