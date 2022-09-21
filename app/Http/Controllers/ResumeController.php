@@ -143,6 +143,14 @@ class ResumeController extends Controller
         $response = $this->recruitmentService->updateResumeAssessment($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    public function getAssessmentList(Request $request)
+    {
+        $route_name = "RESUME_ASSESSMENT_LIST";
+
+        $response = $this->recruitmentService->getAssessmentList($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
     
 
 }

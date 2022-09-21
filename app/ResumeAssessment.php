@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ResumeAssessment extends Model
 {
-    
+    public $timestamps = false;
     public function details(){
         return $this->hasMany(ResumeAssessmentDetail::class, 'assessment_id');
     }
