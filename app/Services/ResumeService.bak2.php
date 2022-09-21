@@ -125,23 +125,7 @@ class ResumeService{
             $resume->created_at = Date('Y-m-d H:i:s');
             $resume->updated_at = Date('Y-m-d H:i:s');
             $resume->created_by = auth()->user()->id;
-
-            // assessment section
-            $assessment_id = $request->assessment_id;
-            $assessment = ResumeAssessment::with("details")->find($assessment_id);
-            if(!$assessment) return ["success" => false, "message" => "Data Assessment Tidak Ditemukan", "status" => 400];
-             $resumeAssessmentResultsObjArr = [];
-            $count = 0;
-            foreach($assessment->details as $ad){
-                $resumeAssessmentResult = new ResumeAssessmentResult();
-                $resumeAssessmentResult->criteria = $ad->criteria;
-                $resumeAssessmentResult->value = "";
-                $resumeAssessmentResultsObjArr[] = $resumeAssessmentResult;
-                $count++;
-            }
-
             if(!$resume->save()) return ["success" => false, "message" => "Gagal Menambah Resume", "status" => 400];
-            if(!$resume->assessmentResults()->saveMany($resumeAssessmentResultsObjArr)) return ["success" => false, "message" => "Gagal Menambah Resume Assessment Result", "status" => 400];
 
             return ["success" => true, "message" => "Data Berhasil Ditambahkan", "id" => $resume->id, "status" => 200];
         }catch(Exception $err){
@@ -289,7 +273,7 @@ class ResumeService{
             "basic_information.email" => "required_with:basic_information|filled|email",
             "basic_information.city" => "required_with:basic_information|filled",
             "basic_information.province" => "required_with:basic_information|filled",
-            "basic_information.assessment_id" => "numeric|exists:App\ResumeAssessment,id|nullable",
+            "basic_information.assessment_id" => "required_with:basic_information|filled|numeric|exists:App\ResumeAssessment,id",
 
             "education" => "filled|array",
             "education.id" => "required_with:education|exists:App\ResumeEducation,id",
@@ -354,30 +338,8 @@ class ResumeService{
             $resume->email = $requestBasicInformation->email;
             $resume->city = $requestBasicInformation->city;
             $resume->province = $requestBasicInformation->province;
+            $resume->assessment_id = $requestBasicInformation->assessment_id;
             $resume->updated_at = Date('Y-m-d H:i:s');
-            // if assessment changes
-            if($requestBasicInformation->assessment_id){
-                $assessmentResults = $resume->assessmentResults();
-                if(count($assessmentResults->get()) > 0){
-                    if(!$assessmentResults->delete()) return ["success" => false, "message" => "Gagal Menghapus Assessment Lama", "status" => 400];
-                }
-
-                $resume->assessment_id = $requestBasicInformation->assessment_id;
-                $assessment_id = $resume->assessment_id;
-                $assessment = ResumeAssessment::with("details")->find($assessment_id);
-                if(!$assessment) return ["success" => false, "message" => "Data Assessment Tidak Ditemukan", "status" => 400];
-                $resumeAssessmentResultsObjArr = [];
-                $count = 0;
-                foreach($assessment->details as $ad){
-                    $resumeAssessmentResult = new ResumeAssessmentResult();
-                    $resumeAssessmentResult->criteria = $ad->criteria;
-                    $resumeAssessmentResult->value = "";
-                    $resumeAssessmentResultsObjArr[] = $resumeAssessmentResult;
-                    $count++;
-                }
-                if(!$resume->assessmentResults()->saveMany($resumeAssessmentResultsObjArr)) return ["success" => false, "message" => "Gagal Menambah Resume Assessment Result", "status" => 400];
-            }
-
             if(!$resume->save()) return ["success" => false, "message" => "Gagal Mengubah Resume", "status" => 400];
             return ["success" => true, "message" => "Data Berhasil Diubah", "status" => 200];
         }
@@ -801,6 +763,8 @@ class ResumeService{
                 return ["success" => false, "message" => $batch['error'], "status" => 400];
             }
 
+        
+            
         try{
             return ["success" => true, "message" => "Data Berhasil Diubah", "id" => $assessment->id, "status" => 200];
         }catch(Exception $err){
@@ -808,6 +772,63 @@ class ResumeService{
         }
     }
 
+    public function addResumeAssessment(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        return $this->addResumeAssessmentAction($request);
+    }
+
+    public function addResumeAssessmentAction(Request $request){
+        $validator = Validator::make($request->all(), [
+            "id" => "required|exists:App\Resume,id",
+            "assessment_id" => "required",
+            "assessment_result_values" => "required|array"
+        ]);
+        
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        
+        try{
+            $id = $request->id;
+            $resume = Resume::with("assessmentResults")->find($id);
+            if(!$resume) return ["success" => false, "message" => "Data Resume Tidak Ditemukan", "status" => 400];
+            if(count($resume->assessmentResults) > 0) return ["success" => false, "message" => "Assessment sudah ada, silahkan edit resume untuk mengubah", "status" => 400];
+
+            $assessment_id = $request->assessment_id;
+            
+            $assessment = ResumeAssessment::with("details")->find($assessment_id);
+            if(!$assessment) return ["success" => false, "message" => "Data Assessment Tidak Ditemukan", "status" => 400];
+            
+            $assessmentDetailsId = $assessment->details->pluck("id")->toArray();
+            $values = $request->assessment_result_values;
+            $valueLen = count($values);
+            $criteriaLen = count($assessmentDetailsId);
+            if($valueLen != $criteriaLen) return ["success" => false, "message" => "Jumlah criteria dan value tidak sesuai", "status" => 400];  
+
+            $resume->assessment_id = $assessment_id;
+            if(!$resume->save()) return ["success" => false, "message" => "Gagal menambah assessment ke resume", "status" => 400];
+            
+            $resumeAssessmentResultsObjArr = [];
+            $count = 0;
+            foreach($assessment->details as $ad){
+                $resumeAssessmentResult = new ResumeAssessmentResult();
+                $resumeAssessmentResult->criteria = $ad->criteria;
+                $resumeAssessmentResult->value = $values[$count];
+                $resumeAssessmentResultsObjArr[] = $resumeAssessmentResult;
+                $count++;
+            }
+
+            if(!$resume->assessmentResults()->saveMany($resumeAssessmentResultsObjArr)) return ["success" => false, "message" => "Gagal Menambah Resume Assessment Result", "status" => 400];
+
+            return ["success" => true, "message" => "Data Berhasil Ditambahkan", "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    } 
 
     public function updateResumeAssessment(Request $request, $route_name)
     {
@@ -817,6 +838,9 @@ class ResumeService{
         
         $validator = Validator::make($request->all(), [
             "id" => "required|exists:App\Resume,id",
+            "delete_assessment" => "boolean",
+            "change_assessment" => "required_if:delete_assessment,false|required_without:delete_assessment|boolean",
+            "assessment_id" => "required_with:change_assessment",
             "assessment_result_values" => "required|array"
         ]);
 
@@ -830,33 +854,88 @@ class ResumeService{
             $id = $request->id;
             $resume = Resume::with("assessmentResults")->find($id);
             if(!$resume) return ["success" => false, "message" => "Data Resume Tidak Ditemukan", "status" => 400];
-                
-            $assessmentResultsId = $resume->assessmentResults->pluck("id")->toArray();
-            $values = $request->assessment_result_values;
-            $valueLen = count($values);
-            $criteriaLen = count($assessmentResultsId);
-            if($valueLen != $criteriaLen) return ["success" => false, "message" => "Jumlah criteria dan value tidak sesuai", "status" => 400];  
-
-            $resumeAssessmentResultsObjArr = [];
-            $count = 0;
             
-            $resumeAssessmentResults = ResumeAssessmentResult::whereIn("id",$assessmentResultsId)->get();
-            foreach($resumeAssessmentResults as $resumeAssessmentResult){
-                $resumeAssessmentResult->value = $values[$count];
-                $resumeAssessmentResultsObjArr[] = $resumeAssessmentResult;
-                $count++;
+            if($request->delete_assessment){
+                $deleteResumeAssessment = $this->deleteResumeAssessmentAction($request);
+                return $deleteResumeAssessment;
             }
 
-            if(!$resume->assessmentResults()->saveMany($resumeAssessmentResultsObjArr)) return ["success" => false, "message" => "Gagal Mengubah Resume Assessment Result", "status" => 400];
+            if(!$request->change_assessment){
+                
+                $assessmentResultsId = $resume->assessmentResults->pluck("id")->toArray();
+                $values = $request->assessment_result_values;
+                $valueLen = count($values);
+                $criteriaLen = count($assessmentResultsId);
+                if($valueLen != $criteriaLen) return ["success" => false, "message" => "Jumlah criteria dan value tidak sesuai", "status" => 400];  
 
-            return ["success" => true, "message" => "Data Berhasil Diubah", "status" => 200];
-            
+                $resumeAssessmentResultsObjArr = [];
+                $count = 0;
+                
+                $resumeAssessmentResults = ResumeAssessmentResult::whereIn("id",$assessmentResultsId)->get();
+                foreach($resumeAssessmentResults as $resumeAssessmentResult){
+                    $resumeAssessmentResult->value = $values[$count];
+                    $resumeAssessmentResultsObjArr[] = $resumeAssessmentResult;
+                    $count++;
+                }
+
+                if(!$resume->assessmentResults()->saveMany($resumeAssessmentResultsObjArr)) return ["success" => false, "message" => "Gagal Mengubah Resume Assessment Result", "status" => 400];
+
+                return ["success" => true, "message" => "Data Berhasil Diubah", "status" => 200];
+            } else{
+                if($resume->assessment_id != NULL){
+                    $deleteResumeAssessment = $this->deleteResumeAssessmentAction($request);
+                    if(!$deleteResumeAssessment['success']){
+                        return ["success" => false, "message" => "Gagal Menghapus Assessment Sebelumnya", "status" => 400];
+                    }  
+                }
+
+                $addResumeAssessment = $this->addResumeAssessmentAction($request);
+                if(!$addResumeAssessment['success']){
+                    return $addResumeAssessment;
+                }
+
+                return ["success" => true, "message" => "Berhasil Mengubah Assessment", "status" => 200];
+            }
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
 
     }
 
+    public function deleteResumeAssessment(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        return $this->deleteResumeAssessmentAction($request);
+    }
+
+    public function deleteResumeAssessmentAction(Request $request){
+        $validator = Validator::make($request->all(), [
+            "id" => "numeric|required",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+
+            $id = $request->id;
+            $resume = Resume::find($id);
+            if(!$resume) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+            $assessmentResults = $resume->assessmentResults();
+            if(count($assessmentResults->get()) > 0){
+                if(!$assessmentResults->delete()) return ["success" => false, "message" => "Gagal Menghapus Assessment", "status" => 400];
+            }
+            $resume->assessment_id = NULL;
+            $resume->save();
+
+            return ["success" => true, "message" => "Data Assessment Berhasil Dihapus", "id" => $resume->id, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
 
     public function getCountAssessment($request, $route_name)
     {
