@@ -425,6 +425,7 @@ $router->group(['middleware' => 'auth'], function($router){
         $router->put('/updateResumeAssessment', 'ResumeController@updateResumeAssessment');
         $router->delete('/deleteAssessment', 'ResumeController@deleteAssessment');
         $router->get('/getAssessmentList', 'ResumeController@getAssessmentList');
+        $router->get('/getSkillLists', 'ResumeController@getSkillLists');
     
 });
 
