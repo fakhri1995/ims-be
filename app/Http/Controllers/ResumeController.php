@@ -151,6 +151,14 @@ class ResumeController extends Controller
         $response = $this->recruitmentService->getAssessmentList($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    public function getSkillLists(Request $request)
+    {
+        $route_name = "RESUME_SKILL_LISTS";
+
+        $response = $this->recruitmentService->getSkillLists($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
     
 
 }

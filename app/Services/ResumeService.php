@@ -14,6 +14,7 @@ use App\ResumeEducation;
 use App\ResumeExperience;
 use App\ResumeProject;
 use App\ResumeSkill;
+use App\ResumeSkillLists;
 use App\ResumeTraining;
 use Exception;
 use App\Services\GlobalService;
@@ -60,11 +61,14 @@ class ResumeService{
             $sort_by = $request->sort_by ?? NULL;
             $sort_type = $request->get('sort_type','asc');
             if($sort_by == "name") $resumes = $resumes->orderBy('name',$sort_type);
-            if($sort_by == "role") $resumes = $resumes->orderBy('role',$sort_type);
+            if($sort_by == "role") $resumes = $resumes->orderBy(ResumeAssessment::select("name")
+                ->whereColumn("resume_assessments.id","resumes.assessment_id"),$sort_type);
+                
             if($sort_by == "email") $resumes = $resumes->orderBy('email',$sort_type);
             if($sort_by == "telp") $resumes = $resumes->orderBy('telp',$sort_type);
 
-            $resumes = $resumes->paginate($rows);
+            // $resumes = $resumes->paginate($rows);
+            $resumes = $resumes->get();
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $resumes, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -237,7 +241,8 @@ class ResumeService{
         else if($request->skill){
             $requestSkill = (object)$request->skill;
             $skill = new ResumeSkill();
-            $skill->name = $requestSkill->name;
+            $skill->name = ucfirst($requestSkill->name);
+            DB::table('resume_skill_lists')->insertOrIgnore([['name' => $skill->name]]);
             if(!$resume->skills()->save($skill)) return ["success" => false, "message" => "Gagal Mengubah Skill Resume", "status" => 400];
             return ["success" => true, "message" => "Data Skill Berhasil Ditambah", "status" => 200];
         }  
@@ -422,7 +427,8 @@ class ResumeService{
             $id = $requestSkill->id;
             $skill = $resume->skills()->find($id);
             if(!$skill) return ["success" => false, "message" => "Skill ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
-            $skill->name = $requestSkill->name;
+            $skill->name = ucfirst($requestSkill->name);
+            DB::table('resume_skill_lists')->insertOrIgnore([['name' => $skill->name]]);
             if(!$skill->save()) return ["success" => false, "message" => "Gagal Mengubah Skill Resume", "status" => 400];
             return ["success" => true, "message" => "Data Skill Berhasil Diubah", "status" => 200];
         }  
@@ -908,6 +914,20 @@ class ResumeService{
         try{
             $resumeAssessments = ResumeAssessment::get(["id","name"]);
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $resumeAssessments, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getSkillLists($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        try{
+            $resumeSkillLists = ResumeSkillLists::limit(10);
+            if($request->name) $resumeSkillLists->where("name","LIKE","%$request->name%");
+            $resumeSkillLists = $resumeSkillLists->get();
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $resumeSkillLists, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }

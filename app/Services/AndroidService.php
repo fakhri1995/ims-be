@@ -17,9 +17,11 @@ class AndroidService{
 
     public function getMainAndroid($request)
     {
-        $status_tickets = Ticket::select(DB::raw('status, count(*) as status_count'));
+        $status_tickets = Ticket::selectRaw('status, count(*) as status_count');
         $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
         $status_tickets = $status_tickets->groupBy('status')->get();
+        // $status_tickets = Ticket::selectRaw('status, count(*) as status_count')->where("status","<","5")->groupBy('status')->get();
+        // $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
         $sum_ticket = $status_tickets->sum('status_count');
         $list = [];
         for($i = 1; $i < 8; $i++){
@@ -41,7 +43,8 @@ class AndroidService{
             "sum_ticket" => $sum_ticket
         ];
 
-        $last_three_tickets = Ticket::select("*")->with(['type', 'ticketable:id,location_id', 'ticketable.location'])->where('status', '<', 5)->whereNotNull('deadline')->orderBy('deadline', 'asc')->limit(3)->get();
+        // $last_three_tickets = Ticket::select("*")->with(['type', 'ticketable:id,location_id', 'ticketable.location'])->where('status', '<', 5)->whereNotNull('deadline')->orderBy('deadline', 'asc')->limit(3)->get();
+        $last_three_tickets = Ticket::select("*")->with(['type', 'ticketable:id,location_id', 'ticketable.location'])->where('status', '<', 5)->orderByRaw('ISNULL(deadline), raised_at ASC, deadline ASC')->limit(3)->get();
         foreach($last_three_tickets as $ticket){
             $ticket->status_name = $statuses[$ticket->status];
             $ticket->name = $ticket->type->code.'-'.$ticket->ticketable_id;
@@ -55,7 +58,6 @@ class AndroidService{
 
         $login_id = auth()->user()->id;
         $task_ids = DB::table('task_user')->where('user_id', $login_id)->pluck('task_id');
-        
         $status_list = DB::table('tasks')->whereIn('id', $task_ids)->select(DB::raw('status, count(*) as status_count'))->groupBy('status')->get();
         $status_list_name = ["-", "Overdue", "Open", "On progress", "On hold", "Completed", "Closed"];
         
@@ -84,10 +86,12 @@ class AndroidService{
             "active_task" => $active_task,
         ];
 
-        $last_three_tasks = Task::select('id', 'name', 'status', 'reference_id', 'created_at', 'deadline')->with(['reference:id,ticketable_id,ticketable_type', 'reference.type'])->where(function ($query) use($login_id, $task_ids){
-            $query->where('created_by', $login_id)
-            ->orWhereIn('id', $task_ids);
-        })->where('status', '<', 5)->whereNotNull('deadline')->orderBy('deadline', 'asc')->limit(3)->get();
+        $last_three_tasks = Task::select('id', 'name', 'status', 'reference_id', 'created_at', 'deadline')->with(['reference:id,ticketable_id,ticketable_type', 'reference.type'])
+            ->where(function ($query) use($login_id, $task_ids){
+                // $query->where('created_by', $login_id)
+                // ->orWhereIn('id', $task_ids);
+                $query->WhereIn('id', $task_ids);
+            })->where('status', '<', 5)->orderByRaw('ISNULL(deadline), deadline ASC')->limit(3)->get();
 
         if(count($last_three_tasks)){
             foreach($last_three_tasks as $task){
