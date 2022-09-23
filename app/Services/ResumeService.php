@@ -67,8 +67,7 @@ class ResumeService{
             if($sort_by == "email") $resumes = $resumes->orderBy('email',$sort_type);
             if($sort_by == "telp") $resumes = $resumes->orderBy('telp',$sort_type);
 
-            // $resumes = $resumes->paginate($rows);
-            $resumes = $resumes->get();
+            $resumes = $resumes->paginate($rows);
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $resumes, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
