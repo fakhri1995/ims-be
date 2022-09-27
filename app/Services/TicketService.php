@@ -509,9 +509,11 @@ class TicketService
             // }
             if($admin){
                 $ticket->deadline = $ticket->deadline ? date("d M Y, H:i", strtotime($ticket->deadline)) : "-";
+                $ticket->originalDeadline = $ticket->deadline ? $ticket->deadline : "-";
                 $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
             } else {
                 $ticket->deadline = $this->approximate_deadline($ticket->deadline);
+                $ticket->originalDeadline = $ticket->deadline;
                 $statuses = ['-','Dalam Proses', 'Menunggu Staff', 'Dalam Proses', 'Dalam Proses', 'Completed', 'Selesai', 'Dibatalkan'];
             }
             $ticket->status_name = $statuses[$ticket->status];
