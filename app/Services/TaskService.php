@@ -370,6 +370,7 @@ class TaskService{
                     $user->geo_loc_check_out = json_decode($user->geo_loc_check_out);
                 }
                 
+                $task->deadline_message = "";
                 $deadline_detail = date_diff(date_create('now'),date_create($task->deadline));
                 if($task->status == 2 || $task->status == 3){
                     if($deadline_detail->days == 0){
