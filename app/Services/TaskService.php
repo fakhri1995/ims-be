@@ -369,6 +369,29 @@ class TaskService{
                     $user->geo_loc_check_in = json_decode($user->geo_loc_check_in);
                     $user->geo_loc_check_out = json_decode($user->geo_loc_check_out);
                 }
+                
+                $deadline_detail = date_diff(date_create('now'),date_create($task->deadline));
+                if($task->status == 2 || $task->status == 3){
+                    if($deadline_detail->days == 0){
+                        $task->deadline_message = "hari ini";
+                    }else if($deadline_detail->days == 1){
+                        $task->deadline_message = "besok";
+                    }else if($deadline_detail->days < 7){
+                        $task->deadline_message = $deadline_detail->days." hari Lagi";
+                    }else{
+                        $task->deadline_message = date_format($task->deadline,'d mm Y');
+                    }
+                }else if($task->status == 1){
+                    if($deadline_detail->days > 0){
+                        $task->deadline_message = $deadline_detail->days." hari yang lalu";
+                    }else if($deadline_detail->h > 0){
+                        $task->deadline_message = $deadline_detail->h." jam yang lalu";
+                    }else if($deadline_detail->i > 0){
+                        $task->deadline_message = $deadline_detail->i." menit yang lalu";
+                    }else if($deadline_detail->s > 0){
+                        $task->deadline_message = $deadline_detail->s." detik yang lalu";
+                    }
+                }
             }
             if($tasks->isEmpty()) return ["success" => true, "message" => "Task Masih Kosong", "data" => $tasks, "status" => 200];
             return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $tasks, "status" => 200];
