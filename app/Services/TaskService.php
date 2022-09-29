@@ -371,26 +371,30 @@ class TaskService{
                 }
                 
                 $task->deadline_message = "";
-                $deadline_detail = date_diff(date_create('now'),date_create($task->deadline));
-                if($task->status == 2 || $task->status == 3){
-                    if($deadline_detail->days == 0){
-                        $task->deadline_message = "hari ini";
-                    }else if($deadline_detail->days == 1){
-                        $task->deadline_message = "besok";
-                    }else if($deadline_detail->days < 7){
-                        $task->deadline_message = $deadline_detail->days." hari Lagi";
+                $date_now = date_create('now');
+                $date_deadline = date_create($task->deadline);
+                if($task->deadline){
+                    $deadline_detail = date_diff($date_now,$date_deadline);
+                    if(date_format($date_now,"YmdHis") < date_format($date_deadline,"YmdHis")){
+                        if($deadline_detail->days == 0){
+                            $task->deadline_message = "hari ini";
+                        }else if($deadline_detail->days == 1){
+                            $task->deadline_message = "besok";
+                        }else if($deadline_detail->days < 7){
+                            $task->deadline_message = $deadline_detail->days." hari Lagi";
+                        }else{
+                            $task->deadline_message = date_format(date_create($task->deadline),'d M Y');
+                        }
                     }else{
-                        $task->deadline_message = date_format($task->deadline,'d mm Y');
-                    }
-                }else if($task->status == 1){
-                    if($deadline_detail->days > 0){
-                        $task->deadline_message = $deadline_detail->days." hari yang lalu";
-                    }else if($deadline_detail->h > 0){
-                        $task->deadline_message = $deadline_detail->h." jam yang lalu";
-                    }else if($deadline_detail->i > 0){
-                        $task->deadline_message = $deadline_detail->i." menit yang lalu";
-                    }else if($deadline_detail->s > 0){
-                        $task->deadline_message = $deadline_detail->s." detik yang lalu";
+                        if($deadline_detail->days > 0){
+                            $task->deadline_message = $deadline_detail->days." hari yang lalu";
+                        }else if($deadline_detail->h > 0){
+                            $task->deadline_message = $deadline_detail->h." jam yang lalu";
+                        }else if($deadline_detail->i > 0){
+                            $task->deadline_message = $deadline_detail->i." menit yang lalu";
+                        }else if($deadline_detail->s > 0){
+                            $task->deadline_message = $deadline_detail->s." detik yang lalu";
+                        }
                     }
                 }
             }
