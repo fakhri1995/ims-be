@@ -371,11 +371,11 @@ class TaskService{
                 }
                 
                 $task->deadline_message = "";
-                $date_now = date_create('now');
-                $date_deadline = date_create($task->deadline);
+                $date_now = date_create(date('Y-m-d'));
+                $date_deadline = date_create(explode(" ",$task->deadline)[0]);
                 if($task->deadline){
                     $deadline_detail = date_diff($date_now,$date_deadline);
-                    if(date_format($date_now,"YmdHis") < date_format($date_deadline,"YmdHis")){
+                    if(date_format($date_now,"YmdHis") <= date_format($date_deadline,"YmdHis")){
                         if($deadline_detail->days == 0){
                             $task->deadline_message = "hari ini";
                         }else if($deadline_detail->days == 1){
@@ -386,15 +386,8 @@ class TaskService{
                             $task->deadline_message = date_format(date_create($task->deadline),'d M Y');
                         }
                     }else{
-                        if($deadline_detail->days > 0){
-                            $task->deadline_message = $deadline_detail->days." hari yang lalu";
-                        }else if($deadline_detail->h > 0){
-                            $task->deadline_message = $deadline_detail->h." jam yang lalu";
-                        }else if($deadline_detail->i > 0){
-                            $task->deadline_message = $deadline_detail->i." menit yang lalu";
-                        }else if($deadline_detail->s > 0){
-                            $task->deadline_message = $deadline_detail->s." detik yang lalu";
-                        }
+                        $task->deadline_message = $deadline_detail->days." hari yang lalu";
+                       
                     }
                 }
             }
