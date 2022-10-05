@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Recruitment;
+use App\RecruitmentEmailTemplate;
 use App\RecruitmentJalurDaftar;
 use App\RecruitmentRole;
 use App\Recruitments;
@@ -768,5 +769,158 @@ class RecruitmentService{
         }
     }
     //END OF RECRUITMENT JALUR DAFTAR SECTION
+
+
+    //RECRUITMENT EMAIL TEMPLATE SECTION
+    public function getRecruitmentEmailTemplate(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        
+        $id = $request->id;
+        $recruitmentEmailTemplate = RecruitmentEmailTemplate::find($id);
+        if(!$recruitmentEmailTemplate) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitmentEmailTemplate, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    
+    public function getRecruitmentEmailTemplates(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $recruitmentEmailTemplates = RecruitmentEmailTemplate::paginate(5);
+        
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitmentEmailTemplates, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getRecruitmentEmailTemplatesList(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $recruitmentEmailTemplates = RecruitmentEmailTemplate::get();
+        
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitmentEmailTemplates, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addRecruitmentEmailTemplate(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+        
+            $recruitmentEmailTemplate = new RecruitmentEmailTemplate();
+            $recruitmentEmailTemplate->name = $request->name ?? "";
+            $recruitmentEmailTemplate->subject = $request->subject ?? "";
+            $recruitmentEmailTemplate->body = $request->body ?? "";
+
+
+            $current_timestamp = date('Y-m-d H:i:s');
+            $recruitmentEmailTemplate->created_at = $current_timestamp;
+            $recruitmentEmailTemplate->updated_at = $current_timestamp;
+
+            $recruitmentEmailTemplate->save();
+
+            return ["success" => true, "message" => "Data Berhasil Ditambah", "data" => $recruitmentEmailTemplate, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateRecruitmentEmailTemplate(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+            $id = $request->id ?? "";
+            
+            $recruitmentEmailTemplate = RecruitmentEmailTemplate::find($id);
+            if(!$recruitmentEmailTemplate){
+                return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
+            }
+
+            $recruitmentEmailTemplate->name = $request->name ?? $recruitmentEmailTemplate->name;
+            $recruitmentEmailTemplate->subject = $request->subject ?? $recruitmentEmailTemplate->subject;
+            $recruitmentEmailTemplate->body = $request->body ?? $recruitmentEmailTemplate->body;
+
+
+            $current_timestamp = date('Y-m-d H:i:s');
+            $recruitmentEmailTemplate->updated_at = $current_timestamp;
+
+            $recruitmentEmailTemplate->save();
+
+            return ["success" => true, "message" => "Data Berhasil Diubah", "data" => $recruitmentEmailTemplate, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteRecruitmentEmailTemplate(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+            $id = $request->id ?? "";
+            
+            $recruitmentEmailTemplate = RecruitmentEmailTemplate::find($id);
+            if(!$recruitmentEmailTemplate){
+                return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
+            }
+            $recruitmentEmailTemplate->delete();
+
+            return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $recruitmentEmailTemplate, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    //END OF RECRUITMENT EMAIL TEMPLATE SECTION
 
 }

@@ -263,6 +263,58 @@ class RecruitmentController extends Controller
     }
 
     //END OF RECRUITMENT JALUR_DAFTAR SECTION
+
+    //RECRUITMENT EMAIL TEMPLATE SECTION
+
+    public function getRecruitmentEmailTemplate(Request $request)
+    {
+        $route_name = "RECRUITMENT_EMAIL_TEMPLATE_GET";
+
+        $response = $this->recruitmentService->getRecruitmentEmailTemplate($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getRecruitmentEmailTemplates(Request $request)
+    {
+        $route_name = "RECRUITMENT_EMAIL_TEMPLATES_GET";
+
+        $response = $this->recruitmentService->getRecruitmentEmailTemplates($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getRecruitmentEmailTemplatesList(Request $request)
+    {
+        $route_name = "RECRUITMENT_EMAIL_TEMPLATES_LIST_GET";
+
+        $response = $this->recruitmentService->getRecruitmentEmailTemplatesList($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function addRecruitmentEmailTemplate(Request $request)
+    {
+        $route_name = "RECRUITMENT_EMAIL_TEMPLATE_ADD";
+
+        $response = $this->recruitmentService->addRecruitmentEmailTemplate($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateRecruitmentEmailTemplate(Request $request)
+    {
+        $route_name = "RECRUITMENT_EMAIL_TEMPLATE_UPDATE";
+
+        $response = $this->recruitmentService->updateRecruitmentEmailTemplate($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteRecruitmentEmailTemplate(Request $request)
+    {
+        $route_name = "RECRUITMENT_EMAIL_TEMPLATE_DELETE";
+
+        $response = $this->recruitmentService->deleteRecruitmentEmailTemplate($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    //END OF RECRUITMENT EMAIL TEMPLATE SECTION
 }
 
 

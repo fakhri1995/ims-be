@@ -461,6 +461,13 @@ $router->group(['middleware' => 'auth'], function($router){
         $router->post('/addRecruitmentJalurDaftar', 'RecruitmentController@addRecruitmentJalurDaftar');
         $router->put('/updateRecruitmentJalurDaftar', 'RecruitmentController@updateRecruitmentJalurDaftar');
         $router->delete('/deleteRecruitmentJalurDaftar', 'RecruitmentController@deleteRecruitmentJalurDaftar');
+        // RECRUITMENT EMAIL TEMPLATES
+        $router->get('/getRecruitmentEmailTemplate', 'RecruitmentController@getRecruitmentEmailTemplate');
+        $router->get('/getRecruitmentEmailTemplates', 'RecruitmentController@getRecruitmentEmailTemplates');
+        $router->get('/getRecruitmentEmailTemplatesList', 'RecruitmentController@getRecruitmentEmailTemplatesList');
+        $router->post('/addRecruitmentEmailTemplate', 'RecruitmentController@addRecruitmentEmailTemplate');
+        $router->put('/updateRecruitmentEmailTemplate', 'RecruitmentController@updateRecruitmentEmailTemplate');
+        $router->delete('/deleteRecruitmentEmailTemplate', 'RecruitmentController@deleteRecruitmentEmailTemplate');
         
 });
 
