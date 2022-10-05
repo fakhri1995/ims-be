@@ -427,29 +427,40 @@ $router->group(['middleware' => 'auth'], function($router){
         $router->get('/getAssessmentList', 'ResumeController@getAssessmentList');
         $router->get('/getSkillLists', 'ResumeController@getSkillLists');
     
+        // RECRUITMENT
         $router->get('/getRecruitment', 'RecruitmentController@getRecruitment');
         $router->get('/getRecruitments', 'RecruitmentController@getRecruitments');
         $router->post('/addRecruitment', 'RecruitmentController@addRecruitment');
         $router->put('/updateRecruitment', 'RecruitmentController@updateRecruitment');
         $router->delete('/deleteRecruitment', 'RecruitmentController@deleteRecruitment');
+        // RECRUITMENT ROLE
         $router->get('/getRecruitmentRole', 'RecruitmentController@getRecruitmentRole');
         $router->get('/getRecruitmentRoles', 'RecruitmentController@getRecruitmentRoles');
         $router->get('/getRecruitmentRolesList', 'RecruitmentController@getRecruitmentRolesList');
         $router->post('/addRecruitmentRole', 'RecruitmentController@addRecruitmentRole');
         $router->put('/updateRecruitmentRole', 'RecruitmentController@updateRecruitmentRole');
         $router->delete('/deleteRecruitmentRole', 'RecruitmentController@deleteRecruitmentRole');
+        // RECRUITMENT STATUS
         $router->get('/getRecruitmentStatus', 'RecruitmentController@getRecruitmentStatus');
         $router->get('/getRecruitmentStatuses', 'RecruitmentController@getRecruitmentStatuses');
         $router->get('/getRecruitmentStatusesList', 'RecruitmentController@getRecruitmentStatusesList');
         $router->post('/addRecruitmentStatus', 'RecruitmentController@addRecruitmentStatus');
         $router->put('/updateRecruitmentStatus', 'RecruitmentController@updateRecruitmentStatus');
         $router->delete('/deleteRecruitmentStatus', 'RecruitmentController@deleteRecruitmentStatus');
+        // RECRUITMENT STAGE
         $router->get('/getRecruitmentStage', 'RecruitmentController@getRecruitmentStage');
         $router->get('/getRecruitmentStages', 'RecruitmentController@getRecruitmentStages');
         $router->get('/getRecruitmentStagesList', 'RecruitmentController@getRecruitmentStagesList');
         $router->post('/addRecruitmentStage', 'RecruitmentController@addRecruitmentStage');
         $router->put('/updateRecruitmentStage', 'RecruitmentController@updateRecruitmentStage');
         $router->delete('/deleteRecruitmentStage', 'RecruitmentController@deleteRecruitmentStage');
+        // RECRUITMENT JALUR DAFTAR
+        $router->get('/getRecruitmentJalurDaftar', 'RecruitmentController@getRecruitmentJalurDaftar');
+        $router->get('/getRecruitmentJalurDaftars', 'RecruitmentController@getRecruitmentJalurDaftars');
+        $router->get('/getRecruitmentJalurDaftarsList', 'RecruitmentController@getRecruitmentJalurDaftarsList');
+        $router->post('/addRecruitmentJalurDaftar', 'RecruitmentController@addRecruitmentJalurDaftar');
+        $router->put('/updateRecruitmentJalurDaftar', 'RecruitmentController@updateRecruitmentJalurDaftar');
+        $router->delete('/deleteRecruitmentJalurDaftar', 'RecruitmentController@deleteRecruitmentJalurDaftar');
         
 });
 

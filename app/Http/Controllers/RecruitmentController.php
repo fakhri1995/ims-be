@@ -211,6 +211,58 @@ class RecruitmentController extends Controller
     }
 
     //END OF RECRUITMENT STAGE SECTION
+
+    //RECRUITMENT JALUR_DAFTAR SECTION
+
+    public function getRecruitmentJalurDaftar(Request $request)
+    {
+        $route_name = "RECRUITMENT_JALUR_DAFTAR_GET";
+
+        $response = $this->recruitmentService->getRecruitmentJalurDaftar($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    
+    public function getRecruitmentJalurDaftars(Request $request)
+    {
+        $route_name = "RECRUITMENT_JALUR_DAFTARS_GET";
+
+        $response = $this->recruitmentService->getRecruitmentJalurDaftars($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getRecruitmentJalurDaftarsList(Request $request)
+    {
+        $route_name = "RECRUITMENT_JALUR_DAFTARS_LIST_GET";
+
+        $response = $this->recruitmentService->getRecruitmentJalurDaftarsList($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function addRecruitmentJalurDaftar(Request $request)
+    {
+        $route_name = "RECRUITMENT_JALUR_DAFTAR_ADD";
+
+        $response = $this->recruitmentService->addRecruitmentJalurDaftar($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateRecruitmentJalurDaftar(Request $request)
+    {
+        $route_name = "RECRUITMENT_JALUR_DAFTAR_UPDATE";
+
+        $response = $this->recruitmentService->updateRecruitmentJalurDaftar($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteRecruitmentJalurDaftar(Request $request)
+    {
+        $route_name = "RECRUITMENT_JALUR_DAFTAR_DELETE";
+
+        $response = $this->recruitmentService->deleteRecruitmentJalurDaftar($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    //END OF RECRUITMENT JALUR_DAFTAR SECTION
 }
 
 

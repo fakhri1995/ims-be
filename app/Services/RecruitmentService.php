@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Recruitment;
+use App\RecruitmentJalurDaftar;
 use App\RecruitmentRole;
 use App\Recruitments;
 use App\RecruitmentStage;
@@ -619,5 +620,153 @@ class RecruitmentService{
         }
     }
     //END OF RECRUITMENT STAGES SECTION
+
+    //RECRUITMENT JALUR DAFTAR SECTION
+    public function getRecruitmentJalurDaftar(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        
+        $id = $request->id;
+        $recruitmentJalurDaftar = RecruitmentJalurDaftar::find($id);
+        if(!$recruitmentJalurDaftar) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitmentJalurDaftar, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    
+    public function getRecruitmentJalurDaftars(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $recruitmentJalurDaftars = RecruitmentJalurDaftar::paginate(5);
+        
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitmentJalurDaftars, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getRecruitmentJalurDaftarsList(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $recruitmentJalurDaftars = RecruitmentJalurDaftar::get();
+        
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitmentJalurDaftars, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addRecruitmentJalurDaftar(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+        
+            $recruitmentJalurDaftar = new RecruitmentJalurDaftar();
+            $recruitmentJalurDaftar->name = $request->name ?? "";
+
+
+            $current_timestamp = date('Y-m-d H:i:s');
+            $recruitmentJalurDaftar->created_at = $current_timestamp;
+            $recruitmentJalurDaftar->updated_at = $current_timestamp;
+
+            $recruitmentJalurDaftar->save();
+
+            return ["success" => true, "message" => "Data Berhasil Ditambah", "data" => $recruitmentJalurDaftar, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateRecruitmentJalurDaftar(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+            $id = $request->id ?? "";
+            
+            $recruitmentJalurDaftar = RecruitmentJalurDaftar::find($id);
+            if(!$recruitmentJalurDaftar){
+                return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
+            }
+
+            $recruitmentJalurDaftar->name = $request->name ?? $recruitmentJalurDaftar->name;
+
+
+            $current_timestamp = date('Y-m-d H:i:s');
+            $recruitmentJalurDaftar->updated_at = $current_timestamp;
+
+            $recruitmentJalurDaftar->save();
+
+            return ["success" => true, "message" => "Data Berhasil Diubah", "data" => $recruitmentJalurDaftar, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteRecruitmentJalurDaftar(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+            $id = $request->id ?? "";
+            
+            $recruitmentJalurDaftar = RecruitmentJalurDaftar::find($id);
+            if(!$recruitmentJalurDaftar){
+                return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
+            }
+            $recruitmentJalurDaftar->delete();
+
+            return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $recruitmentJalurDaftar, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    //END OF RECRUITMENT JALUR DAFTAR SECTION
 
 }
