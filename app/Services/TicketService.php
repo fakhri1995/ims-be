@@ -352,11 +352,11 @@ class TicketService
                 $ticket->status_name = $statuses[$ticket->status];
 
                 $ticket->deadline_message = "";
-                $date_now = date_create('now');
-                $date_deadline = date_create($ticket->deadline);
                 if($ticket->deadline){
+                    $date_now = date_create(date('Y-m-d'));
+                    $date_deadline = date_create(explode(" ",$ticket->deadline)[0]);
                     $deadline_detail = date_diff($date_now,$date_deadline);
-                    if(date_format($date_now,"YmdHis") < date_format($date_deadline,"YmdHis")){
+                    if(date_format($date_now,"YmdHis") <= date_format($date_deadline,"YmdHis")){
                         if($deadline_detail->days == 0){
                             $ticket->deadline_message = "hari ini";
                         }else if($deadline_detail->days == 1){
@@ -367,15 +367,7 @@ class TicketService
                             $ticket->deadline_message = date_format(date_create($ticket->deadline),'d M Y');
                         }
                     }else{
-                        if($deadline_detail->days > 0){
-                            $ticket->deadline_message = $deadline_detail->days." hari yang lalu";
-                        }else if($deadline_detail->h > 0){
-                            $ticket->deadline_message = $deadline_detail->h." jam yang lalu";
-                        }else if($deadline_detail->i > 0){
-                            $ticket->deadline_message = $deadline_detail->i." menit yang lalu";
-                        }else if($deadline_detail->s > 0){
-                            $ticket->deadline_message = $deadline_detail->s." detik yang lalu";
-                        }
+                        $ticket->deadline_message = $deadline_detail->days." hari yang lalu";
                     }
                 }
                 
@@ -561,6 +553,33 @@ class TicketService
                     }
                 }
             }
+
+            foreach($ticket->tasks as $task){
+                $task->deadline_message = "";
+                // $date_now = date_create('now');
+                // $date_deadline = date_create($task->deadline);
+                if($task->deadline){
+                    $date_now = date_create(date('Y-m-d'));
+                    $date_deadline = date_create(explode(" ",$task->deadline)[0]);
+                    $deadline_detail = date_diff($date_now,$date_deadline);
+                    if(date_format($date_now,"Ymd") <= date_format($date_deadline,"Ymd")){
+                        if($deadline_detail->days == 0){
+                            $task->deadline_message = "hari ini";
+                        }else if($deadline_detail->days == 1){
+                            $task->deadline_message = "besok";
+                        }else if($deadline_detail->days < 7){
+                            $task->deadline_message = $deadline_detail->days." hari Lagi";
+                        }else{
+                            $task->deadline_message = date_format(date_create($task->deadline),'d M Y');
+                        }
+                    }else{
+                        $task->deadline_message = $deadline_detail->days." hari yang lalu";
+                    }
+                }
+            }
+           
+
+
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $ticket, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
