@@ -444,6 +444,12 @@ $router->group(['middleware' => 'auth'], function($router){
         $router->post('/addRecruitmentStatus', 'RecruitmentController@addRecruitmentStatus');
         $router->put('/updateRecruitmentStatus', 'RecruitmentController@updateRecruitmentStatus');
         $router->delete('/deleteRecruitmentStatus', 'RecruitmentController@deleteRecruitmentStatus');
+        $router->get('/getRecruitmentStage', 'RecruitmentController@getRecruitmentStage');
+        $router->get('/getRecruitmentStages', 'RecruitmentController@getRecruitmentStages');
+        $router->get('/getRecruitmentStagesList', 'RecruitmentController@getRecruitmentStagesList');
+        $router->post('/addRecruitmentStage', 'RecruitmentController@addRecruitmentStage');
+        $router->put('/updateRecruitmentStage', 'RecruitmentController@updateRecruitmentStage');
+        $router->delete('/deleteRecruitmentStage', 'RecruitmentController@deleteRecruitmentStage');
         
 });
 

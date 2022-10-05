@@ -159,6 +159,58 @@ class RecruitmentController extends Controller
     }
 
     //END OF RECRUITMENT STATUS SECTION
+
+    //RECRUITMENT STAGE SECTION
+
+    public function getRecruitmentStage(Request $request)
+    {
+        $route_name = "RECRUITMENT_STAGE_GET";
+
+        $response = $this->recruitmentService->getRecruitmentStage($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    
+    public function getRecruitmentStages(Request $request)
+    {
+        $route_name = "RECRUITMENT_STAGES_GET";
+
+        $response = $this->recruitmentService->getRecruitmentStages($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getRecruitmentStagesList(Request $request)
+    {
+        $route_name = "RECRUITMENT_STAGES_LIST_GET";
+
+        $response = $this->recruitmentService->getRecruitmentStagesList($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function addRecruitmentStage(Request $request)
+    {
+        $route_name = "RECRUITMENT_STAGE_ADD";
+
+        $response = $this->recruitmentService->addRecruitmentStage($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateRecruitmentStage(Request $request)
+    {
+        $route_name = "RECRUITMENT_STAGE_UPDATE";
+
+        $response = $this->recruitmentService->updateRecruitmentStage($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteRecruitmentStage(Request $request)
+    {
+        $route_name = "RECRUITMENT_STAGE_DELETE";
+
+        $response = $this->recruitmentService->deleteRecruitmentStage($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    //END OF RECRUITMENT STAGE SECTION
 }
 
 

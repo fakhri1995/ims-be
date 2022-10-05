@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Recruitment;
 use App\RecruitmentRole;
 use App\Recruitments;
+use App\RecruitmentStage;
 use App\RecruitmentStatus;
 use Exception;
 use App\Services\GlobalService;
@@ -468,5 +469,155 @@ class RecruitmentService{
         }
     }
     //END OF RECRUITMENT STATUS SECTION
+
+    //RECRUITMENT STAGES SECTION
+    public function getRecruitmentStage(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        
+        $id = $request->id;
+        $recruitmentStage = RecruitmentStage::find($id);
+        if(!$recruitmentStage) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitmentStage, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    
+    public function getRecruitmentStages(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $recruitmentStages = RecruitmentStage::paginate(5);
+        
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitmentStages, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getRecruitmentStagesList(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $recruitmentStages = RecruitmentStage::get();
+        
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitmentStages, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addRecruitmentStage(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+        
+            $recruitmentStage = new RecruitmentStage();
+            $recruitmentStage->name = $request->name ?? "";
+            $recruitmentStage->description = $request->description ?? "";
+
+
+            $current_timestamp = date('Y-m-d H:i:s');
+            $recruitmentStage->created_at = $current_timestamp;
+            $recruitmentStage->updated_at = $current_timestamp;
+
+            $recruitmentStage->save();
+
+            return ["success" => true, "message" => "Data Berhasil Ditambah", "data" => $recruitmentStage, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateRecruitmentStage(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+            $id = $request->id ?? "";
+            
+            $recruitmentStage = RecruitmentStage::find($id);
+            if(!$recruitmentStage){
+                return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
+            }
+
+            $recruitmentStage->name = $request->name ?? $recruitmentStage->name;
+            $recruitmentStage->description = $request->description ?? $recruitmentStage->description;
+
+
+            $current_timestamp = date('Y-m-d H:i:s');
+            $recruitmentStage->updated_at = $current_timestamp;
+
+            $recruitmentStage->save();
+
+            return ["success" => true, "message" => "Data Berhasil Diubah", "data" => $recruitmentStage, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteRecruitmentStage(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+            $id = $request->id ?? "";
+            
+            $recruitmentStage = RecruitmentStage::find($id);
+            if(!$recruitmentStage){
+                return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
+            }
+            $recruitmentStage->delete();
+
+            return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $recruitmentStage, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    //END OF RECRUITMENT STAGES SECTION
 
 }
