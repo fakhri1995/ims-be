@@ -175,7 +175,7 @@ class ResumeService{
             
             "project" => "filled|array",
             "project.name" => "required_with:project",
-            "project.year" => "required_with:project|date",
+            "project.year" => "date|nullable",
             "project.description" => "required_with:project",
             
             "skill" => "filled|array",
@@ -184,17 +184,17 @@ class ResumeService{
             "training" => "filled|array",
             "training.name" => "required_with:training",
             "training.organizer" => "required_with:training",
-            "training.year" => "required_with:training|date",
+            "training.year" => "date|nullable",
             
             "certificate" => "filled|array",
             "certificate.name" => "required_with:certificate",
             "certificate.organizer" => "required_with:certificate",
-            "certificate.year" => "required_with:certificate|date",
+            "certificate.year" => "date|nullable",
             
             "achievement" => "filled|array",
             "achievement.name" => "required_with:achievement",
             "achievement.organizer" => "required_with:achievement",
-            "achievement.year" => "required_with:achievement|date"
+            "achievement.year" => "date|nullable"
         ]);
         
 
@@ -314,7 +314,7 @@ class ResumeService{
             "project" => "filled|array",
             "project.id" => "required_with:project|exists:App\ResumeProject,id",
             "project.name" => "required_with:project",
-            "project.year" => "required_with:project|date",
+            "project.year" => "date|nullable",
             "project.description" => "required_with:project",
             
             "skill" => "filled|array",
@@ -325,19 +325,19 @@ class ResumeService{
             "training.id" => "required_with:training|exists:App\ResumeTraining,id",
             "training.name" => "required_with:training",
             "training.organizer" => "required_with:training",
-            "training.year" => "required_with:training|date",
+            "training.year" => "date|nullable",
             
             "certificate" => "filled|array",
             "certificate.id" => "required_with:certificate|exists:App\ResumeCertificate,id",
             "certificate.name" => "required_with:certificate",
             "certificate.organizer" => "required_with:certificate",
-            "certificate.year" => "required_with:certificate|date",
+            "certificate.year" => "date|nullable",
             
             "achievement" => "filled|array",
             "achievement.id" => "required_with:achievement|exists:App\ResumeAchievement,id",
             "achievement.name" => "required_with:achievement",
             "achievement.organizer" => "required_with:achievement",
-            "achievement.year" => "required_with:achievement|date"
+            "achievement.year" => "date|nullable"
         ]);
         
 
