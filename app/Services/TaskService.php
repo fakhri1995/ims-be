@@ -499,6 +499,27 @@ class TaskService{
             foreach($tasks as $task){
                 $task->location->full_location = $task->location->fullSubNameWParentTopParent();
                 $task->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
+
+                $task->deadline_message = "";
+                $date_now = date_create(date('Y-m-d'));
+                $date_deadline = date_create(explode(" ",$task->deadline)[0]);
+                if($task->deadline){
+                    $deadline_detail = date_diff($date_now,$date_deadline);
+                    if(date_format($date_now,"YmdHis") <= date_format($date_deadline,"YmdHis")){
+                        if($deadline_detail->days == 0){
+                            $task->deadline_message = "hari ini";
+                        }else if($deadline_detail->days == 1){
+                            $task->deadline_message = "besok";
+                        }else if($deadline_detail->days < 7){
+                            $task->deadline_message = $deadline_detail->days." hari Lagi";
+                        }else{
+                            $task->deadline_message = date_format(date_create($task->deadline),'d M Y');
+                        }
+                    }else{
+                        $task->deadline_message = $deadline_detail->days." hari yang lalu";
+                       
+                    }
+                }
             }
             if($tasks->isEmpty()) return ["success" => true, "message" => "Task Masih Kosong", "data" => $tasks, "status" => 200];
             return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $tasks, "status" => 200];
