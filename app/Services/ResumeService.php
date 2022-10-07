@@ -183,17 +183,17 @@ class ResumeService{
             
             "training" => "filled|array",
             "training.name" => "required_with:training",
-            "training.organizer" => "required_with:training",
+            "training.organizer" => "string|nullable",
             "training.year" => "date|nullable",
             
             "certificate" => "filled|array",
             "certificate.name" => "required_with:certificate",
-            "certificate.organizer" => "required_with:certificate",
+            "certificate.organizer" => "string|nullable",
             "certificate.year" => "date|nullable",
             
             "achievement" => "filled|array",
             "achievement.name" => "required_with:achievement",
-            "achievement.organizer" => "required_with:achievement",
+            "achievement.organizer" => "string|nullable",
             "achievement.year" => "date|nullable"
         ]);
         
@@ -249,7 +249,7 @@ class ResumeService{
             $requestTraining = (object)$request->training;
             $training = new ResumeTraining();
             $training->name = $requestTraining->name;
-            $training->organizer = $requestTraining->organizer;
+            $training->organizer = $requestTraining->organizer ?? "";
             $training->year = !$requestTraining->year ? null : $requestTraining->year;
             if(!$resume->trainings()->save($training)) return ["success" => false, "message" => "Gagal Mengubah Training Resume", "status" => 400];
             return ["success" => true, "message" => "Data Training Berhasil Ditambah", "status" => 200];
@@ -258,7 +258,7 @@ class ResumeService{
             $requestCertificates = (object)$request->certificate;
             $certificate = new ResumeCertificate();
             $certificate->name = $requestCertificates->name;
-            $certificate->organizer = $requestCertificates->organizer;
+            $certificate->organizer = $requestCertificates->organizer ?? "";
             $certificate->year = !$requestCertificates->year ? null : $requestCertificates->year;
             if(!$resume->certificates()->save($certificate)) return ["success" => false, "message" => "Gagal Mengubah Certificate Resume", "status" => 400];
             return ["success" => true, "message" => "Data Certificate Berhasil Ditambah", "status" => 200];
@@ -267,7 +267,7 @@ class ResumeService{
             $requestAchievement = (object)$request->achievement;
             $achievement = new ResumeAchievement();
             $achievement->name = $requestAchievement->name;
-            $achievement->organizer = $requestAchievement->organizer;
+            $achievement->organizer = $requestAchievement->organizer ?? "";
             $achievement->year = !$requestAchievement->year ? null : $requestAchievement->year;
             if(!$resume->achievements()->save($achievement)) return ["success" => false, "message" => "Gagal Mengubah Achievement Resume", "status" => 400];
             return ["success" => true, "message" => "Data Achievement Berhasil Ditambah", "status" => 200];
@@ -324,19 +324,19 @@ class ResumeService{
             "training" => "filled|array",
             "training.id" => "required_with:training|exists:App\ResumeTraining,id",
             "training.name" => "required_with:training",
-            "training.organizer" => "required_with:training",
+            "training.organizer" => "string|nullable",
             "training.year" => "date|nullable",
             
             "certificate" => "filled|array",
             "certificate.id" => "required_with:certificate|exists:App\ResumeCertificate,id",
             "certificate.name" => "required_with:certificate",
-            "certificate.organizer" => "required_with:certificate",
+            "certificate.organizer" => "string|nullable",
             "certificate.year" => "date|nullable",
             
             "achievement" => "filled|array",
             "achievement.id" => "required_with:achievement|exists:App\ResumeAchievement,id",
             "achievement.name" => "required_with:achievement",
-            "achievement.organizer" => "required_with:achievement",
+            "achievement.organizer" => "string|nullable",
             "achievement.year" => "date|nullable"
         ]);
         
@@ -437,7 +437,7 @@ class ResumeService{
             $training = $resume->trainings()->find($id);
             if(!$training) return ["success" => false, "message" => "Training ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
             $training->name = $requestTraining->name;
-            $training->organizer = $requestTraining->organizer;
+            $training->organizer = $requestTraining->organizer ?? "";
             $training->year = !$requestTraining->year ? null : $requestTraining->year;
             if(!$training->save()) return ["success" => false, "message" => "Gagal Mengubah Training Resume", "status" => 400];
             return ["success" => true, "message" => "Data Training Berhasil Diubah", "status" => 200];
@@ -448,7 +448,7 @@ class ResumeService{
             $certificate = $resume->certificates()->find($id);
             if(!$certificate) return ["success" => false, "message" => "Certificate ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
             $certificate->name = $requestCertificates->name;
-            $certificate->organizer = $requestCertificates->organizer;
+            $certificate->organizer = $requestCertificates->organizer ?? "";
             $certificate->year = !$requestCertificates->year ? null : $requestCertificates->year;
             if(!$certificate->save()) return ["success" => false, "message" => "Gagal Mengubah Certificate Resume", "status" => 400];
             return ["success" => true, "message" => "Data Certificate Berhasil Diubah", "status" => 200];
@@ -459,7 +459,7 @@ class ResumeService{
             $achievement = $resume->achievements()->find($id);
             if(!$achievement) return ["success" => false, "message" => "Achievement ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
             $achievement->name = $requestAchievement->name;
-            $achievement->organizer = $requestAchievement->organizer;
+            $achievement->organizer = $requestAchievement->organizer ?? "";
             $achievement->year = !$requestAchievement->year ? null : $requestAchievement->year;
             if(!$achievement->save()) return ["success" => false, "message" => "Gagal Mengubah Achievement Resume", "status" => 400];
             return ["success" => true, "message" => "Data Achievement Berhasil Diubah", "status" => 200];
