@@ -176,7 +176,7 @@ class ResumeService{
             "project" => "filled|array",
             "project.name" => "required_with:project",
             "project.year" => "date|nullable",
-            "project.description" => "required_with:project",
+            "project.description" => "string|nullable",
             
             "skill" => "filled|array",
             "skill.name" => "required_with:skill",
@@ -233,7 +233,7 @@ class ResumeService{
             $project = new ResumeProject();
             $project->name = $requestProject->name;
             $project->year = !$requestProject->year ? null : $requestProject->year;
-            $project->description = $requestProject->description;
+            $project->description = $requestProject->description ?? "";
             if(!$resume->projects()->save($project)) return ["success" => false, "message" => "Gagal Mengubah Project Resume", "status" => 400];
             return ["success" => true, "message" => "Data Project Berhasil Ditambah", "status" => 200];
         }  
@@ -315,7 +315,7 @@ class ResumeService{
             "project.id" => "required_with:project|exists:App\ResumeProject,id",
             "project.name" => "required_with:project",
             "project.year" => "date|nullable",
-            "project.description" => "required_with:project",
+            "project.description" => "string|nullable",
             
             "skill" => "filled|array",
             "skill.id" => "required_with:skill|exists:App\ResumeSkill,id",
@@ -417,7 +417,7 @@ class ResumeService{
             if(!$project) return ["success" => false, "message" => "Project ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
             $project->name = $requestProject->name;
             $project->year = !$requestProject->year ? null : $requestProject->year;
-            $project->description = $requestProject->description;
+            $project->description = $requestProject->description ?? "";
             if(!$project->save()) return ["success" => false, "message" => "Gagal Mengubah Project Resume", "status" => 400];
             return ["success" => true, "message" => "Data Project Berhasil Diubah", "status" => 200];
         }  
