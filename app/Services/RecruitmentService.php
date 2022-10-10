@@ -6,13 +6,11 @@ use App\Recruitment;
 use App\RecruitmentEmailTemplate;
 use App\RecruitmentJalurDaftar;
 use App\RecruitmentRole;
-use App\Recruitments;
 use App\RecruitmentStage;
 use App\RecruitmentStatus;
 use Exception;
 use App\Services\GlobalService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class RecruitmentService{
@@ -50,9 +48,52 @@ class RecruitmentService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
+
+        $rules = [
+            "page" => "numeric",
+            "rows" => "numeric|between:1,100",
+            "sort_by" => "in:id,name,role,jalur_daftar,stage,status",
+            "sort_type" => "in:asc,desc"
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $keyword = $request->keyword ?? NULL;
+        $recruitment_role_id = $request->recruitment_role_id ? explode(",",$request->recruitment_role_id) : NULL;
+        $recruitment_jalur_daftar_id = $request->recruitment_jalur_daftar_id ? explode(",",$request->recruitment_jalur_daftar_id) : NULL;
+        $recruitment_stage_id = $request->recruitment_stage_id ? explode(",",$request->recruitment_stage_id) : NULL;
+        $recruitment_status_id = $request->recruitment_status_id ? explode(",",$request->recruitment_status_id) : NULL;
+
+        $rows = $request->rows ?? 5;
+        $recruitments = Recruitment::with(['role','jalur_daftar','stage','status']);
+
+        // filter
+        if($keyword) $recruitments = $recruitments->where("name","LIKE", "%$keyword%");
+        if($recruitment_role_id) $recruitments = $recruitments->whereIn("recruitment_role_id", $recruitment_role_id);
+        if($recruitment_jalur_daftar_id) $recruitments = $recruitments->whereIn("recruitment_jalur_daftar_id", $recruitment_jalur_daftar_id);
+        if($recruitment_stage_id) $recruitments = $recruitments->whereIn("recruitment_stage_id", $recruitment_stage_id);
+        if($recruitment_status_id) $recruitments = $recruitments->whereIn("recruitment_status_id", $recruitment_status_id);
         
-        $recruitments = Recruitment::paginate(5);
-        if(!$recruitments) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+
+        // sort
+        $sort_by = $request->sort_by ?? NULL;
+        $sort_type = $request->get('sort_type','asc');
+        if($sort_by == "id") $recruitments = $recruitments->orderBy('id',$sort_type);
+        if($sort_by == "name") $recruitments = $recruitments->orderBy('name',$sort_type);
+        if($sort_by == "role") $recruitments = $recruitments->orderBy(RecruitmentRole::select("name")
+                ->whereColumn("recruitment_roles.id","recruitments.recruitment_role_id"),$sort_type);
+        if($sort_by == "jalur_daftar") $recruitments = $recruitments->orderBy(RecruitmentJalurDaftar::select("name")
+                ->whereColumn("recruitment_jalur_daftars.id","recruitments.recruitment_jalur_daftar_id"),$sort_type);
+        if($sort_by == "stage") $recruitments = $recruitments->orderBy(RecruitmentStage::select("name")
+                ->whereColumn("recruitment_stages.id","recruitments.recruitment_stage_id"),$sort_type);
+        if($sort_by == "status") $recruitments = $recruitments->orderBy(RecruitmentStatus::select("name")
+                ->whereColumn("recruitment_statuses.id","recruitments.recruitment_status_id"),$sort_type);
+
+        $recruitments = $recruitments->paginate($rows);
         
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitments, "status" => 200];
@@ -80,10 +121,10 @@ class RecruitmentService{
             $recruitment->name = $request->name ?? "";
             $recruitment->email = $request->email ?? "";
             $recruitment->university = $request->university ?? "";
-            $recruitment->role = $request->role ?? "";
-            $recruitment->jalur_daftar = $request->jalur_daftar ?? "";
-            $recruitment->stage = $request->stage ?? "";
-            $recruitment->status = $request->status ?? "";
+            $recruitment->recruitment_role_id = $request->recruitment_role_id ?? "";
+            $recruitment->recruitment_jalur_daftar_id = $request->recruitment_jalur_daftar_id ?? "";
+            $recruitment->recruitment_stage_id = $request->recruitment_stage_id ?? "";
+            $recruitment->recruitment_status_id = $request->recruitment_status_id ?? "";
 
 
             $current_timestamp = date('Y-m-d H:i:s');
@@ -123,10 +164,10 @@ class RecruitmentService{
             $recruitment->name = $request->name ?? $recruitment->name;
             $recruitment->email = $request->email ?? $recruitment->email;
             $recruitment->university = $request->university ?? $recruitment->university;
-            $recruitment->role = $request->role ?? $recruitment->role;
-            $recruitment->jalur_daftar = $request->jalur_daftar ?? $recruitment->jalur_daftar;
-            $recruitment->stage = $request->stage ?? $recruitment->stage;
-            $recruitment->status = $request->status ?? $recruitment->status;
+            $recruitment->recruitment_role_id = $request->recruitment_role_id ?? "";
+            $recruitment->recruitment_jalur_daftar_id = $request->recruitment_jalur_daftar_id ?? "";
+            $recruitment->recruitment_stage_id = $request->recruitment_stage_id ?? "";
+            $recruitment->recruitment_status_id = $request->recruitment_status_id ?? "";
 
 
             $current_timestamp = date('Y-m-d H:i:s');

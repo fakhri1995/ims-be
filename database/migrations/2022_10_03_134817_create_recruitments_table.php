@@ -18,10 +18,10 @@ class CreateRecruitmentsTable extends Migration
             $table->string('name');
             $table->string('email');
             $table->string('university');
-            $table->unsignedBigInteger('role');
-            $table->unsignedBigInteger('jalur_daftar');
-            $table->unsignedBigInteger("stage");
-            $table->unsignedBigInteger("status");
+            $table->unsignedBigInteger('recruitment_role_id');
+            $table->unsignedBigInteger('recruitment_jalur_daftar_id');
+            $table->unsignedBigInteger("recruitment_stage_id");
+            $table->unsignedBigInteger("recruitment_status_id");
             $table->dateTime('created_at');
             $table->dateTime('updated_at');
             $table->unsignedBigInteger('created_by');
