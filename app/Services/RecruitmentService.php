@@ -6,6 +6,7 @@ use App\Recruitment;
 use App\RecruitmentEmailTemplate;
 use App\RecruitmentJalurDaftar;
 use App\RecruitmentRole;
+use App\RecruitmentRoleType;
 use App\RecruitmentStage;
 use App\RecruitmentStatus;
 use Exception;
@@ -26,6 +27,7 @@ class RecruitmentService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
+            "id" => "required|numeric",
         ]);
 
         if($validator->fails()){
@@ -34,7 +36,7 @@ class RecruitmentService{
         }
         
         $id = $request->id;
-        $recruitment = Recruitment::find($id);
+        $recruitment = Recruitment::with(['role','role.type','jalur_daftar','stage','status'])->find($id);
         if(!$recruitment) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         
         try{
@@ -69,7 +71,7 @@ class RecruitmentService{
         $recruitment_status_id = $request->recruitment_status_id ? explode(",",$request->recruitment_status_id) : NULL;
 
         $rows = $request->rows ?? 5;
-        $recruitments = Recruitment::with(['role','jalur_daftar','stage','status']);
+        $recruitments = Recruitment::with(['role','role.type','jalur_daftar','stage','status']);
 
         // filter
         if($keyword) $recruitments = $recruitments->where("name","LIKE", "%$keyword%");
@@ -108,6 +110,13 @@ class RecruitmentService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
+            "name" => "required",
+            "email" => "required|email",
+            "university" => "required",
+            "recruitment_role_id" => "required|numeric",
+            "recruitment_jalur_daftar_id" => "required|numeric",
+            "recruitment_stage_id" => "required|numeric",
+            "recruitment_status_id" => "required|numeric",
         ]);
 
         if($validator->fails()){
@@ -116,6 +125,19 @@ class RecruitmentService{
         }
 
         try{
+
+            $recruitment_role_id = $request->recruitment_role_id ?? NULL;
+            $recruitment_jalur_daftar_id = $request->recruitment_jalur_daftar_id ?? NULL;
+            $recruitment_stage_id = $request->recruitment_stage_id ?? NULL;
+            $recruitment_status_id = $request->recruitment_status_id ?? NULL;
+
+            
+            
+            if(!RecruitmentRole::find($recruitment_role_id)) return ["success" => false, "message" => "Recruitment Role yang dipilih tidak tersedia", "status" => 400];
+            if(!RecruitmentJalurDaftar::find($recruitment_jalur_daftar_id)) return ["success" => false, "message" => "Recruitment Jalur daftar yang dipilih tidak tersedia", "status" => 400];
+            if(!RecruitmentStage::find($recruitment_stage_id)) return ["success" => false, "message" => "Recruitment Stage yang dipilih tidak tersedia", "status" => 400];
+            if(!RecruitmentStatus::find($recruitment_status_id)) return ["success" => false, "message" => "Recruitment Status yang dipilih tidak tersedia", "status" => 400];
+
         
             $recruitment = new Recruitment();
             $recruitment->name = $request->name ?? "";
@@ -146,6 +168,14 @@ class RecruitmentService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
+            "id" => "required|numeric",
+            "name" => "required",
+            "email" => "required|email",
+            "university" => "required",
+            "recruitment_role_id" => "required|numeric",
+            "recruitment_jalur_daftar_id" => "required|numeric",
+            "recruitment_stage_id" => "required|numeric",
+            "recruitment_status_id" => "required|numeric",
         ]);
 
         if($validator->fails()){
@@ -155,12 +185,23 @@ class RecruitmentService{
 
         try{
             $id = $request->id ?? "";
-            
             $recruitment = Recruitment::find($id);
             if(!$recruitment){
                 return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
             }
 
+
+            $recruitment_role_id = $request->recruitment_role_id ?? NULL;
+            $recruitment_jalur_daftar_id = $request->recruitment_jalur_daftar_id ?? NULL;
+            $recruitment_stage_id = $request->recruitment_stage_id ?? NULL;
+            $recruitment_status_id = $request->recruitment_status_id ?? NULL;
+            
+            if(!RecruitmentRole::find($recruitment_role_id)) return ["success" => false, "message" => "Recruitment Role yang dipilih tidak tersedia", "status" => 400];
+            if(!RecruitmentJalurDaftar::find($recruitment_jalur_daftar_id)) return ["success" => false, "message" => "Recruitment Jalur daftar yang dipilih tidak tersedia", "status" => 400];
+            if(!RecruitmentStage::find($recruitment_stage_id)) return ["success" => false, "message" => "Recruitment Stage yang dipilih tidak tersedia", "status" => 400];
+            if(!RecruitmentStatus::find($recruitment_status_id)) return ["success" => false, "message" => "Recruitment Status yang dipilih tidak tersedia", "status" => 400];
+            
+            
             $recruitment->name = $request->name ?? $recruitment->name;
             $recruitment->email = $request->email ?? $recruitment->email;
             $recruitment->university = $request->university ?? $recruitment->university;
@@ -209,6 +250,27 @@ class RecruitmentService{
         }
     }
 
+    public function getCountRecruitment($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        try{
+
+            $recruitments_count = Recruitment::count(); 
+            $recruitment_roles_count = RecruitmentRole::count();
+
+            $recruitments = [
+                "recruitments_count" => $recruitments_count,
+                "recruitment_roles_count" => $recruitment_roles_count
+            ];
+
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitments, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+
+    }
+
     //END OF RECRUITMENT SECTION
 
     //RECRUITMENT ROLES SECTION
@@ -218,6 +280,7 @@ class RecruitmentService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
+            "id" => "required|numeric",
         ]);
 
         if($validator->fails()){
@@ -226,7 +289,7 @@ class RecruitmentService{
         }
         
         $id = $request->id;
-        $recruitmentRole = RecruitmentRole::find($id);
+        $recruitmentRole = RecruitmentRole::with(['type'])->withCount('recruitments')->find($id);
         if(!$recruitmentRole) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         
         try{
@@ -241,8 +304,41 @@ class RecruitmentService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
-        $recruitmentRoles = RecruitmentRole::paginate(5);
+        $rules = [
+            "page" => "numeric",
+            "rows" => "numeric|between:1,100",
+            "sort_by" => "in:id,name,role_type,recruitments_count",
+            "sort_type" => "in:asc,desc"
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
         
+        
+        $keyword = $request->keyword ?? NULL;
+        $recruitment_role_type_id = $request->recruitment_role_type_id ? explode(",",$request->recruitment_role_type_id) : NULL;
+
+        $rows = $request->rows ?? 5;
+        $recruitmentRoles = RecruitmentRole::with(['type'])->withCount('recruitments');
+        
+        // filter
+        if($keyword) $recruitmentRoles = $recruitmentRoles->where("name","LIKE", "%$keyword%");
+        if($recruitment_role_type_id) $recruitmentRoles = $recruitmentRoles->whereIn("recruitment_role_type_id", $recruitment_role_type_id);
+        
+        // sort
+        $sort_by = $request->sort_by ?? NULL;
+        $sort_type = $request->get('sort_type','asc');
+        if($sort_by == "id") $recruitmentRoles = $recruitmentRoles->orderBy('id',$sort_type);
+        if($sort_by == "name") $recruitmentRoles = $recruitmentRoles->orderBy('name',$sort_type);
+        if($sort_by == "role_type") $recruitmentRoles = $recruitmentRoles->orderBy(RecruitmentRole::select("name")
+                ->whereColumn("recruitment_role_types.id","recruitment_roles.recruitment_role_type_id"),$sort_type);
+        if($sort_by == "recruitments_count") $recruitmentRoles = $recruitmentRoles->orderBy('recruitments_count',$sort_type);
+
+
+        $recruitmentRoles = $recruitmentRoles->paginate($rows);
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitmentRoles, "status" => 200];
         }catch(Exception $err){
@@ -270,6 +366,9 @@ class RecruitmentService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
+            "name" => "required",
+            "alias" => "required",
+            "recruitment_role_type_id" => "required|numeric",
         ]);
 
         if($validator->fails()){
@@ -278,11 +377,14 @@ class RecruitmentService{
         }
 
         try{
-        
+            $recruitment_role_type_id = $request->recruitment_role_type_id ?? NULL;
+            if(!RecruitmentRoleType::find($recruitment_role_type_id)) return ["success" => false, "message" => "Recruitment Role Type yang dipilih tidak tersedia", "status" => 400];
+
+
             $recruitmentRole = new RecruitmentRole();
             $recruitmentRole->name = $request->name ?? "";
             $recruitmentRole->alias = $request->alias ?? "";
-            $recruitmentRole->role_type_id = $request->role_type_id ?? "";
+            $recruitmentRole->recruitment_role_type_id = $request->recruitment_role_type_id ?? "";
 
 
             $current_timestamp = date('Y-m-d H:i:s');
@@ -303,6 +405,10 @@ class RecruitmentService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
+            "id" => "required|numeric",
+            "name" => "required",
+            "alias" => "required",
+            "recruitment_role_type_id" => "required|numeric",
         ]);
 
         if($validator->fails()){
@@ -318,9 +424,14 @@ class RecruitmentService{
                 return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
             }
 
+            $recruitment_role_type_id = $request->recruitment_role_type_id ?? NULL;
+            if(!RecruitmentRoleType::find($recruitment_role_type_id)) return ["success" => false, "message" => "Recruitment Role Type yang dipilih tidak tersedia", "status" => 400];
+
+            
+
             $recruitmentRole->name = $request->name ?? $recruitmentRole->name;
             $recruitmentRole->alias = $request->alias ?? $recruitmentRole->alias;
-            $recruitmentRole->role_type_id = $request->role_type_id ?? $recruitmentRole->role_type_id;
+            $recruitmentRole->recruitment_role_type_id = $request->recruitment_role_type_id ?? $recruitmentRole->recruitment_role_type_id;
 
 
             $current_timestamp = date('Y-m-d H:i:s');
@@ -361,6 +472,21 @@ class RecruitmentService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
+
+    public function getRecruitmentRoleTypesList(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $recruitmentRoleTypes = RecruitmentRoleType::get();
+        
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitmentRoleTypes, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    
     //END OF RECRUITMENT ROLES SECTION
 
     //RECRUITMENT STATUS SECTION
@@ -370,6 +496,7 @@ class RecruitmentService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
+            "id" => "required|numeric",
         ]);
 
         if($validator->fails()){
@@ -378,7 +505,7 @@ class RecruitmentService{
         }
         
         $id = $request->id;
-        $recruitmentStatus = RecruitmentStatus::find($id);
+        $recruitmentStatus = RecruitmentStatus::withCount('recruitments')->find($id);
         if(!$recruitmentStatus) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         
         try{
@@ -393,8 +520,35 @@ class RecruitmentService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
-        $recruitmentStatuses = RecruitmentStatus::paginate(5);
+        $rules = [
+            "page" => "numeric",
+            "rows" => "numeric|between:1,100",
+            "sort_by" => "in:id,name,recruitments_count",
+            "sort_type" => "in:asc,desc"
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $keyword = $request->keyword ?? NULL;
+
+        $rows = $request->rows ?? 5;
+        $recruitmentStatuses = RecruitmentStatus::withCount('recruitments');
         
+        // filter
+        if($keyword) $recruitmentStatuses = $recruitmentStatuses->where("name","LIKE", "%$keyword%");
+        
+        // sort
+        $sort_by = $request->sort_by ?? NULL;
+        $sort_type = $request->get('sort_type','asc');
+        if($sort_by == "id") $recruitmentStatuses = $recruitmentStatuses->orderBy('id',$sort_type);
+        if($sort_by == "name") $recruitmentStatuses = $recruitmentStatuses->orderBy('name',$sort_type);
+        if($sort_by == "recruitments_count") $recruitmentStatuses = $recruitmentStatuses->orderBy('recruitments_count',$sort_type);
+
+        $recruitmentStatuses = $recruitmentStatuses->paginate($rows);
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitmentStatuses, "status" => 200];
         }catch(Exception $err){
@@ -422,6 +576,9 @@ class RecruitmentService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
+            "name" => "required",
+            "color" => "required",
+            "description" => "required",
         ]);
 
         if($validator->fails()){
@@ -434,6 +591,7 @@ class RecruitmentService{
             $recruitmentStatus = new RecruitmentStatus();
             $recruitmentStatus->name = $request->name ?? "";
             $recruitmentStatus->color = $request->color ?? "";
+            $recruitmentStatus->description = $request->description ?? "";
 
 
             $current_timestamp = date('Y-m-d H:i:s');
@@ -454,6 +612,10 @@ class RecruitmentService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
+            "id" => "required|numeric",
+            "name" => "required",
+            "color" => "required",
+            "description" => "required",
         ]);
 
         if($validator->fails()){
@@ -471,6 +633,7 @@ class RecruitmentService{
 
             $recruitmentStatus->name = $request->name ?? $recruitmentStatus->name;
             $recruitmentStatus->color = $request->color ?? $recruitmentStatus->color;
+            $recruitmentStatus->description = $request->description ?? $recruitmentStatus->description;
 
 
             $current_timestamp = date('Y-m-d H:i:s');
@@ -520,6 +683,7 @@ class RecruitmentService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
+            "id" => "required|numeric",
         ]);
 
         if($validator->fails()){
@@ -528,7 +692,7 @@ class RecruitmentService{
         }
         
         $id = $request->id;
-        $recruitmentStage = RecruitmentStage::find($id);
+        $recruitmentStage = RecruitmentStage::withCount('recruitments')->find($id);
         if(!$recruitmentStage) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         
         try{
@@ -543,7 +707,36 @@ class RecruitmentService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
-        $recruitmentStages = RecruitmentStage::paginate(5);
+        $rules = [
+            "page" => "numeric",
+            "rows" => "numeric|between:1,100",
+            "sort_by" => "in:id,name,recruitments_count",
+            "sort_type" => "in:asc,desc"
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $keyword = $request->keyword ?? NULL;
+
+        $rows = $request->rows ?? 5;
+        $recruitmentStages = RecruitmentStage::withCount('recruitments');
+        
+        // filter
+        if($keyword) $recruitmentStages = $recruitmentStages->where("name","LIKE", "%$keyword%");
+        
+        // sort
+        $sort_by = $request->sort_by ?? NULL;
+        $sort_type = $request->get('sort_type','asc');
+        if($sort_by == "id") $recruitmentStages = $recruitmentStages->orderBy('id',$sort_type);
+        if($sort_by == "name") $recruitmentStages = $recruitmentStages->orderBy('name',$sort_type);
+        if($sort_by == "recruitments_count") $recruitmentStages = $recruitmentStages->orderBy('recruitments_count',$sort_type);
+
+        $recruitmentStages = $recruitmentStages->paginate($rows);
+        
         
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitmentStages, "status" => 200];
@@ -572,6 +765,8 @@ class RecruitmentService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
+            "name" => "required",
+            "description" => "required",
         ]);
 
         if($validator->fails()){
@@ -604,6 +799,9 @@ class RecruitmentService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
+            "id" => "required|numeric",
+            "name" => "required",
+            "description" => "required",
         ]);
 
         if($validator->fails()){
@@ -670,6 +868,7 @@ class RecruitmentService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
+            "id" => "required|numeric",
         ]);
 
         if($validator->fails()){
@@ -678,7 +877,7 @@ class RecruitmentService{
         }
         
         $id = $request->id;
-        $recruitmentJalurDaftar = RecruitmentJalurDaftar::find($id);
+        $recruitmentJalurDaftar = RecruitmentJalurDaftar::withCount('recruitments')->find($id);
         if(!$recruitmentJalurDaftar) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         
         try{
@@ -693,7 +892,36 @@ class RecruitmentService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
-        $recruitmentJalurDaftars = RecruitmentJalurDaftar::paginate(5);
+
+        $rules = [
+            "page" => "numeric",
+            "rows" => "numeric|between:1,100",
+            "sort_by" => "in:id,name,recruitments_count",
+            "sort_type" => "in:asc,desc"
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $keyword = $request->keyword ?? NULL;
+
+        $rows = $request->rows ?? 5;
+        $recruitmentJalurDaftars = RecruitmentJalurDaftar::withCount('recruitments');
+        
+        // filter
+        if($keyword) $recruitmentJalurDaftars = $recruitmentJalurDaftars->where("name","LIKE", "%$keyword%");
+        
+        // sort
+        $sort_by = $request->sort_by ?? NULL;
+        $sort_type = $request->get('sort_type','asc');
+        if($sort_by == "id") $recruitmentJalurDaftars = $recruitmentJalurDaftars->orderBy('id',$sort_type);
+        if($sort_by == "name") $recruitmentJalurDaftars = $recruitmentJalurDaftars->orderBy('name',$sort_type);
+        if($sort_by == "recruitments_count") $recruitmentJalurDaftars = $recruitmentJalurDaftars->orderBy('recruitments_count',$sort_type);
+
+        $recruitmentJalurDaftars = $recruitmentJalurDaftars->paginate($rows);
         
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitmentJalurDaftars, "status" => 200];
@@ -722,6 +950,7 @@ class RecruitmentService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
+            "name" => "required",
         ]);
 
         if($validator->fails()){
@@ -753,6 +982,8 @@ class RecruitmentService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
+            "id" => "required|numeric",
+            "name" => "required",
         ]);
 
         if($validator->fails()){
@@ -819,6 +1050,7 @@ class RecruitmentService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
+            "id" => "required|numeric",
         ]);
 
         if($validator->fails()){
@@ -842,7 +1074,34 @@ class RecruitmentService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
-        $recruitmentEmailTemplates = RecruitmentEmailTemplate::paginate(5);
+        $rules = [
+            "page" => "numeric",
+            "rows" => "numeric|between:1,100",
+            "sort_by" => "in:id,name",
+            "sort_type" => "in:asc,desc"
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $keyword = $request->keyword ?? NULL;
+
+        $rows = $request->rows ?? 5;
+        $recruitmentEmailTemplates = new RecruitmentEmailTemplate;
+        
+        // filter
+        if($keyword) $recruitmentEmailTemplates = $recruitmentEmailTemplates->where("name","LIKE", "%$keyword%");
+        
+        // sort
+        $sort_by = $request->sort_by ?? NULL;
+        $sort_type = $request->get('sort_type','asc');
+        if($sort_by == "id") $recruitmentEmailTemplates = $recruitmentEmailTemplates->orderBy('id',$sort_type);
+        if($sort_by == "name") $recruitmentEmailTemplates = $recruitmentEmailTemplates->orderBy('name',$sort_type);
+
+        $recruitmentEmailTemplates = $recruitmentEmailTemplates->paginate($rows);
         
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitmentEmailTemplates, "status" => 200];
@@ -871,6 +1130,9 @@ class RecruitmentService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
+            "name" => "required",
+            "subject" => "required",
+            "body" => "required",
         ]);
 
         if($validator->fails()){
@@ -904,7 +1166,12 @@ class RecruitmentService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
+            "id" => "required|numeric",
+            "name" => "required",
+            "subject" => "required",
+            "body" => "required",
         ]);
+
 
         if($validator->fails()){
             $errors = $validator->errors()->all();

@@ -53,6 +53,15 @@ class RecruitmentController extends Controller
         $response = $this->recruitmentService->deleteRecruitment($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    
+    public function getCountRecruitment(Request $request)
+    {
+        $route_name = "RECRUITMENT_COUNT_GET";
+
+        $response = $this->recruitmentService->getCountRecruitment($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    
 
     //END OF RECRUITMENT SECTION
     //RECRUITMENT ROLE SECTION
@@ -102,6 +111,14 @@ class RecruitmentController extends Controller
         $route_name = "RECRUITMENT_ROLE_DELETE";
 
         $response = $this->recruitmentService->deleteRecruitmentRole($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getRecruitmentRoleTypesList(Request $request)
+    {
+        $route_name = "RECRUITMENT_ROLE_TYPES_LIST_GET";
+
+        $response = $this->recruitmentService->getRecruitmentRoleTypesList($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
