@@ -17,6 +17,7 @@ class CreateRecruitmentStatusesTable extends Migration
             $table->id();
             $table->string("name");
             $table->string("color");
+            $table->string("description");
             $table->dateTime('created_at');
             $table->dateTime('updated_at');
         });

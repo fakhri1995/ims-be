@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateRecruitmentRolesTable extends Migration
+class CreateRecruitmentRoleTypesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,9 @@ class CreateRecruitmentRolesTable extends Migration
      */
     public function up()
     {
-        Schema::create('recruitment_roles', function (Blueprint $table) {
+        Schema::create('recruitment_role_types', function (Blueprint $table) {
             $table->id();
             $table->string("name");
-            $table->string("alias");
-            $table->unsignedBigInteger("recruitment_role_type_id");
-            $table->dateTime('created_at');
-            $table->dateTime('updated_at');
         });
     }
 
@@ -30,6 +26,6 @@ class CreateRecruitmentRolesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('recruitment_roles');
+        Schema::dropIfExists('recruitment_role_types');
     }
 }
