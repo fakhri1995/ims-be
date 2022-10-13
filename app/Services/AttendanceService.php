@@ -50,6 +50,8 @@ class AttendanceService{
                 else if($sort_by === 'description') $attendance_forms = $attendance_forms->orderBy('description', $sort_type);
                 else if($sort_by === 'updated_at') $attendance_forms = $attendance_forms->orderBy('updated_at', $sort_type);
                 else if($sort_by === 'count') $attendance_forms = $attendance_forms->orderBy('users_count', $sort_type);
+            } else {
+                $attendance_forms = $attendance_forms->orderBy('users_count', 'desc');
             }
             
             $attendance_forms = $attendance_forms->paginate($rows);
