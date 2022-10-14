@@ -333,7 +333,7 @@ class RecruitmentService{
         $sort_type = $request->get('sort_type','asc');
         if($sort_by == "id") $recruitmentRoles = $recruitmentRoles->orderBy('id',$sort_type);
         if($sort_by == "name") $recruitmentRoles = $recruitmentRoles->orderBy('name',$sort_type);
-        if($sort_by == "role_type") $recruitmentRoles = $recruitmentRoles->orderBy(RecruitmentRole::select("name")
+        if($sort_by == "role_type") $recruitmentRoles = $recruitmentRoles->orderBy(RecruitmentRoleType::select("name")
                 ->whereColumn("recruitment_role_types.id","recruitment_roles.recruitment_role_type_id"),$sort_type);
         if($sort_by == "recruitments_count") $recruitmentRoles = $recruitmentRoles->orderBy('recruitments_count',$sort_type);
 
