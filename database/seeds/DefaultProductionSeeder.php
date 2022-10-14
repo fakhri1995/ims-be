@@ -25,5 +25,7 @@ class DefaultProductionSeeder extends Seeder
         // $this->call(UserSeeder::class);
         // $this->call(CompanySeeder::class);
         // $this->call(GroupSeeder::class);
+        // $this->call(CareerV2Seeder::class);
+        // $this->call(RecruitmentRoleTypeSeeder::class);
     }
 }

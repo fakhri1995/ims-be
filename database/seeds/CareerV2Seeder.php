@@ -1,6 +1,9 @@
 <?php
 
 use App\CareerV2;
+use App\CareerV2ApplyStatus;
+use App\CareerV2Experience;
+use App\CareerV2RoleType;
 use Illuminate\Database\Seeder;
 
 class CareerV2Seeder extends Seeder
@@ -11,81 +14,92 @@ class CareerV2Seeder extends Seeder
      * @return void
      */
 
-    // just use this for local / testing
-    public function addCareerDummy(){
+    public function addApplyStatus(){
         $data = [
             [
-                "name" => "Back-End Engineer Golang",
-                "career_role_type_id" => "1",
-                "career_experience_id" => "4",
-                "salary_min" => "10000000",
-                "salary_max" => "13000000",
-                "overview" => "this is overview",
-                "description" => "this is desc",
-                "qualification" => "this is qualification",
-                "is_posted" => "1"
+                "name" =>  "Unprocessed",
+                "display_order" =>  1,
             ],
             [
-                "name" => "Flutter Developer",
-                "career_role_type_id" => "2",
-                "career_experience_id" => "3",
-                "salary_min" => "8000000",
-                "salary_max" => "10000000",
-                "overview" => "this is overview",
-                "description" => "this is desc",
-                "qualification" => "this is qualification",
-                "is_posted" => "0"
+                "name" =>  "Shortlisted",
+                "display_order" =>  2,
             ],
             [
-                "name" => "Software Engineer (Python)",
-                "career_role_type_id" => "3",
-                "career_experience_id" => "2",
-                "salary_min" => "7000000",
-                "salary_max" => "9000000",
-                "overview" => "this is overview",
-                "description" => "this is desc",
-                "qualification" => "this is qualification",
-                "is_posted" => "1"
+                "name" =>  "Rejected",
+                "display_order" =>  3,
+            ],
+        ];
+
+        $i = 1;
+        foreach($data as $d){
+            $careerExperience = new CareerV2ApplyStatus();
+            $careerExperience->id = $i;
+            $careerExperience->name = $d['name'];
+            $careerExperience->display_order = $d['display_order'];
+            $careerExperience->save();
+            $i++;
+        }
+    }
+
+    public function addExperience(){
+        $data = [
+            [
+                "min" =>  0,
+                "max" =>  1,
+                "str" =>  "0 - 1 Tahun",
             ],
             [
-                "name" => "Product Manager",
-                "career_role_type_id" => "4",
-                "career_experience_id" => "1",
-                "salary_min" => "6000000",
-                "salary_max" => "10000000",
-                "overview" => "this is overview",
-                "description" => "this is desc",
-                "qualification" => "this is qualification",
-                "is_posted" => "0"
+                "min" =>  1,
+                "max" =>  3,
+                "str" =>  "1 - 3 Tahun",
+            ],
+            [
+                "min" =>  3,
+                "max" =>  5,
+                "str" =>  "3 - 5 Tahun",
+            ],
+            [
+                "min" =>  5,
+                "max" =>  NULL,
+                "str" =>  "Lebih dari 5 Tahun",
             ]
         ];
 
         $i = 1;
         foreach($data as $d){
-            $career = new CareerV2();
-            $career->name = $d["name"];
-            $career->career_role_type_id = $d["career_role_type_id"];
-            $career->career_experience_id = $d["career_experience_id"];
-            $career->salary_min = $d["salary_min"];
-            $career->salary_max = $d["salary_max"];
-            $career->overview = $d["overview"];
-            $career->description = $d["description"];
-            $career->is_posted = $d["is_posted"];
-            $career->created_at = Date('Y-m-d H:i:s');
-            $career->updated_at = Date('Y-m-d H:i:s');
-            $career->created_by = 1;
-            $career->save();
+            $careerExperience = new CareerV2Experience();
+            $careerExperience->id = $i;
+            $careerExperience->min = $d['min'];
+            $careerExperience->max = $d['max'];
+            $careerExperience->str = $d['str'];
+            $careerExperience->save();
             $i++;
         }
     }
 
+    public function addRoleType(){
+        $data = [
+            [ "name" => "Full Time" ],
+            [ "name" => "Internship" ],
+            [ "name" => "Contract" ],
+            [ "name" => "Part Time" ],
+        ];
+
+        $i = 1;
+        foreach($data as $d){
+            $careerRoleType = new CareerV2RoleType();
+            $careerRoleType->id = $i;
+            $careerRoleType->name = $d['name'];
+            $careerRoleType->save();
+            $i++;
+        }
+    }
 
     public function run()
     {   
-        $this->call(CareerV2ApplyStatusSeeder::class);
-        $this->call(CareerV2ExperienceSeeder::class);
-        $this->call(CareerV2RoleTypeSeeder::class);
-        
-        // $this->addCareerDummy(); // not for server
+        $this->addApplyStatus();
+        $this->addExperience();
+        $this->addRoleType();
+
     }
 }
