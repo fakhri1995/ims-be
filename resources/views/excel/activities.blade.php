@@ -5,7 +5,8 @@
     <tr>
         <th>Nomor</th>
         <th>Nama</th>
-        <th>Waktu</th>
+        <th>Tanggal</th>
+        <th>Jam</th>
         @foreach($attendance_form->details as $detail)
         <th>{{ $detail['name'] }}</th>
         @endforeach
@@ -17,7 +18,8 @@
         <tr>
             <td>{{ $i }}</td>
             <td>{{ $activity->user->name ?? '-' }}</td>
-            <td>{{ $activity->updated_at }}</td>
+            <td>{{ date('Y-m-d', strtotime($activity->updated_at)) }}</td>
+            <td>{{ date('H:i:s', strtotime($activity->updated_at)) }}</td>
             <?php
             foreach($attendance_form->details as $detail){
                 $search = array_search($detail['key'], array_column($activity->details, 'key'));
