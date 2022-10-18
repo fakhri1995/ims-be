@@ -21,7 +21,7 @@ class AttendancesExport implements FromView, WithTitle
             $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
         })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
             $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
-        })->orderBy('check_in', 'desc')->get();
+        })->orderBy('check_in', 'asc')->get();
 
         foreach($this->attendances as $user_attendance){
             $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
