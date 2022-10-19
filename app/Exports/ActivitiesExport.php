@@ -6,16 +6,19 @@ use App\AttendanceActivity;
 use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Log;
 
 class ActivitiesExport implements FromView, WithTitle
 {
 
-    public function __construct($from, $to, $attendance_form, $multiple, $user_ids)
+    public function __construct($from, $to, $attendance_form,$form_ids, $multiple, $user_ids)
     {
+        Log::info($attendance_form);
         if($multiple){
-            $this->activities = AttendanceActivity::with('user:id,name')->whereIn('user_id', $user_ids)->whereBetween('updated_at', [$from, $to])->where('attendance_form_id', $attendance_form->id)->orderBy('updated_at', 'asc')->get();
+            $this->activities = AttendanceActivity::with('user:id,name')->whereIn('user_id', $user_ids)->whereBetween('updated_at', [$from, $to])->whereIn('attendance_form_id', $form_ids)->orderBy('updated_at', 'asc')->get();
         } else $this->activities = AttendanceActivity::with('user:id,name')->where('user_id', auth()->user()->id)->whereBetween('updated_at', [$from, $to])->where('attendance_form_id', $attendance_form->id)->orderBy('updated_at', 'asc')->get();
         $this->attendance_form = $attendance_form;
+        Log::info('aktifitas bro '.$this->activities);
     }
 
     public function view(): View
