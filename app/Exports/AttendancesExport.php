@@ -6,7 +6,6 @@ use App\AttendanceUser;
 use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Log;
 
 class AttendancesExport implements FromView, WithTitle
 {
@@ -28,7 +27,6 @@ class AttendancesExport implements FromView, WithTitle
             $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
             $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
         }
-        Log::info('attendance bro '.$this->attendances);
     }
 
     public function view(): View

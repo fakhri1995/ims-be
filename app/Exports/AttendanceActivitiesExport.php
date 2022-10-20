@@ -2,7 +2,6 @@
 
 namespace App\Exports;
 
-use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
@@ -36,7 +35,6 @@ class AttendanceActivitiesExport implements WithMultipleSheets
         $sheets = [];
         $sheets[] = new ActivitiesExport($this->from, $this->to, $this->attendance_form, $this->form_ids, $this->multiple, $this->user_ids);
         $sheets[] = new AttendancesExport($this->from, $this->to, $this->multiple, $this->user_ids);
-        Log::info($sheets);
         return $sheets;
     }
 }
