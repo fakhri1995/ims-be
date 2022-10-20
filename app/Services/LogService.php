@@ -22,6 +22,10 @@ use App\ActivityLogPurchaseOrder;
 use App\StatusConditionInventory;
 use App\ActivityLogInventoryPivot;
 use App\ActivityLogInventoryRelationship;
+use App\ActivityLogRecruitment;
+use App\RecruitmentStage;
+use App\RecruitmentStatus;
+use Exception;
 
 class LogService
 {
@@ -829,4 +833,85 @@ class LogService
         $connectable_id = auth()->user()->id;
         $this->addLogPurchaseOrder($purchase_order_id, $log_name, $description, $connectable_type, $connectable_id);
     }
+
+    public function addLogRecruitment($subject_id, $causer_id, $log_name, $properties, $notes = null)
+    {
+        $log = new ActivityLogRecruitment;
+        $log->subject_id = $subject_id;
+        $log->causer_id = $causer_id;
+        $log->log_name = $log_name;
+        $log->properties = $properties;
+        $log->notes = $notes;
+        $log->created_at = date("Y-m-d H:i:s");
+        $log->save();
+    }
+
+    public function getRecruitmentLog($id, $route_name)
+    {
+        $GlobalService = new GlobalService;
+        $access = $GlobalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+
+        $recruitmentStatus = RecruitmentStatus::select("id","name")->get();
+        $recruitmentStatusArray = [];
+        foreach($recruitmentStatus as $status){
+            $recruitmentStatusArray[$status->id] = $status->name;
+        }
+
+        $recruitmentStage = RecruitmentStage::select("id","name")->get();
+        $recruitmentStageArray = array();
+        foreach($recruitmentStage as $stage){
+            $recruitmentStageArray[$stage->id] = $stage->name;
+        }
+
+        $typeArray = [
+            "recruitment_status" => [
+                "string" => "Recruitment status",
+                "data" => $recruitmentStatusArray
+            ],
+            "recruitment_stage" => [
+                "string" => "Recruitment stage",
+                "data" => $recruitmentStageArray
+            ]
+        ];
+
+        try{
+            
+            $logsRecruitment = ActivityLogRecruitment::where("subject_id",$id)->get();
+            $normal_logs = [];
+            $special_logs = ActivityLogRecruitment::where(["subject_id" => $id, "log_name" => "Notes"])->get();
+            foreach($logsRecruitment as $log){
+                $properties = $log->properties ?? NULL;
+
+                if($log->log_name == "Updated"){
+                    $log_type_string = $typeArray[$properties->log_type]["string"];
+                    $old_str = "old_".$properties->log_type."_id"; //contoh : jika log_type = recruitment_stage, ini bakal menjadi old_recruitment_stage_id
+                    $new_str = "new_".$properties->log_type."_id"; //contoh : jika log_type = recruitment_stage, ini bakal menjadi new_recruitment_stage_id
+                    $old = $typeArray[$properties->log_type]["data"][$properties->$old_str];
+                    $new = $typeArray[$properties->log_type]["data"][$properties->$new_str];
+                    $log->description = "Perubahan $log_type_string dari $old ke $new";
+                    $normal_logs[] = $log;
+                    continue;
+                }
+
+                if($log->log_name == "Notes"){
+                    $normal_logs[] = $log;
+                    continue;
+                }
+
+                if($log->log_name == "Updated"){
+                    $log->description = "Data dibuat";
+                    continue;
+                }
+
+                
+            }
+            $data = $normal_logs;
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    
 }

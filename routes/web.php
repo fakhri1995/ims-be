@@ -32,6 +32,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getClientTicketLog', 'ActivityLogController@getClientTicketLog');
     $router->get('/getTicketLog', 'ActivityLogController@getTicketLog');
     $router->get('/getCompanyLog', 'ActivityLogController@getCompanyLog');
+    $router->get('/getRecruitmentLog', 'ActivityLogController@getRecruitmentLog');
 
     //User Routes
     $router->post('/addAndroidToken', 'LoginController@addAndroidToken');
@@ -434,6 +435,11 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/updateRecruitment', 'RecruitmentController@updateRecruitment');
     $router->delete('/deleteRecruitment', 'RecruitmentController@deleteRecruitment');
     $router->get('/getCountRecruitment', 'RecruitmentController@getCountRecruitment');
+    $router->put('/updateRecruitment/stage', 'RecruitmentController@updateRecruitment_stage');
+    $router->put('/updateRecruitment/status', 'RecruitmentController@updateRecruitment_status');
+    $router->post('/addRecruitmentLogNotes', 'RecruitmentController@addRecruitmentLogNotes');
+    $router->put('/updateRecruitments/stage', 'RecruitmentController@updateRecruitments_stage');
+    $router->put('/updateRecruitments/status', 'RecruitmentController@updateRecruitments_status');
     // RECRUITMENT ROLE
     $router->get('/getRecruitmentRole', 'RecruitmentController@getRecruitmentRole');
     $router->get('/getRecruitmentRoles', 'RecruitmentController@getRecruitmentRoles');

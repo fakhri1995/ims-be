@@ -61,7 +61,46 @@ class RecruitmentController extends Controller
         $response = $this->recruitmentService->getCountRecruitment($request, $route_name);
         return response()->json($response, $response['status']);
     }
-    
+
+    public function updateRecruitment_status(Request $request)
+    {
+        $route_name = "RECRUITMENT_UPDATE_STATUS";
+
+        $response = $this->recruitmentService->updateRecruitment_status($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateRecruitment_stage(Request $request)
+    {
+        $route_name = "RECRUITMENT_UPDATE_STAGE";
+
+        $response = $this->recruitmentService->updateRecruitment_stage($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function addRecruitmentLogNotes(Request $request)
+    {
+        $route_name = "RECRUITMENT_LOG_NOTES_ADD";
+
+        $response = $this->recruitmentService->addRecruitmentLogNotes($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateRecruitments_status(Request $request)
+    {
+        $route_name = "RECRUITMENTS_UPDATE_STATUS";
+
+        $response = $this->recruitmentService->updateRecruitments_status($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateRecruitments_stage(Request $request)
+    {
+        $route_name = "RECRUITMENTS_UPDATE_STAGE";
+
+        $response = $this->recruitmentService->updateRecruitments_stage($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 
     //END OF RECRUITMENT SECTION
     //RECRUITMENT ROLE SECTION
