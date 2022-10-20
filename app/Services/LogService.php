@@ -844,8 +844,6 @@ class LogService
         $log->notes = $notes;
         $log->created_at = date("Y-m-d H:i:s");
         $log->save();
-
-        return $log;
     }
 
     public function getRecruitmentLog($id, $route_name)

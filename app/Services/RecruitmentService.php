@@ -12,6 +12,7 @@ use App\RecruitmentStatus;
 use Exception;
 use App\Services\GlobalService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class RecruitmentService{
@@ -401,6 +402,146 @@ class RecruitmentService{
             $logService->addLogRecruitment($id, auth()->user()->id, "Notes", NULL , $logNotes);
             
             return ["success" => true, "message" => "Data Berhasil Diubah", "data" => $recruitment, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateRecruitments_status(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+            "id" => "required|array",
+            "id.*" => "required|numeric",
+            "recruitment_status_id" => "required|numeric",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+       
+            $ids = $request->id;
+            $recruitments = Recruitment::whereIn('id',$ids)->get();
+            $recruitmentsArray = $recruitments->pluck('id')->toArray();
+            $recruitmentsArrayDiff = array_diff($ids,$recruitmentsArray);
+            if(count($recruitmentsArrayDiff) > 0) return ["success" => false, "message" => "Id : [".implode(", ",$recruitmentsArrayDiff)."] tidak ditemukan", "status" => 400];
+
+
+        try{  
+            $recruitment_status_id = $request->recruitment_status_id;
+            if(!RecruitmentStatus::find($recruitment_status_id)) return ["success" => false, "message" => "Recruitment Status yang dipilih tidak tersedia", "status" => 400];
+            
+
+            $current_timestamp = date('Y-m-d H:i:s');
+            $recruitmentsUpdateStage = Recruitment::whereIn('id',$ids)->where('recruitment_status_id',"!=",$recruitment_status_id)->update([
+                "recruitment_status_id" => $recruitment_status_id,
+                "updated_at" => $current_timestamp
+            ]);
+
+            if($recruitmentsUpdateStage){
+                $batch = DB::transaction(function() use($request,$recruitments,$recruitment_status_id,$current_timestamp){
+                    try{
+                        foreach($recruitments as $recruitment){
+                            $recruitment_status_id_old = $recruitment->recruitment_status_id;
+                            $logService = new LogService;
+                            $logProperties = [
+                                "log_type" => "recruitment_status",
+                                "old_recruitment_status_id" => $recruitment_status_id_old,
+                                "new_recruitment_status_id" => $recruitment_status_id
+                            ];
+                            $logNotes = $request->notes ?? NULL;
+                            if($recruitment_status_id_old != $recruitment_status_id){
+                                $logService->addLogRecruitment($recruitment->id, auth()->user()->id, "Updated", $logProperties, $logNotes);
+                            
+                                $recruitment->recruitment_status_id = $recruitment_status_id;
+                                $recruitment->updated_at = $current_timestamp;
+                            }
+                        }
+                        return true;
+                    }catch(Exception $e){
+                        return ["error" => $e];
+                    }
+                }); 
+                
+                if(isset($batch['error'])){
+                    return ["success" => false, "message" => $batch['error'], "status" => 400];
+                }
+            }
+            return ["success" => true, "message" => "Data Berhasil Diubah", "data" => $recruitments, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateRecruitments_stage(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+            "id" => "required|array",
+            "id.*" => "required|numeric",
+            "recruitment_stage_id" => "required|numeric",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+       
+            $ids = $request->id;
+            $recruitments = Recruitment::whereIn('id',$ids)->get();
+            $recruitmentsArray = $recruitments->pluck('id')->toArray();
+            $recruitmentsArrayDiff = array_diff($ids,$recruitmentsArray);
+            if(count($recruitmentsArrayDiff) > 0) return ["success" => false, "message" => "Id : [".implode(", ",$recruitmentsArrayDiff)."] tidak ditemukan", "status" => 400];
+
+
+        try{  
+            $recruitment_stage_id = $request->recruitment_stage_id;
+            if(!RecruitmentStage::find($recruitment_stage_id)) return ["success" => false, "message" => "Recruitment Stage yang dipilih tidak tersedia", "status" => 400];
+            
+
+            $current_timestamp = date('Y-m-d H:i:s');
+            $recruitmentsUpdateStage = Recruitment::whereIn('id',$ids)->where('recruitment_stage_id',"!=",$recruitment_stage_id)->update([
+                "recruitment_stage_id" => $recruitment_stage_id,
+                "updated_at" => $current_timestamp
+            ]);
+            
+            if($recruitmentsUpdateStage){
+                $batch = DB::transaction(function() use($request,$recruitments,$recruitment_stage_id,$current_timestamp){
+                    try{
+                        foreach($recruitments as $recruitment){
+                            $recruitment_stage_id_old = $recruitment->recruitment_stage_id;
+                            $logService = new LogService;
+                            $logProperties = [
+                                "log_type" => "recruitment_stage",
+                                "old_recruitment_stage_id" => $recruitment_stage_id_old,
+                                "new_recruitment_stage_id" => $recruitment_stage_id
+                            ];
+                            $logNotes = $request->notes ?? NULL;
+                            if($recruitment_stage_id_old != $recruitment_stage_id){
+                                $logService->addLogRecruitment($recruitment->id, auth()->user()->id, "Updated", $logProperties, $logNotes);
+                            
+                                $recruitment->recruitment_stage_id = $recruitment_stage_id;
+                                $recruitment->updated_at = $current_timestamp;
+                            }
+                        }
+                        return true;
+                    }catch(Exception $e){
+                        return ["error" => $e];
+                    }
+                }); 
+                
+                if(isset($batch['error'])){
+                    return ["success" => false, "message" => $batch['error'], "status" => 400];
+                }
+            }
+            return ["success" => true, "message" => "Data Berhasil Diubah", "data" => $recruitments, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
