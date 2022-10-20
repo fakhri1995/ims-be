@@ -55,4 +55,14 @@ class ActivityLogController extends Controller
         $response = $this->logService->getCompanyLog($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+
+    // Recruitment
+    public function getRecruitmentLog(Request $request){
+        $route_name = "RECRUITMENT_LOG_GET";   
+        
+        $id = $request->id ?? NULL;
+        $response = $this->logService->getRecruitmentLog($id, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }

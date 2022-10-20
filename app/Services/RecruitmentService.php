@@ -271,6 +271,141 @@ class RecruitmentService{
 
     }
 
+    public function updateRecruitment_status(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+            "id" => "required|numeric",
+            "recruitment_status_id" => "required|numeric",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+            
+
+        try{
+            $id = $request->id ?? "";
+            $recruitment = Recruitment::find($id);
+            if(!$recruitment){
+                return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
+            }
+            $recruitment_status_id = $request->recruitment_status_id ?? NULL;
+
+            if(!RecruitmentStatus::find($recruitment_status_id)) return ["success" => false, "message" => "Recruitment Status yang dipilih tidak tersedia", "status" => 400];
+            if($recruitment->recruitment_status_id == $request->recruitment_status_id) return ["success" => true, "message" => "Tidak terjadi perubahan pada status karena id sama", "data" => $recruitment, "status" => 200];
+            
+            $recruitment_status_id_old = $recruitment->recruitment_status_id;
+            $recruitment->recruitment_status_id = $request->recruitment_status_id ?? "";
+
+            
+            $current_timestamp = date('Y-m-d H:i:s');
+            $recruitment->updated_at = $current_timestamp;
+            if($recruitment->save()){
+                $logService = new LogService;
+                $logProperties = [
+                    "log_type" => "recruitment_status",
+                    "old_recruitment_status_id" => $recruitment_status_id_old,
+                    "new_recruitment_status_id" => $recruitment_status_id
+                ];
+                $logNotes = $request->notes ?? NULL;
+                $logService->addLogRecruitment($id, auth()->user()->id, "Updated", $logProperties, $logNotes);
+            }
+            
+            return ["success" => true, "message" => "Data Berhasil Diubah", "data" => $recruitment, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateRecruitment_stage(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+            "id" => "required|numeric",
+            "recruitment_stage_id" => "required|numeric",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+            $id = $request->id ?? "";
+            $recruitment = Recruitment::find($id);
+            if(!$recruitment){
+                return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
+            }
+
+            $recruitment_stage_id = $request->recruitment_stage_id ?? NULL;
+
+            if(!RecruitmentStage::find($recruitment_stage_id)) return ["success" => false, "message" => "Recruitment Stage yang dipilih tidak tersedia", "status" => 400];
+            if($recruitment->recruitment_stage_id == $request->recruitment_stage_id) return ["success" => true, "message" => "Tidak terjadi perubahan pada stage karena id sama", "data" => $recruitment, "status" => 200];
+            
+            $recruitment_stage_id_old = $recruitment->recruitment_stage_id;
+            $recruitment->recruitment_stage_id = $request->recruitment_stage_id ?? "";
+
+
+            $current_timestamp = date('Y-m-d H:i:s');
+            $recruitment->updated_at = $current_timestamp;
+            if($recruitment->save()){
+                $logService = new LogService;
+                $logProperties = [
+                    "log_type" => "recruitment_stage",
+                    "old_recruitment_stage_id" => $recruitment_stage_id_old,
+                    "new_recruitment_stage_id" => $recruitment_stage_id
+                ];
+                $logNotes = $request->notes ?? NULL;
+                $logService->addLogRecruitment($id, auth()->user()->id, "Updated", $logProperties, $logNotes);
+            }
+
+            return ["success" => true, "message" => "Data Berhasil Diubah", "data" => $recruitment, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addRecruitmentLogNotes(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+            "id" => "required|numeric",
+            "notes" => "required",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+
+            $id = $request->id ?? "";
+            $recruitment = Recruitment::find($id);
+            if(!$recruitment){
+                return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
+            }
+
+            
+            $logNotes = $request->notes;
+            $logService = new LogService;
+            $logService->addLogRecruitment($id, auth()->user()->id, "Notes", NULL , $logNotes);
+            
+            return ["success" => true, "message" => "Data Berhasil Diubah", "data" => $recruitment, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     //END OF RECRUITMENT SECTION
 
     //RECRUITMENT ROLES SECTION
@@ -460,11 +595,10 @@ class RecruitmentService{
 
         try{
             $id = $request->id ?? "";
+            $recruitmentRole = RecruitmentRole::withCount('recruitments')->find($id);
+            if(!$recruitmentRole) return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
+            if($recruitmentRole->recruitments_count > 0) return ["success" => false, "message" => "Data masih digunakan pada recruitment", "status" => 400]; 
             
-            $recruitmentRole = RecruitmentRole::find($id);
-            if(!$recruitmentRole){
-                return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
-            }
             $recruitmentRole->delete();
 
             return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $recruitmentRole, "status" => 200];
@@ -663,10 +797,9 @@ class RecruitmentService{
         try{
             $id = $request->id ?? "";
             
-            $recruitmentStatus = RecruitmentStatus::find($id);
-            if(!$recruitmentStatus){
-                return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
-            }
+            $recruitmentStatus = RecruitmentStatus::withCount('recruitments')->find($id);
+            if(!$recruitmentStatus) return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
+            if($recruitmentStatus->recruitments_count > 0) return ["success" => false, "message" => "Data masih digunakan pada recruitment", "status" => 400]; 
             $recruitmentStatus->delete();
 
             return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $recruitmentStatus, "status" => 200];
@@ -848,10 +981,9 @@ class RecruitmentService{
         try{
             $id = $request->id ?? "";
             
-            $recruitmentStage = RecruitmentStage::find($id);
-            if(!$recruitmentStage){
-                return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
-            }
+            $recruitmentStage = RecruitmentStage::withCount('recruitments')->find($id);
+            if(!$recruitmentStage) return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
+            if($recruitmentStage->recruitments_count > 0) return ["success" => false, "message" => "Data masih digunakan pada recruitment", "status" => 400]; 
             $recruitmentStage->delete();
 
             return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $recruitmentStage, "status" => 200];
@@ -1029,10 +1161,9 @@ class RecruitmentService{
         try{
             $id = $request->id ?? "";
             
-            $recruitmentJalurDaftar = RecruitmentJalurDaftar::find($id);
-            if(!$recruitmentJalurDaftar){
-                return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
-            }
+            $recruitmentJalurDaftar = RecruitmentJalurDaftar::withCount('recruitments')->find($id);
+            if(!$recruitmentJalurDaftar) return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
+            if($recruitmentJalurDaftar->recruitments_count > 0) return ["success" => false, "message" => "Data masih digunakan pada recruitment", "status" => 400]; 
             $recruitmentJalurDaftar->delete();
 
             return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $recruitmentJalurDaftar, "status" => 200];
