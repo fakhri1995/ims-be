@@ -7,7 +7,7 @@
         <th>Nama</th>
         <th>Tanggal</th>
         <th>Jam</th>
-        @foreach($attendance_form->details as $detail)
+        @foreach($attendance_form[0]->details as $detail)
         <th>{{ $detail['name'] }}</th>
         @endforeach
     </tr>
@@ -21,7 +21,7 @@
             <td>{{ date('Y-m-d', strtotime($activity->updated_at)) }}</td>
             <td>{{ date('H:i:s', strtotime($activity->updated_at)) }}</td>
             <?php
-            foreach($attendance_form->details as $detail){
+            foreach($attendance_form[0]->details as $detail){
                 $search = array_search($detail['key'], array_column($activity->details, 'key'));
 
                 if($search !== false){

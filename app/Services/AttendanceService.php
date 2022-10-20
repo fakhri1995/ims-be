@@ -16,7 +16,6 @@ use App\AttendanceProjectType;
 use App\AttendanceProjectStatus;
 use App\AttendanceProjectCategory;
 use App\Exports\AttendanceActivitiesExport;
-use Illuminate\Support\Facades\Log;
 
 class AttendanceService{
     public function __construct()
@@ -321,11 +320,12 @@ class AttendanceService{
         }
     }
 
-    private function activityExport($from, $to, $attendance_form,$form_ids, $multiple = false, $user_ids = [])
+    private function activityExport($from, $to, $attendance_form,$form_ids=[], $multiple = false, $user_ids = [])
     {
-        ob_end_clean();
-        ob_start();
-        return Excel::download(new AttendanceActivitiesExport($from, $to, $attendance_form, $form_ids, $multiple, $user_ids), 'AttendanceActivityReport.xlsx', \Maatwebsite\Excel\Excel::XLS);
+        ob_end_clean(); // this
+        ob_start(); // and this
+        return Excel::download(new AttendanceActivitiesExport($from, $to, $attendance_form, $form_ids, $multiple, $user_ids), 'AttendanceActivityReport.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        // return Excel::download(new AttendanceActivitiesExport($from, $to, $attendance_form, $form_ids, $multiple, $user_ids), 'AttendanceActivityReport.xlsx', \Maatwebsite\Excel\Excel::XLS);
     }
 
     public function exportAttendanceActivityUser($request, $route_name)
@@ -349,10 +349,11 @@ class AttendanceService{
         $from = $request->get('from', null);
         $to = $request->get('to', null);
         $attendance_form = AttendanceForm::find($request->get('attendance_form_id'));
-        // $form_ids = json_decode($request->get('attendance_form_id'));
+        
         $user_ids = json_decode($request->get('user_ids', "[]"));
         if(!$attendance_form) return ["success" => false, "message" => "Attendance Form Tidak Ditemukan", "status" => 400];
         $excel = $this->activityExport($from, $to, $attendance_form, $request->get('attendance_form_id'), true, $user_ids);
+        
         return ["success" => true, "message" => "Berhasil Export Attendance Activity", "data" => $excel, "status" => 200];
     }
     
