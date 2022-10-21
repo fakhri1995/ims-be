@@ -109,7 +109,6 @@ class RecruitmentService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
         $validator = Validator::make($request->all(), [
             "name" => "required",
             "email" => "required|email",
@@ -155,9 +154,90 @@ class RecruitmentService{
             $recruitment->updated_at = $current_timestamp;
             $recruitment->created_by = auth()->user()->id ?? "";
 
-            $recruitment->save();
+            if($recruitment->save()){
+                $logService = new LogService;
+                $logProperties = [
+                    "log_type" => "created_recruitment",
+                    "data" => $recruitment
+                ];
+                $logNotes = $request->notes ?? NULL;
+                $logService->addLogRecruitment($recruitment->id, auth()->user()->id, "Created", $logProperties, $logNotes);
+            }
 
             return ["success" => true, "message" => "Data Berhasil Ditambah", "data" => $recruitment, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addRecruitments(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+            "*.name" => "required",
+            "*.email" => "required|email",
+            "*.university" => "required",
+            "*.recruitment_role_id" => "required|numeric",
+            "*.recruitment_jalur_daftar_id" => "required|numeric",
+            "*.recruitment_stage_id" => "required|numeric",
+            "*.recruitment_status_id" => "required|numeric",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+            
+            $recruitment_role_ids = $request->pluck('recruitment_role_id')->toArray();
+            $recruitment_jalur_daftar_ids = $request->pluck('recruitment_jalur_daftar_id')->toArray();
+            $recruitment_stage_ids = $request->pluck('recruitment_stage_id')->toArray();
+            $recruitment_status_ids = $request->pluck('recruitment_status_id')->toArray();
+
+            $recruitment_role_id_array = RecruitmentRole::whereIn("recruitment_role_id",$recruitment_role_ids)->pluck("id")->toArray();
+            $recruitment_jalur_daftar_id_array = RecruitmentJalurDaftar::whereIn("recruitment_jalur_daftar_id",$recruitment_jalur_daftar_ids)->pluck("id")->toArray();
+            $recruitment_stage_id_array = RecruitmentStage::whereIn("recruitment_stage_id",$recruitment_stage_ids)->pluck("id")->toArray();
+            $recruitment_status_id_array = RecruitmentStatus::whereIn("recruitment_status_id",$recruitment_status_ids)->pluck("id")->toArray();
+            
+            $recruitment_role_id_diff = array_diff($recruitment_role_ids,$recruitment_role_id_array);
+            $recruitment_jalur_daftar_id_diff = array_diff($recruitment_jalur_daftar_ids,$recruitment_jalur_daftar_id_array);
+            $recruitment_stage_id_diff = array_diff($recruitment_stage_ids,$recruitment_stage_id_array);
+            $recruitment_status_id_diff = array_diff($recruitment_status_ids,$recruitment_status_id_array);
+
+            // $recruitment_role_id = $request->recruitment_role_id;
+            // $recruitment_jalur_daftar_id = $request->recruitment_jalur_daftar_id;
+            // $recruitment_stage_id = $request->recruitment_stage_id;
+            // $recruitment_status_id = $request->recruitment_status_id;
+
+            
+            
+            // if(!RecruitmentRole::find($recruitment_role_id)) return ["success" => false, "message" => "Recruitment Role yang dipilih tidak tersedia", "status" => 400];
+            // if(!RecruitmentJalurDaftar::find($recruitment_jalur_daftar_id)) return ["success" => false, "message" => "Recruitment Jalur daftar yang dipilih tidak tersedia", "status" => 400];
+            // if(!RecruitmentStage::find($recruitment_stage_id)) return ["success" => false, "message" => "Recruitment Stage yang dipilih tidak tersedia", "status" => 400];
+            // if(!RecruitmentStatus::find($recruitment_status_id)) return ["success" => false, "message" => "Recruitment Status yang dipilih tidak tersedia", "status" => 400];
+
+        
+            // $recruitment = new Recruitment();
+            // $recruitment->name = $request->name;
+            // $recruitment->email = $request->email;
+            // $recruitment->university = $request->university;
+            // $recruitment->recruitment_role_id = $request->recruitment_role_id;
+            // $recruitment->recruitment_jalur_daftar_id = $request->recruitment_jalur_daftar_id;
+            // $recruitment->recruitment_stage_id = $request->recruitment_stage_id;
+            // $recruitment->recruitment_status_id = $request->recruitment_status_id;
+
+
+            // $current_timestamp = date('Y-m-d H:i:s');
+            // $recruitment->created_at = $current_timestamp;
+            // $recruitment->updated_at = $current_timestamp;
+            // $recruitment->created_by = auth()->user()->id ?? "";
+
+            // $recruitment->save();
+
+            return ["success" => true, "message" => "Data Berhasil Ditambah", "data" => "", "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
