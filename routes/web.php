@@ -432,6 +432,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getRecruitment', 'RecruitmentController@getRecruitment');
     $router->get('/getRecruitments', 'RecruitmentController@getRecruitments');
     $router->post('/addRecruitment', 'RecruitmentController@addRecruitment');
+    $router->post('/addRecruitments', 'RecruitmentController@addRecruitments');
     $router->put('/updateRecruitment', 'RecruitmentController@updateRecruitment');
     $router->delete('/deleteRecruitment', 'RecruitmentController@deleteRecruitment');
     $router->get('/getCountRecruitment', 'RecruitmentController@getCountRecruitment');

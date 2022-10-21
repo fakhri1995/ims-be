@@ -878,9 +878,9 @@ class LogService
 
         try{
             
-            $logsRecruitment = ActivityLogRecruitment::where("subject_id",$id)->get();
+            $logsRecruitment = ActivityLogRecruitment::where("subject_id",$id)->orderBy('created_at','desc')->get();
             $normal_logs = [];
-            $special_logs = ActivityLogRecruitment::where(["subject_id" => $id, "log_name" => "Notes"])->get();
+            $special_logs = ActivityLogRecruitment::where(["subject_id" => $id, "log_name" => "Notes"])->orderBy('created_at','desc')->get();
             foreach($logsRecruitment as $log){
                 $properties = $log->properties ?? NULL;
 
@@ -896,18 +896,24 @@ class LogService
                 }
 
                 if($log->log_name == "Notes"){
+                    $log->description = "Notes berhasil ditambahkan";
                     $normal_logs[] = $log;
                     continue;
                 }
 
-                if($log->log_name == "Updated"){
-                    $log->description = "Data dibuat";
+                if($log->log_name == "Created"){
+                    $log->description = "Data berhasul dibuat!";
+                    $normal_logs[] = $log;
                     continue;
                 }
 
                 
             }
-            $data = $normal_logs;
+            // $data = $normal_logs;
+            $data = [
+                "normal_logs" => $normal_logs,
+                "special_logs" => $special_logs
+            ];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];

@@ -38,6 +38,14 @@ class RecruitmentController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function addRecruitments(Request $request)
+    {
+        $route_name = "RECRUITMENTS_ADD";
+
+        $response = $this->recruitmentService->addRecruitments($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function updateRecruitment(Request $request)
     {
         $route_name = "RECRUITMENT_UPDATE";
