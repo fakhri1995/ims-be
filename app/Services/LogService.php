@@ -902,7 +902,7 @@ class LogService
                 }
 
                 if($log->log_name == "Created"){
-                    $log->description = "Data berhasul dibuat!";
+                    $log->description = "Data berhasil dibuat!";
                     $normal_logs[] = $log;
                     continue;
                 }
