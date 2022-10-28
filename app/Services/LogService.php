@@ -845,6 +845,11 @@ class LogService
         $log->created_at = date("Y-m-d H:i:s");
         $log->save();
     }
+    
+    public function addLogRecruitments($logs)
+    {
+        ActivityLogRecruitment::insert($logs);
+    }
 
     public function getRecruitmentLog($id, $route_name)
     {

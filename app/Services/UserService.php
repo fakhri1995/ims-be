@@ -19,6 +19,7 @@ class UserService
         $this->globalService = new GlobalService;
         $this->agent_role_id = 1;
         $this->requester_role_id = 2;
+        $this->guest_role_id = 9;
     }
 
     public function getUserListRoles($role, $name = null){
@@ -96,6 +97,13 @@ class UserService
         return $this->getUserDetail($account_id, $this->requester_role_id);
     }
 
+    public function getGuestDetail($account_id, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        return $this->getUserDetail($account_id, $this->guest_role_id);
+    }
+
     public function getFullUserList($role_id = 0, $name = null)
     {
         $users = User::select('id','name', 'company_id', 'role', 'position')->with(['company:id,parent_id,name,top_parent_id', 'company.topParent']);
@@ -156,6 +164,13 @@ class UserService
         return $this->getUserList($request, $this->requester_role_id);
     }
 
+    public function getGuestList($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        return $this->getUserList($request, $this->guest_role_id);
+    }
+
     public function addUserMember($request, $role_id){
         $email = $request->get('email');
         $password = $request->get('password');
@@ -205,7 +220,8 @@ class UserService
             } 
             
             if($role_id === 1) return ["success" => true, "message" => "Akun Agent berhasil ditambah", "id" => $user->id, "status" => 200];
-            else return ["success" => true, "message" => "Akun Requester berhasil ditambah", "id" => $user->id, "status" => 200];
+            else if($role_id === 2) return ["success" => true, "message" => "Akun Requester berhasil ditambah", "id" => $user->id, "status" => 200];
+            else return ["success" => true, "message" => "Akun Guest berhasil ditambah", "id" => $user->id, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -223,6 +239,13 @@ class UserService
         if($access["success"] === false) return $access;
         
         return $this->addUserMember($data, $this->requester_role_id);
+    }
+
+    public function addGuestMember($data, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        return $this->addUserMember($data, $this->guest_role_id);
     }
 
     public function updateUserDetail($request, $role_id){
@@ -258,7 +281,8 @@ class UserService
             $user->attendanceForms()->sync($attendance_form_ids);
             if(!$save_role["success"]) return $save_role;
             if($role_id === 1) return ["success" => true, "message" => "Akun Agent berhasil diperbarui", "status" => 200];
-            else return ["success" => true, "message" => "Akun Requester berhasil diperbarui", "status" => 200];
+            else if($role_id === 2)  return ["success" => true, "message" => "Akun Requester berhasil diperbarui", "status" => 200];
+            else return ["success" => true, "message" => "Akun Guest berhasil diperbarui", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -278,6 +302,13 @@ class UserService
         return $this->updateUserDetail($data, $this->requester_role_id);
     }
 
+    public function updateGuestDetail($data, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        return $this->updateUserDetail($data, $this->guest_role_id);
+    }
+
     public function changeUserPassword($data, $role_id){
         $user = User::find($data['id']);
         if($user === null) return ["success" => false, "message" => "Id Pengguna Tidak Ditemukan", "status" => 400];
@@ -286,7 +317,8 @@ class UserService
             $user->password = Hash::make($data['password']);
             $user->save();
             if($role_id === 1) return ["success" => true, "message" => "Password Akun Agent berhasil diperbarui", "status" => 200];
-            else return ["success" => true, "message" => "Password Akun Requester berhasil diperbarui", "status" => 200];
+            else if($role_id === 2) return ["success" => true, "message" => "Password Akun Requester berhasil diperbarui", "status" => 200];
+            else return ["success" => true, "message" => "Password Akun Guest berhasil diperbarui", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -306,6 +338,13 @@ class UserService
         return $this->changeUserPassword($data, $this->requester_role_id);
     }
 
+    public function changeGuestPassword($data, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        return $this->changeUserPassword($data, $this->guest_role_id);
+    }
+
     public function userActivation($data, $role_id){
         $user = User::find($data['id']);
         if($user === null) return ["success" => false, "message" => "Id Pengguna Tidak Ditemukan", "status" => 400];
@@ -314,7 +353,8 @@ class UserService
             $user->is_enabled = $data['is_enabled'];
             $user->save();
             if($role_id === 1) return ["success" => true, "message" => "Status Aktivasi Agent Telah diperbarui", "status" => 200];
-            else return ["success" => true, "message" => "Status Aktivasi Requester Telah diperbarui", "status" => 200];
+            else if($role_id === 2) return ["success" => true, "message" => "Status Aktivasi Requester Telah diperbarui", "status" => 200];
+            else return ["success" => true, "message" => "Status Aktivasi Guest Telah diperbarui", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -332,6 +372,13 @@ class UserService
         if($access["success"] === false) return $access;
         
         return $this->userActivation($data, $this->requester_role_id);
+    }
+
+    public function guestActivation($data, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        return $this->userActivation($data, $this->guest_role_id);
     }
 
     public function updateRoleUser($data, $role_id){
@@ -389,6 +436,13 @@ class UserService
         if($access["success"] === false) return $access;
         
         return $this->deleteUser($id, $this->requester_role_id);
+    }
+
+    public function deleteGuest($id, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        return $this->deleteUser($id, $this->guest_role_id);
     }
         
 }

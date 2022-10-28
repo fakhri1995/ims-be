@@ -12,6 +12,7 @@ use App\RecruitmentStatus;
 use Exception;
 use App\Services\GlobalService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
@@ -190,54 +191,69 @@ class RecruitmentService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        try{
-            
-            $recruitment_role_ids = $request->pluck('recruitment_role_id')->toArray();
-            $recruitment_jalur_daftar_ids = $request->pluck('recruitment_jalur_daftar_id')->toArray();
-            $recruitment_stage_ids = $request->pluck('recruitment_stage_id')->toArray();
-            $recruitment_status_ids = $request->pluck('recruitment_status_id')->toArray();
-
-            $recruitment_role_id_array = RecruitmentRole::whereIn("recruitment_role_id",$recruitment_role_ids)->pluck("id")->toArray();
-            $recruitment_jalur_daftar_id_array = RecruitmentJalurDaftar::whereIn("recruitment_jalur_daftar_id",$recruitment_jalur_daftar_ids)->pluck("id")->toArray();
-            $recruitment_stage_id_array = RecruitmentStage::whereIn("recruitment_stage_id",$recruitment_stage_ids)->pluck("id")->toArray();
-            $recruitment_status_id_array = RecruitmentStatus::whereIn("recruitment_status_id",$recruitment_status_ids)->pluck("id")->toArray();
-            
+            $requestCollection = collect($request);
+            $recruitment_role_ids = $requestCollection->pluck('recruitment_role_id')->toArray();
+            $recruitment_role_id_array = RecruitmentRole::whereIn("id",$recruitment_role_ids)->pluck("id")->toArray();
             $recruitment_role_id_diff = array_diff($recruitment_role_ids,$recruitment_role_id_array);
+            if(count($recruitment_role_id_diff)) return ["success" => false, "message" => "Recruitment Role Id : [".implode(", ",$recruitment_role_id_diff)."] tidak ditemukan", "status" => 400];
+            
+            $recruitment_jalur_daftar_ids = $requestCollection->pluck('recruitment_jalur_daftar_id')->toArray();
+            $recruitment_jalur_daftar_id_array = RecruitmentJalurDaftar::whereIn("id",$recruitment_jalur_daftar_ids)->pluck("id")->toArray();
             $recruitment_jalur_daftar_id_diff = array_diff($recruitment_jalur_daftar_ids,$recruitment_jalur_daftar_id_array);
-            $recruitment_stage_id_diff = array_diff($recruitment_stage_ids,$recruitment_stage_id_array);
+            if(count($recruitment_jalur_daftar_id_diff)) return ["success" => false, "message" => "Recruitment Jalur Daftar Id : [".implode(", ",$recruitment_jalur_daftar_id_diff)."] tidak ditemukan", "status" => 400];
+
+            $recruitment_status_ids = $requestCollection->pluck('recruitment_status_id')->toArray();
+            $recruitment_status_id_array = RecruitmentStatus::whereIn("id",$recruitment_status_ids)->pluck("id")->toArray();
             $recruitment_status_id_diff = array_diff($recruitment_status_ids,$recruitment_status_id_array);
+            if(count($recruitment_status_id_diff)) return ["success" => false, "message" => "Recruitment Status Id : [".implode(", ",$recruitment_status_id_diff)."] tidak ditemukan", "status" => 400];
 
-            // $recruitment_role_id = $request->recruitment_role_id;
-            // $recruitment_jalur_daftar_id = $request->recruitment_jalur_daftar_id;
-            // $recruitment_stage_id = $request->recruitment_stage_id;
-            // $recruitment_status_id = $request->recruitment_status_id;
-
+            $recruitment_stage_ids = $requestCollection->pluck('recruitment_stage_id')->toArray();  
+            $recruitment_stage_id_array = RecruitmentStage::whereIn("id",$recruitment_stage_ids)->pluck("id")->toArray();
+            $recruitment_stage_id_diff = array_diff($recruitment_stage_ids,$recruitment_stage_id_array);
+            if(count($recruitment_stage_id_diff)) return ["success" => false, "message" => "Recruitment Stage Id : [".implode(", ",$recruitment_stage_id_diff)."] tidak ditemukan", "status" => 400];
             
-            
-            // if(!RecruitmentRole::find($recruitment_role_id)) return ["success" => false, "message" => "Recruitment Role yang dipilih tidak tersedia", "status" => 400];
-            // if(!RecruitmentJalurDaftar::find($recruitment_jalur_daftar_id)) return ["success" => false, "message" => "Recruitment Jalur daftar yang dipilih tidak tersedia", "status" => 400];
-            // if(!RecruitmentStage::find($recruitment_stage_id)) return ["success" => false, "message" => "Recruitment Stage yang dipilih tidak tersedia", "status" => 400];
-            // if(!RecruitmentStatus::find($recruitment_status_id)) return ["success" => false, "message" => "Recruitment Status yang dipilih tidak tersedia", "status" => 400];
 
-        
-            // $recruitment = new Recruitment();
-            // $recruitment->name = $request->name;
-            // $recruitment->email = $request->email;
-            // $recruitment->university = $request->university;
-            // $recruitment->recruitment_role_id = $request->recruitment_role_id;
-            // $recruitment->recruitment_jalur_daftar_id = $request->recruitment_jalur_daftar_id;
-            // $recruitment->recruitment_stage_id = $request->recruitment_stage_id;
-            // $recruitment->recruitment_status_id = $request->recruitment_status_id;
+            $current_timestamp = date('Y-m-d H:i:s');
+            $recruitments = [];
+            $logs = [];
+            $requestAll = $request->all();
+            foreach($requestAll as $req){
+                $req = (object)$req;
+                $recruitment = new Recruitment();
+                $recruitment->name = $req->name;
+                $recruitment->email = $req->email;
+                $recruitment->university = $req->university;
+                $recruitment->recruitment_role_id = $req->recruitment_role_id;
+                $recruitment->recruitment_jalur_daftar_id = $req->recruitment_jalur_daftar_id;
+                $recruitment->recruitment_stage_id = $req->recruitment_stage_id;
+                $recruitment->recruitment_status_id = $req->recruitment_status_id;
 
+                $recruitment->created_at = $current_timestamp;
+                $recruitment->updated_at = $current_timestamp;
+                $recruitment->created_by = auth()->user()->id;
 
-            // $current_timestamp = date('Y-m-d H:i:s');
-            // $recruitment->created_at = $current_timestamp;
-            // $recruitment->updated_at = $current_timestamp;
-            // $recruitment->created_by = auth()->user()->id ?? "";
+                if($recruitment->save()){
+                    $properties = [
+                        "log_type" => "created_recruitment",
+                        "data" => $recruitment
+                    ];
+                    $logs[] = [
+                        "subject_id" => $recruitment->id,
+                        "causer_id" => auth()->user()->id,
+                        "log_name" => "Created",
+                        "properties" => json_encode($properties),
+                        "notes" => $req->notes ?? NULL,
+                        "created_at" => date("Y-m-d H:i:s"),
+                    ];
+                }
+                $recruitments[] = $recruitment;
+            }
 
-            // $recruitment->save();
+            $logService = new LogService;
+            $logService->addLogRecruitments($logs);
 
-            return ["success" => true, "message" => "Data Berhasil Ditambah", "data" => "", "status" => 200];
+        try{
+            return ["success" => true, "message" => "Data Berhasil Ditambah", "data" => $recruitments, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -309,6 +325,7 @@ class RecruitmentService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
+            "id" => "numeric|required"
         ]);
 
         if($validator->fails()){
@@ -326,6 +343,38 @@ class RecruitmentService{
             $recruitment->delete();
 
             return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $recruitment, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteRecruitments(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+            "ids" => "array|required",
+            "ids.*" => "numeric"
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+            $ids = $request->ids ?? [];
+            
+            $recruitment = Recruitment::whereIn("id",$ids);
+            $recruitment_ids = $recruitment->pluck("id")->toArray();
+            $recruitment_id_diff = array_diff($ids,$recruitment_ids);
+            if(count($recruitment_id_diff)) return ["success" => false, "message" => "Recruitment Id : [".implode(", ",$recruitment_id_diff)."] tidak ditemukan", "status" => 400];
+
+            $data = $recruitment->get();
+            $recruitment->delete();
+
+            try{
+            return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $data, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
