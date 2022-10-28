@@ -236,4 +236,74 @@ class UserController extends Controller
     //         ]], $error_response->getStatusCode());
     //     }
     // }
+
+    //Guest
+
+    public function getGuestDetail(Request $request)
+    {
+        $route_name = "GUEST_GET";
+        
+        $account_id = $request->get('account_id');
+        $response = $this->userService->getGuestDetail($account_id, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getGuestList(Request $request)
+    {
+        $route_name = "GUESTS_GET";
+        
+        $response = $this->userService->getGuestList($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function addGuestMember(Request $request)
+    {
+        $route_name = "GUEST_ADD";
+        
+        $response = $this->userService->addGuestMember($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateGuestDetail(Request $request)
+    {
+        $route_name = "GUEST_UPDATE";
+
+        $response = $this->userService->updateGuestDetail($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function changeGuestPassword(Request $request)
+    {
+        $route_name = "GUEST_PASSWORD_UPDATE";
+        
+        $data_request = [
+            "id" => $request->get('id'),
+            "password" => $request->get('new_password')
+        ];
+
+        $response = $this->userService->changeGuestPassword($data_request, $route_name);
+        return response()->json($response, $response['status']);     
+    }
+
+    public function guestActivation(Request $request)
+    {
+        $route_name = "GUEST_STATUS";
+        
+        $data_request = [
+            "id" => $request->get('user_id'),
+            "is_enabled" => $request->get('is_enabled')
+        ];
+
+        $response = $this->userService->guestActivation($data_request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteGuest(Request $request)
+    {
+        $route_name = "GUEST_DELETE";
+        
+        $id = $request->get('id', null);
+        $response = $this->userService->deleteGuest($id, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }

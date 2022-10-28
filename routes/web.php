@@ -71,6 +71,15 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/requesterActivation', 'UserController@requesterActivation');
     $router->delete('/deleteRequester', 'UserController@deleteRequester');
 
+    //Guest Routes
+    $router->get('/getGuestDetail', 'UserController@getGuestDetail');
+    $router->get('/getGuestList', 'UserController@getGuestList');
+    $router->post('/addGuestMember', 'UserController@addGuestMember');
+    $router->post('/updateGuestDetail', 'UserController@updateGuestDetail');
+    $router->put('/changeGuestPassword', 'UserController@changeGuestPassword');
+    $router->put('/guestActivation', 'UserController@guestActivation');
+    $router->delete('/deleteGuest', 'UserController@deleteGuest');
+
     $router->get('/getFilterGroups', 'GroupController@getFilterGroups');
     
     //Agent Group Routes
@@ -435,6 +444,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addRecruitments', 'RecruitmentController@addRecruitments');
     $router->put('/updateRecruitment', 'RecruitmentController@updateRecruitment');
     $router->delete('/deleteRecruitment', 'RecruitmentController@deleteRecruitment');
+    $router->delete('/deleteRecruitments', 'RecruitmentController@deleteRecruitments');
     $router->get('/getCountRecruitment', 'RecruitmentController@getCountRecruitment');
     $router->put('/updateRecruitment/stage', 'RecruitmentController@updateRecruitment_stage');
     $router->put('/updateRecruitment/status', 'RecruitmentController@updateRecruitment_status');

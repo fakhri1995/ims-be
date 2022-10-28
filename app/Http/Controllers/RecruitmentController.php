@@ -61,6 +61,14 @@ class RecruitmentController extends Controller
         $response = $this->recruitmentService->deleteRecruitment($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    public function deleteRecruitments(Request $request)
+    {
+        $route_name = "RECRUITMENTS_DELETE";
+
+        $response = $this->recruitmentService->deleteRecruitments($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
     
     public function getCountRecruitment(Request $request)
     {
