@@ -22,7 +22,7 @@
 
                 if($search !== false){
                     $value = $activity->details[$search]['value'];
-                    if($detail['type'] !== 3) echo "<td> $value </td>";
+                    if($detail['type'] !== 3) echo "<td> ".htmlentities($value)." </td>";
                     else {
                         if(count($value)){
                             $checklist_value = "";
