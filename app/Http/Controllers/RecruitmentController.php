@@ -386,6 +386,14 @@ class RecruitmentController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function sendRecruitmentEmail(Request $request)
+    {
+        $route_name = "RECRUITMENT_EMAIL_SEND";
+
+        $response = $this->recruitmentService->sendRecruitmentEmail($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     //END OF RECRUITMENT EMAIL TEMPLATE SECTION
 }
 

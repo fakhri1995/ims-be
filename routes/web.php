@@ -487,7 +487,8 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addRecruitmentEmailTemplate', 'RecruitmentController@addRecruitmentEmailTemplate');
     $router->put('/updateRecruitmentEmailTemplate', 'RecruitmentController@updateRecruitmentEmailTemplate');
     $router->delete('/deleteRecruitmentEmailTemplate', 'RecruitmentController@deleteRecruitmentEmailTemplate');
-        
+    
+    $router->post('/sendRecruitmentEmail', 'RecruitmentController@sendRecruitmentEmail');
 });
 
 // //Incident Routes

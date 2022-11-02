@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Mail\RecruitmentMail;
 use App\Recruitment;
 use App\RecruitmentEmailTemplate;
 use App\RecruitmentJalurDaftar;
@@ -14,6 +15,7 @@ use App\Services\GlobalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class RecruitmentService{
@@ -1626,6 +1628,40 @@ class RecruitmentService{
             $recruitmentEmailTemplate->delete();
 
             return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $recruitmentEmailTemplate, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function sendRecruitmentEmail(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+            "email" => "required|email",
+            "subject" => "required",
+            "body" => "required",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+
+        
+        $email = $request->email;
+        $data = (object)[
+            "subject" => $request->subject,
+            "body" => $request->body,
+            // "attachment" => base64_encode($request->file('attachment')) ?? NULL,
+            "attachment" => $request->file('attachment') ?? NULL,
+        ];
+        
+            $sendMail = Mail::to($email)->send(new RecruitmentMail($data));
+        try{
+            return ["success" => true, "message" => $sendMail, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
