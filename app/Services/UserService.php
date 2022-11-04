@@ -120,7 +120,7 @@ class UserService
 
     public function getUserList($request, $role_id){
         $company_id = auth()->user()->company_id;
-        $users = User::with(['company:id,parent_id,name,top_parent_id', 'company.topParent', 'profileImage'])
+        $users = User::with(['company:id,parent_id,name,top_parent_id', 'company.topParent', 'profileImage','roles'])
         ->select('id','name', 'nip', 'email','role','company_id', 'position','phone_number','created_time','is_enabled')
         ->where('users.role', $role_id);
         if($company_id !== 1){
@@ -172,31 +172,34 @@ class UserService
     }
 
     public function addUserMember($request, $role_id){
-        $email = $request->get('email');
-        $password = $request->get('password');
+        $email = $request->email;
+        $password = $request->password;
         $check_email_user = User::where('email', $email)->first();
         if($check_email_user) return ["success" => false, "message" => "Email Telah Digunakan", "status" => 400];
-        if($password !== $request->get('confirm_password')) return ["success" => false, "message" => "Password Tidak Sama", "status" => 400];
+        if($password !== $request->confirm_password) return ["success" => false, "message" => "Password Tidak Sama", "status" => 400];
         try{
             $user = new User;
-            $user->name = $request->get('fullname');
-            $user->nip = $request->get('nip');
-            $user->company_id = $request->get('company_id');
+            $user->name = $request->fullname;
+            $user->nip = $request->nip;
+            $user->company_id = $request->company_id;
             $user->email = $email;
             $user->password = Hash::make($password);
             $user->role = $role_id;
-            $user->phone_number = $request->get('phone_number');
-            $user->position = $request->get('position');
+            $user->phone_number = $request->phone_number;
+            $user->position = $request->position;
             $user->is_enabled = true;
             $user->created_time = date("Y-m-d H:i:s");
+            // dd($user);
+
             $user->save();
+            
+            $roles_ids = is_array($request->role_ids) ? $request->role_ids : json_decode($request->role_ids) ?? [] ;
             $data_request = [
                 "id" => $user->id,
-                "role_ids" => $request->get('role_ids', [])
+                "role_ids" => $roles_ids
             ];
-
             $set_role = $this->updateRoleUser($data_request, $role_id);
-            $attendance_form_ids = $request->get('attendance_form_ids', []);
+            $attendance_form_ids = $request->attendance_form_ids ?? [];
             $user->attendanceForms()->attach($attendance_form_ids);
             if($request->hasFile('profile_image')) {
                 $fileService = new FileService;
@@ -245,19 +248,25 @@ class UserService
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
+        //default for guest
+        $data->company_id = 0;
+        $data->position = "Guest";
+        $hash_password = md5($data->email."12345678"); //as default
+        $data->password = $hash_password;
+        $data->confirm_password = $hash_password;
         return $this->addUserMember($data, $this->guest_role_id);
     }
 
     public function updateUserDetail($request, $role_id){
-        $id = $request->get('id');
+        $id = $request->id;
         $user = User::with('profileImage')->find($id);
         if($user === null) return ["success" => false, "message" => "Id Pengguna Tidak Ditemukan", "status" => 400];
         if($user->role !== $role_id) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Akun Ini", "status" => 403];
-        try{
-            $user->name = $request->get('fullname');
-            $user->nip = $request->get('nip');
-            $user->phone_number = $request->get('phone_number');
-            $user->position = $request->get('position');
+        
+            $user->name = $request->fullname;
+            $user->nip = $request->nip;
+            $user->phone_number = $request->phone_number;
+            $user->position = $request->position;
             $user->save();
 
             if($request->hasFile('profile_image')) {
@@ -271,13 +280,14 @@ class UserService
                 }
                 $add_file_response = $fileService->addFile($user->id, $file, $table, $description, $folder_detail);
             }
-            
+            $roles_ids = is_array($request->role_ids) ? $request->role_ids : json_decode($request->role_ids) ?? [] ;
             $data_request = [
                 "id" => $id,
-                "role_ids" => $request->get('role_ids', [])
+                "role_ids" => $roles_ids
             ];
+            try{
             $save_role = $this->updateRoleUser($data_request, $role_id);
-            $attendance_form_ids = $request->get('attendance_form_ids', []);
+            $attendance_form_ids = $request->attendance_form_ids ?? [];
             $user->attendanceForms()->sync($attendance_form_ids);
             if(!$save_role["success"]) return $save_role;
             if($role_id === 1) return ["success" => true, "message" => "Akun Agent berhasil diperbarui", "status" => 200];
@@ -305,7 +315,9 @@ class UserService
     public function updateGuestDetail($data, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+        //default for guest
+        $data->company_id = 0;
+        $data->position = "Guest";;
         return $this->updateUserDetail($data, $this->guest_role_id);
     }
 

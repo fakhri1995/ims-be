@@ -19,7 +19,7 @@ class CreateActivityLogRecruitmentsTable extends Migration
             $table->string("notes")->nullable();
             $table->unsignedBigInteger("subject_id");
             $table->unsignedBigInteger("causer_id");
-            $table->string("properties")->nullable();
+            $table->text("properties")->nullable();
             $table->dateTime('created_at');
         });
     }
