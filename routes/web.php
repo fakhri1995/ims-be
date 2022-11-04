@@ -438,6 +438,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getSkillLists', 'ResumeController@getSkillLists');
 
     // RECRUITMENT
+    $router->get('/getRecruitmentExcelTemplate', 'RecruitmentController@getRecruitmentExcelTemplate');
     $router->get('/getRecruitment', 'RecruitmentController@getRecruitment');
     $router->get('/getRecruitments', 'RecruitmentController@getRecruitments');
     $router->post('/addRecruitment', 'RecruitmentController@addRecruitment');
@@ -451,6 +452,8 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addRecruitmentLogNotes', 'RecruitmentController@addRecruitmentLogNotes');
     $router->put('/updateRecruitments/stage', 'RecruitmentController@updateRecruitments_stage');
     $router->put('/updateRecruitments/status', 'RecruitmentController@updateRecruitments_status');
+    $router->get('/getRecruitmentPreviewStageStatus', 'RecruitmentController@getRecruitmentPreviewStageStatus');
+    
     // RECRUITMENT ROLE
     $router->get('/getRecruitmentRole', 'RecruitmentController@getRecruitmentRole');
     $router->get('/getRecruitmentRoles', 'RecruitmentController@getRecruitmentRoles');

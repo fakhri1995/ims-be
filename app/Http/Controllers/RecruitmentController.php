@@ -14,6 +14,15 @@ class RecruitmentController extends Controller
     }
 
     //RECRUITMENT SECTION
+    public function getRecruitmentExcelTemplate(Request $request)
+    {
+        $route_name = "RECRUITMENT_EXCEL_TEMPLATE_GET";
+
+        $response = $this->recruitmentService->getRecruitmentExcelTemplate($request, $route_name);
+        if(!$response['success']) return response()->json($response, $response['status']);
+        return ($response['data']);
+    }
+
     public function getRecruitment(Request $request)
     {
         $route_name = "RECRUITMENT_GET";
@@ -115,6 +124,14 @@ class RecruitmentController extends Controller
         $route_name = "RECRUITMENTS_UPDATE_STAGE";
 
         $response = $this->recruitmentService->updateRecruitments_stage($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getRecruitmentPreviewStageStatus(Request $request)
+    {
+        $route_name = "RECRUITMENT_PREVIEW_STAGE_STATUS_GET";
+
+        $response = $this->recruitmentService->getRecruitmentPreviewStageStatus($request, $route_name);
         return response()->json($response, $response['status']);
     }
 

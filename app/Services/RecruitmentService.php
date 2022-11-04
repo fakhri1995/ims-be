@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\ActivityLogRecruitment;
+use App\Exports\RecruitmentExportTemplate;
 use App\Mail\RecruitmentMail;
 use App\Recruitment;
 use App\RecruitmentEmailTemplate;
@@ -17,6 +19,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 
 class RecruitmentService{
     public function __construct()
@@ -25,6 +28,19 @@ class RecruitmentService{
     }  
 
     //RECRUITMENT SECTION
+    public function getRecruitmentExcelTemplate(Request $request, $route_name)
+    {   
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $excel = Excel::download(new RecruitmentExportTemplate(), "Recruitment Template.xlsx");
+            return ["success" => true, "message" => "Data Berhasil Diexport", "data" => $excel, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     public function getRecruitment(Request $request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
@@ -676,6 +692,99 @@ class RecruitmentService{
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
+    }
+
+    public function getRecruitmentPreviewStageStatus(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "id" => "required|numeric",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        
+
+        $id = $request->id;
+        $recruitment = Recruitment::with(['role'])->find($id);
+        if(!$recruitment) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        
+        $recruitmentStatus = RecruitmentStatus::select("id","name")->get();
+        $recruitmentStatusArray = [];
+        foreach($recruitmentStatus as $status){
+            $recruitmentStatusArray[$status->id] = $status->name;
+        }
+
+        $recruitmentStage = RecruitmentStage::select("id","name")->get();
+        $recruitmentStageArray = array();
+        foreach($recruitmentStage as $stage){
+            $recruitmentStageArray[$stage->id] = $stage->name;
+        }
+
+        $typeArray = [
+            "recruitment_status" => [
+                "string" => "Recruitment status",
+                "data" => $recruitmentStatusArray
+            ],
+            "recruitment_stage" => [
+                "string" => "Recruitment stage",
+                "data" => $recruitmentStageArray
+            ]
+        ];
+
+        $data = [
+            "name" => $recruitment->name,
+            "recruitment_role_id" => $recruitment->recruitment_role_id,
+            "role" => $recruitment->role,
+            "created_at" => $recruitment->created_at,
+            "recruitment_stage" => [],
+        ];
+
+        
+
+            
+            $logsRecruitment = ActivityLogRecruitment::where("subject_id",$id)->orderBy('created_at','desc')->whereIn("log_name",["Created","Updated"])->get();
+            $normal_logs = [];
+            $special_logs = ActivityLogRecruitment::where(["subject_id" => $id, "log_name" => "Notes"])->orderBy('created_at','desc')->get();
+            foreach($logsRecruitment as $log){
+                $properties = $log->properties ?? NULL;
+
+                if($properties->log_type == "recruitment_stage"){
+                    $log_type_string = $typeArray[$properties->log_type]["string"];
+                    $old_str = "old_".$properties->log_type."_id"; //contoh : jika log_type = recruitment_stage, ini bakal menjadi old_recruitment_stage_id
+                    $new_str = "new_".$properties->log_type."_id"; //contoh : jika log_type = recruitment_stage, ini bakal menjadi new_recruitment_stage_id
+                    $old = $typeArray[$properties->log_type]["data"][$properties->$old_str];
+                    $new = $typeArray[$properties->log_type]["data"][$properties->$new_str];
+                    $data[$properties->log_type][] = [
+                        "name" => $new,
+                        "updated_at" => $log->created_at
+                    ];
+                    continue;
+                }
+
+                if($properties->log_type == "created_recruitment"){
+                    $log->description = "Data berhasil dibuat!";
+                    $first = $typeArray["recruitment_stage"]["data"][$properties->data->recruitment_stage_id];
+                    $data['recruitment_stage'][] = [
+                        "name" => $first,
+                        "updated_at" => $log->created_at
+                    ];
+                    continue;
+                }
+
+            }
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+
+
     }
 
     //END OF RECRUITMENT SECTION
@@ -1650,7 +1759,7 @@ class RecruitmentService{
         }
 
 
-        
+
         $email = $request->email;
         $data = (object)[
             "subject" => $request->subject,
