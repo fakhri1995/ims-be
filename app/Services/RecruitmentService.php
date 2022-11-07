@@ -14,8 +14,8 @@ use App\RecruitmentStage;
 use App\RecruitmentStatus;
 use Exception;
 use App\Services\GlobalService;
+use App\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
@@ -784,6 +784,49 @@ class RecruitmentService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
 
+    }
+
+    public function generateRecruitmentAccount(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        if(auth()->user()->role != 1) return ["success" => false, "message" => "HANYA AGENT YANG MEMILIKI FITUR INI", "status" => 401];
+
+        $validator = Validator::make($request->all(), [
+            "id" => "required|numeric",
+        ]);
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $id = $request->id;
+        $recruitment = Recruitment::with(['role'])->find($id);
+        if(!$recruitment) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        
+        $userService = new UserService();
+
+        $role_ids = is_array($request->role_ids) ? $request->role_ids : json_decode($request->role_ids) ?? [] ;
+        $userData = (object)[
+            "fullname" => $recruitment->name,
+            "email" => $recruitment->email,
+            "phone_number" => 0,
+            "role_ids" => $role_ids,
+        ];
+            
+        
+        $check_email_user = User::where('email', $recruitment->email)->first();
+        if(!$check_email_user){
+            $addGuestMember = $userService->addGuestMember($userData,"BYPASS");
+            if($addGuestMember['success'] === false) return $addGuestMember;
+        }
+        
+        $loginService = new LoginService();
+        $loginService->mailForgetPassword($recruitment->email);
+
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitment, "status" => 200];
 
     }
 

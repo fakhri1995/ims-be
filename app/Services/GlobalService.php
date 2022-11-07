@@ -13,6 +13,9 @@ class GlobalService
         if($user_super_admin) return ["success" => true];
         //------
 
+        //Route Name BYPASS for Special BYPASS
+        if($route_name == "BYPASS") return ["success" => true];
+
 
         $access_feature = AccessFeature::with('roles')->where('name', $route_name)->first();
         if($access_feature === null) {

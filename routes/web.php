@@ -453,6 +453,8 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/updateRecruitments/stage', 'RecruitmentController@updateRecruitments_stage');
     $router->put('/updateRecruitments/status', 'RecruitmentController@updateRecruitments_status');
     $router->get('/getRecruitmentPreviewStageStatus', 'RecruitmentController@getRecruitmentPreviewStageStatus');
+
+    $router->post('/generateRecruitmentAccount', 'RecruitmentController@generateRecruitmentAccount');
     
     // RECRUITMENT ROLE
     $router->get('/getRecruitmentRole', 'RecruitmentController@getRecruitmentRole');

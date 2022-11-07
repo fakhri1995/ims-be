@@ -108,7 +108,7 @@ class ResumeService{
             "email" => "required|email",
             "city" => "required",
             "province" => "required",
-            "assessment_id" => "required|numeric|exists:App\ResumeAssessment,id"
+            "assessment_id" => "required|numeric|nullable"
         ]);
 
         if($validator->fails()){
