@@ -473,6 +473,7 @@ class AttendanceService{
 
         try{
             $login_id = auth()->user()->id;
+            $name = auth()->user()->name;
             $id = $request->get('id');
             $user_attendance = AttendanceUser::with('evidence:link,description,fileable_id,fileable_type')->select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
             ->join('long_lat_lists AS check_in_list', function ($join) {
@@ -485,6 +486,7 @@ class AttendanceService{
             
             $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
             $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
+            $user_attendance->name = $name;
             $attendance_activities = AttendanceActivity::with('attendanceForm:id,name,details')->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
             $data = (object)[
                 "user_attendance" => $user_attendance,
