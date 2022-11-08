@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\GlobalService;
 use Closure;
 use Illuminate\Contracts\Auth\Factory as Auth;
 
@@ -23,6 +24,7 @@ class Authenticate
     public function __construct(Auth $auth)
     {
         $this->auth = $auth;
+        $this->globalService = new GlobalService;
     }
 
     /**
@@ -49,7 +51,7 @@ class Authenticate
             return response()->json($response, 401);
         }
         
-        if(!$this->auth->user()->company->is_enabled){
+        if(!$this->auth->user()->company->is_enabled && $this->auth->user()->role != $this->globalService->guest_role_id){
              $response = ["success" => false, "message" => [
                 "errorInfo" => [
                     "status" => 401, 

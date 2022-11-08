@@ -17,9 +17,9 @@ class UserService
     public function __construct()
     {
         $this->globalService = new GlobalService;
-        $this->agent_role_id = 1;
-        $this->requester_role_id = 2;
-        $this->guest_role_id = 9;
+        $this->agent_role_id = $this->globalService->agent_role_id;
+        $this->requester_role_id = $this->globalService->requester_role_id;
+        $this->guest_role_id = $this->globalService->guest_role_id;
     }
 
     public function getUserListRoles($role, $name = null){

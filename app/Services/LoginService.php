@@ -13,7 +13,12 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 
 class LoginService
-{
+{   
+    public function __construct()
+    {
+        $this->globalService = new GlobalService;
+    }
+
     public function generate_token($email, $password){
         $token = Http::asForm()->post(config('service.passport.login_endpoint'), [
             'grant_type' => 'password',
@@ -29,7 +34,7 @@ class LoginService
     public function login($email, $password){
         $user = User::with('company:id,is_enabled')->where('email', $email)->first();
         if($user){
-            if(!$user->company->is_enabled){
+            if(!$user->company->is_enabled && $user->role != $this->globalService->guest_role_id){
                 return [
                     "success" => false, 
                     "message" => "Perusahaan user sedang dinonaktifkan",

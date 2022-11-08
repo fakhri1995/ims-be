@@ -12,6 +12,7 @@ use App\RecruitmentRole;
 use App\RecruitmentRoleType;
 use App\RecruitmentStage;
 use App\RecruitmentStatus;
+use App\Resume;
 use Exception;
 use App\Services\GlobalService;
 use App\User;
@@ -56,7 +57,7 @@ class RecruitmentService{
         }
         
         $id = $request->id;
-        $recruitment = Recruitment::with(['role','role.type','jalur_daftar','stage','status'])->find($id);
+        $recruitment = Recruitment::with(['role','role.type','jalur_daftar','stage','status','resume'])->find($id);
         if(!$recruitment) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         
         try{
@@ -91,7 +92,7 @@ class RecruitmentService{
         $recruitment_status_id = $request->recruitment_status_id ? explode(",",$request->recruitment_status_id) : NULL;
 
         $rows = $request->rows ?? 5;
-        $recruitments = Recruitment::with(['role','role.type','jalur_daftar','stage','status']);
+        $recruitments = Recruitment::with(['role','role.type','jalur_daftar','stage','status','resume']);
 
         // filter
         if($keyword) $recruitments = $recruitments->where("name","LIKE", "%$keyword%");
@@ -801,33 +802,55 @@ class RecruitmentService{
             $errors = $validator->errors()->all();
             return ["success" => false, "message" => $errors, "status" => 400];
         }
-
-        $id = $request->id;
-        $recruitment = Recruitment::with(['role'])->find($id);
-        if(!$recruitment) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
-        
-        $userService = new UserService();
-
-        $role_ids = is_array($request->role_ids) ? $request->role_ids : json_decode($request->role_ids) ?? [] ;
-        $userData = (object)[
-            "fullname" => $recruitment->name,
-            "email" => $recruitment->email,
-            "phone_number" => 0,
-            "role_ids" => $role_ids,
-        ];
+        try{
             
-        
-        $check_email_user = User::where('email', $recruitment->email)->first();
-        if(!$check_email_user){
-            $addGuestMember = $userService->addGuestMember($userData,"BYPASS");
-            if($addGuestMember['success'] === false) return $addGuestMember;
+            $id = $request->id;
+            $recruitment = Recruitment::with(['role'])->find($id);
+            if(!$recruitment) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+            
+            $userService = new UserService();
+
+            $role_ids = is_array($request->role_ids) ? $request->role_ids : json_decode($request->role_ids) ?? [] ;
+            $userData = (object)[
+                "fullname" => $recruitment->name,
+                "email" => $recruitment->email,
+                "phone_number" => 0,
+                "role_ids" => $role_ids,
+            ];
+                
+            
+            $owner = User::where('email', $recruitment->email)->first();
+            if(!$owner){
+                $addGuestMember = $userService->addGuestMember($userData,"BYPASS");
+                if($addGuestMember['success'] === false) return $addGuestMember;
+
+                $owner = User::where('email', $userData->email)->first();
+            }
+
+            $recruitment->owner_id = $owner->id;
+            $recruitment->save();
+
+            $resume = Resume::where('owner_id', $owner->id)->first();
+            if(!$resume){
+                $resume = new Resume();
+                $resume->name = $recruitment->name;
+                $resume->role = $recruitment->role->name;
+                $resume->email = $recruitment->email;
+                $resume->created_at = date('Y-m-d H:i:s');
+                $resume->updated_at = date('Y-m-d H:i:s');
+                $resume->created_by = auth()->user()->id;
+                $resume->owner_id = $owner->id;
+                $resume->save();
+            }
+            
+            $loginService = new LoginService();
+            $loginService->mailForgetPassword($recruitment->email);
+
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitment, "status" => 200];
+
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
         }
-        
-        $loginService = new LoginService();
-        $loginService->mailForgetPassword($recruitment->email);
-
-        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitment, "status" => 200];
-
     }
 
     //END OF RECRUITMENT SECTION
@@ -846,12 +869,13 @@ class RecruitmentService{
             $errors = $validator->errors()->all();
             return ["success" => false, "message" => $errors, "status" => 400];
         }
-        
-        $id = $request->id;
-        $recruitmentRole = RecruitmentRole::with(['type'])->withCount('recruitments')->find($id);
-        if(!$recruitmentRole) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
-        
+           
         try{
+            $id = $request->id;
+            $recruitmentRole = RecruitmentRole::with(['type'])->withCount('recruitments')->find($id);
+            if(!$recruitmentRole) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        
+        
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitmentRole, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];

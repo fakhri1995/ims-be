@@ -5,7 +5,11 @@ use App\AccessFeature;
 use App\Role;
 
 class GlobalService
-{
+{   
+    public $agent_role_id = 1;
+    public $requester_role_id = 2;
+    public $guest_role_id = 3;
+
     public function checkRoute($route_name){
         //Super Admin Special Bypass
         $super_admin_role = Role::where('name', 'Super Admin')->first();
