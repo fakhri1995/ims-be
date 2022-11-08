@@ -17,9 +17,9 @@ class UserService
     public function __construct()
     {
         $this->globalService = new GlobalService;
-        $this->agent_role_id = 1;
-        $this->requester_role_id = 2;
-        $this->guest_role_id = 9;
+        $this->agent_role_id = $this->globalService->agent_role_id;
+        $this->requester_role_id = $this->globalService->requester_role_id;
+        $this->guest_role_id = $this->globalService->guest_role_id;
     }
 
     public function getUserListRoles($role, $name = null){
@@ -177,6 +177,7 @@ class UserService
         $check_email_user = User::where('email', $email)->first();
         if($check_email_user) return ["success" => false, "message" => "Email Telah Digunakan", "status" => 400];
         if($password !== $request->confirm_password) return ["success" => false, "message" => "Password Tidak Sama", "status" => 400];
+        
         try{
             $user = new User;
             $user->name = $request->fullname;
@@ -201,7 +202,7 @@ class UserService
             $set_role = $this->updateRoleUser($data_request, $role_id);
             $attendance_form_ids = $request->attendance_form_ids ?? [];
             $user->attendanceForms()->attach($attendance_form_ids);
-            if($request->hasFile('profile_image')) {
+            if(method_exists($request,'hasFile') && $request->hasFile('profile_image')) {
                 $fileService = new FileService;
                 $file = $request->file('profile_image');
                 $table = 'App\User';
@@ -221,7 +222,6 @@ class UserService
                 ];
                 Mail::to($email)->send(new ChangePasswordMail($email_data));
             } 
-            
             if($role_id === 1) return ["success" => true, "message" => "Akun Agent berhasil ditambah", "id" => $user->id, "status" => 200];
             else if($role_id === 2) return ["success" => true, "message" => "Akun Requester berhasil ditambah", "id" => $user->id, "status" => 200];
             else return ["success" => true, "message" => "Akun Guest berhasil ditambah", "id" => $user->id, "status" => 200];
@@ -250,6 +250,7 @@ class UserService
         
         //default for guest
         $data->company_id = 0;
+        $data->nip = 0;
         $data->position = "Guest";
         $hash_password = md5($data->email."12345678"); //as default
         $data->password = $hash_password;

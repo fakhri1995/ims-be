@@ -5,13 +5,20 @@ use App\AccessFeature;
 use App\Role;
 
 class GlobalService
-{
+{   
+    public $agent_role_id = 1;
+    public $requester_role_id = 2;
+    public $guest_role_id = 3;
+
     public function checkRoute($route_name){
         //Super Admin Special Bypass
         $super_admin_role = Role::where('name', 'Super Admin')->first();
         $user_super_admin = auth()->user()->roles->where('id', $super_admin_role->id)->first();
         if($user_super_admin) return ["success" => true];
         //------
+
+        //Route Name BYPASS for Special BYPASS
+        if($route_name == "BYPASS") return ["success" => true];
 
 
         $access_feature = AccessFeature::with('roles')->where('name', $route_name)->first();

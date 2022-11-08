@@ -135,6 +135,14 @@ class RecruitmentController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function generateRecruitmentAccount(Request $request)
+    {
+        $route_name = "RECRUITMENT_ACCOUNT_GENERATE";
+
+        $response = $this->recruitmentService->generateRecruitmentAccount($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     //END OF RECRUITMENT SECTION
     //RECRUITMENT ROLE SECTION
 

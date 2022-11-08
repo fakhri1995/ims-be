@@ -31,7 +31,7 @@ class ResumeService{
     
     public function getResumes(Request $request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+        // if($access["success"] === false) return $access;
         $rules = [
             "page" => "numeric",
             "rows" => "numeric|between:1,100",
@@ -51,6 +51,9 @@ class ResumeService{
             $keyword = $request->keyword ?? NULL;
             // $resumes = Resume::with(['educations', 'experiences', 'projects', 'skills', 'trainings', 'certificates', 'achievements', 'assessmentResults']);
             $resumes = Resume::with("assessment");
+            if(auth()->user()->role == $this->globalService->guest_role_id){
+                $resumes = $resumes->where("owner_id", auth()->user()->id);
+            }
             $rows = $request->rows ?? 5;
             
             // filter
@@ -90,6 +93,9 @@ class ResumeService{
         $id = $request->id;
         $resume = resume::with(['educations', 'experiences', 'projects', 'skills', 'trainings', 'certificates', 'achievements', 'assessment', 'assessmentResults'])->find($id);
         if(!$resume) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        if(auth()->user()->role == $this->globalService->guest_role_id && $resume->owner_id != auth()->user()->id){
+            return ["success" => false, "message" => "Anda tidak memiliki akses ke resume ini", "status" => 400];
+        }
         
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $resume, "status" => 200];
@@ -108,7 +114,7 @@ class ResumeService{
             "email" => "required|email",
             "city" => "required",
             "province" => "required",
-            "assessment_id" => "required|numeric|exists:App\ResumeAssessment,id"
+            "assessment_id" => "required|numeric|nullable"
         ]);
 
         if($validator->fails()){
@@ -206,6 +212,9 @@ class ResumeService{
         $resume_id = $request->id;
         $resume = Resume::find($resume_id);
         if(!$resume) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        if(auth()->user()->role == $this->globalService->guest_role_id && $resume->owner_id != auth()->user()->id){
+            return ["success" => false, "message" => "Anda tidak memiliki akses ke resume ini", "status" => 400];
+        }
 
         if($request->education){
             $requestEducation = (object)$request->education;
@@ -349,16 +358,22 @@ class ResumeService{
         $resume_id = $request->id;
         $resume = Resume::find($resume_id);
         if(!$resume) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        if(auth()->user()->role == $this->globalService->guest_role_id && $resume->owner_id != auth()->user()->id){
+            return ["success" => false, "message" => "Anda tidak memiliki akses ke resume ini", "status" => 400];
+        }
 
         // resume basic information
         if($request->basic_information){
             $requestBasicInformation = (object)$request->basic_information;
-            $resume->name = $requestBasicInformation->name;
             $resume->telp = $requestBasicInformation->telp;
-            $resume->email = $requestBasicInformation->email;
             $resume->city = $requestBasicInformation->city;
             $resume->province = $requestBasicInformation->province;
             $resume->updated_at = Date('Y-m-d H:i:s');
+            if(auth()->user()->role != $this->globalService->guest_role_id){
+                $resume->name = $requestBasicInformation->name;
+                $resume->email = $requestBasicInformation->email;
+            }
+
             // if assessment changes
             if($requestBasicInformation->assessment_id){
                 $assessmentResults = $resume->assessmentResults();
@@ -489,7 +504,10 @@ class ResumeService{
         $id = $request->id;
         $resume = resume::find($id);
         if(!$resume) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
-        
+        if(auth()->user()->role == $this->globalService->guest_role_id && $resume->owner_id != auth()->user()->id){
+            return ["success" => false, "message" => "Anda tidak memiliki akses ke resume ini", "status" => 400];
+        }
+
         try{
             $resume->delete();
             return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $resume, "status" => 200];
@@ -523,7 +541,9 @@ class ResumeService{
             $resume_id = $request->id;
             $resume = resume::find($resume_id);
             if(!$resume) return ["success" => false, "message" => "Data Resume Tidak Ditemukan", "status" => 400];
-        
+            if(auth()->user()->role == $this->globalService->guest_role_id && $resume->owner_id != auth()->user()->id){
+                return ["success" => false, "message" => "Anda tidak memiliki akses ke resume ini", "status" => 400];
+            }
             if($request->education_id){
                 $model = $resume->educations()->find($request->education_id);
                 if(!$model) return ["success" => false, "message" => "Data Education yang dihapus tidak valid", "status" => 400];

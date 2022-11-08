@@ -29,5 +29,10 @@ class Recruitment extends Model
     {
         return $this->belongsTo(RecruitmentStatus::class, 'recruitment_status_id');
     }
+
+    public function resume()
+    {
+        return $this->hasOne(Resume::class, 'owner_id', 'owner_id');
+    }
 }
 

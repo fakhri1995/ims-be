@@ -28,6 +28,7 @@ class CreateResumesTable extends Migration
             $table->dateTime('updated_at');
             $table->unsignedBigInteger('created_by');
             $table->softDeletes();
+            $table->unsignedBigInteger('owner_id')->nullable();
 
         });
     }
