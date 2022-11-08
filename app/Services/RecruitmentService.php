@@ -144,6 +144,10 @@ class RecruitmentService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
+        $email = $request->email ?? "";
+        $recruitment = Recruitment::where('email',$email)->first();
+        if($recruitment) return ["success" => false, "message" => "Email sudah pernah digunakan", "status" => 400]; 
+
         try{
 
             $recruitment_role_id = $request->recruitment_role_id ?? NULL;
