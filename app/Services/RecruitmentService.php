@@ -838,7 +838,6 @@ class RecruitmentService{
             if(!$resume){
                 $resume = new Resume();
                 $resume->name = $recruitment->name;
-                $resume->role = $recruitment->role->name;
                 $resume->email = $recruitment->email;
                 $resume->created_at = date('Y-m-d H:i:s');
                 $resume->updated_at = date('Y-m-d H:i:s');
