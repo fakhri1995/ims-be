@@ -19,7 +19,7 @@ class CreateResumesTable extends Migration
             $table->string("telp");
             $table->string("email");
 
-            $table->string("role");
+            // $table->string("role");
 
             $table->string("city");
             $table->string("province");
