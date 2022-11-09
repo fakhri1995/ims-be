@@ -800,6 +800,7 @@ class RecruitmentService{
 
         $validator = Validator::make($request->all(), [
             "id" => "required|numeric",
+            "role_ids" => "array"
         ]);
         
         if($validator->fails()){
