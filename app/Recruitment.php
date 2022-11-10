@@ -34,5 +34,10 @@ class Recruitment extends Model
     {
         return $this->hasOne(Resume::class, 'owner_id', 'owner_id');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'owner_id')->select(['id','is_enabled','email']);
+    }
 }
 

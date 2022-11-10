@@ -57,7 +57,7 @@ class RecruitmentService{
         }
         
         $id = $request->id;
-        $recruitment = Recruitment::with(['role','role.type','jalur_daftar','stage','status','resume'])->find($id);
+        $recruitment = Recruitment::with(['role','role.type','jalur_daftar','stage','status','resume','user'])->find($id);
         if(!$recruitment) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         
         try{
@@ -851,6 +851,40 @@ class RecruitmentService{
             $loginService->mailForgetPassword($recruitment->email);
 
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitment, "status" => 200];
+
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getRecruitmentAccountToken(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+            "id" => "required|numeric"
+        ]);
+
+        if(auth()->user()->role != 1) return ["success" => false, "message" => "HANYA AGENT YANG MEMILIKI FITUR INI", "status" => 401];
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+            
+            $id = $request->id;
+            $recruitment = Recruitment::with(['user'])->find($id);
+            if(!$recruitment) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+            
+            if($recruitment->owner_id == null) return ["success" => false, "message" => "Akun recruitment belum digenerate", "status" => 400];
+            $recruitmentUserEmail = $recruitment->user->email;
+
+            $forgotPasswordToken = DB::table('password_resets')->where(['email' => $recruitmentUserEmail])->first();
+
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $forgotPasswordToken, "status" => 200];
 
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
