@@ -143,6 +143,14 @@ class RecruitmentController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getRecruitmentAccountToken(Request $request)
+    {
+        $route_name = "RECRUITMENT_ACCOUNT_TOKEN_GET";
+
+        $response = $this->recruitmentService->getRecruitmentAccountToken($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     //END OF RECRUITMENT SECTION
     //RECRUITMENT ROLE SECTION
 
