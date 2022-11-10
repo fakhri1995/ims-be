@@ -455,7 +455,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getRecruitmentPreviewStageStatus', 'RecruitmentController@getRecruitmentPreviewStageStatus');
 
     $router->post('/generateRecruitmentAccount', 'RecruitmentController@generateRecruitmentAccount');
-    $router->post('/getRecruitmentAccountToken', 'RecruitmentController@getRecruitmentAccountToken');
+    $router->get('/getRecruitmentAccountToken', 'RecruitmentController@getRecruitmentAccountToken');
     
     // RECRUITMENT ROLE
     $router->get('/getRecruitmentRole', 'RecruitmentController@getRecruitmentRole');
