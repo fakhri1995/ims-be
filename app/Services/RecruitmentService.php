@@ -882,9 +882,10 @@ class RecruitmentService{
             if($recruitment->owner_id == null) return ["success" => false, "message" => "Akun recruitment belum digenerate", "status" => 400];
             $recruitmentUserEmail = $recruitment->user->email;
 
-            $forgotPasswordToken = DB::table('password_resets')->where(['email' => $recruitmentUserEmail])->first();
-
-            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $forgotPasswordToken, "status" => 200];
+            $password_resets = DB::table('password_resets')->where(['email' => $recruitmentUserEmail])->first();
+            $password_resets_token = $password_resets->token ?? null;
+            $password_resets->reset_password_url = env('APP_URL_WEB').'/resetPassword?token='.$password_resets_token;
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $password_resets, "status" => 200];
 
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
