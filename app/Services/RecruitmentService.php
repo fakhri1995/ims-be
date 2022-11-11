@@ -49,8 +49,6 @@ class RecruitmentService{
         
 
         $recruitment = Recruitment::with(['role','role.type','jalur_daftar','stage','status','resume','user']);
-        echo auth()->user()->role;
-        echo $this->globalService->guest_role_id;
         if(auth()->user()->role == $this->globalService->guest_role_id){
              $recruitment = $recruitment->where('owner_id',auth()->user()->id)->first();
         }
