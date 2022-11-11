@@ -45,19 +45,28 @@ class RecruitmentService{
     public function getRecruitment(Request $request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+        // if($access["success"] === false) return $access;
         
-        $validator = Validator::make($request->all(), [
-            "id" => "required|numeric",
-        ]);
 
-        if($validator->fails()){
-            $errors = $validator->errors()->all();
-            return ["success" => false, "message" => $errors, "status" => 400];
+        $recruitment = Recruitment::with(['role','role.type','jalur_daftar','stage','status','resume','user']);
+        echo auth()->user()->role;
+        echo $this->globalService->guest_role_id;
+        if(auth()->user()->role == $this->globalService->guest_role_id){
+             $recruitment = $recruitment->where('owner_id',auth()->user()->id)->first();
         }
-        
-        $id = $request->id;
-        $recruitment = Recruitment::with(['role','role.type','jalur_daftar','stage','status','resume','user'])->find($id);
+        else{
+            $validator = Validator::make($request->all(), [
+                "id" => "required|numeric",
+            ]);
+    
+            if($validator->fails()){
+                $errors = $validator->errors()->all();
+                return ["success" => false, "message" => $errors, "status" => 400];
+            }
+            $id = $request->id;
+            $recruitment = $recruitment->find($id);
+        }
+
         if(!$recruitment) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         
         try{
