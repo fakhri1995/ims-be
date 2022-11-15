@@ -99,7 +99,7 @@ class RecruitmentService{
         $recruitment_status_id = $request->recruitment_status_id ? explode(",",$request->recruitment_status_id) : NULL;
 
         $rows = $request->rows ?? 5;
-        $recruitments = Recruitment::with(['role','role.type','jalur_daftar','stage','status','resume']);
+        $recruitments = Recruitment::with(['role','role.type','jalur_daftar','stage','status','resume','user']);
 
         // filter
         if($keyword) $recruitments = $recruitments->where("name","LIKE", "%$keyword%");
