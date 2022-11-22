@@ -45,7 +45,7 @@ class RecruitmentService{
     public function getRecruitment(Request $request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
-        // if($access["success"] === false) return $access;
+        if($access["success"] === false) return $access;
         
 
         $recruitment = Recruitment::with(['role','role.type','jalur_daftar','stage','status','resume','user']);

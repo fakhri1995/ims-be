@@ -493,8 +493,16 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addRecruitmentEmailTemplate', 'RecruitmentController@addRecruitmentEmailTemplate');
     $router->put('/updateRecruitmentEmailTemplate', 'RecruitmentController@updateRecruitmentEmailTemplate');
     $router->delete('/deleteRecruitmentEmailTemplate', 'RecruitmentController@deleteRecruitmentEmailTemplate');
-    
     $router->post('/sendRecruitmentEmail', 'RecruitmentController@sendRecruitmentEmail');
+
+
+    // Employee Module -- -- -- -- --
+    // Employee 
+    $router->get('/getEmployee', 'EmployeeController@getEmployee');
+    $router->get('/getEmployees', 'EmployeeController@getEmployees');
+    $router->post('/addEmployee', 'EmployeeController@addEmployee');
+    $router->put('/updateEmployee', 'EmployeeController@updateEmployee');
+    $router->delete('/deleteEmployee', 'EmployeeController@deleteEmployee');
 });
 
 // //Incident Routes
