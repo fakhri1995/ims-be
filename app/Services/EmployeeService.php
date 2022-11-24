@@ -34,7 +34,7 @@ class EmployeeService{
         }
 
             $id = $request->id;
-            $employee = Employee::with("contracts")->find($id);
+            $employee = Employee::with(["contracts","inventories"])->find($id);
             if(!$employee) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             if($employee->is_posted == false && $employee->created_by != auth()->user()->id){
                 return ["success" => false, "message" => "Draft dibuat oleh user lain", "status" => 400]; 
@@ -54,7 +54,7 @@ class EmployeeService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $employee = Employee::paginate();
+        $employee = Employee::with(["contracts","inventories"])->paginate();
 
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employee, "status" => 200];
@@ -174,7 +174,7 @@ class EmployeeService{
         }
 
         $id = $request->id;
-        $employeeContract = EmployeeContract::find($id);
+        $employeeContract = EmployeeContract::with(["employee"])->find($id);
         if(!$employeeContract) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
 
@@ -203,7 +203,7 @@ class EmployeeService{
 
         $employee_id = $request->employee_id;
 
-        $employeeContracts = EmployeeContract::where(["employee_id" => $employee_id])->get();
+        $employeeContracts = EmployeeContract::with(["employee"])->where(["employee_id" => $employee_id])->get();
 
         try{
 
@@ -336,7 +336,7 @@ class EmployeeService{
         }
 
         $id = $request->id;
-        $employeeInventory = EmployeeInventory::find($id);
+        $employeeInventory = EmployeeInventory::with(["employee","devices"])->find($id);
         if(!$employeeInventory) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
 
@@ -365,7 +365,7 @@ class EmployeeService{
 
         $employee_id = $request->employee_id;
 
-        $employeeInventories = EmployeeInventory::where(["employee_id" => $employee_id])->get();
+        $employeeInventories = EmployeeInventory::with(["employee","devices"])->where(["employee_id" => $employee_id])->get();
 
         try{
 
@@ -491,7 +491,7 @@ class EmployeeService{
         }
 
         $id = $request->id;
-        $employeeDevice = EmployeeDevice::find($id);
+        $employeeDevice = EmployeeDevice::with(["inventory"])->find($id);
         if(!$employeeDevice) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
 
@@ -519,7 +519,7 @@ class EmployeeService{
 
         $employee_inventory_id = $request->employee_inventory_id;
 
-        $employeeDevices = EmployeeDevice::where(["employee_inventory_id" => $employee_inventory_id])->get();
+        $employeeDevices = EmployeeDevice::with(["inventory"])->where(["employee_inventory_id" => $employee_inventory_id])->get();
 
         try{
 
