@@ -9,4 +9,14 @@ class EmployeeInventory extends Model
 {
     public $timestamps = false;
     use SoftDeletes;
+
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class, "employee_id");
+    }
+
+    public function devices()
+    {
+        return $this->hasMany(EmployeeDevice::class, "employee_inventory_id");
+    }
 }

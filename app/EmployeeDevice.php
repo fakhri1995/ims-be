@@ -9,4 +9,9 @@ class EmployeeDevice extends Model
 {
     public $timestamps = false;
     use SoftDeletes;
+
+    public function inventory()
+    {
+        return $this->belongsTo(EmployeeInventory::class, "employee_inventory_id");
+    }
 }
