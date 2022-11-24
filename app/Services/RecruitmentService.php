@@ -45,7 +45,7 @@ class RecruitmentService{
     public function getRecruitment(Request $request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
-        // if($access["success"] === false) return $access;
+        if($access["success"] === false) return $access;
         
 
         $recruitment = Recruitment::with(['role','role.type','jalur_daftar','stage','status','resume','user']);
@@ -1883,7 +1883,7 @@ class RecruitmentService{
         
             $sendMail = Mail::to($email)->send(new RecruitmentMail($data));
         try{
-            return ["success" => true, "message" => $sendMail, "status" => 200];
+            return ["success" => true, "message" => "Email berhasil dikirim", "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }

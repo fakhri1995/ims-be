@@ -493,8 +493,37 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addRecruitmentEmailTemplate', 'RecruitmentController@addRecruitmentEmailTemplate');
     $router->put('/updateRecruitmentEmailTemplate', 'RecruitmentController@updateRecruitmentEmailTemplate');
     $router->delete('/deleteRecruitmentEmailTemplate', 'RecruitmentController@deleteRecruitmentEmailTemplate');
-    
     $router->post('/sendRecruitmentEmail', 'RecruitmentController@sendRecruitmentEmail');
+
+
+    // Employee Module -- -- -- -- --
+    // Employee 
+    $router->get('/getEmployee', 'EmployeeController@getEmployee');
+    $router->get('/getEmployees', 'EmployeeController@getEmployees');
+    $router->post('/addEmployee', 'EmployeeController@addEmployee');
+    $router->put('/updateEmployee', 'EmployeeController@updateEmployee');
+    $router->delete('/deleteEmployee', 'EmployeeController@deleteEmployee');
+
+    // Employee Contract
+    $router->get('/getEmployeeContract', 'EmployeeController@getEmployeeContract');
+    $router->get('/getEmployeeContracts', 'EmployeeController@getEmployeeContracts');
+    $router->post('/addEmployeeContract', 'EmployeeController@addEmployeeContract');
+    $router->put('/updateEmployeeContract', 'EmployeeController@updateEmployeeContract');
+    $router->delete('/deleteEmployeeContract', 'EmployeeController@deleteEmployeeContract');
+
+    // Employee Inventory
+    $router->get('/getEmployeeInventory', 'EmployeeController@getEmployeeInventory');
+    $router->get('/getEmployeeInventories', 'EmployeeController@getEmployeeInventories');
+    $router->post('/addEmployeeInventory', 'EmployeeController@addEmployeeInventory');
+    $router->put('/updateEmployeeInventory', 'EmployeeController@updateEmployeeInventory');
+    $router->delete('/deleteEmployeeInventory', 'EmployeeController@deleteEmployeeInventory');
+
+    // Employee Device
+    $router->get('/getEmployeeDevice', 'EmployeeController@getEmployeeDevice');
+    $router->get('/getEmployeeDevices', 'EmployeeController@getEmployeeDevices');
+    $router->post('/addEmployeeDevice', 'EmployeeController@addEmployeeDevice');
+    $router->put('/updateEmployeeDevice', 'EmployeeController@updateEmployeeDevice');
+    $router->delete('/deleteEmployeeDevice', 'EmployeeController@deleteEmployeeDevice');
 });
 
 // //Incident Routes
