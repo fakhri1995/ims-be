@@ -312,7 +312,7 @@ class EmployeeService{
             $employeeContract = EmployeeContract::find($id);
             if(!$employeeContract) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             if($employeeContract->employee_id != $employee_id) return ["success" => false, "message" => "Kontrak dan Karyawan tidak sesuai", "status" => 400]; 
-            $employeeContract->dekete();
+            $employeeContract->delete();
             
             return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $employeeContract, "status" => 200];
         }catch(Exception $err){
