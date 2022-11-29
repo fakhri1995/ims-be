@@ -15,6 +15,7 @@ class CreateEmployeesTable extends Migration
     {
         Schema::create('employees', function (Blueprint $table) {
             $table->id();
+            // id card file
             $table->string("name")->nullable();
             $table->string("nip")->nullable();
             $table->string("nik")->nullable();
@@ -28,6 +29,7 @@ class CreateEmployeesTable extends Migration
             $table->string("gender")->nullable();
             $table->enum("blood_type",["A","B","AB","O"])->nullable();
             $table->unsignedBigInteger("marital_status")->nullable(); //referance to status perkawinan
+            $table->integer("number_of_children")->nullable();
             $table->string("bio_mother_name")->nullable();
             $table->string("npwp")->nullable();
             $table->string("bpjs_kesehatan")->nullable();

@@ -19,5 +19,10 @@ class Employee extends Model
     {
         return $this->hasMany(EmployeeInventory::class, "employee_id", "id");
     }
+
+    public function id_card_photo()
+    {
+        return $this->morphOne(File::class, 'fileable');
+    }
     
 }
