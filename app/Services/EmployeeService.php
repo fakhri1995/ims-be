@@ -34,7 +34,7 @@ class EmployeeService{
         }
 
             $id = $request->id;
-            $employee = Employee::with(["contracts","inventories"])->find($id);
+            $employee = Employee::with(["contracts","inventories","id_card_photo"])->find($id);
             if(!$employee) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             if($employee->is_posted == false && $employee->created_by != auth()->user()->id){
                 return ["success" => false, "message" => "Draft dibuat oleh user lain", "status" => 400]; 
@@ -68,14 +68,16 @@ class EmployeeService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        
+            
             $employee = new Employee();
-            $current_date = date("Y-m-d H:i:s");
-            $employee->created_at = $current_date;
-            $employee->updated_at = $current_date;
+            $current_timestamp = date("Y-m-d H:i:s");
+            $employee->created_at = $current_timestamp;
+            $employee->updated_at = $current_timestamp;
             $employee->created_by = auth()->user()->id;
             $employee->is_posted = false;
             $employee->save();
+
+           
 
             try{
             return ["success" => true, "message" => "Data Berhasil Dibuat", "data" => $employee, "status" => 200];
@@ -100,14 +102,14 @@ class EmployeeService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        try{
+        
             $id = $request->id;
-            $employee = Employee::find($id);
+            $employee = Employee::with("id_card_photo")->find($id);
             if(!$employee) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             if($employee->is_posted == false && $employee->created_by != auth()->user()->id){
                 return ["success" => false, "message" => "Draft dibuat oleh user lain", "status" => 400]; 
             }
-
+        try{
             $employee->name = $request->name ?? NULL;
             $employee->nip = $request->nip ?? NULL;
             $employee->nik = $request->nik ?? NULL;
@@ -121,6 +123,7 @@ class EmployeeService{
             $employee->gender = $request->gender ?? NULL;
             $employee->blood_type = $request->blood_type ?? NULL;
             $employee->marital_status = $request->marital_status ?? NULL;
+            $employee->number_of_children = $request->number_of_children ?? NULL;
             $employee->bio_mother_name = $request->bio_mother_name ?? NULL;
             $employee->npwp = $request->npwp ?? NULL;
             $employee->bpjs_kesehatan = $request->bpjs_kesehatan ?? NULL;
@@ -129,8 +132,18 @@ class EmployeeService{
             $employee->acc_number_another = $request->acc_number_another ?? NULL;
             $employee->is_posted = $request->is_posted ?? NULL;
             $employee->save();
+
+            $file = $request->file('id_card_photo',NULL);
+            if($file){
+                $old_file_id = $employee->id_card_photo->id ?? NULL;
+                $fileService = new FileService;
+                $add_file_response = $fileService->addFile($employee->id, $file, 'App\Employee', 'employee_id_card_photo', 'Employee', false);
+                if($add_file_response['success'] && $old_file_id) {
+                    $fileService->deleteForceFile($old_file_id);
+                }
+            }
             
-            return ["success" => true, "message" => "Data Berhasil Diupdate", "data" => $employee, "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diupdate", "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -174,7 +187,7 @@ class EmployeeService{
         }
 
         $id = $request->id;
-        $employeeContract = EmployeeContract::with(["employee"])->find($id);
+        $employeeContract = EmployeeContract::with(["employee","role","contract_status","contract_file"])->find($id);
         if(!$employeeContract) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
 
@@ -236,9 +249,9 @@ class EmployeeService{
 
         try{
             $employeeContract = new EmployeeContract();
-            $current_date = date("Y-m-d H:i:s");
-            $employeeContract->created_at = $current_date;
-            $employeeContract->updated_at = $current_date;
+            $current_timestamp = date("Y-m-d H:i:s");
+            $employeeContract->created_at = $current_timestamp;
+            $employeeContract->updated_at = $current_timestamp;
             $employeeContract->created_by = auth()->user()->id;
             $employeeContract->is_employee_active = false;
             $employeeContract->employee_id = $request->employee_id;
@@ -265,7 +278,7 @@ class EmployeeService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        try{
+            
             $id = $request->id;
             $employee_id = $request->employee_id;
             $employeeContract = EmployeeContract::find($id);
@@ -284,8 +297,18 @@ class EmployeeService{
             $employeeContract->resign_at = $request->resign_at ?? NULL;
             $employeeContract->benefit = $request->benefit ?? NULL;
             $employeeContract->save();
-            
-            return ["success" => true, "message" => "Data Berhasil Diupdate", "data" => $employeeContract, "status" => 200];
+
+            $file = $request->file('contract_file',NULL);
+            if($file){
+                $old_file_id = $employeeContract->contract_file->id ?? NULL;
+                $fileService = new FileService;
+                $add_file_response = $fileService->addFile($employeeContract->id, $file, 'App\EmployeeContract', 'employee_contract_file', 'EmployeeContract', false);
+                if($add_file_response['success'] && $old_file_id) {
+                    $fileService->deleteForceFile($old_file_id);
+                }
+            }
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diupdate", "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -336,7 +359,7 @@ class EmployeeService{
         }
 
         $id = $request->id;
-        $employeeInventory = EmployeeInventory::with(["employee","devices"])->find($id);
+        $employeeInventory = EmployeeInventory::with(["employee","devices","delivery_file","return_file"])->find($id);
         if(!$employeeInventory) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
 
@@ -398,9 +421,9 @@ class EmployeeService{
 
         try{
             $employeeInventory = new EmployeeInventory();
-            $current_date = date("Y-m-d H:i:s");
-            $employeeInventory->created_at = $current_date;
-            $employeeInventory->updated_at = $current_date;
+            $current_timestamp = date("Y-m-d H:i:s");
+            $employeeInventory->created_at = $current_timestamp;
+            $employeeInventory->updated_at = $current_timestamp;
             $employeeInventory->created_by = auth()->user()->id;
             $employeeInventory->employee_id = $request->employee_id;
             $employeeInventory->save();
@@ -426,21 +449,43 @@ class EmployeeService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        try{
             $id = $request->id;
-            $employee = EmployeeInventory::find($id);
-            if(!$employee) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+            $employeeInventory = EmployeeInventory::with(["delivery_file","return_file"])->find($id);
+            if(!$employeeInventory) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
-            $employee->id_number = $request->id_number ?? NULL;
-            $employee->device_name = $request->device_name ?? NULL;
-            $employee->referance_invertory = $request->referance_invertory ?? NULL;
-            $employee->device_type = $request->device_type ?? NULL;
-            $employee->serial_number = $request->serial_number ?? NULL;
-            $employee->pic_delivery = $request->pic_delivery ?? NULL;
-            $employee->pic_taking = $request->pic_taking ?? NULL;
-            $employee->save();
+            $employeeInventory->id_number = $request->id_number ?? NULL;
+            $employeeInventory->device_name = $request->device_name ?? NULL;
+            $employeeInventory->referance_invertory = $request->referance_invertory ?? NULL;
+            $employeeInventory->device_type = $request->device_type ?? NULL;
+            $employeeInventory->serial_number = $request->serial_number ?? NULL;
+            $employeeInventory->delivery_date = $request->delivery_date ?? NULL;
+            $employeeInventory->return_date = $request->return_date ?? NULL;
+            $employeeInventory->pic_delivery = $request->pic_delivery ?? NULL;
+            $employeeInventory->pic_return = $request->pic_return ?? NULL;
+            $employeeInventory->save();
+
+            $delivery_file = $request->file('delivery_file',NULL);
+            if($delivery_file){
+                $old_file_id = $employeeInventory->delivery_file->id ?? NULL;
+                $fileService = new FileService;
+                $add_file_response = $fileService->addFile($employeeInventory->id, $delivery_file, 'App\EmployeeInventory', 'employee_delivery_file', 'EmployeeInventory', false);
+                if($add_file_response['success'] && $old_file_id) {
+                    $fileService->deleteForceFile($old_file_id);
+                }
+            }
+
+            $return_file = $request->file('return_file',NULL);
+            if($return_file){
+                $old_file_id = $employeeInventory->return_file->id ?? NULL;
+                $fileService = new FileService;
+                $add_file_response = $fileService->addFile($employeeInventory->id, $return_file, 'App\EmployeeInventory', 'employee_return_file', 'EmployeeInventory', false);
+                if($add_file_response['success'] && $old_file_id) {
+                    $fileService->deleteForceFile($old_file_id);
+                }
+            }
             
-            return ["success" => true, "message" => "Data Berhasil Diupdate", "data" => $employee, "status" => 200];
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diupdate", "data" => $employeeInventory, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -549,9 +594,9 @@ class EmployeeService{
 
         
             $employeeDevice = new EmployeeDevice();
-            $current_date = date("Y-m-d H:i:s");
-            $employeeDevice->created_at = $current_date;
-            $employeeDevice->updated_at = $current_date;
+            $current_timestamp = date("Y-m-d H:i:s");
+            $employeeDevice->created_at = $current_timestamp;
+            $employeeDevice->updated_at = $current_timestamp;
             $employeeDevice->created_by = auth()->user()->id;
             $employeeDevice->employee_inventory_id = $request->employee_inventory_id;
             $employeeDevice->save();

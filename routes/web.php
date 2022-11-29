@@ -501,21 +501,21 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getEmployee', 'EmployeeController@getEmployee');
     $router->get('/getEmployees', 'EmployeeController@getEmployees');
     $router->post('/addEmployee', 'EmployeeController@addEmployee');
-    $router->put('/updateEmployee', 'EmployeeController@updateEmployee');
+    $router->post('/updateEmployee', 'EmployeeController@updateEmployee');
     $router->delete('/deleteEmployee', 'EmployeeController@deleteEmployee');
 
     // Employee Contract
     $router->get('/getEmployeeContract', 'EmployeeController@getEmployeeContract');
     $router->get('/getEmployeeContracts', 'EmployeeController@getEmployeeContracts');
     $router->post('/addEmployeeContract', 'EmployeeController@addEmployeeContract');
-    $router->put('/updateEmployeeContract', 'EmployeeController@updateEmployeeContract');
+    $router->post('/updateEmployeeContract', 'EmployeeController@updateEmployeeContract');
     $router->delete('/deleteEmployeeContract', 'EmployeeController@deleteEmployeeContract');
 
     // Employee Inventory
     $router->get('/getEmployeeInventory', 'EmployeeController@getEmployeeInventory');
     $router->get('/getEmployeeInventories', 'EmployeeController@getEmployeeInventories');
     $router->post('/addEmployeeInventory', 'EmployeeController@addEmployeeInventory');
-    $router->put('/updateEmployeeInventory', 'EmployeeController@updateEmployeeInventory');
+    $router->post('/updateEmployeeInventory', 'EmployeeController@updateEmployeeInventory');
     $router->delete('/deleteEmployeeInventory', 'EmployeeController@deleteEmployeeInventory');
 
     // Employee Device

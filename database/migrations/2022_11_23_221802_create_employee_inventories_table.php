@@ -20,10 +20,12 @@ class CreateEmployeeInventoriesTable extends Migration
             $table->string("referance_invertory")->nullable();
             $table->string("device_type")->nullable();
             $table->string("serial_number")->nullable();
+            $table->date("delivery_date")->nullable();
+            $table->date("return_date")->nullable();
             $table->string("pic_delivery")->nullable();
-            $table->string("pic_taking")->nullable();
-            // pic_delivery_document morph files
-            // pic_taking_document morph files
+            $table->string("pic_return")->nullable();
+            // delivery_file morph files
+            // return_file morph files
             $table->unsignedBigInteger('employee_id'); //refernece employee.id
             $table->dateTime('created_at');
             $table->dateTime('updated_at');

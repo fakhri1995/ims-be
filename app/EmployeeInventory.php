@@ -19,4 +19,14 @@ class EmployeeInventory extends Model
     {
         return $this->hasMany(EmployeeDevice::class, "employee_inventory_id");
     }
+
+    public function delivery_file()
+    {
+        return $this->morphOne(File::class, 'fileable')->where("description","employee_delivery_file");
+    }
+
+    public function return_file()
+    {
+        return $this->morphOne(File::class, 'fileable')->where("description","employee_return_file");;
+    }
 }
