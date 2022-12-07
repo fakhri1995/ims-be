@@ -10,6 +10,11 @@ class Employee extends Model
     public $timestamps = false;
     use SoftDeletes;
 
+    public function contract()
+    {
+        return $this->hasOne(EmployeeContract::class, "employee_id", "id")->orderBy('contract_start_at','desc');
+    }
+
     public function contracts()
     {
         return $this->hasMany(EmployeeContract::class, "employee_id", "id");

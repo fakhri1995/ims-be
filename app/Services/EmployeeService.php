@@ -19,6 +19,49 @@ class EmployeeService{
         $this->globalService = new GlobalService;
     }  
 
+    public function getEmployeePlacementsCount(){
+        try{
+            $employee = EmployeeContract::where("is_employee_active",1)
+            ->selectRaw("placement, count(*) as placement_count")
+            ->groupBy("placement")
+            ->get();
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employee, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getEmployeeRolesCount(){
+        try{
+            $employee = EmployeeContract::with("role")
+            ->where("is_employee_active",1)
+            ->selectRaw("role_id, count(*) as role_count")
+            ->groupBy("role_id")
+            ->get();
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employee, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getEmployeeStatusesCount(){
+
+        $employeeContracts = EmployeeContract::selectRaw("id as contract_id,employee_id,is_employee_active ,max(contract_start_at) as contract_start_at")
+        ->groupBy("employee_id");
+
+        $employee = Employee::joinSub($employeeContracts, "employee_contracts", function($query){
+            $query->on("employees.id","=","employee_contracts.employee_id");
+        })
+        ->selectRaw("count(*) as status_count, is_employee_active")
+        ->groupBy("is_employee_active")
+        ->get();
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employee, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     public function getEmployee($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
@@ -34,7 +77,9 @@ class EmployeeService{
         }
 
             $id = $request->id;
-            $employee = Employee::with(["contracts","inventories","id_card_photo"])->find($id);
+            $employee = Employee::with(["id_card_photo",
+                "contracts","contracts.role","contracts.contract_status",
+                "inventories","inventories.devices","inventories.delivery_file","inventories.return_file"])->find($id);
             if(!$employee) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             if($employee->is_posted == false && $employee->created_by != auth()->user()->id){
                 return ["success" => false, "message" => "Draft dibuat oleh user lain", "status" => 400]; 
@@ -54,10 +99,44 @@ class EmployeeService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $employee = Employee::with(["contracts","inventories"])->paginate();
+
+        $keyword = $request->keyword ?? NULL;
+        $role_ids = $request->role_ids ? explode(",",$request->role_ids) : NULL;
+        $placements = $request->placements ? explode(",",$request->placements) : NULL;
+        $contract_status_ids = $request->contract_status_ids ? explode(",",$request->contract_status_ids) : NULL;
+        $is_employee_active = $request->is_employee_active == 1 ? 1 : 0;
+        $rows = $request->rows ?? 5;
+
+
+        $employees = Employee::with(["contract","contract.role","contract.contract_status"]);
+
+        // filter
+        if($keyword) $employees = $employees->where("name","LIKE", "%$keyword%");
+        $employees = $employees->whereHas("contract", function ($query) use ($role_ids,$placements,$contract_status_ids, $is_employee_active) {
+            if($role_ids) $query->whereIn('role_id', $role_ids);
+            if($placements) $query->whereIn('placement', $placements);
+            if($contract_status_ids) $query->whereIn('contract_status_id', $contract_status_ids);
+            $query->where('is_employee_active',$is_employee_active);
+            return $query;
+        });
+        
+
+        // sort
+        $sort_by = $request->sort_by ?? NULL;
+        $sort_type = $request->get('sort_type','asc');
+        if($sort_by == "name") $employees = $employees->orderBy('name',$sort_type);
+        // if($sort_by == "role") $employees = $employees->orderBy(RecruitmentRole::select("name")
+        //         ->whereColumn("employee_roles.id","employees.employee_role_id"),$sort_type);
+
+        $employees = $employees->paginate($rows);
+        $current_timestamp = date_create(date("Y-m-d"));
+        foreach($employees as $e){
+            $contract_end_at = date_create($e->contract->contract_end_at);
+            $e->contract->contract_end_countdown = $current_timestamp > $contract_end_at ? 0 : date_diff($current_timestamp,$contract_end_at)->days;
+        }
 
         try{
-            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employee, "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employees, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -216,7 +295,10 @@ class EmployeeService{
 
         $employee_id = $request->employee_id;
 
-        $employeeContracts = EmployeeContract::with(["employee"])->where(["employee_id" => $employee_id])->get();
+        $employeeContracts = EmployeeContract::with(["employee"])
+            ->where(["employee_id" => $employee_id])
+            ->orderBy('contract_start_at','desc')
+            ->get();
 
         try{
 
@@ -278,7 +360,8 @@ class EmployeeService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-            
+              
+
             $id = $request->id;
             $employee_id = $request->employee_id;
             $employeeContract = EmployeeContract::find($id);
@@ -295,7 +378,11 @@ class EmployeeService{
             $employeeContract->placement = $request->placement ?? NULL;
             $employeeContract->new_office = $request->new_office ?? NULL;
             $employeeContract->resign_at = $request->resign_at ?? NULL;
+            $employeeContract->annual_leave = $request->annual_leave ?? NULL;
             $employeeContract->benefit = $request->benefit ?? NULL;
+
+            if($employeeContract->is_employee_active == true) EmployeeContract::where('employee_id',$employee_id)->update(['is_employee_active' => 0]);  
+
             $employeeContract->save();
 
             $file = $request->file('contract_file',NULL);
@@ -441,7 +528,9 @@ class EmployeeService{
 
         $validator = Validator::make($request->all(), [
             "id" => "numeric|required",
-            "employee_id" => "numeric|required"
+            "employee_id" => "numeric|required",
+            "device" => "array",
+            // "device.*.id" => "required_with:device"
         ]);
 
         if($validator->fails()){
@@ -453,6 +542,7 @@ class EmployeeService{
             $employeeInventory = EmployeeInventory::with(["delivery_file","return_file"])->find($id);
             if(!$employeeInventory) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
+        try{
             $employeeInventory->id_number = $request->id_number ?? NULL;
             $employeeInventory->device_name = $request->device_name ?? NULL;
             $employeeInventory->referance_invertory = $request->referance_invertory ?? NULL;
@@ -484,8 +574,20 @@ class EmployeeService{
                 }
             }
             
-        try{
-            return ["success" => true, "message" => "Data Berhasil Diupdate", "data" => $employeeInventory, "status" => 200];
+            $devices = $request->device;
+            foreach($devices as $device){
+                $device = (object)$device;
+                $employeeDevice = EmployeeDevice::where(["id" => $device->id, "employee_inventory_id" => $device->employee_inventory_id])->first();
+                if($employeeDevice){
+                    $employeeDevice->id_number = $device->id_number;
+                    $employeeDevice->device_name = $device->device_name;
+                    $employeeDevice->device_type = $device->device_type;
+                    $employeeDevice->serial_number = $device->serial_number;
+                    $employeeDevice->save();
+                }
+            }
+            
+            return ["success" => true, "message" => "Data Berhasil Diupdate", "data" => $employeeDevice, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
