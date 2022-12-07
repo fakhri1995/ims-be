@@ -12,6 +12,31 @@ class EmployeeController extends Controller
         $this->employeeService = new EmployeeService;
     }
 
+    public function getEmployeePlacementsCount(Request $request)
+    {
+        $route_name = "";
+
+        $response = $this->employeeService->getEmployeePlacementsCount($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getEmployeeRolesCount(Request $request)
+    {
+        $route_name = "";
+
+        $response = $this->employeeService->getEmployeeRolesCount($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getEmployeeStatusesCount(Request $request)
+    {
+        $route_name = "";
+
+        $response = $this->employeeService->getEmployeeStatusesCount($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    
+
     public function getEmployee(Request $request)
     {
         $route_name = "EMPLOYEE_GET";

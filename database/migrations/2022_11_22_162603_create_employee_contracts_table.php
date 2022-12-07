@@ -26,6 +26,7 @@ class CreateEmployeeContractsTable extends Migration
             $table->string("placement")->nullable();
             $table->string("new_office")->nullable();
             $table->date("resign_at")->nullable();
+            $table->integer("annual_leave")->nullable();
             $table->text("benefit")->nullable();
             $table->unsignedBigInteger('employee_id'); //refernece employee.id
             $table->dateTime('created_at');
