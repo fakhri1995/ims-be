@@ -504,6 +504,9 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addEmployee', 'EmployeeController@addEmployee');
     $router->post('/updateEmployee', 'EmployeeController@updateEmployee');
     $router->delete('/deleteEmployee', 'EmployeeController@deleteEmployee');
+    $router->get('/getEmployeePlacementsCount', 'EmployeeController@getEmployeePlacementsCount');
+    $router->get('/getEmployeeRolesCount', 'EmployeeController@getEmployeeRolesCount');
+    $router->get('/getEmployeeStatusesCount', 'EmployeeController@getEmployeeStatusesCount');
 
     // Employee Contract
     $router->get('/getEmployeeContract', 'EmployeeController@getEmployeeContract');
