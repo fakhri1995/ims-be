@@ -75,4 +75,19 @@ class CompanyProfileController extends Controller
         $response = $this->companyProfileService->deleteCareer($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    public function addFormSolution(Request $request)
+    {
+        $route_name = "FORM_POST";
+
+        $response = $this->companyProfileService->addFormSolution($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function addFormSolutionTalent(Request $request)
+    {
+        $route_name = "FORM_POST";
+
+        $response = $this->companyProfileService->addFormSolutionTalents($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }
