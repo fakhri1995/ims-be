@@ -157,8 +157,6 @@ class CompanyProfileService{
                 
                 $add_file_response = $fileService->addFile($message->id, $file, $table, $description, $folder_detail);
             }
-                
-                // Log::info("hasfile " . $add_file_response);
            
             return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
         } catch(Exception $err){
@@ -169,10 +167,6 @@ class CompanyProfileService{
 
     public function addFormSolutionTalents(Request $request, $route_name)
     {
-        // Log::info("oe bro " .$request->get('talent_list'));
-        // Log::info("oe bro 2" .$request->talent_list);
-        // Log::info("oe bro 3" .$request);
-        // Log::info("oe bro 2" .$request->talent_list);
         $message = new FormSolution;
         $message->company_name = $request->company_name;
         $message->contact_name = $request->getcontact_name;
@@ -217,7 +211,6 @@ class CompanyProfileService{
            
             return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
         } catch(Exception $err){
-            Log::info("error iki bro ".$err);
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
