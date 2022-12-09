@@ -5,7 +5,10 @@ use Illuminate\Http\Request;
 use App\Services\GlobalService;
 use App\Message;
 use App\Career;
+use App\FormSolution;
+use App\FormSolutionDetail;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 class CompanyProfileService{
     public function __construct()
@@ -126,4 +129,91 @@ class CompanyProfileService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
+
+    public function addFormSolution(Request $request, $route_name)
+    {
+        Log::info("oe bro " .$request);
+        $message = new FormSolution;
+        $message->company_name = $request->company_name;
+        $message->contact_name = $request->getcontact_name;
+        $message->email = $request->company_email;
+        $message->phone_number = $request->phone_number;
+        $message->kind_project = $request->kind_project;
+        $message->type_project = $request->type_project;
+        $message->purpose = $request->purpose;
+        $message->budget_from = $request->budget_from;
+        $message->budget_to = $request->budget_to;
+        $message->meeting_schedule = $request->meeting_schedule;
+        $message->kind_form = $request->kind_form;
+        
+        try{
+            $message->save();
+            if(method_exists($request,'hasFile') && $request->hasFile('attachment')) {
+                $fileService = new FileService;
+                $file = $request->file('attachment');
+                $table = 'App\FormSolution';
+                $description = 'attachment_software';
+                $folder_detail = 'FormSolution';
+                
+                $add_file_response = $fileService->addFile($message->id, $file, $table, $description, $folder_detail);
+            }
+           
+            return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
+        } catch(Exception $err){
+            Log::info("error iki bro ".$err);
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addFormSolutionTalents(Request $request, $route_name)
+    {
+        $message = new FormSolution;
+        $message->company_name = $request->company_name;
+        $message->contact_name = $request->getcontact_name;
+        $message->email = $request->company_email;
+        $message->phone_number = $request->phone_number;
+        $message->kind_project = $request->kind_project;
+        $message->meeting_schedule = $request->meeting_schedule;
+        $message->kind_form = $request->kind_form;
+        $message->many_people = $request->many_people;
+        
+        try{
+            $message->save();
+            $talent_list =$request->get('talent_list');
+            // Log::info("bismillah bro ".$talent_list[0]->kindOfTalent);
+            
+             for ($a = 0; $a < count($request->talent_list); $a++) {
+                $data_talent = $request->talent_list[$a];
+                $product_list="";
+                for($b=0;$b<count($data_talent['product']);$b++) {
+                    $data_product = $data_talent['product'][$b];
+                    if($b==(count($data_talent['product'])-1)) {
+                        $product_list=$product_list.$data_product;
+                    }
+                    else {
+                        $product_list=$product_list.$data_product . ",";
+                    }
+                }
+                $data_save[] = [
+                    'kind_of_product' => $data_talent['kindOfTalent'],
+                    'list_product' => $product_list,
+                    'level_employee' => $data_talent['levelEmployee'],
+                    'many_product' => $data_talent['manyTalent'],
+                    'urgently' => $data_talent['urgently'],
+                    'time_used' => $data_talent['timeUsed'],
+                    'open_remote' => $data_talent['openRemote'],
+                    'maximum_budget' => $data_talent['maxBudget'],
+                    'details' => $data_talent['details'],
+                    'form_solution_id' => $message->id,
+                ];
+             }
+            FormSolutionDetail::insert($data_save);
+           
+            return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    
 }
