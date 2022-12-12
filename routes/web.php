@@ -17,7 +17,7 @@ $router->post('/addMessage', 'CompanyProfileController@addMessage');
 $router->get('/getCareers', 'CompanyProfileController@getCareers');
 $router->post('/addFormSolution', 'CompanyProfileController@addFormSolution');
 $router->post('/addFormSolutionTalent', 'CompanyProfileController@addFormSolutionTalent');
-
+$router->post('/addFormSolutionHardware', 'CompanyProfileController@addFormSolutionHardware');
 // ----------------------------------------- //
 
 $router->post('/login', 'LoginController@login');
