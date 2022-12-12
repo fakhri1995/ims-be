@@ -132,10 +132,9 @@ class CompanyProfileService{
 
     public function addFormSolution(Request $request, $route_name)
     {
-        Log::info("oe bro " .$request);
         $message = new FormSolution;
         $message->company_name = $request->company_name;
-        $message->contact_name = $request->getcontact_name;
+        $message->contact_name = $request->contact_name;
         $message->email = $request->company_email;
         $message->phone_number = $request->phone_number;
         $message->kind_project = $request->kind_project;
@@ -208,6 +207,34 @@ class CompanyProfileService{
                 ];
              }
             FormSolutionDetail::insert($data_save);
+           
+            return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addFormSolutionHardware(Request $request, $route_name)
+    {
+        $message = new FormSolution;
+        $message->company_name = $request->company_name;
+        $message->contact_name = $request->contact_name;
+        $message->email = $request->company_email;
+        $message->phone_number = $request->phone_number;
+        $message->purpose = $request->purpose;
+        $message->meeting_schedule = $request->meeting_schedule;
+        $message->kind_form = $request->kind_form;
+        // Log::info("bismillah bro ".$request->get('hardware_list'));
+        try{
+            $message->save();
+            $talent_list =$request->get('hardware_list');
+            // Log::info("bismillah bro ".$talent_list[0]->kindOfHardware);
+            
+             for ($a = 0; $a < count($request->hardware_list); $a++) {
+                $hardware=$request->hardware_list[$a];
+                
+             }
+            // FormSolutionDetail::insert($data_save);
            
             return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
         } catch(Exception $err){

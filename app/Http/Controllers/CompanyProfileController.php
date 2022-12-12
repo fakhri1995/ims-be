@@ -90,4 +90,11 @@ class CompanyProfileController extends Controller
         $response = $this->companyProfileService->addFormSolutionTalents($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    public function addFormSolutionHardware(Request $request)
+    {
+        $route_name = "FORM_POST";
+
+        $response = $this->companyProfileService->addFormSolutionHardware($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }
