@@ -15,6 +15,8 @@
 
 $router->post('/addMessage', 'CompanyProfileController@addMessage');
 $router->get('/getCareers', 'CompanyProfileController@getCareers');
+$router->get('/getArticle', 'CompanyProfileController@getArticle');
+$router->get('/getArticleDetail', 'CompanyProfileController@getArticleDetail');
 $router->post('/addFormSolution', 'CompanyProfileController@addFormSolution');
 $router->post('/addFormSolutionTalent', 'CompanyProfileController@addFormSolutionTalent');
 $router->post('/addFormSolutionHardware', 'CompanyProfileController@addFormSolutionHardware');
@@ -46,6 +48,15 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getMessages', 'CompanyProfileController@getMessages');
     $router->delete('/deleteMessage', 'CompanyProfileController@deleteMessage');
 
+    //formsolution routes
+    
+    $router->get('/getFormSolution', 'CompanyProfileController@getFormSolution');
+    $router->get('/getFormSolutionDetail', 'CompanyProfileController@getFormSolutionDetail');
+
+    //blog routes
+    $router->post('/addArticle', 'CompanyProfileController@addArticle');
+    $router->delete('/deleteArticle', 'CompanyProfileController@deleteArticle');
+    $router->post('/updateArticle', 'CompanyProfileController@updateArticle');
     //Career Routes
     $router->post('/addCareer', 'CompanyProfileController@addCareer');
     $router->put('/updateCareer', 'CompanyProfileController@updateCareer');

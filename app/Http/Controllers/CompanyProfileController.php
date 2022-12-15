@@ -97,4 +97,55 @@ class CompanyProfileController extends Controller
         $response = $this->companyProfileService->addFormSolutionHardware($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    public function getFormSolution(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getFormSolution($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getFormSolutionDetail(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getFormSolutionDetail($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function addArticle(Request $request)
+    {
+        $route_name = "ARTICLE_POST";
+
+        $response = $this->companyProfileService->addArticle($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getArticle(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getArticle($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function deleteArticle(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->deleteArticle($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getArticleDetail(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getArticleDetail($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function updateArticle(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->updateArticle($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    
 }
