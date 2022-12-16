@@ -147,5 +147,40 @@ class CompanyProfileController extends Controller
         $response = $this->companyProfileService->updateArticle($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    public function addProduct(Request $request)
+    {
+        $route_name = "PRODUCT_POST";
+
+        $response = $this->companyProfileService->addProduct($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getProduct(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getProduct($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function deleteProduct(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->deleteProduct($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getProductDetail(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getProductDetail($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function updateProduct(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->updateProduct($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
     
 }
