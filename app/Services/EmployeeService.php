@@ -104,11 +104,14 @@ class EmployeeService{
         $role_ids = $request->role_ids ? explode(",",$request->role_ids) : NULL;
         $placements = $request->placements ? explode(",",$request->placements) : NULL;
         $contract_status_ids = $request->contract_status_ids ? explode(",",$request->contract_status_ids) : NULL;
-        $is_employee_active = $request->is_employee_active == 1 ? 1 : 0;
+        $is_employee_active = $request->is_employee_active == 0 ? 0 : 1;
         $rows = $request->rows ?? 5;
 
-
-        $employees = Employee::with(["contract","contract.role","contract.contract_status"]);
+        $current_timestamp = date("Y-m-d");
+        $employees = Employee::with(["contract" => function ($query) use($current_timestamp) {
+            $query->selectRaw("*, DATEDIFF(contract_end_at, '$current_timestamp') as contract_end_countdown");
+            $query->orderBy("contract_end_countdown", "asc");
+        },"contract.role","contract.contract_status"]);
 
         // filter
         if($keyword) $employees = $employees->where("name","LIKE", "%$keyword%");
@@ -119,6 +122,9 @@ class EmployeeService{
             $query->where('is_employee_active',$is_employee_active);
             return $query;
         });
+
+        $employees = $employees->orderBy(EmployeeContract::select("contract_end_at")
+        ->whereColumn("employees.id","employee_contracts.employee_id")->limit(1),"asc");
         
 
         // sort
@@ -128,12 +134,12 @@ class EmployeeService{
         // if($sort_by == "role") $employees = $employees->orderBy(RecruitmentRole::select("name")
         //         ->whereColumn("employee_roles.id","employees.employee_role_id"),$sort_type);
 
-        $employees = $employees->paginate($rows);
-        $current_timestamp = date_create(date("Y-m-d"));
-        foreach($employees as $e){
-            $contract_end_at = date_create($e->contract->contract_end_at);
-            $e->contract->contract_end_countdown = $current_timestamp > $contract_end_at ? 0 : date_diff($current_timestamp,$contract_end_at)->days;
-        }
+        $employees = $employees->toSql();
+        // $current_timestamp = date_create(date("Y-m-d"));
+        // foreach($employees as $e){
+        //     $contract_end_at = date_create($e->contract->contract_end_at);
+        //     $e->contract->contract_end_countdown = $current_timestamp > $contract_end_at ? 0 : date_diff($current_timestamp,$contract_end_at)->days;
+        // }
 
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employees, "status" => 200];
