@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Blog;
+use App\Product;
 use Illuminate\Http\Request;
 use App\Services\GlobalService;
 use App\Message;
@@ -162,7 +163,6 @@ class CompanyProfileService{
            
             return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
         } catch(Exception $err){
-            Log::info("error iki bro ".$err);
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
@@ -182,7 +182,6 @@ class CompanyProfileService{
         try{
             $message->save();
             $talent_list =$request->get('talent_list');
-            // Log::info("bismillah bro ".$talent_list[0]->kindOfTalent);
             
              for ($a = 0; $a < count($request->talent_list); $a++) {
                 $data_talent = $request->talent_list[$a];
@@ -219,7 +218,6 @@ class CompanyProfileService{
 
     public function addFormSolutionHardware(Request $request, $route_name)
     {
-        Log::info($request);
         $message = new FormSolution;
         $message->company_name = $request->company_name;
         $message->contact_name = $request->contact_name;
@@ -339,7 +337,6 @@ class CompanyProfileService{
            
             return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
         } catch(Exception $err){
-            Log::info("error iki bro ".$err);
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
@@ -349,7 +346,6 @@ class CompanyProfileService{
         
         try{
             $messages = Blog::with('attachment_article')->get();
-            Log::info('My message', ['user' => $messages]);
             if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $messages, "status" => 200];
         } catch(Exception $err){
@@ -423,6 +419,117 @@ class CompanyProfileService{
                 $old_file_id = $article->attachment_article->id ?? NULL;
                 $fileService = new FileService;
                 $add_file_response = $fileService->addFile($article->id, $file, 'App\Blog', 'attachment_article', 'Blog', false);
+                if($add_file_response['success'] && $old_file_id) {
+                    $fileService->deleteForceFile($old_file_id);
+                }
+            }
+            
+            return ["success" => true, "message" => "Data Berhasil Diupdate", "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addProduct(Request $request, $route_name)
+    {
+        $product = new Product;
+        $product->name_product = $request->name_product;
+        $product->category_product_id = $request->category_product_id;
+        try{
+            $product->save();
+            if(method_exists($request,'hasFile') && $request->hasFile('attachment_product')) {
+                $fileService = new FileService;
+                $file = $request->file('attachment_product');
+                $table = 'App\Product';
+                $description = 'attachment_product';
+                $folder_detail = 'Product';
+                
+                $add_file_response = $fileService->addFile($product->id, $file, $table, $description, $folder_detail);
+            }
+           
+            return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getProduct(Request $request, $route_name)
+    {
+        
+        try{
+            $messages = Product::with('attachment_product')->get();
+            if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $messages, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getProductDetail($request, $route_name)
+    {
+
+        $validator = Validator::make($request->all(), [
+            "id" => "numeric|required"
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+            $id = $request->id;
+            $employee = Product::with('attachment_product')->find($id);
+            if(!$employee) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+
+
+        try{
+
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employee, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteProduct($request, $route_name)
+    {
+
+        $id = $request->id;
+        $product = Product::find($id);
+        if(!$product) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+
+        try{
+            $product->delete();
+            return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $product, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateProduct($request,$route_name) 
+    {
+        $validator = Validator::make($request->all(), [
+            "id" => "numeric|required",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        
+            $id = $request->id;
+            $product = Product::with('attachment_product')->find($id);
+            if(!$product) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        try{
+            $product->name_product = $request->name_product ?? NULL;
+            $product->category_product_id = $request->category_product_id ?? NULL;
+            $product->save();
+
+            $file = $request->file('attachment_product',NULL);
+            if($file){
+                $old_file_id = $product->attachment_product->id ?? NULL;
+                $fileService = new FileService;
+                $add_file_response = $fileService->addFile($product->id, $file, 'App\Product', 'attachment_product', 'Product', false);
                 if($add_file_response['success'] && $old_file_id) {
                     $fileService->deleteForceFile($old_file_id);
                 }
