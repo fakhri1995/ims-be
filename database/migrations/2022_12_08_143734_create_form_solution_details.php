@@ -22,6 +22,7 @@ class CreateFormSolutionDetails extends Migration
             $table->integer('many_product');
             $table->integer('maximum_budget');
             $table->string('time_used');
+            $table->string('open_remote');
             $table->text('details');
             $table->unsignedBigInteger('form_solution_id'); //refernece form solution id
             $table->dateTime('created_at');
