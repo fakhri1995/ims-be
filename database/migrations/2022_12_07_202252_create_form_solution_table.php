@@ -42,6 +42,6 @@ class CreateFormSolutionTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('form_solution');
+        Schema::dropIfExists('form_solutions');
     }
 }
