@@ -199,4 +199,88 @@ class EmployeeController extends Controller
         $response = $this->employeeService->deleteEmployeeDevice($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+
+    // EMPLOYEE SALARY TEMPLATE
+    public function getEmployeeSalaryColumn(Request $request)
+    {
+        $route_name = "EMPLOYEE_SALARY_COLUMN_GET";
+
+        $response = $this->employeeService->getEmployeeSalaryColumn($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    
+    public function getEmployeeSalaryColumns(Request $request)
+    {
+        $route_name = "EMPLOYEE_SALARY_COLUMNS_GET";
+
+        $response = $this->employeeService->getEmployeeSalaryColumns($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function addEmployeeSalaryColumn(Request $request)
+    {
+        $route_name = "EMPLOYEE_SALARY_COLUMN_ADD";
+
+        $response = $this->employeeService->addEmployeeSalaryColumn($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateEmployeeSalaryColumn(Request $request)
+    {
+        $route_name = "EMPLOYEE_SALARY_COLUMN_UPDATE";
+
+        $response = $this->employeeService->updateEmployeeSalaryColumn($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteEmployeeSalaryColumn(Request $request)
+    {
+        $route_name = "EMPLOYEE_SALARY_COLUMN_DELETE";
+
+        $response = $this->employeeService->deleteEmployeeSalaryColumn($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+
+    // EMPLOYEE PAYSLIP
+    public function getEmployeePayslip(Request $request)
+    {
+        $route_name = "EMPLOYEE_PAYSLIP_GET";
+
+        $response = $this->employeeService->getEmployeePayslip($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    
+    public function getEmployeePayslips(Request $request)
+    {
+        $route_name = "EMPLOYEE_PAYSLIPS_GET";
+
+        $response = $this->employeeService->getEmployeePayslips($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function addEmployeePayslip(Request $request)
+    {
+        $route_name = "EMPLOYEE_PAYSLIP_ADD";
+
+        $response = $this->employeeService->addEmployeePayslip($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateEmployeePayslip(Request $request)
+    {
+        $route_name = "EMPLOYEE_PAYSLIP_UPDATE";
+
+        $response = $this->employeeService->updateEmployeePayslip($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteEmployeePayslip(Request $request)
+    {
+        $route_name = "EMPLOYEE_PAYSLIP_DELETE";
+
+        $response = $this->employeeService->deleteEmployeePayslip($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }

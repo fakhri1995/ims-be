@@ -6,6 +6,8 @@ use App\Employee;
 use App\EmployeeContract;
 use App\EmployeeDevice;
 use App\EmployeeInventory;
+use App\EmployeePayslip;
+use App\EmployeeSalaryColumn;
 use Exception;
 use App\Services\GlobalService;
 use Illuminate\Http\Request;
@@ -104,11 +106,14 @@ class EmployeeService{
         $role_ids = $request->role_ids ? explode(",",$request->role_ids) : NULL;
         $placements = $request->placements ? explode(",",$request->placements) : NULL;
         $contract_status_ids = $request->contract_status_ids ? explode(",",$request->contract_status_ids) : NULL;
-        $is_employee_active = $request->is_employee_active == 1 ? 1 : 0;
+        $is_employee_active = $request->is_employee_active == 0 ? 0 : 1;
         $rows = $request->rows ?? 5;
 
-
-        $employees = Employee::with(["contract","contract.role","contract.contract_status"]);
+        $current_timestamp = date("Y-m-d");
+        $employees = Employee::with(["contract" => function ($query) use($current_timestamp) {
+            $query->selectRaw("*, DATEDIFF(contract_end_at, '$current_timestamp') as contract_end_countdown");
+            $query->orderBy("contract_end_countdown", "asc");
+        },"contract.role","contract.contract_status"]);
 
         // filter
         if($keyword) $employees = $employees->where("name","LIKE", "%$keyword%");
@@ -119,6 +124,9 @@ class EmployeeService{
             $query->where('is_employee_active',$is_employee_active);
             return $query;
         });
+
+        $employees = $employees->orderBy(EmployeeContract::select("contract_end_at")
+        ->whereColumn("employees.id","employee_contracts.employee_id")->limit(1),"asc");
         
 
         // sort
@@ -128,12 +136,12 @@ class EmployeeService{
         // if($sort_by == "role") $employees = $employees->orderBy(RecruitmentRole::select("name")
         //         ->whereColumn("employee_roles.id","employees.employee_role_id"),$sort_type);
 
-        $employees = $employees->paginate($rows);
-        $current_timestamp = date_create(date("Y-m-d"));
-        foreach($employees as $e){
-            $contract_end_at = date_create($e->contract->contract_end_at);
-            $e->contract->contract_end_countdown = $current_timestamp > $contract_end_at ? 0 : date_diff($current_timestamp,$contract_end_at)->days;
-        }
+        $employees = $employees->toSql();
+        // $current_timestamp = date_create(date("Y-m-d"));
+        // foreach($employees as $e){
+        //     $contract_end_at = date_create($e->contract->contract_end_at);
+        //     $e->contract->contract_end_countdown = $current_timestamp > $contract_end_at ? 0 : date_diff($current_timestamp,$contract_end_at)->days;
+        // }
 
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employees, "status" => 200];
@@ -769,4 +777,296 @@ class EmployeeService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
+
+    // EMPLOYEE SALARY COLUMN
+    public function getEmployeeSalaryColumn($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "id" => "numeric|required"
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $id = $request->id;
+        $employeeSalaryTemplate = EmployeeSalaryColumn::find($id);
+        if(!$employeeSalaryTemplate) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+
+
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employeeSalaryTemplate, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    
+    public function getEmployeeSalaryColumns($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $employeeSalaryTemplates = EmployeeSalaryColumn::get();
+
+        try{
+
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employeeSalaryTemplates, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addEmployeeSalaryColumn($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        
+            $employeeSalaryTemplate = new EmployeeSalaryColumn();
+            $current_timestamp = date("Y-m-d H:i:s");
+            $employeeSalaryTemplate->name = $request->name;
+            $employeeSalaryTemplate->percent = $request->percent;
+            $employeeSalaryTemplate->type = $request->type;
+            $employeeSalaryTemplate->required = $request->required;
+            $employeeSalaryTemplate->created_at = $current_timestamp;
+            $employeeSalaryTemplate->updated_at = $current_timestamp;
+            $employeeSalaryTemplate->created_by = auth()->user()->id;
+            $employeeSalaryTemplate->save();
+
+        try{
+            return ["success" => true, "message" => "Data Berhasil Dibuat", "data" => $employeeSalaryTemplate, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateEmployeeSalaryColumn($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "id" => "numeric|required",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+            $id = $request->id;
+            $employeeSalaryTemplate = EmployeeSalaryColumn::find($id);
+            if(!$employeeSalaryTemplate) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+
+            $current_timestamp = date("Y-m-d H:i:s");
+            $employeeSalaryTemplate->name = $request->name;
+            $employeeSalaryTemplate->percent = $request->percent;
+            $employeeSalaryTemplate->type = $request->type;
+            $employeeSalaryTemplate->required = $request->required;
+            $employeeSalaryTemplate->updated_at = $current_timestamp;
+            $employeeSalaryTemplate->save();
+            
+            return ["success" => true, "message" => "Data Berhasil Diupdate", "data" => $employeeSalaryTemplate, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteEmployeeSalaryColumn($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "id" => "numeric|required",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+            $id = $request->id;
+            $employeeSalaryTemplate = EmployeeSalaryColumn::find($id);
+            if(!$employeeSalaryTemplate) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+
+            $employeeSalaryTemplate->delete();
+            
+            return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $employeeSalaryTemplate, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+
+    // EMPLOYEE PAYSLIP
+    public function getEmployeePayslip($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "id" => "numeric|required"
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $id = $request->id;
+        $employeePayslip = EmployeePayslip::with("employee")->find($id);
+        if(!$employeePayslip) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+
+
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employeePayslip, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    
+    public function getEmployeePayslips($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $employeePayslips = EmployeePayslip::with("employee")->paginate();
+
+        try{
+
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employeePayslips, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addEmployeePayslip($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $validator = Validator::make($request->all(), [
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        
+            $employeePayslip = new EmployeePayslip();
+            $current_timestamp = date("Y-m-d H:i:s");
+            $employeePayslip->employee_id = $request->employee_id;
+            $employeePayslip->total_hari_kerja = $request->total_hari_kerja;
+            $employeePayslip->tanggal_dibayarkan = $request->tanggal_dibayarkan;
+            $employeePayslip->total_gross_penerimaan = 0; //sum of penerimaan
+            $employeePayslip->total_gross_pengurangan = 0; //sum of pengeluaran
+            $employeePayslip->take_home_pay = $employeePayslip->total_gross_penerimaan - $employeePayslip->total_gross_pengurangan;
+            $employeePayslip->is_posted = $request->is_posted;
+            $employeePayslip->created_at = $current_timestamp;
+            $employeePayslip->updated_at = $current_timestamp;
+            $employeePayslip->created_by = auth()->user()->id;
+            $employeePayslip->save();
+
+        try{
+            return ["success" => true, "message" => "Data Berhasil Dibuat", "data" => $employeePayslip, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateEmployeePayslip($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "id" => "numeric|required",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+            $id = $request->id;
+            $employeePayslip = EmployeePayslip::find($id);
+            if(!$employeePayslip) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+
+            $current_timestamp = date("Y-m-d H:i:s");
+            $employeePayslip->employee_id = $request->employee_id;
+            $employeePayslip->total_hari_kerja = $request->total_hari_kerja;
+            $employeePayslip->tanggal_dibayarkan = $request->tanggal_dibayarkan;
+            $employeePayslip->total_gross_penerimaan = 0; //sum of penerimaan
+            $employeePayslip->total_gross_pengurangan = 0; //sum of pengeluaran
+            $employeePayslip->take_home_pay = $employeePayslip->total_gross_penerimaan - $employeePayslip->total_gross_pengurangan;
+            $employeePayslip->is_posted = $request->is_posted;
+            $employeePayslip->updated_at = $current_timestamp;
+            $employeePayslip->save();
+            
+            return ["success" => true, "message" => "Data Berhasil Diupdate", "data" => $employeePayslip, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteEmployeePayslip($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "id" => "numeric|required",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+            $id = $request->id;
+            $employeePayslip = EmployeePayslip::find($id);
+            if(!$employeePayslip) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+
+            $employeePayslip->delete();
+            
+            return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $employeePayslip, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    
 }
