@@ -75,4 +75,112 @@ class CompanyProfileController extends Controller
         $response = $this->companyProfileService->deleteCareer($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    public function addFormSolution(Request $request)
+    {
+        $route_name = "FORM_POST";
+
+        $response = $this->companyProfileService->addFormSolution($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function addFormSolutionTalent(Request $request)
+    {
+        $route_name = "FORM_POST";
+
+        $response = $this->companyProfileService->addFormSolutionTalents($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function addFormSolutionHardware(Request $request)
+    {
+        $route_name = "FORM_POST";
+
+        $response = $this->companyProfileService->addFormSolutionHardware($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getFormSolution(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getFormSolution($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getFormSolutionDetail(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getFormSolutionDetail($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function addArticle(Request $request)
+    {
+        $route_name = "ARTICLE_POST";
+
+        $response = $this->companyProfileService->addArticle($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getArticle(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getArticle($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function deleteArticle(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->deleteArticle($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getArticleDetail(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getArticleDetail($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function updateArticle(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->updateArticle($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function addProduct(Request $request)
+    {
+        $route_name = "PRODUCT_POST";
+
+        $response = $this->companyProfileService->addProduct($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getProduct(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getProduct($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function deleteProduct(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->deleteProduct($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getProductDetail(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getProductDetail($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function updateProduct(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->updateProduct($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    
 }
