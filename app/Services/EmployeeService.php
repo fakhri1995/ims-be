@@ -8,6 +8,7 @@ use App\EmployeeDevice;
 use App\EmployeeInventory;
 use App\EmployeePayslip;
 use App\EmployeeSalaryColumn;
+use App\RecruitmentRole;
 use Exception;
 use App\Services\GlobalService;
 use Illuminate\Http\Request;
@@ -121,27 +122,23 @@ class EmployeeService{
             if($role_ids) $query->whereIn('role_id', $role_ids);
             if($placements) $query->whereIn('placement', $placements);
             if($contract_status_ids) $query->whereIn('contract_status_id', $contract_status_ids);
-            $query->where('is_employee_active',$is_employee_active);
+            // $query->where('is_employee_active',$is_employee_active);
             return $query;
         });
 
-        $employees = $employees->orderBy(EmployeeContract::select("contract_end_at")
-        ->whereColumn("employees.id","employee_contracts.employee_id")->limit(1),"asc");
         
 
         // sort
         $sort_by = $request->sort_by ?? NULL;
         $sort_type = $request->get('sort_type','asc');
+        if($sort_by == NULL or $sort_by == "") $employees = $employees->orderBy(EmployeeContract::select("contract_end_at")
+                ->whereColumn("employees.id","employee_contracts.employee_id")->limit(1),$sort_type);
         if($sort_by == "name") $employees = $employees->orderBy('name',$sort_type);
-        // if($sort_by == "role") $employees = $employees->orderBy(RecruitmentRole::select("name")
-        //         ->whereColumn("employee_roles.id","employees.employee_role_id"),$sort_type);
+        if($sort_by == "role") $employees = $employees->orderBy(RecruitmentRole::select("name")
+                ->whereColumn("employee_roles.id","employees.employee_role_id"),$sort_type);
 
-        $employees = $employees->toSql();
-        // $current_timestamp = date_create(date("Y-m-d"));
-        // foreach($employees as $e){
-        //     $contract_end_at = date_create($e->contract->contract_end_at);
-        //     $e->contract->contract_end_countdown = $current_timestamp > $contract_end_at ? 0 : date_diff($current_timestamp,$contract_end_at)->days;
-        // }
+        
+        $employees = $employees->paginate();
 
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employees, "status" => 200];
