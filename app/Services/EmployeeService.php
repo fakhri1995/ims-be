@@ -7,6 +7,7 @@ use App\EmployeeContract;
 use App\EmployeeDevice;
 use App\EmployeeInventory;
 use App\EmployeePayslip;
+use App\EmployeeSalary;
 use App\EmployeeSalaryColumn;
 use App\RecruitmentRole;
 use Exception;
@@ -934,7 +935,7 @@ class EmployeeService{
         }
 
         $id = $request->id;
-        $employeePayslip = EmployeePayslip::with("employee")->find($id);
+        $employeePayslip = EmployeePayslip::with(["employee","salaries","salaries.column"])->find($id);
         if(!$employeePayslip) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
 
@@ -1017,7 +1018,6 @@ class EmployeeService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        try{
             $id = $request->id;
             $employeePayslip = EmployeePayslip::find($id);
             if(!$employeePayslip) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
@@ -1032,7 +1032,21 @@ class EmployeeService{
             $employeePayslip->is_posted = $request->is_posted;
             $employeePayslip->updated_at = $current_timestamp;
             $employeePayslip->save();
-            
+
+            foreach($request->salaries as $salary){
+                $salary = (object)$salary;
+                $employeePayslipSalary = EmployeeSalary::updateOrCreate(
+                    [
+                        "employee_payslip_id" => $id,
+                        "employee_salary_column_id" => $salary->employee_salary_column_id,
+                    ],
+                    [
+                        "value" => $salary->value,
+                    ]
+                );
+            }
+           
+        try{
             return ["success" => true, "message" => "Data Berhasil Diupdate", "data" => $employeePayslip, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
