@@ -18,6 +18,7 @@ class CreateEmployeePayslipsTable extends Migration
             $table->unsignedBigInteger('employee_id');
             $table->string("total_hari_kerja")->nullable();
             $table->date("tanggal_dibayarkan")->nullable();
+            $table->integer("gaji_pokok")->nullable();
             $table->integer("total_gross_penerimaan")->nullable();
             $table->integer("total_gross_pengurangan")->nullable();
             $table->integer("take_home_pay")->nullable();

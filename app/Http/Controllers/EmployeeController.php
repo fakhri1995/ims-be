@@ -260,6 +260,14 @@ class EmployeeController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getEmployeePayslipsEmpty(Request $request)
+    {
+        $route_name = "EMPLOYEE_PAYSLIPS_EMPTY_GET";
+
+        $response = $this->employeeService->getEmployeePayslipsEmpty($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    
     public function addEmployeePayslip(Request $request)
     {
         $route_name = "EMPLOYEE_PAYSLIP_ADD";
@@ -281,6 +289,16 @@ class EmployeeController extends Controller
         $route_name = "EMPLOYEE_PAYSLIP_DELETE";
 
         $response = $this->employeeService->deleteEmployeePayslip($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    
+    public function getEmployeePayslipStatusCount(Request $request)
+    {
+        $route_name = "EMPLOYEE_PAYSLIP_STATUS_COUNT_GET
+        ";
+
+        $response = $this->employeeService->getEmployeePayslipStatusCount($request, $route_name);
         return response()->json($response, $response['status']);
     }
 }

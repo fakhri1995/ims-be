@@ -559,6 +559,9 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addEmployeePayslip', 'EmployeeController@addEmployeePayslip');
     $router->put('/updateEmployeePayslip', 'EmployeeController@updateEmployeePayslip');
     $router->delete('/deleteEmployeePayslip', 'EmployeeController@deleteEmployeePayslip');
+    $router->get('/getEmployeePayslipStatusCount', 'EmployeeController@getEmployeePayslipStatusCount');
+    $router->get('/getEmployeePayslipsEmpty', 'EmployeeController@getEmployeePayslipsEmpty');
+
 });
 
 // //Incident Routes

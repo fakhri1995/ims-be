@@ -131,7 +131,7 @@ class EmployeeService{
 
         // sort
         $sort_by = $request->sort_by ?? NULL;
-        $sort_type = $request->get('sort_type','asc');
+        $sort_type = $request->sort_type ?? 'asc';
         if($sort_by == NULL or $sort_by == "") $employees = $employees->orderBy(EmployeeContract::select("contract_end_at")
                 ->whereColumn("employees.id","employee_contracts.employee_id")->limit(1),$sort_type);
         if($sort_by == "name") $employees = $employees->orderBy('name',$sort_type);
@@ -952,6 +952,7 @@ class EmployeeService{
         if($access["success"] === false) return $access;
 
         $validator = Validator::make($request->all(), [
+            "employee_id" => "numeric"
         ]);
 
         if($validator->fails()){
@@ -959,9 +960,75 @@ class EmployeeService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        $employeePayslips = EmployeePayslip::with("employee")->paginate();
+            $keyword = $request->keyword ?? NULL;
+            $role_ids = $request->role_ids ? explode(",",$request->role_ids) : NULL;
+            $placements = $request->placements ? explode(",",$request->placements) : NULL;
+            $is_posted = $request->is_posted ?? NULL;
+            $rows = $request->rows ?? 5;
+
+
+            $employee_id = $request->employee_id ?? NULL;
+            $employeePayslips = EmployeePayslip::with([
+                "employee" => function ($query) use ($keyword) {
+                    if($keyword) $query->where("name","LIKE", "%$keyword%");
+                    return $query;
+                },
+                "employee.contract" => function ($query) use ($role_ids, $placements) {
+                    if($role_ids) $query->whereIn("role_id",$role_ids);
+                    if($placements) $query->whereIn("placement",$placements);
+                    return $query;
+                },
+                "employee.contract.role"]);
+
+            if($employee_id) $employeePayslips = $employeePayslips->where("employee_id",$employee_id);
+
+            // filter
+
+            if($is_posted) $employeePayslips = $employeePayslips->where("is_posted", $is_posted);
+            // $employeePayslips = $employeePayslips->whereHas("employee", function ($query) use ($keyword) {
+            //     if($keyword) $query->where("name","LIKE", "%$keyword%");
+            //     return $query;
+            // });
+            // $employeePayslips = $employeePayslips->whereHas("employee.contract", function ($query) use ($role_ids, $placements) {
+            //     if($role_ids) $query->whereIn("role_id",$role_ids);
+            //     if($placements) $query->whereIn("placement",$placements);
+            //     return $query;
+            // });
+            
+            // sort
+            $sort_by = $request->sort_by ?? NULL;
+            $sort_type = $request->sort_type ?? 'asc';
+
+            if($sort_by == "name") $employeePayslips = $employeePayslips->orderBy('name',$sort_type);
+
+            $employeePayslips = $employeePayslips->paginate($rows);
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employeePayslips, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getEmployeePayslipsEmpty($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            // "employee_id" => "numeric"
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $employeePayslips = "";
 
         try{
+            // $employee_id = $request->employee_id ?? NULL;
+            // if(!$employee_id) $employeePayslips = EmployeePayslip::with("employee")->paginate();
+            // else $employeePayslips = EmployeePayslip::with("employee")->where("employee_id",$employee_id)->paginate();
 
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employeePayslips, "status" => 200];
         }catch(Exception $err){
@@ -973,15 +1040,18 @@ class EmployeeService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+         
         $validator = Validator::make($request->all(), [
+            "employee_id" => "numeric|integer|exists:App\Employee,id"
         ]);
 
         if($validator->fails()){
             $errors = $validator->errors()->all();
             return ["success" => false, "message" => $errors, "status" => 400];
         }
-
+        $employee_id = $request->employee_id;
+        $employee = Employee::find($employee_id);
+        if(!$employee) return ["success" => false, "message" => "Employee id tidak ditemukan", "status" => 400];
         
             $employeePayslip = new EmployeePayslip();
             $current_timestamp = date("Y-m-d H:i:s");
@@ -1011,6 +1081,7 @@ class EmployeeService{
 
         $validator = Validator::make($request->all(), [
             "id" => "numeric|required",
+            "salaries.*.employee_salary_column_id" => "numeric|required|exists:App\EmployeeSalaryColumn,id"
         ]);
 
         if($validator->fails()){
@@ -1023,28 +1094,46 @@ class EmployeeService{
             if(!$employeePayslip) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
             $current_timestamp = date("Y-m-d H:i:s");
-            $employeePayslip->employee_id = $request->employee_id;
-            $employeePayslip->total_hari_kerja = $request->total_hari_kerja;
-            $employeePayslip->tanggal_dibayarkan = $request->tanggal_dibayarkan;
-            $employeePayslip->total_gross_penerimaan = 0; //sum of penerimaan
-            $employeePayslip->total_gross_pengurangan = 0; //sum of pengeluaran
-            $employeePayslip->take_home_pay = $employeePayslip->total_gross_penerimaan - $employeePayslip->total_gross_pengurangan;
-            $employeePayslip->is_posted = $request->is_posted;
-            $employeePayslip->updated_at = $current_timestamp;
-            $employeePayslip->save();
 
+            $gaji_pokok = $request->gaji_pokok ?? 0;
+            $total_gross_penerimaan = $gaji_pokok;
+            $total_gross_pengurangan = 0;
+
+            $employee_salary_column_ids = [];
             foreach($request->salaries as $salary){
                 $salary = (object)$salary;
+                $employeePayslipSalaryColumn = EmployeeSalaryColumn::find($salary->employee_salary_column_id);
+                if(!$employeePayslipSalaryColumn) continue;
+
+                $employee_salary_column_ids[] = $salary->employee_salary_column_id;
+                $salaryValue = $salary->value;
+                if($employeePayslipSalaryColumn->percent) $salaryValue = $employeePayslipSalaryColumn->percent/100 * $gaji_pokok;
+                
+                if($employeePayslipSalaryColumn->type == 1) $total_gross_penerimaan+=$salaryValue;
+                else if($employeePayslipSalaryColumn->type == 2) $total_gross_pengurangan+=$salaryValue;
+
                 $employeePayslipSalary = EmployeeSalary::updateOrCreate(
                     [
                         "employee_payslip_id" => $id,
                         "employee_salary_column_id" => $salary->employee_salary_column_id,
                     ],
                     [
-                        "value" => $salary->value,
+                        "value" => $salaryValue,
                     ]
                 );
             }
+
+            $deleteEmployeeSalary = EmployeeSalary::where("employee_payslip_id",2)->whereNotIn("employee_salary_column_id",$employee_salary_column_ids)->delete();
+
+            $employeePayslip->employee_id = $request->employee_id;
+            $employeePayslip->total_hari_kerja = $request->total_hari_kerja;
+            $employeePayslip->tanggal_dibayarkan = $request->tanggal_dibayarkan;
+            $employeePayslip->total_gross_penerimaan = $total_gross_penerimaan; //sum of penerimaan
+            $employeePayslip->total_gross_pengurangan = $total_gross_pengurangan; //sum of pengeluaran
+            $employeePayslip->take_home_pay = $total_gross_penerimaan - $total_gross_pengurangan;
+            $employeePayslip->is_posted = $request->is_posted;
+            $employeePayslip->updated_at = $current_timestamp;
+            $employeePayslip->save();
            
         try{
             return ["success" => true, "message" => "Data Berhasil Diupdate", "data" => $employeePayslip, "status" => 200];
@@ -1075,6 +1164,20 @@ class EmployeeService{
             $employeePayslip->delete();
             
             return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $employeePayslip, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getEmployeePayslipStatusCount($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $current_month = date("m");
+            $employeePayslip = EmployeePayslip::selectRaw("is_posted, count(*) as total")->groupBy("is_posted")->whereMonth("created_at",$current_month)->get();
+            
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employeePayslip, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
