@@ -30,4 +30,7 @@ class Employee extends Model
         return $this->morphOne(File::class, 'fileable');
     }
     
+    public function payslips(){
+        return $this->hasMany(EmployeePayslip::class, "employee_id", "id");
+    }
 }
