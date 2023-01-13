@@ -12,7 +12,12 @@ class Blog extends Model
 
     public function attachment_article()
     {
-        return $this->morphOne(File::class, 'fileable');
+        return $this->morphOne(File::class, 'fileable')->where("description","attachment_article");
+    }
+
+    public function company_logo()
+    {
+        return $this->morphOne(File::class, 'fileable')->where("description","company_logo");;
     }
     
 }

@@ -319,9 +319,32 @@ class CompanyProfileService{
     public function addArticle(Request $request, $route_name)
     {
         $message = new Blog;
+        Log::debug($request);
+        Log::debug($request->page_path);
         $message->title = $request->title;
         $message->description = $request->description;
-        $message->slug = $request->slug;
+        
+        
+        $message->tags = $request->tags;
+        $message->company_name = $request->company_name;
+        $message->quote = $request->quote;
+        $message->author = $request->author;
+        $message->job_title = $request->job_title;
+        $message->meta_title = $request->meta_title;
+        $message->meta_description = $request->meta_description;
+        $message->title_id = $request->title_id;
+        $message->description_id = $request->description_id;
+        $message->content = $request->content_id;
+        $message->page_path = $request->page_path_id;
+        $message->quote_id = $request->quote_id;
+        $message->tags_id = $request->tags_id;
+        $message->job_title_id = $request->job_title_id;
+        $message->meta_title_id = $request->meta_title_id;
+        $message->meta_description_id = $request->meta_description_id;
+        $message->article_type = $request->article_type;
+        $message->page_path = $request->page_path;
+        $message->content = $request->content;
+        
         $message->user_id = auth()->user()->id;
         try{
             $message->save();
@@ -334,6 +357,15 @@ class CompanyProfileService{
                 
                 $add_file_response = $fileService->addFile($message->id, $file, $table, $description, $folder_detail);
             }
+            if(method_exists($request,'hasFile') && $request->hasFile('company_logo')) {
+                $fileService = new FileService;
+                $file = $request->file('company_logo');
+                $table = 'App\Blog';
+                $description = 'company_logo';
+                $folder_detail = 'Blog';
+                
+                $add_file_response = $fileService->addFile($message->id, $file, $table, $description, $folder_detail);
+            }
            
             return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
         } catch(Exception $err){
@@ -341,6 +373,40 @@ class CompanyProfileService{
         }
     }
 
+    public function getTestimonialLandingPage(Request $request, $route_name)
+    {
+        
+        try{
+            $messages = Blog::with(["attachment_article","company_logo"])->where('article_type', '=', 'Customer Stories')->skip(0)->take(3)->get();
+            if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $messages, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    public function getArticleList(Request $request, $route_name)
+    {
+        
+        try{
+            $messages = Blog::with('attachment_article')->where('article_type', '=', 'Blog')->get();
+            if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $messages, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    public function getArticlePopularList(Request $request, $route_name)
+    {
+        
+        try{
+            $messages = Blog::with('attachment_article')->where('article_type', '=', 'Blog')->skip(0)->take(4)->get();
+            if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $messages, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    
     public function getArticle(Request $request, $route_name)
     {
         

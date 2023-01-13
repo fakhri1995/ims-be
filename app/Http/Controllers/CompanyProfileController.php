@@ -119,11 +119,33 @@ class CompanyProfileController extends Controller
         $response = $this->companyProfileService->addArticle($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    
+    public function getTestimonialLandingPage(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getTestimonialLandingPage($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
     public function getArticle(Request $request)
     {
         $route_name = "FORM_GET";
 
         $response = $this->companyProfileService->getArticle($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getArticleList(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getArticleList($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getArticlePopularList(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getArticlePopularList($request, $route_name);
         return response()->json($response, $response['status']);
     }
     public function deleteArticle(Request $request)
