@@ -432,7 +432,7 @@ class CompanyProfileService{
         }
 
             $id = $request->id;
-            $employee = Blog::with('attachment_article')->find($id);
+            $employee = Blog::with(['attachment_article','company_logo'])->find($id);
             if(!$employee) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
 
