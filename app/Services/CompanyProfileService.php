@@ -503,14 +503,41 @@ class CompanyProfileService{
         try{
             $article->title = $request->title ?? NULL;
             $article->description = $request->description ?? NULL;
-            $article->slug = $request->slug ?? NULL;
+            $article->tags = $request->tags ?? NULL;
+            $article->company_name = $request->company_name ?? NULL;
+            $article->quote = $request->quote ?? NULL;
+            $article->author = $request->author ?? NULL;
+            $article->job_title = $request->job_title ?? NULL;
+            $article->meta_title = $request->meta_title ?? NULL;
+            $article->meta_description = $request->meta_description ?? NULL;
+            $article->title_id = $request->title_id ?? NULL;
+            $article->description_id = $request->description_id ?? NULL;
+            $article->content = $request->content_id ?? NULL;
+            $article->page_path = $request->page_path_id ?? NULL;
+            $article->quote_id = $request->quote_id ?? NULL;
+            $article->tags_id = $request->tags_id ?? NULL;
+            $article->job_title_id = $request->job_title_id ?? NULL;
+            $article->meta_title_id = $request->meta_title_id ?? NULL;
+            $article->meta_description_id = $request->meta_description_id ?? NULL;
+            $article->article_type = $request->article_type ?? NULL;
+            $article->page_path = $request->page_path ?? NULL;
+            $article->content = $request->content ?? NULL;
             $article->save();
 
             $file = $request->file('attachment',NULL);
+            $file2 = $request->file('company_logo',NULL);
             if($file){
                 $old_file_id = $article->attachment_article->id ?? NULL;
                 $fileService = new FileService;
                 $add_file_response = $fileService->addFile($article->id, $file, 'App\Blog', 'attachment_article', 'Blog', false);
+                if($add_file_response['success'] && $old_file_id) {
+                    $fileService->deleteForceFile($old_file_id);
+                }
+            }
+            if($file2){
+                $old_file_id = $article->company_logo->id ?? NULL;
+                $fileService = new FileService;
+                $add_file_response = $fileService->addFile($article->id, $file, 'App\Blog', 'company_logo', 'Blog', false);
                 if($add_file_response['success'] && $old_file_id) {
                     $fileService->deleteForceFile($old_file_id);
                 }
