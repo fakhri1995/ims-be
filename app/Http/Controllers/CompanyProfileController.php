@@ -162,6 +162,13 @@ class CompanyProfileController extends Controller
         $response = $this->companyProfileService->getArticleDetail($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    public function getArticleDetailLanding(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getArticleDetailLanding($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
     public function getTestimonialDetail(Request $request)
     {
         $route_name = "FORM_GET";
