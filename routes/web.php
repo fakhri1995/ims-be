@@ -20,6 +20,7 @@ $router->get('/getArticleList', 'CompanyProfileController@getArticleList');
 $router->get('/getArticlePopularList', 'CompanyProfileController@getArticlePopularList');
 $router->get('/getTestimonialLandingPage', 'CompanyProfileController@getTestimonialLandingPage');
 $router->get('/getArticleDetail', 'CompanyProfileController@getArticleDetail');
+$router->get('/getArticleDetailLanding', 'CompanyProfileController@getArticleDetailLanding');
 $router->get('/getTestimonialDetail', 'CompanyProfileController@getTestimonialDetail');
 $router->get('/getProduct', 'CompanyProfileController@getProduct');
 $router->get('/getProductDetail', 'CompanyProfileController@getProductDetail');

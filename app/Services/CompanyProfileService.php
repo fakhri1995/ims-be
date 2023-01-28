@@ -443,6 +443,31 @@ class CompanyProfileService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
+
+    public function getArticleDetailLanding($request, $route_name)
+    {
+
+        $validator = Validator::make($request->all(), [
+            "page_path" => "required"
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+            $page_path = $request->page_path;
+            $employee = Blog::with(['attachment_article','company_logo'])->where('page_path', '=', $page_path)->get();
+            if(!$employee) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+
+
+        try{
+
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employee, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
     public function getTestimonialDetail($request, $route_name)
     {
 
