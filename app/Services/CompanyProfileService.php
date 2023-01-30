@@ -11,7 +11,6 @@ use App\Career;
 use App\FormSolution;
 use App\FormSolutionDetail;
 use Exception;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class CompanyProfileService{
@@ -412,7 +411,30 @@ class CompanyProfileService{
         
         try{
             $messages = Blog::with('attachment_article')->get();
-            if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
+            // if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $messages, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getCountArticle(Request $request, $route_name)
+    {
+        
+        try{
+            $messages = Blog::where('article_type','=','Blog')->count();
+            // if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $messages, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    public function getCountCustomerStories(Request $request, $route_name)
+    {
+        
+        try{
+            $messages = Blog::where('article_type','=','Customer Stories')->count();
+            // if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $messages, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];

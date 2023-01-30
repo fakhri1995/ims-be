@@ -16,6 +16,8 @@
 $router->post('/addMessage', 'CompanyProfileController@addMessage');
 $router->get('/getCareers', 'CompanyProfileController@getCareers');
 $router->get('/getArticle', 'CompanyProfileController@getArticle');
+$router->get('/getCountArticle', 'CompanyProfileController@getCountArticle');
+$router->get('/getCountCustomerStories', 'CompanyProfileController@getCountCustomerStories');
 $router->get('/getArticleList', 'CompanyProfileController@getArticleList');
 $router->get('/getArticlePopularList', 'CompanyProfileController@getArticlePopularList');
 $router->get('/getTestimonialLandingPage', 'CompanyProfileController@getTestimonialLandingPage');
