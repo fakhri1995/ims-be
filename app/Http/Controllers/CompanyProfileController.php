@@ -134,6 +134,20 @@ class CompanyProfileController extends Controller
         $response = $this->companyProfileService->getArticle($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    public function getCountCustomerStories(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getCountCustomerStories($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getCountArticle(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getCountArticle($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
     public function getArticleList(Request $request)
     {
         $route_name = "FORM_GET";
