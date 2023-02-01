@@ -11,6 +11,7 @@ use App\Career;
 use App\FormSolution;
 use App\FormSolutionDetail;
 use Exception;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class CompanyProfileService{
@@ -318,8 +319,6 @@ class CompanyProfileService{
     public function addArticle(Request $request, $route_name)
     {
         $message = new Blog;
-        Log::debug($request);
-        Log::debug($request->page_path);
         $message->title = $request->title;
         $message->description = $request->description;
         
@@ -377,6 +376,39 @@ class CompanyProfileService{
         
         try{
             $messages = Blog::with(["attachment_article","company_logo"])->where('article_type', '=', 'Customer Stories')->skip(0)->take(6)->get();
+            if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $messages, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    public function getTestimonialHardwarePage(Request $request, $route_name)
+    {
+        
+        try{
+            $messages = Blog::with(["attachment_article","company_logo"])->where('article_type', '=', 'Customer Stories')->whereRaw('LOWER(`tags`) LIKE ? ',[trim(strtolower('hardware')).'%'])->skip(0)->take(6)->get();
+            if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $messages, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    public function getTestimonialSoftwarePage(Request $request, $route_name)
+    {
+        
+        try{
+            $messages = Blog::with(["attachment_article","company_logo"])->where('article_type', '=', 'Customer Stories')->whereRaw('LOWER(`tags`) LIKE ? ',[trim(strtolower('software')).'%'])->skip(0)->take(6)->get();
+            if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $messages, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+    public function getTestimonialTalentPage(Request $request, $route_name)
+    {
+        
+        try{
+            $messages = Blog::with(["attachment_article","company_logo"])->where('article_type', '=', 'Customer Stories')->whereRaw('LOWER(`tags`) LIKE ? ',[trim(strtolower('talents')).'%'])->skip(0)->take(6)->get();
             if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $messages, "status" => 200];
         } catch(Exception $err){
