@@ -127,6 +127,28 @@ class CompanyProfileController extends Controller
         $response = $this->companyProfileService->getTestimonialLandingPage($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    public function getTestimonialHardwarePage(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getTestimonialHardwarePage($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getTestimonialSoftwarePage(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getTestimonialSoftwarePage($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getTestimonialTalentPage(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getTestimonialTalentPage($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    
     public function getArticle(Request $request)
     {
         $route_name = "FORM_GET";
