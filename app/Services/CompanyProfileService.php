@@ -11,7 +11,6 @@ use App\Career;
 use App\FormSolution;
 use App\FormSolutionDetail;
 use Exception;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class CompanyProfileService{
@@ -333,7 +332,7 @@ class CompanyProfileService{
         $message->title_id = $request->title_id;
         $message->description_id = $request->description_id;
         $message->content = $request->content_id;
-        $message->page_path = $request->page_path_id;
+        $message->page_path_id = $request->page_path_id;
         $message->quote_id = $request->quote_id;
         $message->tags_id = $request->tags_id;
         $message->job_title_id = $request->job_title_id;
@@ -535,7 +534,6 @@ class CompanyProfileService{
         }
 
             $pagepath = $request->pagepath;
-            Log::info($request);
             $employee = Blog::with('attachment_article')->where('page_path','=',$pagepath)->get();
             if(!$employee) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
@@ -592,7 +590,7 @@ class CompanyProfileService{
             $article->title_id = $request->title_id ?? NULL;
             $article->description_id = $request->description_id ?? NULL;
             $article->content = $request->content_id ?? NULL;
-            $article->page_path = $request->page_path_id ?? NULL;
+            $article->page_path_id = $request->page_path_id ?? NULL;
             $article->quote_id = $request->quote_id ?? NULL;
             $article->tags_id = $request->tags_id ?? NULL;
             $article->job_title_id = $request->job_title_id ?? NULL;
