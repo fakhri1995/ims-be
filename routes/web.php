@@ -21,6 +21,7 @@ $router->get('/getCountCustomerStories', 'CompanyProfileController@getCountCusto
 $router->get('/getArticleList', 'CompanyProfileController@getArticleList');
 $router->get('/getArticlePopularList', 'CompanyProfileController@getArticlePopularList');
 $router->get('/getTestimonialLandingPage', 'CompanyProfileController@getTestimonialLandingPage');
+$router->get('/getOtherTestimonial', 'CompanyProfileController@getOtherTestimonial');
 $router->get('/getTestimonialHardwarePage', 'CompanyProfileController@getTestimonialHardwarePage');
 $router->get('/getTestimonialSoftwarePage', 'CompanyProfileController@getTestimonialSoftwarePage');
 $router->get('/getTestimonialTalentPage', 'CompanyProfileController@getTestimonialTalentPage');
