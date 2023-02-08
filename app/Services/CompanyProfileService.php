@@ -381,6 +381,17 @@ class CompanyProfileService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
+    public function getOtherTestimonial(Request $request, $route_name)
+    {
+        $id = $request->id;
+        try{
+            $messages = Blog::with(["attachment_article","company_logo"])->where('article_type', '=', 'Customer Stories')->where('page_patch', '!=', $id)->skip(0)->take(4)->get();
+            if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $messages, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
     public function getTestimonialHardwarePage(Request $request, $route_name)
     {
         
