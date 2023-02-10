@@ -331,7 +331,7 @@ class CompanyProfileService{
         $message->meta_description = $request->meta_description;
         $message->title_id = $request->title_id;
         $message->description_id = $request->description_id;
-        $message->content = $request->content_id;
+        $message->content_id = $request->content_id;
         $message->page_path_id = $request->page_path_id;
         $message->quote_id = $request->quote_id;
         $message->tags_id = $request->tags_id;
@@ -600,7 +600,7 @@ class CompanyProfileService{
             $article->meta_description = $request->meta_description ?? NULL;
             $article->title_id = $request->title_id ?? NULL;
             $article->description_id = $request->description_id ?? NULL;
-            $article->content = $request->content_id ?? NULL;
+            $article->content_id = $request->content_id ?? NULL;
             $article->page_path_id = $request->page_path_id ?? NULL;
             $article->quote_id = $request->quote_id ?? NULL;
             $article->tags_id = $request->tags_id ?? NULL;
