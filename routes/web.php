@@ -25,6 +25,7 @@ $router->get('/getOtherTestimonial', 'CompanyProfileController@getOtherTestimoni
 $router->get('/getTestimonialHardwarePage', 'CompanyProfileController@getTestimonialHardwarePage');
 $router->get('/getTestimonialSoftwarePage', 'CompanyProfileController@getTestimonialSoftwarePage');
 $router->get('/getTestimonialTalentPage', 'CompanyProfileController@getTestimonialTalentPage');
+$router->get('/getCustomerStoriesPage', 'CompanyProfileController@getCustomerStoriesPage');
 $router->get('/getArticleDetail', 'CompanyProfileController@getArticleDetail');
 $router->get('/getArticleDetailLanding', 'CompanyProfileController@getArticleDetailLanding');
 $router->get('/getTestimonialDetail', 'CompanyProfileController@getTestimonialDetail');
