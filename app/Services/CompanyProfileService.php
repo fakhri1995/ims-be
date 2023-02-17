@@ -381,6 +381,17 @@ class CompanyProfileService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
+    public function getCustomerStoriesPage(Request $request, $route_name)
+    {
+        
+        try{
+            $messages = Blog::with(["attachment_article","company_logo"])->where('article_type', '=', 'Customer Stories')->get();
+            if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $messages, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
     public function getOtherTestimonial(Request $request, $route_name)
     {
         $id = $request->id;
@@ -521,7 +532,7 @@ class CompanyProfileService{
         }
 
             $page_path = $request->page_path;
-            $employee = Blog::with(['attachment_article','company_logo'])->where('page_path', '=', $page_path)->get();
+            $employee = Blog::with(['attachment_article','company_logo'])->where('page_path', '=', $page_path)->orWhere('page_path_id','=',$page_path)->get();
             if(!$employee) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
 
@@ -545,7 +556,7 @@ class CompanyProfileService{
         }
 
             $pagepath = $request->pagepath;
-            $employee = Blog::with('attachment_article')->where('page_path','=',$pagepath)->get();
+            $employee = Blog::with('attachment_article')->where('page_path','=',$pagepath)->orWhere('page_path_id','=',$pagepath)->get();
             if(!$employee) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
 
