@@ -531,6 +531,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getEmployee', 'EmployeeController@getEmployee');
     $router->get('/getEmployees', 'EmployeeController@getEmployees');
     $router->post('/addEmployee', 'EmployeeController@addEmployee');
+    $router->post('/addEmployeeFromUser', 'EmployeeController@addEmployeeFromUser');
     $router->post('/updateEmployee', 'EmployeeController@updateEmployee');
     $router->delete('/deleteEmployee', 'EmployeeController@deleteEmployee');
     $router->get('/getEmployeePlacementsCount', 'EmployeeController@getEmployeePlacementsCount');
@@ -573,6 +574,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteEmployeePayslip', 'EmployeeController@deleteEmployeePayslip');
     $router->get('/getEmployeePayslipStatusCount', 'EmployeeController@getEmployeePayslipStatusCount');
     $router->get('/getEmployeePayslipsEmpty', 'EmployeeController@getEmployeePayslipsEmpty');
+    $router->get('/downloadEmployeePayslip', 'EmployeeController@downloadEmployeePayslip');
 
 });
 
