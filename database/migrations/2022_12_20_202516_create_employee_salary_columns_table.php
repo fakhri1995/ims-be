@@ -18,6 +18,7 @@ class CreateEmployeeSalaryColumnsTable extends Migration
             $table->string("name")->nullable();
             $table->unsignedDecimal("percent")->nullable(); // in decimal
             $table->integer("type")->nullable(); // 1 : Penerimaan, 2 : Pengurangan
+            $table->boolean("is_amount_for_bpjs")->default(false);
             $table->boolean("required")->nullable();
             $table->dateTime('created_at');
             $table->dateTime('updated_at');

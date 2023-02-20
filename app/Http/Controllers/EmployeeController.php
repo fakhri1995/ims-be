@@ -61,6 +61,14 @@ class EmployeeController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function addEmployeeFromUser(Request $request)
+    {
+        $route_name = "EMPLOYEE_FROM_USER_ADD";
+
+        $response = $this->employeeService->addEmployeeFromUser($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function updateEmployee(Request $request)
     {
         $route_name = "EMPLOYEE_UPDATE";
@@ -260,6 +268,14 @@ class EmployeeController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getEmployeePayslipEmpty(Request $request)
+    {
+        $route_name = "EMPLOYEE_PAYSLIP_EMPTY_GET";
+
+        $response = $this->employeeService->getEmployeePayslipEmpty($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getEmployeePayslipsEmpty(Request $request)
     {
         $route_name = "EMPLOYEE_PAYSLIPS_EMPTY_GET";
@@ -295,10 +311,18 @@ class EmployeeController extends Controller
     
     public function getEmployeePayslipStatusCount(Request $request)
     {
-        $route_name = "EMPLOYEE_PAYSLIP_STATUS_COUNT_GET
-        ";
+        $route_name = "EMPLOYEE_PAYSLIP_STATUS_COUNT_GET";
 
         $response = $this->employeeService->getEmployeePayslipStatusCount($request, $route_name);
         return response()->json($response, $response['status']);
+    }
+
+    public function downloadEmployeePayslip(Request $request)
+    {
+        $route_name = "EMPLOYEE_PAYSLIP_DOWNLOAD";
+
+        $response = $this->employeeService->downloadEmployeePayslip($request, $route_name);
+        if($response['success'] === false) return response()->json($response, $response['status']);
+        return $response['data'];
     }
 }
