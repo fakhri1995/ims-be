@@ -53,6 +53,14 @@ class EmployeeController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getEmployeesDraft(Request $request)
+    {
+        $route_name = "EMPLOYEES_DRAFT_GET";
+
+        $response = $this->employeeService->getEmployeesDraft($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function addEmployee(Request $request)
     {
         $route_name = "EMPLOYEE_ADD";

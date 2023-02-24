@@ -12,7 +12,7 @@ class Employee extends Model
 
     public function contract()
     {
-        return $this->hasOne(EmployeeContract::class, "employee_id", "id")->orderBy('contract_start_at','desc');
+        return $this->hasOne(EmployeeContract::class, "id", "last_contract_id");
     }
 
     public function contracts()
