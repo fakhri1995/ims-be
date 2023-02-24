@@ -74,4 +74,9 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     {
         return $this->hasMany(FirebaseAndroidToken::class, 'user_id', 'id')->select('token', 'user_id');
     }
+
+    public function employee()
+    {
+        return $this->hasOne(Employee::class, 'user_id', 'id');
+    }
 }

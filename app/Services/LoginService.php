@@ -186,6 +186,11 @@ class LoginService
         auth()->user()->profileImage;
         auth()->user()->attendanceForms;
         auth()->user()->attendanceForms->makeHidden(['updated_at', 'deleted_at', 'created_by']);
+        auth()->user()->employee;
+        auth()->user()->employee->contract->makeHidden('benefit','gaji_pokok','bpjs_ks','bpjs_tk_jht','bpjs_tk_jkk','bpjs_tk_jkm','bpjs_tk_jp','pph21');
+
+       
+        
         $list_feature = [];
         foreach(auth()->user()->roles as $role)
         {
