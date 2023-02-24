@@ -292,9 +292,10 @@ class LogService
                 $log->log_name = $log_name.$name;
             } else if($log->description === 'Perubahan Status'){
                 $properties = json_decode($log->log_name, false);
+                $old_status = $statuses[$properties->old_status];
                 $new_status = $statuses[$properties->new_status];
                 $log->notes = $properties->notes;
-                $log->log_name = "Perubahan status menjadi $new_status";
+                $log->log_name = "Perubahan status dari $old_status menjadi $new_status";
             }
             $normal_logs[] = $log;
         }

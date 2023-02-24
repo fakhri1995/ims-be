@@ -301,6 +301,10 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteFileTask', 'TaskController@deleteFileTask');
     $router->delete('/cancelSendOutInventoryTask', 'TaskController@cancelSendOutInventoryTask');
     $router->delete('/cancelSendInInventoryTask', 'TaskController@cancelSendInInventoryTask');
+    $router->post('/addTaskReport','TaskController@addTaskReport');
+    $router->get('/getTaskReports','TaskController@getTaskReports');
+    $router->get('/getTaskReport','TaskController@getTaskReport');
+    $router->delete('/deleteTaskReport','TaskController@deleteTaskReport');
 
     //Task Detail Routes
     $router->post('/addTaskDetail', 'TaskController@addTaskDetail');
@@ -525,6 +529,8 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getEmployeePlacementsCount', 'EmployeeController@getEmployeePlacementsCount');
     $router->get('/getEmployeeRolesCount', 'EmployeeController@getEmployeeRolesCount');
     $router->get('/getEmployeeStatusesCount', 'EmployeeController@getEmployeeStatusesCount');
+    $router->get('/getEmployeesDraft', 'EmployeeController@getEmployeesDraft');
+    
 
     // Employee Contract
     $router->get('/getEmployeeContract', 'EmployeeController@getEmployeeContract');
