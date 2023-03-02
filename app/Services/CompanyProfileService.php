@@ -370,6 +370,25 @@ class CompanyProfileService{
         }
     }
 
+    public function uploadFile(Request $request, $route_name)
+    {
+
+        try {
+            if(method_exists($request,'hasFile') && $request->hasFile('attachment_content')) {
+                $fileService = new FileService;
+                $file = $request->file('attachment_content');
+                $table = 'App\Blog';
+                $description = 'attachment_content';
+                $folder_detail = 'Blog';
+                
+                $add_file_response = $fileService->addFile(1, $file, $table, $description, $folder_detail);
+            }
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $add_file_response, "status" => 200];
+        } catch(Exception $err) {
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     public function getTestimonialLandingPage(Request $request, $route_name)
     {
         
