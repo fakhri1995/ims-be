@@ -59,6 +59,39 @@ class TaskController extends Controller
         $response = $this->taskService->getTasks($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    
+    public function addTaskReport(Request $request)
+    {
+        $route_name = "TASK_REPORT_ADD";
+
+        $response = $this->taskService->addTaskReport($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+
+    public function getTaskReports(Request $request)
+    {
+        $route_name = "TASK_REPORT_ADD";
+
+        $response = $this->taskService->getTaskReports($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getTaskReport(Request $request)
+    {
+        $route_name = "TASK_REPORT_ADD";
+
+        $response = $this->taskService->getTaskReport($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteTaskReport(Request $request)
+    {
+        $route_name = "TASK_REPORT_ADD";
+
+        $response = $this->taskService->deleteTaskReport($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 
     public function getUserTasks(Request $request)
     {
