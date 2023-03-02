@@ -69,6 +69,8 @@ $router->group(['middleware' => 'auth'], function($router){
 
     //blog routes
     $router->post('/addArticle', 'CompanyProfileController@addArticle');
+    $router->post('/uploadFile', 'CompanyProfileController@uploadFile');
+    
     $router->delete('/deleteArticle', 'CompanyProfileController@deleteArticle');
     $router->post('/updateArticle', 'CompanyProfileController@updateArticle');
     //product routes

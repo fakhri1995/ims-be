@@ -119,6 +119,14 @@ class CompanyProfileController extends Controller
         $response = $this->companyProfileService->addArticle($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    public function uploadFile(Request $request)
+    {
+        $route_name = "ARTICLE_POST";
+
+        $response = $this->companyProfileService->uploadFile($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    
     
     public function getTestimonialLandingPage(Request $request)
     {
