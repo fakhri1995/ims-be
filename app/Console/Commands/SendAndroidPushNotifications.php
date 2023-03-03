@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Notification;
+use App\Services\AndroidService;
 use GuzzleHttp\Client;
 use Illuminate\Console\Command;
 
@@ -30,7 +31,7 @@ class SendAndroidPushNotifications extends Command
     public function __construct()
     {
         parent::__construct();
-
+        $this->androidService = new AndroidService();
         $this->client = new Client();
     }
 
@@ -58,27 +59,9 @@ class SendAndroidPushNotifications extends Command
                 'title' => ltrim($notification->notificationable_type, "App\\"),
                 'body' => $notification->description
             ];
-            $this->sendPushNotification($tokens, $notification_template);
+            $this->androidService->sendPushNotification($tokens, $notification_template);
             $notification->need_push_notification = false;
             $notification->save();
         }
-    }
-
-    private function sendPushNotification($registrations_ids, $notification)
-    {
-        $headers = [
-            'Authorization' => 'key ='.env('KEY_ANDROID_FIREBASE'),
-            'content-type' => 'application/json'
-        ];
-
-        $body = [
-            'registration_ids' => $registrations_ids,
-            'notification' => $notification
-        ];
-
-        $response = $this->client->request('POST', 'https://fcm.googleapis.com/fcm/send', [
-            'headers'  => $headers,
-            'json' => $body
-        ]);
     }
 }
