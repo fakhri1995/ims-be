@@ -60,4 +60,8 @@ class Task extends Model
     {
         return $this->morphMany('App\File', 'fileable');
     }
+
+    public function logs(){
+        return $this->hasMany(ActivityLogTicket::class,'id','subject_id');
+    }
 }

@@ -25,6 +25,7 @@ $router->get('/getOtherTestimonial', 'CompanyProfileController@getOtherTestimoni
 $router->get('/getTestimonialHardwarePage', 'CompanyProfileController@getTestimonialHardwarePage');
 $router->get('/getTestimonialSoftwarePage', 'CompanyProfileController@getTestimonialSoftwarePage');
 $router->get('/getTestimonialTalentPage', 'CompanyProfileController@getTestimonialTalentPage');
+$router->get('/getCustomerStoriesPage', 'CompanyProfileController@getCustomerStoriesPage');
 $router->get('/getArticleDetail', 'CompanyProfileController@getArticleDetail');
 $router->get('/getArticleDetailLanding', 'CompanyProfileController@getArticleDetailLanding');
 $router->get('/getTestimonialDetail', 'CompanyProfileController@getTestimonialDetail');
@@ -68,6 +69,8 @@ $router->group(['middleware' => 'auth'], function($router){
 
     //blog routes
     $router->post('/addArticle', 'CompanyProfileController@addArticle');
+    $router->post('/uploadFile', 'CompanyProfileController@uploadFile');
+    
     $router->delete('/deleteArticle', 'CompanyProfileController@deleteArticle');
     $router->post('/updateArticle', 'CompanyProfileController@updateArticle');
     //product routes
@@ -312,6 +315,10 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteFileTask', 'TaskController@deleteFileTask');
     $router->delete('/cancelSendOutInventoryTask', 'TaskController@cancelSendOutInventoryTask');
     $router->delete('/cancelSendInInventoryTask', 'TaskController@cancelSendInInventoryTask');
+    $router->post('/addTaskReport','TaskController@addTaskReport');
+    $router->get('/getTaskReports','TaskController@getTaskReports');
+    $router->get('/getTaskReport','TaskController@getTaskReport');
+    $router->delete('/deleteTaskReport','TaskController@deleteTaskReport');
 
     //Task Detail Routes
     $router->post('/addTaskDetail', 'TaskController@addTaskDetail');
@@ -530,11 +537,14 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getEmployee', 'EmployeeController@getEmployee');
     $router->get('/getEmployees', 'EmployeeController@getEmployees');
     $router->post('/addEmployee', 'EmployeeController@addEmployee');
+    $router->post('/addEmployeeFromUser', 'EmployeeController@addEmployeeFromUser');
     $router->post('/updateEmployee', 'EmployeeController@updateEmployee');
     $router->delete('/deleteEmployee', 'EmployeeController@deleteEmployee');
     $router->get('/getEmployeePlacementsCount', 'EmployeeController@getEmployeePlacementsCount');
     $router->get('/getEmployeeRolesCount', 'EmployeeController@getEmployeeRolesCount');
     $router->get('/getEmployeeStatusesCount', 'EmployeeController@getEmployeeStatusesCount');
+    $router->get('/getEmployeesDraft', 'EmployeeController@getEmployeesDraft');
+    
 
     // Employee Contract
     $router->get('/getEmployeeContract', 'EmployeeController@getEmployeeContract');
@@ -572,6 +582,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteEmployeePayslip', 'EmployeeController@deleteEmployeePayslip');
     $router->get('/getEmployeePayslipStatusCount', 'EmployeeController@getEmployeePayslipStatusCount');
     $router->get('/getEmployeePayslipsEmpty', 'EmployeeController@getEmployeePayslipsEmpty');
+    $router->get('/downloadEmployeePayslip', 'EmployeeController@downloadEmployeePayslip');
 
 });
 

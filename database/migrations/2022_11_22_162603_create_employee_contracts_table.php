@@ -19,15 +19,22 @@ class CreateEmployeeContractsTable extends Migration
             $table->string("contract_name")->nullable();
             $table->string("role_id")->nullable();
             $table->string("contract_status_id")->nullable();
-            $table->string("pkwt_reference")->nullable();
             // dokumen_kontrak morph files
+            $table->string("pkwt_reference")->nullable();
             $table->date("contract_start_at")->nullable();
             $table->date("contract_end_at")->nullable();
             $table->string("placement")->nullable();
             $table->string("new_office")->nullable();
             $table->date("resign_at")->nullable();
             $table->integer("annual_leave")->nullable();
-            $table->text("benefit")->nullable();
+            $table->text("benefit")->nullable(); //bakal ada benefit statis
+            $table->string("gaji_pokok")->nullable();
+            $table->string("bpjs_ks")->nullable();
+            $table->string("bpjs_tk_jht")->nullable();
+            $table->string("bpjs_tk_jkk")->nullable();
+            $table->string("bpjs_tk_jkm")->nullable();
+            $table->string("bpjs_tk_jp")->nullable();
+            $table->string("pph21")->nullable();
             $table->unsignedBigInteger('employee_id'); //refernece employee.id
             $table->dateTime('created_at');
             $table->dateTime('updated_at');

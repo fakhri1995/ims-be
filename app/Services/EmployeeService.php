@@ -12,7 +12,12 @@ use App\EmployeeSalaryColumn;
 use App\RecruitmentRole;
 use Exception;
 use App\Services\GlobalService;
+use App\User;
+use Barryvdh\DomPDF\Facade as PDF;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
@@ -81,11 +86,13 @@ class EmployeeService{
         }
 
             $id = $request->id;
-            $employee = Employee::with(["id_card_photo",
-                "contracts","contracts.role","contracts.contract_status",
+            $employee = Employee::with(["user","id_card_photo",
+                "contracts" => function ($q){
+                    $q->orderBy('contract_start_at','desc');
+                },"contracts.role","contracts.contract_status",
                 "inventories","inventories.devices","inventories.delivery_file","inventories.return_file"])->find($id);
             if(!$employee) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
-            if($employee->is_posted == false && $employee->created_by != auth()->user()->id){
+            if($employee->is_posted == false && $employee->created_by != auth()->user()->id && $employee->created_by != null){
                 return ["success" => false, "message" => "Draft dibuat oleh user lain", "status" => 400]; 
             }
 
@@ -102,13 +109,80 @@ class EmployeeService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
+        
 
+        $validator = Validator::make($request->all(), [
+            "rows" => "numeric",
+            "limit" => "numeric",
+            "sort_type" => "in:asc,desc",
+            "is_employee_active" => "boolean"
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
 
         $keyword = $request->keyword ?? NULL;
         $role_ids = $request->role_ids ? explode(",",$request->role_ids) : NULL;
         $placements = $request->placements ? explode(",",$request->placements) : NULL;
         $contract_status_ids = $request->contract_status_ids ? explode(",",$request->contract_status_ids) : NULL;
-        $is_employee_active = $request->is_employee_active == 0 ? 0 : 1;
+        $is_employee_active = $request->is_employee_active == NULL? NULL : $request->is_employee_active;
+        $rows = $request->rows ?? 5;
+
+        $current_timestamp = date("Y-m-d");
+        $employees = Employee::with(["contract" => function ($query) use($current_timestamp) {
+            $query->selectRaw("*, DATEDIFF(contract_end_at, '$current_timestamp') as contract_end_countdown");
+            // $query->orderBy("contract_end_countdown", "desc");
+        },"contract.role","contract.contract_status"]);
+
+        // filter
+        if($keyword) $employees = $employees->where("name","LIKE", "%$keyword%");
+        $employees = $employees->whereHas("contract", function ($query) use($is_employee_active,$role_ids,$placements,$contract_status_ids) {
+            if($is_employee_active != NULL) $query->where('is_employee_active', $is_employee_active);
+            if($role_ids) $query->whereIn('role_id', $role_ids);
+            if($placements) $query->whereIn('placement', $placements);
+            if($contract_status_ids) $query->whereIn('contract_status_id', $contract_status_ids);
+            return $query;
+        });
+        
+        if($is_employee_active == 0) $employees = $employees->orWhereNull('last_contract_id');
+        
+        // sort
+        $sort_by = $request->sort_by ?? NULL;
+        $sort_type = $request->sort_type == 'desc' ? 'desc' : 'asc';
+        if($sort_by == NULL or $sort_by == "" or $sort_by == "contract_end_countdown") $employees = $employees->orderBy(EmployeeContract::select("contract_end_at")
+                ->whereColumn("employees.id","employee_contracts.employee_id")->limit(1),$sort_type);
+        if($sort_by == "name") $employees = $employees->orderBy('name',$sort_type);
+        if($sort_by == "role") $employees = $employees->orderBy(RecruitmentRole::select("name")
+                ->whereColumn("employee_roles.id","employees.employee_role_id"),$sort_type);
+
+        $employees = $employees->paginate($rows);
+
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employees, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getEmployeesDraft($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+
+        $validator = Validator::make($request->all(), [
+            "rows" => "numeric",
+            "limit" => "numeric",
+            "sort_type" => "in:asc,desc"
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
         $rows = $request->rows ?? 5;
 
         $current_timestamp = date("Y-m-d");
@@ -117,29 +191,8 @@ class EmployeeService{
             $query->orderBy("contract_end_countdown", "asc");
         },"contract.role","contract.contract_status"]);
 
-        // filter
-        if($keyword) $employees = $employees->where("name","LIKE", "%$keyword%");
-        $employees = $employees->whereHas("contract", function ($query) use ($role_ids,$placements,$contract_status_ids, $is_employee_active) {
-            if($role_ids) $query->whereIn('role_id', $role_ids);
-            if($placements) $query->whereIn('placement', $placements);
-            if($contract_status_ids) $query->whereIn('contract_status_id', $contract_status_ids);
-            // $query->where('is_employee_active',$is_employee_active);
-            return $query;
-        });
-
-        
-
-        // sort
-        $sort_by = $request->sort_by ?? NULL;
-        $sort_type = $request->sort_type ?? 'asc';
-        if($sort_by == NULL or $sort_by == "") $employees = $employees->orderBy(EmployeeContract::select("contract_end_at")
-                ->whereColumn("employees.id","employee_contracts.employee_id")->limit(1),$sort_type);
-        if($sort_by == "name") $employees = $employees->orderBy('name',$sort_type);
-        if($sort_by == "role") $employees = $employees->orderBy(RecruitmentRole::select("name")
-                ->whereColumn("employee_roles.id","employees.employee_role_id"),$sort_type);
-
-        
-        $employees = $employees->paginate();
+        $employees = $employees->where('is_posted', 0);
+        $employees = $employees->where('updating_by', auth()->user()->id)->paginate($rows);
 
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employees, "status" => 200];
@@ -147,6 +200,8 @@ class EmployeeService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
+
+
 
     public function addEmployee($request, $route_name)
     {
@@ -159,12 +214,70 @@ class EmployeeService{
             $employee->created_at = $current_timestamp;
             $employee->updated_at = $current_timestamp;
             $employee->created_by = auth()->user()->id;
+            $employee->updating_by = auth()->user()->id;
             $employee->is_posted = false;
             $employee->save();
 
            
+        try{
+            return ["success" => true, "message" => "Data Berhasil Dibuat", "data" => $employee, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
 
-            try{
+    public function addEmployeeFromUser($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "user_id" => "numeric|required",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        
+            $user_id = $request->user_id;
+            $user = User::find($user_id);
+            if(!$user) return ["success" => false, "message" => "Data User Tidak Ditemukan", "status" => 400];
+            $employeeExist = Employee::where("user_id",$user_id)->first();
+            if($employeeExist) return ["success" => false, "message" => "User telah memiliki data employee", "status" => 400];
+        try{
+            $employee = new Employee();
+            $employee->name = $user->name ?? NULL;
+            $employee->nip = $user->nip ?? NULL;
+            $employee->nik = $request->nik ?? NULL;
+            $employee->alias = $request->alias ?? NULL;
+            $employee->email_office = $user->email ?? NULL;
+            $employee->email_personal = $request->email_personal ?? NULL;
+            $employee->domicile = $request->domicile ?? NULL;
+            $employee->phone_number = $user->phone_number ?? NULL;
+            $employee->birth_place = $request->birth_place ?? NULL;
+            $employee->birth_date = $request->birth_date ?? NULL;
+            $employee->gender = $request->gender ?? NULL;
+            $employee->blood_type = $request->blood_type ?? NULL;
+            $employee->marital_status = $request->marital_status ?? NULL;
+            $employee->number_of_children = $request->number_of_children ?? NULL;
+            $employee->bio_mother_name = $request->bio_mother_name ?? NULL;
+            $employee->npwp = $request->npwp ?? NULL;
+            $employee->bpjs_kesehatan = $request->bpjs_kesehatan ?? NULL;
+            $employee->bpjs_ketenagakerjaan = $request->bpjs_ketenagakerjaan ?? NULL;
+            $employee->acc_number_bukopin = $request->acc_number_bukopin ?? NULL;
+            $employee->acc_number_another = $request->acc_number_another ?? NULL;
+            $employee->is_posted = false;
+            $employee->user_id = $user_id;
+
+            $current_timestamp = date("Y-m-d H:i:s");
+            $employee->created_at = $current_timestamp;
+            $employee->updated_at = $current_timestamp;
+            $employee->created_by = auth()->user()->id;
+            $employee->save();
+
+            
             return ["success" => true, "message" => "Data Berhasil Dibuat", "data" => $employee, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -179,7 +292,8 @@ class EmployeeService{
 
         $validator = Validator::make($request->all(), [
             "id" => "numeric|required",
-            "is_posted" => "boolean"
+            "is_posted" => "boolean",
+            "user_id" => "numeric|min:1"
         ]);
 
         if($validator->fails()){
@@ -191,9 +305,17 @@ class EmployeeService{
             $id = $request->id;
             $employee = Employee::with("id_card_photo")->find($id);
             if(!$employee) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
-            if($employee->is_posted == false && $employee->created_by != auth()->user()->id){
+            if(!$employee->is_posted && $employee->updating_by != auth()->user()->id){
                 return ["success" => false, "message" => "Draft dibuat oleh user lain", "status" => 400]; 
             }
+
+            $user_id = $request->user_id;
+            if($user_id != NULL && $employee->user_id != NULL && $employee->user_id != $user_id) return ["success" => false, "message" => "Employee telah memiliki relasi ke user", "status" => 400]; 
+            if($user_id != NULL){
+                $user = User::find($user_id);
+                if(!$user) return ["success" => false, "message" => "User Tidak Ditemukan", "status" => 400];
+            }
+           
         try{
             $employee->name = $request->name ?? NULL;
             $employee->nip = $request->nip ?? NULL;
@@ -214,8 +336,13 @@ class EmployeeService{
             $employee->bpjs_kesehatan = $request->bpjs_kesehatan ?? NULL;
             $employee->bpjs_ketenagakerjaan = $request->bpjs_ketenagakerjaan ?? NULL;
             $employee->acc_number_bukopin = $request->acc_number_bukopin ?? NULL;
-            $employee->acc_number_another = $request->acc_number_another ?? NULL;
-            $employee->is_posted = $request->is_posted ?? NULL;
+            $employee->acc_number_bukopin = $request->acc_number_bukopin ?? NULL;
+            $employee->acc_name_another = $request->acc_name_another ?? NULL;
+            $employee->user_id = $user_id;
+            $employee->is_posted = $request->is_posted;
+            if(!$request->is_posted) $employee->updating_by = auth()->user()->id;
+            else $employee->updating_by = NULL;
+            $employee->updated_at = date('Y-m-d H:i:s');
             $employee->save();
 
             $file = $request->file('id_card_photo',NULL);
@@ -228,7 +355,9 @@ class EmployeeService{
                 }
             }
             
-            return ["success" => true, "message" => "Data Berhasil Diupdate", "status" => 200];
+            $employee = Employee::with("id_card_photo")->find($id);
+
+            return ["success" => true, "message" => "Data Berhasil Diupdate", "data" => $employee, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -253,7 +382,6 @@ class EmployeeService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
-
 
 
     // EMPLOYEE CONTRACT
@@ -303,6 +431,7 @@ class EmployeeService{
 
         $employeeContracts = EmployeeContract::with(["employee"])
             ->where(["employee_id" => $employee_id])
+            ->orderBy('is_employee_active','desc')
             ->orderBy('contract_start_at','desc')
             ->get();
 
@@ -342,8 +471,13 @@ class EmployeeService{
             $employeeContract->updated_at = $current_timestamp;
             $employeeContract->created_by = auth()->user()->id;
             $employeeContract->is_employee_active = false;
-            $employeeContract->employee_id = $request->employee_id;
+            $employeeContract->employee_id = $employee_id;
             $employeeContract->save();
+
+            if($employee->last_contract_id == NULL) {
+                $employee->last_contract_id = $employeeContract->id;
+                $employee->save();
+            }
 
             return ["success" => true, "message" => "Data Berhasil Dibuat", "data" => $employeeContract, "status" => 200];
         }catch(Exception $err){
@@ -374,7 +508,8 @@ class EmployeeService{
             if(!$employeeContract) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             if($employeeContract->employee_id != $employee_id) return ["success" => false, "message" => "Kontrak dan Karyawan tidak sesuai", "status" => 400]; 
 
-            $employeeContract->is_employee_active = $request->is_employee_active ?? NULL;
+            $is_employee_active = $request->is_employee_active ?? NULL;
+
             $employeeContract->contract_name = $request->contract_name ?? NULL;
             $employeeContract->role_id = $request->role_id ?? NULL;
             $employeeContract->contract_status_id = $request->contract_status_id ?? NULL;
@@ -387,8 +522,24 @@ class EmployeeService{
             $employeeContract->annual_leave = $request->annual_leave ?? NULL;
             $employeeContract->benefit = $request->benefit ?? NULL;
 
-            if($employeeContract->is_employee_active == true) EmployeeContract::where('employee_id',$employee_id)->update(['is_employee_active' => 0]);  
+            $total_pemasukan = $request->gaji_pokok;
 
+            $employeeContract->gaji_pokok = $total_pemasukan;
+            $employeeContract->bpjs_ks = $total_pemasukan * 0.05; //5%
+            $employeeContract->bpjs_tk_jht = $total_pemasukan * 0.057; // 0.057%
+            $employeeContract->bpjs_tk_jkk = $total_pemasukan * 0.0024; //0,24 %
+            $employeeContract->bpjs_tk_jkm = $total_pemasukan * 0.003; //0,3 %
+            $employeeContract->bpjs_tk_jp = $total_pemasukan * 0.03; //3%
+            $employeeContract->pph21 = $request->pph21;
+
+            if($is_employee_active == true) {
+                EmployeeContract::where('employee_id',$employee_id)->update(['is_employee_active' => 0]);
+                $employeeContract->employee->last_contract_id = $id;
+                $employeeContract->employee->save();
+            }  
+
+            $employeeContract->is_employee_active = $is_employee_active;
+            $employeeContract->updated_at = date('Y-m-d H:i:s');
             $employeeContract->save();
 
             $file = $request->file('contract_file',NULL);
@@ -401,7 +552,7 @@ class EmployeeService{
                 }
             }
         try{
-            return ["success" => true, "message" => "Data Berhasil Diupdate", "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diupdate", "data" => $employeeContract, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -558,6 +709,7 @@ class EmployeeService{
             $employeeInventory->return_date = $request->return_date ?? NULL;
             $employeeInventory->pic_delivery = $request->pic_delivery ?? NULL;
             $employeeInventory->pic_return = $request->pic_return ?? NULL;
+            $employeeInventory->updated_at = date('Y-m-d H:i:s');
             $employeeInventory->save();
 
             $delivery_file = $request->file('delivery_file',NULL);
@@ -581,6 +733,7 @@ class EmployeeService{
             }
             
             $devices = $request->device;
+            $employeeDevice = [];
             foreach($devices as $device){
                 $device = (object)$device;
                 $employeeDevice = EmployeeDevice::where(["id" => $device->id, "employee_inventory_id" => $device->employee_inventory_id])->first();
@@ -592,8 +745,9 @@ class EmployeeService{
                     $employeeDevice->save();
                 }
             }
-            
-            return ["success" => true, "message" => "Data Berhasil Diupdate", "data" => $employeeDevice, "status" => 200];
+
+            $employeeInventory = EmployeeInventory::with(["devices","delivery_file","return_file"])->find($id);
+            return ["success" => true, "message" => "Data Berhasil Diupdate", "data" => $employeeInventory, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -740,6 +894,7 @@ class EmployeeService{
             $employeeDevice->device_name = $request->device_name ?? NULL;
             $employeeDevice->device_type = $request->device_type ?? NULL;
             $employeeDevice->serial_number = $request->serial_number ?? NULL;
+            $employeeDevice->updated_at = date('Y-m-d H:i:s');
             $employeeDevice->save();
             
             return ["success" => true, "message" => "Data Berhasil Diupdate", "data" => $employeeDevice, "status" => 200];
@@ -832,6 +987,10 @@ class EmployeeService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
+            "is_amount_for_bpjs" => "required|boolean",
+            "required" => 'boolean',
+            "type" => "in:1,2",
+            "percent" => "numeric|min:0"
         ]);
 
         if($validator->fails()){
@@ -846,6 +1005,7 @@ class EmployeeService{
             $employeeSalaryTemplate->percent = $request->percent;
             $employeeSalaryTemplate->type = $request->type;
             $employeeSalaryTemplate->required = $request->required;
+            $employeeSalaryTemplate->is_amount_for_bpjs = $request->is_amount_for_bpjs;
             $employeeSalaryTemplate->created_at = $current_timestamp;
             $employeeSalaryTemplate->updated_at = $current_timestamp;
             $employeeSalaryTemplate->created_by = auth()->user()->id;
@@ -882,6 +1042,7 @@ class EmployeeService{
             $employeeSalaryTemplate->percent = $request->percent;
             $employeeSalaryTemplate->type = $request->type;
             $employeeSalaryTemplate->required = $request->required;
+            $employeeSalaryTemplate->is_amount_for_bpjs = $request->is_amount_for_bpjs;
             $employeeSalaryTemplate->updated_at = $current_timestamp;
             $employeeSalaryTemplate->save();
             
@@ -964,6 +1125,8 @@ class EmployeeService{
             $role_ids = $request->role_ids ? explode(",",$request->role_ids) : NULL;
             $placements = $request->placements ? explode(",",$request->placements) : NULL;
             $is_posted = $request->is_posted ?? NULL;
+            $pay_year = $request->pay_year ?? NULL;
+            $pay_month = $request->pay_month ?? NULL;
             $rows = $request->rows ?? 5;
 
 
@@ -983,8 +1146,9 @@ class EmployeeService{
             if($employee_id) $employeePayslips = $employeePayslips->where("employee_id",$employee_id);
 
             // filter
-
-            if($is_posted) $employeePayslips = $employeePayslips->where("is_posted", $is_posted);
+            if($is_posted != NULL) $employeePayslips = $employeePayslips->where("is_posted", $is_posted);
+            if($pay_year) $employeePayslips = $employeePayslips->whereYear("tanggal_dibayarkan", $pay_year);
+            if($pay_month) $employeePayslips = $employeePayslips->whereMonth("tanggal_dibayarkan", $pay_month);
             // $employeePayslips = $employeePayslips->whereHas("employee", function ($query) use ($keyword) {
             //     if($keyword) $query->where("name","LIKE", "%$keyword%");
             //     return $query;
@@ -997,7 +1161,7 @@ class EmployeeService{
             
             // sort
             $sort_by = $request->sort_by ?? NULL;
-            $sort_type = $request->sort_type ?? 'asc';
+            $sort_type = $request->sort_type ?? 'desc';
 
             if($sort_by == "name") $employeePayslips = $employeePayslips->orderBy('name',$sort_type);
 
@@ -1052,7 +1216,7 @@ class EmployeeService{
         $employee_id = $request->employee_id;
         $employee = Employee::find($employee_id);
         if(!$employee) return ["success" => false, "message" => "Employee id tidak ditemukan", "status" => 400];
-        
+
             $employeePayslip = new EmployeePayslip();
             $current_timestamp = date("Y-m-d H:i:s");
             $employeePayslip->employee_id = $request->employee_id;
@@ -1060,6 +1224,14 @@ class EmployeeService{
             $employeePayslip->tanggal_dibayarkan = $request->tanggal_dibayarkan;
             $employeePayslip->total_gross_penerimaan = 0; //sum of penerimaan
             $employeePayslip->total_gross_pengurangan = 0; //sum of pengeluaran
+            $total_pemasukan = 0;
+            $employeePayslip->gaji_pokok = $total_pemasukan;
+            $employeePayslip->bpjs_ks = $total_pemasukan * 0.05; //5%
+            $employeePayslip->bpjs_tk_jht = $total_pemasukan * 0.057; // 0.057%
+            $employeePayslip->bpjs_tk_jkk = $total_pemasukan * 0.0024; //0,24 %
+            $employeePayslip->bpjs_tk_jkm = $total_pemasukan * 0.003; //0,3 %
+            $employeePayslip->bpjs_tk_jp = $total_pemasukan * 0.03; //3%
+            $employeePayslip->pph21 = 0;
             $employeePayslip->take_home_pay = $employeePayslip->total_gross_penerimaan - $employeePayslip->total_gross_pengurangan;
             $employeePayslip->is_posted = $request->is_posted;
             $employeePayslip->created_at = $current_timestamp;
@@ -1097,8 +1269,8 @@ class EmployeeService{
 
             $gaji_pokok = $request->gaji_pokok ?? 0;
             $total_gross_penerimaan = $gaji_pokok;
-            $total_gross_pengurangan = 0;
-
+            $total_gross_pengurangan = $request->pph21 ?? 0;
+            $total_amount_for_bpjs = $gaji_pokok ?? 0;
             $employee_salary_column_ids = [];
             foreach($request->salaries as $salary){
                 $salary = (object)$salary;
@@ -1109,7 +1281,10 @@ class EmployeeService{
                 $salaryValue = $salary->value;
                 if($employeePayslipSalaryColumn->percent) $salaryValue = $employeePayslipSalaryColumn->percent/100 * $gaji_pokok;
                 
-                if($employeePayslipSalaryColumn->type == 1) $total_gross_penerimaan+=$salaryValue;
+                if($employeePayslipSalaryColumn->type == 1) {
+                    $total_gross_penerimaan+=$salaryValue;
+                    if($employeePayslipSalaryColumn->is_amount_for_bpjs) $total_amount_for_bpjs+=$salaryValue;
+                }
                 else if($employeePayslipSalaryColumn->type == 2) $total_gross_pengurangan+=$salaryValue;
 
                 $employeePayslipSalary = EmployeeSalary::updateOrCreate(
@@ -1125,11 +1300,26 @@ class EmployeeService{
 
             $deleteEmployeeSalary = EmployeeSalary::where("employee_payslip_id",2)->whereNotIn("employee_salary_column_id",$employee_salary_column_ids)->delete();
 
+            $employeePayslip->gaji_pokok = $gaji_pokok;
+            $employeePayslip->bpjs_ks = $total_amount_for_bpjs * 0.05; //5%
+            $employeePayslip->bpjs_tk_jht = $total_amount_for_bpjs * 0.057; // 0.057%
+            $employeePayslip->bpjs_tk_jkk = $total_amount_for_bpjs * 0.0024; //0,24 %
+            $employeePayslip->bpjs_tk_jkm = $total_amount_for_bpjs * 0.003; //0,3 %
+            $employeePayslip->bpjs_tk_jp = $total_amount_for_bpjs * 0.03; //3%
+            $employeePayslip->pph21 = $request->pph21;
+
+            $total_gross_pengurangan = $total_gross_pengurangan +
+                $employeePayslip->bpjs_ks +
+                $employeePayslip->bpjs_tk_jht +
+                $employeePayslip->bpjs_tk_jkk +
+                $employeePayslip->bpjs_tk_jkm +
+                $employeePayslip->bpjs_tk_jp;
+
             $employeePayslip->employee_id = $request->employee_id;
             $employeePayslip->total_hari_kerja = $request->total_hari_kerja;
             $employeePayslip->tanggal_dibayarkan = $request->tanggal_dibayarkan;
             $employeePayslip->total_gross_penerimaan = $total_gross_penerimaan; //sum of penerimaan
-            $employeePayslip->total_gross_pengurangan = $total_gross_pengurangan; //sum of pengeluaran
+            $employeePayslip->total_gross_pengurangan = $total_gross_pengurangan;
             $employeePayslip->take_home_pay = $total_gross_penerimaan - $total_gross_pengurangan;
             $employeePayslip->is_posted = $request->is_posted;
             $employeePayslip->updated_at = $current_timestamp;
@@ -1181,6 +1371,34 @@ class EmployeeService{
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
+    }
+    
+    public function downloadEmployeePayslip($request, $route_name)
+    {
+        $data = ['payslip' => ""];
+        // $pdf = PDF::setEncryption("password")->loadView('pdf.employee_payslip', $data);
+
+        $options = new Options();
+        $options->set('defaultFont', 'Courier');
+        $options->set('isHtml5ParserEnabled ', true);
+
+        $pdf = new Dompdf($options);
+        // $pdf->getCanvas();
+        // ->get_cpdf()
+        // ->setEncryption('test123', 'test456', ['print', 'modify', 'copy', 'add']);
+        $html = view('pdf.employee_payslip')->render();
+        $pdf->loadHtml($html);
+        $pdf->setPaper('A4', 'landscape');
+        $pdf->render();
+        $output = $pdf->output();
+        $res = new Response ($output, 200, array(
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' =>  'attachment; filename="test.pdf"',
+            'Content-Length' => strlen($output),
+        ));
+        // file_put_contents('output.pdf', $pdf->output());
+        // return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $pdf->download('Payslip Test.pdf'), "status" => 200];
+        return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $res, "status" => 200];
     }
     
 }
