@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Notification;
 use App\Services\AndroidService;
-use GuzzleHttp\Client;
 use Illuminate\Console\Command;
 
 class SendAndroidPushNotifications extends Command
@@ -32,7 +31,6 @@ class SendAndroidPushNotifications extends Command
     {
         parent::__construct();
         $this->androidService = new AndroidService();
-        $this->client = new Client();
     }
 
     /**

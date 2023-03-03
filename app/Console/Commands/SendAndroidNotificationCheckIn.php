@@ -3,11 +3,8 @@
 namespace App\Console\Commands;
 
 use App\AttendanceUser;
-use App\FirebaseAndroidToken;
 use App\Services\AndroidService;
-use App\Services\GlobalService;
 use App\User;
-use GuzzleHttp\Client;
 use Illuminate\Console\Command;
 
 class SendAndroidNotificationCheckIn extends Command

@@ -6,7 +6,6 @@ use App\AttendanceUser;
 use App\AttendanceActivity;
 use App\Services\AndroidService;
 use App\User;
-use GuzzleHttp\Client;
 use Illuminate\Console\Command;
 
 class SendAndroidNotificationActivity extends Command
@@ -33,7 +32,6 @@ class SendAndroidNotificationActivity extends Command
     public function __construct()
     {
         parent::__construct();
-        $this->client = new Client();
         $this->androidService = new AndroidService();
     }
 
