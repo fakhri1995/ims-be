@@ -36,10 +36,14 @@ class CreateEmployeesTable extends Migration
             $table->string("bpjs_ketenagakerjaan")->nullable();
             $table->string("acc_number_bukopin")->nullable();
             $table->string("acc_number_another")->nullable();
+            $table->string("acc_name_another")->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->boolean("is_posted")->default('0');
+            $table->unsignedBigInteger("last_contract_id")->uniqie()->nullable();
             $table->dateTime('created_at');
             $table->dateTime('updated_at');
             $table->unsignedBigInteger('created_by');
+            $table->unsignedBigInteger('updating_by')->nullable();
             $table->softDeletes();
         });
     }

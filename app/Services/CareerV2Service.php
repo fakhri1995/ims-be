@@ -89,7 +89,7 @@ class CareerV2Service{
         if($is_posted != NULL) $career = $career->where("is_posted", $is_posted);
         
         // sort_by
-        $sort_type = $request->sort_type ?? 'asc';
+        $sort_type = $request->sort_type == 'desc' ? 'desc' : 'asc';
         $sort_by = $request->sort_by ?? NULL;
         if($sort_by == "name") $career = $career->orderBy('name',$sort_type);
         if($sort_by == "created_at") $career = $career->orderBy('created_at',$sort_type);

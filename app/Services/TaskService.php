@@ -16,11 +16,12 @@ use App\Services\FileService;
 use App\Services\CompanyService;
 use App\Services\GlobalService;
 use App\Services\NotificationService;
+use App\TaskReport;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Collection;
 use Carbon\Carbon;
 use Exception;
-use Validator;
+use Illuminate\Support\Facades\Validator;
 
 class TaskService{
 
@@ -311,7 +312,6 @@ class TaskService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        try{
             $rows = $request->get('rows', 10);
             $keyword = $request->get('keyword', null);
             $sort_by = $request->get('sort_by', null);
@@ -332,7 +332,7 @@ class TaskService{
                 })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
                     $join->on('task_user.long_check_out', '=', 'check_out_list.longitude')->on('task_user.lat_check_out', '=', 'check_out_list.latitude');
                 });
-            }, 'reference:id,ticketable_type,ticketable_id', 'reference.type:id,code,table_name']);
+            }, 'reference:id,ticketable_type,ticketable_id', 'reference.type:id,code,table_name', 'reference.ticketable']);
 
 
             if($location > 0){
@@ -390,10 +390,19 @@ class TaskService{
                        
                     }
                 }
+
+                try{
+                    $task->reference->ticketable->location->full_location = $task->reference->ticketable->location->fullNameWParentTopParent();
+                    $task->reference->ticketable->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
+                }catch(Exception $err){
+                    
+                }
             }
+
             if($tasks->isEmpty()) return ["success" => true, "message" => "Task Masih Kosong", "data" => $tasks, "status" => 200];
             return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $tasks, "status" => 200];
 
+            try{
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -726,7 +735,10 @@ class TaskService{
                     $join->on('task_user.long_check_out', '=', 'check_out_list.longitude')->on('task_user.lat_check_out', '=', 'check_out_list.latitude');
                 });
             } , 'group:id,name', 'inventories:id,model_id,mig_id','inventories.modelInventory.asset', 'taskDetails', 
-            'reference', 'reference.creator:id,name,company_id', 'reference.creator.company:id,name,top_parent_id', 'reference.type', 'reference.ticketable.location', 'reference.ticketable.assetType', 'reference.ticketable.inventory'])->find($id);
+            'reference', 'reference.creator:id,name,company_id', 'reference.creator.company:id,name,top_parent_id', 
+            'reference.type', 'reference.ticketable', 'reference.ticketable.location', 'reference.ticketable.assetType', 
+            'reference.ticketable.inventory'])->find($id);
+            
             
             if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
             $task->location->full_location = $task->location->fullSubNameWParentTopParent();
@@ -2801,6 +2813,100 @@ class TaskService{
         try{
             $task->delete();
             return ["success" => true, "message" => "Tipe Task Berhasil Dihapus", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addTaskReport($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+    try{   
+
+            $task_id = $request->task_id;
+            $task = Task::find($task_id);
+
+            if(!$task) return ["success" => false, "message" => "Data Task Tidak Ditemukan", "status" => 400];
+
+            $current_time = date('Y-m-d H:i:s');
+            $taskReport = new TaskReport();
+            $taskReport->information = $request->information;
+            $taskReport->task_id = $request->task_id;
+            $taskReport->created_by = auth()->user()->id;
+            $taskReport->created_at = $current_time;
+            $taskReport->updated_at = $current_time;
+            $taskReport->save();
+            
+
+            return ["success" => true, "message" => "Task Report Berhasil Dibuat", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getTaskReports($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+
+        $validator = Validator::make($request->all(), [
+            "page" => "numeric",
+            "rows" => "numeric|between:1,100",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $rows = $request->rows ?? 5;
+
+        try{   
+
+            $taskReports = TaskReport::with('task')->paginate();
+
+            return ["success" => true, "message" => "Task Reports Berhasil Diambil", "data" => $taskReports, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getTaskReport($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{   
+
+            $id = $request->id;
+            $taskReport = TaskReport::with('task')->find($id);
+
+            if(!$taskReport) return ["success" => false, "message" => "Task Report Tidak Ditemukan", "status" => 400];
+
+            return ["success" => true, "message" => "Task Report Berhasil Diambil", "data" => $taskReport, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteTaskReport($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{   
+
+            $id = $request->id;
+            $taskReport = TaskReport::find($id);
+
+            if(!$taskReport) return ["success" => false, "message" => "Task Report Tidak Ditemukan", "status" => 400];
+
+            $taskReport->delete();
+
+            return ["success" => true, "message" => "Task Report Berhasil Dihapus", "data" => $taskReport, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
