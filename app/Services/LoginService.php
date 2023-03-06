@@ -188,7 +188,9 @@ class LoginService
         auth()->user()->attendanceForms->makeHidden(['updated_at', 'deleted_at', 'created_by']);
         auth()->user()->employee;
         if(auth()->user()->employee != null){  
-            auth()->user()->employee->contract->makeHidden('benefit','gaji_pokok','bpjs_ks','bpjs_tk_jht','bpjs_tk_jkk','bpjs_tk_jkm','bpjs_tk_jp','pph21');
+            if(auth()->user()->employee->contract != null){
+                auth()->user()->employee->contract->makeHidden('benefit','gaji_pokok','bpjs_ks','bpjs_tk_jht','bpjs_tk_jkk','bpjs_tk_jkm','bpjs_tk_jp','pph21');
+            }
         }
        
         
