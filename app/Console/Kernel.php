@@ -52,7 +52,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         //$schedule->command(SendAndroidPushNotifications::class)->cron('* * * * *')->runInBackground();
-        $schedule->command(SendAndroidNotificationCheckIn::class)->cron('5 9 * * *')->runInBackground();
+        $schedule->command(SendAndroidNotificationCheckIn::class)->cron('0 8 * * *')->runInBackground();
         $schedule->command(SendAndroidNotificationActivity::class)->cron('0 13 * * *')->runInBackground();
         $schedule->command(UnhideTasks::class)->cron('* * * * *')->runInBackground();
         $schedule->command(SetOverdueTasks::class)->cron('* * * * *')->runInBackground();
