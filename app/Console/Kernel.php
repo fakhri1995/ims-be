@@ -14,6 +14,8 @@ use App\Console\Commands\GenerateThricePerYearTask;
 use App\Console\Commands\GenerateTwicePerMonthTask;
 use App\Console\Commands\GenerateFourTimesPerYearTask;
 use App\Console\Commands\GenerateOneHourLeftTaskNotification;
+use App\Console\Commands\SendAndroidNotificationActivity;
+use App\Console\Commands\SendAndroidNotificationCheckIn;
 use Illuminate\Console\Scheduling\Schedule;
 use Laravel\Lumen\Console\Kernel as ConsoleKernel;
 
@@ -25,6 +27,8 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
+        SendAndroidNotificationCheckIn::class,
+        SendAndroidNotificationActivity::class,
         SendAndroidPushNotifications::class,
         UnhideTasks::class,
         SetOverdueTasks::class,
@@ -47,7 +51,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command(SendAndroidPushNotifications::class)->cron('* * * * *')->runInBackground();
+        //$schedule->command(SendAndroidPushNotifications::class)->cron('* * * * *')->runInBackground();
+        $schedule->command(SendAndroidNotificationCheckIn::class)->cron('5 9 * * *')->runInBackground();
+        $schedule->command(SendAndroidNotificationActivity::class)->cron('0 13 * * *')->runInBackground();
         $schedule->command(UnhideTasks::class)->cron('* * * * *')->runInBackground();
         $schedule->command(SetOverdueTasks::class)->cron('* * * * *')->runInBackground();
         $schedule->command(SearchGeoLocation::class)->cron('* * * * *')->runInBackground();
