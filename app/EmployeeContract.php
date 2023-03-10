@@ -29,4 +29,9 @@ class EmployeeContract extends Model
     {
         return $this->morphOne(File::class, 'fileable');
     }
+
+    public function benefits()
+    {
+        return $this->hasMany(EmployeeBenefit::class, "employee_contract_id");
+    }
 }
