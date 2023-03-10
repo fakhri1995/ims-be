@@ -168,7 +168,7 @@ class EmployeeService{
         $employeesDraft = Employee::with(["contract" => function ($query) use($current_timestamp) {
             $query->selectRaw("*, DATEDIFF(contract_end_at, '$current_timestamp') as contract_end_countdown");
             // $query->orderBy("contract_end_countdown", "desc");
-        },"contract.role","contract.contract_status"])->where('is_posted',0);
+        },"contract.role","contract.contract_status"])->where('updating_by',auth()->user()->id)->where('is_posted',0);
 
         
         $employeesDraftCount = $employeesDraft->count();
