@@ -574,7 +574,7 @@ class EmployeeService{
             $employeeContract->new_office = $request->new_office ?? NULL;
             $employeeContract->resign_at = $request->resign_at ?? NULL;
             $employeeContract->annual_leave = $request->annual_leave ?? NULL;
-            $benefits = $request->benefit ?? NULL;
+            $benefits = $request->benefit ?? [];
 
 
 
