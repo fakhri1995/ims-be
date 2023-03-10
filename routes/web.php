@@ -570,6 +570,8 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getEmployeePayslipsEmpty', 'EmployeeController@getEmployeePayslipsEmpty');
     $router->get('/downloadEmployeePayslip', 'EmployeeController@downloadEmployeePayslip');
 
+
+    $router->get('/getBankLists', "BankListController@getBankLists");
 });
 
 // //Incident Routes
