@@ -16,7 +16,19 @@
 $router->post('/addMessage', 'CompanyProfileController@addMessage');
 $router->get('/getCareers', 'CompanyProfileController@getCareers');
 $router->get('/getArticle', 'CompanyProfileController@getArticle');
+$router->get('/getCountArticle', 'CompanyProfileController@getCountArticle');
+$router->get('/getCountCustomerStories', 'CompanyProfileController@getCountCustomerStories');
+$router->get('/getArticleList', 'CompanyProfileController@getArticleList');
+$router->get('/getArticlePopularList', 'CompanyProfileController@getArticlePopularList');
+$router->get('/getTestimonialLandingPage', 'CompanyProfileController@getTestimonialLandingPage');
+$router->get('/getOtherTestimonial', 'CompanyProfileController@getOtherTestimonial');
+$router->get('/getTestimonialHardwarePage', 'CompanyProfileController@getTestimonialHardwarePage');
+$router->get('/getTestimonialSoftwarePage', 'CompanyProfileController@getTestimonialSoftwarePage');
+$router->get('/getTestimonialTalentPage', 'CompanyProfileController@getTestimonialTalentPage');
+$router->get('/getCustomerStoriesPage', 'CompanyProfileController@getCustomerStoriesPage');
 $router->get('/getArticleDetail', 'CompanyProfileController@getArticleDetail');
+$router->get('/getArticleDetailLanding', 'CompanyProfileController@getArticleDetailLanding');
+$router->get('/getTestimonialDetail', 'CompanyProfileController@getTestimonialDetail');
 $router->get('/getProduct', 'CompanyProfileController@getProduct');
 $router->get('/getProductDetail', 'CompanyProfileController@getProductDetail');
 $router->post('/addFormSolution', 'CompanyProfileController@addFormSolution');
@@ -57,6 +69,8 @@ $router->group(['middleware' => 'auth'], function($router){
 
     //blog routes
     $router->post('/addArticle', 'CompanyProfileController@addArticle');
+    $router->post('/uploadFile', 'CompanyProfileController@uploadFile');
+    
     $router->delete('/deleteArticle', 'CompanyProfileController@deleteArticle');
     $router->post('/updateArticle', 'CompanyProfileController@updateArticle');
     //product routes

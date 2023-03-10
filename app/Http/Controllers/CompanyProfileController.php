@@ -119,11 +119,93 @@ class CompanyProfileController extends Controller
         $response = $this->companyProfileService->addArticle($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    public function uploadFile(Request $request)
+    {
+        $route_name = "ARTICLE_POST";
+
+        $response = $this->companyProfileService->uploadFile($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    
+    
+    public function getTestimonialLandingPage(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getTestimonialLandingPage($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getCustomerStoriesPage(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getCustomerStoriesPage($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    
+    public function getOtherTestimonial(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getOtherTestimonial($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    
+    public function getTestimonialHardwarePage(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getTestimonialHardwarePage($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getTestimonialSoftwarePage(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getTestimonialSoftwarePage($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getTestimonialTalentPage(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getTestimonialTalentPage($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    
     public function getArticle(Request $request)
     {
         $route_name = "FORM_GET";
 
         $response = $this->companyProfileService->getArticle($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getCountCustomerStories(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getCountCustomerStories($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getCountArticle(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getCountArticle($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getArticleList(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getArticleList($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getArticlePopularList(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getArticlePopularList($request, $route_name);
         return response()->json($response, $response['status']);
     }
     public function deleteArticle(Request $request)
@@ -140,6 +222,21 @@ class CompanyProfileController extends Controller
         $response = $this->companyProfileService->getArticleDetail($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    public function getArticleDetailLanding(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getArticleDetailLanding($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    public function getTestimonialDetail(Request $request)
+    {
+        $route_name = "FORM_GET";
+
+        $response = $this->companyProfileService->getTestimonialDetail($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    
     public function updateArticle(Request $request)
     {
         $route_name = "FORM_GET";

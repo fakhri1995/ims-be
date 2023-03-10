@@ -6,6 +6,7 @@ use App\Task;
 use App\Ticket;
 use App\AttendanceUser;
 use Carbon\Carbon;
+use GuzzleHttp\Client;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -13,6 +14,25 @@ class AndroidService{
     public function __construct()
     {
         $this->globalService = new GlobalService;
+    }
+
+    public function sendPushNotification($registrations_ids, $notification)
+    {
+        $this->client = new Client();
+        $headers = [
+            'Authorization' => 'key ='.env('KEY_ANDROID_FIREBASE'),
+            'content-type' => 'application/json'
+        ];
+
+        $body = [
+            'registration_ids' => $registrations_ids,
+            'notification' => $notification
+        ];
+        
+        $response = $this->client->request('POST', 'https://fcm.googleapis.com/fcm/send', [
+            'headers'  => $headers,
+            'json' => $body
+        ]);
     }
 
     public function getMainAndroid($request)
