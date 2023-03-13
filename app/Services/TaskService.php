@@ -759,6 +759,7 @@ class TaskService{
                     $inventory->connect_id = $inventory->pivot->connect_id;
                 }
             }
+            $logService = new LogService;
             if($task->reference !== null){
                 $task->reference->name = $task->reference->type->code.'-'.$task->reference->ticketable_id;
                 $task->reference->creator->location = $task->reference->creator->location ?? $task->reference->creator->company->fullName();
@@ -781,9 +782,9 @@ class TaskService{
                     }
                 }
                 $task->reference->name = $task->reference->type->code.'-'.sprintf('%03d', $task->reference->ticketable_id);
-                $logService = new LogService;
                 $task->reference->logs = $logService->getTicketLogFunction($task->reference->id);
             } 
+            $task->logs = $logService->getLogTaskFunction($id);
             
             if($task->status === 4) $task->time_left = date_diff(date_create($task->deadline), date_create($task->on_hold_at)); 
             else $task->time_left = date_diff(date_create($task->deadline), date_create(date("Y-m-d H:i:s"))); 
@@ -1242,11 +1243,22 @@ class TaskService{
                 }
                 $task->notes = $notes;
                 $task->save();
-
+                
+                $logService = new LogService;
                 if($task->is_from_ticket){
-                    $logService = new LogService;
                     $logService->updateStatusLogTicket($task->reference_id, $login_id, $old_status, $task->status, $notes);
                 }
+
+                $logService = new LogService;
+                $logProperties = [
+                    "log_type" => "task_status",
+                    "old_task_status_id" => $old_status,
+                    "new_task_status_id" => $task->status
+                ];
+                $logNotes = $request->notes ?? NULL;
+                $logService->addLogTask($task->id, $login_id, "Updated", $logProperties, $logNotes);
+
+                
                 return ["success" => true, "message" => "Berhasil Merubah Status Task", "status" => 200];
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Task Ini.", "status" => 400];
         } catch(Exception $err){

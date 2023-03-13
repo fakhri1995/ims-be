@@ -23,6 +23,7 @@ use App\StatusConditionInventory;
 use App\ActivityLogInventoryPivot;
 use App\ActivityLogInventoryRelationship;
 use App\ActivityLogRecruitment;
+use App\ActivityLogTask;
 use App\RecruitmentStage;
 use App\RecruitmentStatus;
 use Exception;
@@ -921,5 +922,55 @@ class LogService
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
+
+    public function addLogTask($subject_id, $causer_id, $log_name, $properties, $notes = null)
+    {
+        $log = new ActivityLogTask;
+        $log->subject_id = $subject_id;
+        $log->causer_id = $causer_id;
+        $log->log_name = $log_name;
+        $log->properties = $properties;
+        $log->notes = $notes;
+        $log->created_at = date("Y-m-d H:i:s");
+        $log->save();
+    }
+
+    public function getLogTaskFunction($id)
+    {
+
+        $logStatusArray = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
+
+        $typeArray = [
+            "task_status" => [
+                "string" => "Task status",
+                "data" => $logStatusArray
+            ]
+        ];
+
+        try{
+            $logsTask = ActivityLogTask::where("subject_id",$id)->orderBy('created_at','desc')->get();
+            $normal_logs = [];
+            foreach($logsTask as $log){
+                $properties = $log->properties ?? NULL;
+
+                if($log->log_name == "Updated"){
+                    $log_type_string = $typeArray[$properties->log_type]["string"];
+                    $old_str = "old_".$properties->log_type."_id"; //contoh : jika log_type = log_stage, ini bakal menjadi old_log_stage_id
+                    $new_str = "new_".$properties->log_type."_id"; //contoh : jika log_type = log_stage, ini bakal menjadi new_log_stage_id
+                    $old = $typeArray[$properties->log_type]["data"][$properties->$old_str];
+                    $new = $typeArray[$properties->log_type]["data"][$properties->$new_str];
+                    $log->description = "Perubahan $log_type_string dari $old ke $new";
+                    $normal_logs[] = $log;
+                    continue;
+                }
+                
+            }
+            $data = $normal_logs;
+            return $data;
+        } catch(Exception $err){
+            return ["error" => $err];
+        }
+    }
+
     
 }
