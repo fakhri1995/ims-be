@@ -31,9 +31,12 @@ class EmployeeService{
 
     public function getEmployeePlacementsCount(){
         try{
-            $employee = EmployeeContract::where("is_employee_active",1)
-            ->selectRaw("placement, count(*) as placement_count")
-            ->groupBy("placement")
+            $employee = EmployeeContract::whereHas('employee_last_contract', function($q){
+                $q->where('is_posted',1);
+            })
+            ->selectRaw('placement, count(1) as placement_count')
+            ->where('is_employee_active',1)
+            ->groupBy('placement')
             ->get();
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employee, "status" => 200];
         }catch(Exception $err){
@@ -43,10 +46,13 @@ class EmployeeService{
 
     public function getEmployeeRolesCount(){
         try{
-            $employee = EmployeeContract::with("role")
-            ->where("is_employee_active",1)
-            ->selectRaw("role_id, count(*) as role_count")
-            ->groupBy("role_id")
+            $employee = EmployeeContract::with(['role'])
+            ->whereHas('employee_last_contract', function($q){
+                $q->where('is_posted',1);
+            })
+            ->selectRaw('role_id, count(1) as role_count')
+            ->where('is_employee_active',1)
+            ->groupBy('role_id')
             ->get();
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employee, "status" => 200];
         }catch(Exception $err){
@@ -56,15 +62,19 @@ class EmployeeService{
 
     public function getEmployeeStatusesCount(){
 
-        $employeeContracts = EmployeeContract::selectRaw("id as contract_id,employee_id,is_employee_active ,max(contract_start_at) as contract_start_at")
-        ->groupBy("employee_id");
+        // $employee = DB::table('employees as e')
+        // ->join('employee_contracts as ec','e.last_contract_id','ec.id')
+        // ->select(DB::raw('ec.is_employee_active, count(1) as status_count'))
+        // ->where('e.is_posted', 1)
+        // ->groupBy('ec.is_employee_active')
+        // ->get();
 
-        $employee = Employee::joinSub($employeeContracts, "employee_contracts", function($query){
-            $query->on("employees.id","=","employee_contracts.employee_id");
-        })
-        ->selectRaw("count(*) as status_count, is_employee_active")
-        ->groupBy("is_employee_active")
-        ->get();
+        $employee = EmployeeContract::whereHas('employee_last_contract', function($q){
+                $q->where('is_posted',1);
+            })
+            ->selectRaw('is_employee_active, count(1) as status_count')
+            ->groupBy('is_employee_active')
+            ->get();
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employee, "status" => 200];
         }catch(Exception $err){
@@ -90,7 +100,7 @@ class EmployeeService{
             $employee = Employee::with(["user","id_card_photo",
                 "contracts" => function ($q){
                     $q->orderBy('contract_start_at','desc');
-                },"contracts.role","contracts.contract_status","contracts.benefits","contract.benefits.column",
+                },"contracts.role","contracts.contract_status","contracts.salaries","contract.salaries.column",
                 "inventories","inventories.devices","inventories.delivery_file","inventories.return_file"])->find($id);
             if(!$employee) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             if($employee->is_posted == false && $employee->created_by != auth()->user()->id && $employee->created_by != null){
@@ -139,17 +149,22 @@ class EmployeeService{
             // $query->orderBy("contract_end_countdown", "desc");
         },"contract.role","contract.contract_status"])->where('is_posted',1);
 
+        function filter($employees, $keyword, $is_employee_active, $role_ids, $placements, $contract_status_ids){
+            if($keyword) $employees = $employees->where("name","LIKE", "%$keyword%");
+            $employees = $employees->whereHas("contract", function ($query) use($is_employee_active,$role_ids,$placements,$contract_status_ids) {
+                if($is_employee_active != NULL) $query->where('is_employee_active', $is_employee_active);
+                if($role_ids) $query->whereIn('role_id', $role_ids);
+                if($placements) $query->whereIn('placement', $placements);
+                if($contract_status_ids) $query->whereIn('contract_status_id', $contract_status_ids);
+                return $query;
+            });
+            return $employees;
+        }
+
         // filter
-        if($keyword) $employees = $employees->where("name","LIKE", "%$keyword%");
-        $employees = $employees->whereHas("contract", function ($query) use($is_employee_active,$role_ids,$placements,$contract_status_ids) {
-            if($is_employee_active != NULL) $query->where('is_employee_active', $is_employee_active);
-            if($role_ids) $query->whereIn('role_id', $role_ids);
-            if($placements) $query->whereIn('placement', $placements);
-            if($contract_status_ids) $query->whereIn('contract_status_id', $contract_status_ids);
-            return $query;
-        });
+        $employees = filter($employees, $keyword, $is_employee_active, $role_ids, $placements, $contract_status_ids);
         
-        if($is_employee_active == 0) $employees = $employees->orWhereNull('last_contract_id');
+        // if($is_employee_active == 0) $employees = $employees->orWhereNull('last_contract_id');
         
         // sort
         $sort_by = $request->sort_by ?? NULL;
@@ -163,54 +178,50 @@ class EmployeeService{
         if($sort_by == "role") $employees = $employees->orderBy(RecruitmentRole::select("name")
                 ->whereColumn("employee_roles.id","employees.employee_role_id"),$sort_type);
         
-                
-        // $employees = $employees->paginate($rows);
-        $employeesDraft = Employee::with(["contract" => function ($query) use($current_timestamp) {
-            $query->selectRaw("*, DATEDIFF(contract_end_at, '$current_timestamp') as contract_end_countdown");
-            // $query->orderBy("contract_end_countdown", "desc");
-        },"contract.role","contract.contract_status"])->where('updating_by',auth()->user()->id)->where('is_posted',0);
-
         
-        $employeesDraftCount = $employeesDraft->count();
-        $employeeCount = $employees->count();
-        $employeeTotalCount = $employeesDraftCount + $employeeCount;
-        $employeesDraft = $employeesDraft->offset($offset)->limit($rows)->get()->toArray();
-        
-        // dd($employeesDraft);
-        // dd($employeesDraftCount);
-        
-        if(count($employeesDraft) < $rows){
-            $rowDiff = $rows - count($employeesDraft);
-            // $diffPage = $employeesDraftCount / $rows;
-            $offset2 = $rows * $page - $employeesDraftCount - $rows; 
-            if($offset2 < 0) $offset2 = 0;
-            $employees = $employees->offset($offset2)->limit($rowDiff)->get()->toArray();
+        if($is_employee_active){
+            $employeesDraft = Employee::with(["contract" => function ($query) use($current_timestamp) {
+                $query->selectRaw("*, DATEDIFF(contract_end_at, '$current_timestamp') as contract_end_countdown");
+            },"contract.role","contract.contract_status"])->where('updating_by',auth()->user()->id)->where('is_posted',0);
+            $employeesDraft = filter($employeesDraft, $keyword, $is_employee_active, $role_ids, $placements, $contract_status_ids);
             
-            // dd($offset2);    
+            $employeesDraftCount = $employeesDraft->count();
+            $employeeCount = $employees->count();
+            $employeeTotalCount = $employeesDraftCount + $employeeCount;
+            $employeesDraft = $employeesDraft->offset($offset)->limit($rows)->get()->toArray();
+            
+            if(count($employeesDraft) < $rows){
+                $rowDiff = $rows - count($employeesDraft);
+                $offset2 = $rows * $page - $employeesDraftCount - $rows; 
+                if($offset2 < 0) $offset2 = 0;
+                $employees = $employees->offset($offset2)->limit($rowDiff)->get()->toArray();
+            }else{
+                $employees = [];
+            }
+    
+            $employeeMerge = array_merge($employeesDraft, $employees);
+            
+            $last_page = ceil($employeeTotalCount/5);
+    
+            $data = [
+                "current_page" => $page,
+                "data" => $employeeMerge,
+                "first_page_url" => "http://service-migsys.patar/getEmployees?page=1",
+                "from" => count($employeeMerge) <= 0 ? NULL : $page*$rows-$rows+1,
+                "last_page" => $last_page,
+                "last_page_url" => "http://service-migsys.patar/getEmployees?page=$last_page",
+                "next_page_url" => $page < $last_page ? $page + 1 : NULL,
+                "path" => "http://service-migsys.patar/getEmployees",
+                "per_page" => $rows,
+                "prev_page_url" => $page <= 1 ? NULL : $page - 1,
+                "to" => count($employeeMerge) <= 0 ? NULL : $page*$rows + count($employeeMerge) - $rows,
+                "total" => $employeeTotalCount
+            ];
         }else{
-            $employees = [];
-        }
-
-
-
-        $employeeMerge = array_merge($employeesDraft, $employees);
+            $data = $employees->paginate($rows);
+        }        
         
-        $last_page = ceil($employeeTotalCount/5);
-
-        $data = [
-            "current_page" => $page,
-            "data" => $employeeMerge,
-            "first_page_url" => "http://service-migsys.patar/getEmployees?page=1",
-            "from" => count($employeeMerge) <= 0 ? NULL : $page*$rows-$rows+1,
-            "last_page" => $last_page,
-            "last_page_url" => "http://service-migsys.patar/getEmployees?page=$last_page",
-            "next_page_url" => $page < $last_page ? $page + 1 : NULL,
-            "path" => "http://service-migsys.patar/getEmployees",
-            "per_page" => $rows,
-            "prev_page_url" => $page <= 1 ? NULL : $page - 1,
-            "to" => count($employeeMerge) <= 0 ? NULL : $page*$rows + count($employeeMerge) - $rows,
-            "total" => $employeeTotalCount
-        ];
+        
 
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
@@ -454,7 +465,7 @@ class EmployeeService{
         }
 
         $id = $request->id;
-        $employeeContract = EmployeeContract::with(["employee","role","contract_status","contract_file","benefits"])->find($id);
+        $employeeContract = EmployeeContract::with(["employee","role","contract_status","contract_file","salaries"])->find($id);
         if(!$employeeContract) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
 
@@ -574,7 +585,8 @@ class EmployeeService{
             $employeeContract->new_office = $request->new_office ?? NULL;
             $employeeContract->resign_at = $request->resign_at ?? NULL;
             $employeeContract->annual_leave = $request->annual_leave ?? NULL;
-            $benefits = $request->benefit ?? [];
+            $salaries = $request->salary ?? [];
+            
 
 
 
@@ -594,17 +606,20 @@ class EmployeeService{
             $gaji_pokok = $request->gaji_pokok ?? 0;
             $total_amount_for_bpjs = $gaji_pokok ?? 0;
             $employee_salary_column_ids = [];
-            foreach($benefits as $salary){
+            foreach($salaries as $salary){
                 $salary = (object)$salary;
                 $employeePayslipSalaryColumn = EmployeeSalaryColumn::find($salary->employee_salary_column_id);
                 if(!$employeePayslipSalaryColumn) continue;
-
+                
                 $employee_salary_column_ids[] = $salary->employee_salary_column_id;
                 $salaryValue = $salary->value;
-                if($employeePayslipSalaryColumn->percent) $salaryValue = $employeePayslipSalaryColumn->percent/100 * $gaji_pokok;
+                
+                if($employeePayslipSalaryColumn->percent > 0) {
+                    $salaryValue = $employeePayslipSalaryColumn->percent/100 * $gaji_pokok;}
+
+                
                 
                 if($employeePayslipSalaryColumn->is_amount_for_bpjs) $total_amount_for_bpjs+=$salaryValue;
-                
 
                 $employeePayslipSalary = EmployeeBenefit::updateOrCreate(
                     [

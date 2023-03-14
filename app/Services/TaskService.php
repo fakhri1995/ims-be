@@ -1255,7 +1255,7 @@ class TaskService{
                     "old_task_status_id" => $old_status,
                     "new_task_status_id" => $task->status
                 ];
-                $logNotes = $request->notes ?? NULL;
+                $logNotes = $task->status == 4 ? $request->notes : NULL;
                 $logService->addLogTask($task->id, $login_id, "Updated", $logProperties, $logNotes);
 
                 
