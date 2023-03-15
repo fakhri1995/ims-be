@@ -17,6 +17,7 @@ use App\AttendanceProjectStatus;
 use App\AttendanceProjectCategory;
 use App\Company;
 use App\Exports\AttendanceActivitiesExport;
+use App\File;
 
 class AttendanceService{
     public function __construct()
@@ -232,6 +233,13 @@ class AttendanceService{
         }
     }
 
+    private function addAttendanceActivityFile($id, $file, $description)
+    {
+        $fileService = new FileService;
+        $add_file_response = $fileService->addFile($id, $file, 'App\AttendanceActivity', $description, 'AttendanceActivity', false);
+        return $add_file_response;
+    }
+
     public function addAttendanceActivity($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
@@ -244,13 +252,26 @@ class AttendanceService{
         $last_check_in = AttendanceUser::where('user_id', $login_id)->orderBy('check_in', 'desc')->first();
         if($last_check_in->check_out) return ["success" => false, "message" => "Silahkan Lakukan Check In Terlebih Dahulu", "status" => 400];
         $activity_details = $request->get('details', []);
+        ksort($activity_details);
+        $fileArray = []; // index => [ "key" : value, "value" : value ]
         foreach($attendance_form->details as $form_detail){
             $search = array_search($form_detail['key'], array_column($activity_details, 'key'));
             if($search === false) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum diisi" , "status" => 400];
+            if($form_detail['type'] === 6){
+                $file = $request->file("details.$search.value",NULL);
+                $isFile = is_file($file);
+                if($isFile) $activity_details[$search]['value'] = true;
+                else $activity_details[$search]['value'] = NULL;
+                if($form_detail['required'] && !$isFile) return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe file" , "status" => 400];
+                $fileArray[$search] = [
+                    "key" => $form_detail['key'],
+                    "file" => $file
+                ];
+            }
             if(!isset($activity_details[$search]['value']) || ($form_detail['required'] && $activity_details[$search]['value'] === "")) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
             if($form_detail['type'] === 3){
                 if(gettype($activity_details[$search]['value']) !== "array") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe array", "status" => 400];
-            } else {
+            } else if($form_detail['type'] !== 6) {
                 if(gettype($activity_details[$search]['value']) !== "string") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe string", "status" => 400];
             }
         }
@@ -261,8 +282,19 @@ class AttendanceService{
         // $attendance_activity->attendance_project_status_id = $request->get('attendance_project_status_id');
         $attendance_activity->updated_at = date('Y-m-d H:i:s');
         $attendance_activity->details = $activity_details;
+
         try{
             $attendance_activity->save();
+
+            $attendance_id = $attendance_activity->id;
+            foreach($fileArray as $index => $value){
+                if(!$activity_details[$index]['value']) continue;
+                $uploadFile = $this->addAttendanceActivityFile($attendance_id, $value['file'], $value['key']);
+                if($uploadFile['success']) $activity_details[$index]['value'] = $uploadFile['new_data']->link;
+            }
+            $attendance_activity->details = $activity_details;
+            $attendance_activity->save();
+
             return ["success" => true, "message" => "Attendance Activity Berhasil Dibuat", "id" => $attendance_activity->id, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -282,19 +314,53 @@ class AttendanceService{
         $attendance_form = AttendanceForm::find($attendance_activity->attendance_form_id);
         if($attendance_form === null) return ["success" => false, "message" => "Id Form Tidak Ditemukan", "status" => 400];
         $activity_details = $request->get('details', []);
+        ksort($activity_details);
+        $fileArray = []; // index => [ "key" : value, "value" : value ]
+        $old_activity_details = $attendance_activity->details;
         foreach($attendance_form->details as $form_detail){
+            print_r($form_detail);
+            echo "<br>";
             $search = array_search($form_detail['key'], array_column($activity_details, 'key'));
             if($search === false) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum diisi" , "status" => 400];
+            if($form_detail['type'] === 6){
+                $file = $request->file("details.$search.value",NULL);
+                $isFile = is_file($file);
+                if($isFile) $activity_details[$search]['value'] = true;
+                else {
+                    $search_old = array_search($form_detail['key'], array_column($old_activity_details, 'key'));
+                    $activity_details[$search]['value'] = $old_activity_details[$search_old]['value'];
+                }
+                if(!$activity_details[$search]['value'] && ($form_detail['required'] && !$isFile)) return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe file" , "status" => 400];
+                $fileArray[$search] = [
+                    "key" => $form_detail['key'],
+                    "file" => $file
+                ];
+            }
             if(!isset($activity_details[$search]['value']) || ($form_detail['required'] && $activity_details[$search]['value'] === "")) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
             if($form_detail['type'] === 3){
                 if(gettype($activity_details[$search]['value']) !== "array") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe array", "status" => 400];
-            } else {
+            } else if($form_detail['type'] !== 6) {
                 if(gettype($activity_details[$search]['value']) !== "string") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe string", "status" => 400];
             }
         }
-        $attendance_activity->updated_at = date('Y-m-d H:i:s');
+        $current_time = date('Y-m-d H:i:s');
+        $attendance_activity->updated_at = $current_time;
         $attendance_activity->details = $activity_details;
         try{
+
+            $id = $attendance_activity->id;
+            
+            foreach($fileArray as $index => $value){
+                if($activity_details[$index]['value'] === true){
+                    $old_activity_details[$index]['value'];
+                    $deleteOldFile = File::where(['fileable_id' => $id, 'description' => $value['key']])
+                    ->whereNull('deleted_at')
+                    ->update(['deleted_at' => $current_time]);
+                    $uploadFile = $this->addAttendanceActivityFile($id, $value['file'], $value['key']);
+                    if($uploadFile['success']) $activity_details[$index]['value'] = $uploadFile['new_data']->link;
+                }
+            }
+            $attendance_activity->details = $activity_details;
             $attendance_activity->save();
             return ["success" => true, "message" => "Attendance Activity Berhasil Diperbarui", "status" => 200];
         } catch(Exception $err){
