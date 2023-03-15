@@ -9,6 +9,7 @@ use App\Services\FileService;
 use App\RelationshipInventory;
 use Illuminate\Support\Facades\DB;
 use App\Services\GlobalService;
+use Illuminate\Support\Facades\Validator;
 
 class CompanyService
 {
@@ -301,6 +302,15 @@ class CompanyService
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
+        $validator = Validator::make($request->all(), [
+            "check_in_time" => "date_format:H:i:s"
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
         if($role_id === 4) $parent_id = $request->get('parent_id', null);
         else $parent_id = $request->get('parent_id', auth()->user()->company->parent_id);
         
@@ -336,6 +346,7 @@ class CompanyService
             $company->fax = $request->get('fax', '-');
             $company->email = $request->get('email', '-');
             $company->website = $request->get('website', '-');
+            $company->check_in_time = $request->get('check_in_time','08:00:00');
             $company->save();
 
             if($request->hasFile('company_logo')) {
@@ -375,6 +386,15 @@ class CompanyService
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
+        $validator = Validator::make($request->all(), [
+            "check_in_time" => "date_format:H:i:s"
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
         if($main) $company = Company::find(auth()->user()->company_id);
         else {
             $id = $request->get('id');
@@ -383,6 +403,7 @@ class CompanyService
         }
         if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
         try{
+            
             $company->name = $request->get('name');
             $company->address = $request->get('address');
             $company->phone_number = $request->get('phone_number');
@@ -394,6 +415,7 @@ class CompanyService
             $company->fax = $request->get('fax', '-');
             $company->email = $request->get('email', '-');
             $company->website = $request->get('website', '-');
+            $company->check_in_time = $request->get('check_in_time', '08:00:00');
             $company->save();
 
             if($request->hasFile('company_logo')) {

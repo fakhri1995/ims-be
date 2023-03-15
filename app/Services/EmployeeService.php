@@ -465,7 +465,7 @@ class EmployeeService{
         }
 
         $id = $request->id;
-        $employeeContract = EmployeeContract::with(["employee","role","contract_status","contract_file","salaries"])->find($id);
+        $employeeContract = EmployeeContract::with(["employee","role","contract_status","contract_file","salaries","salaries.column"])->find($id);
         if(!$employeeContract) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
 
@@ -585,7 +585,7 @@ class EmployeeService{
             $employeeContract->new_office = $request->new_office ?? NULL;
             $employeeContract->resign_at = $request->resign_at ?? NULL;
             $employeeContract->annual_leave = $request->annual_leave ?? NULL;
-            $salaries = $request->salary ?? [];
+            $salaries = $request->salaries ?? [];
             
 
 
