@@ -15,6 +15,7 @@ use App\Services\FileService;
 use App\AttendanceProjectType;
 use App\AttendanceProjectStatus;
 use App\AttendanceProjectCategory;
+use App\Company;
 use App\Exports\AttendanceActivitiesExport;
 
 class AttendanceService{
@@ -520,9 +521,25 @@ class AttendanceService{
     {
         $date_time_split = explode(' ', $current_timestamp);
         $today_user_attendance = AttendanceUser::select('id', 'user_id', 'check_in', 'is_late')->where('user_id', $login_id)->whereDate('check_in', '=', $date_time_split[0])->first();
+        $user_company_id = auth()->user()->company_id;
+        $company = Company::find($user_company_id);
+
+        if($company->id == 1) $check_in_time = $company->check_in_time;
+        else if($company->role == 3) {
+            $top_parent_company = Company::find(1);
+            $check_in_time = $top_parent_company->check_in_time;
+        }
+        else{
+            $top_parent_id = $company->getTopParent()->id;
+            if($top_parent_id == null) $check_in_time = $company->check_in_time;
+            else {
+                $top_parent_company = Company::find($top_parent_id);
+                $check_in_time = $top_parent_company->check_in_time;
+            }
+        }
         if($today_user_attendance) return $today_user_attendance->is_late;
         else {
-            if($date_time_split[1] > "08:15:00") return true;
+            if($date_time_split[1] > $check_in_time) return true;
             else return false;
         }
     }
