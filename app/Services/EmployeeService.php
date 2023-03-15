@@ -594,13 +594,7 @@ class EmployeeService{
 
             $total_pemasukan = $request->gaji_pokok;
 
-            $employeeContract->gaji_pokok = $total_pemasukan;
-            $employeeContract->bpjs_ks = $total_pemasukan * 0.05; //5%
-            $employeeContract->bpjs_tk_jht = $total_pemasukan * 0.057; // 0.057%
-            $employeeContract->bpjs_tk_jkk = $total_pemasukan * 0.0024; //0,24 %
-            $employeeContract->bpjs_tk_jkm = $total_pemasukan * 0.003; //0,3 %
-            $employeeContract->bpjs_tk_jp = $total_pemasukan * 0.03; //3%
-            $employeeContract->pph21 = $request->pph21;
+
 
             
             $gaji_pokok = $request->gaji_pokok ?? 0;
@@ -608,20 +602,20 @@ class EmployeeService{
             $employee_salary_column_ids = [];
             foreach($salaries as $salary){
                 $salary = (object)$salary;
-                $employeePayslipSalaryColumn = EmployeeSalaryColumn::find($salary->employee_salary_column_id);
-                if(!$employeePayslipSalaryColumn) continue;
+                $employeeSalaryColumn = EmployeeSalaryColumn::find($salary->employee_salary_column_id);
+                if(!$employeeSalaryColumn) continue;
                 
                 $employee_salary_column_ids[] = $salary->employee_salary_column_id;
                 $salaryValue = $salary->value;
                 
-                if($employeePayslipSalaryColumn->percent > 0) {
-                    $salaryValue = $employeePayslipSalaryColumn->percent/100 * $gaji_pokok;}
+                if($employeeSalaryColumn->percent > 0) {
+                    $salaryValue = $employeeSalaryColumn->percent/100 * $gaji_pokok;}
 
                 
                 
-                if($employeePayslipSalaryColumn->is_amount_for_bpjs) $total_amount_for_bpjs+=$salaryValue;
+                if($employeeSalaryColumn->is_amount_for_bpjs) $total_amount_for_bpjs+=$salaryValue;
 
-                $employeePayslipSalary = EmployeeBenefit::updateOrCreate(
+                $employeeSalary = EmployeeBenefit::updateOrCreate(
                     [
                         "employee_contract_id" => $id,
                         "employee_salary_column_id" => $salary->employee_salary_column_id,
@@ -632,16 +626,27 @@ class EmployeeService{
                 );
             }
 
+            $deleteEmployeeSalary = EmployeeBenefit::where("employee_contract_id",$id)->whereNotIn("employee_salary_column_id",$employee_salary_column_ids)->delete();
+
+            $employeeContract->gaji_pokok = $total_pemasukan;
+            $employeeContract->bpjs_ks = $total_amount_for_bpjs * 0.05; //5%
+            $employeeContract->bpjs_tk_jht = $total_amount_for_bpjs * 0.057; // 0.057%
+            $employeeContract->bpjs_tk_jkk = $total_amount_for_bpjs * 0.0024; //0,24 %
+            $employeeContract->bpjs_tk_jkm = $total_amount_for_bpjs * 0.003; //0,3 %
+            $employeeContract->bpjs_tk_jp = $total_amount_for_bpjs * 0.03; //3%
+            $employeeContract->pph21 = $request->pph21;
+
+
+            $employeeContract->is_employee_active = $is_employee_active;
+            $employeeContract->updated_at = date('Y-m-d H:i:s');
+            $employeeContract->save();
+            
             if($is_employee_active == true) {
                 EmployeeContract::where('employee_id',$employee_id)->update(['is_employee_active' => 0]);
                 $employeeContract->employee->last_contract_id = $id;
                 $employeeContract->employee->save();
             }  
 
-            $employeeContract->is_employee_active = $is_employee_active;
-            $employeeContract->updated_at = date('Y-m-d H:i:s');
-            $employeeContract->save();
-            
             $file = $request->file('contract_file',NULL);
             if($file){
                 $old_file_id = $employeeContract->contract_file->id ?? NULL;
