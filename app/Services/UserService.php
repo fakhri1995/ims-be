@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Services;
+
+use App\Company;
 use App\User;
 use Exception;
 use App\Services\FileService;
@@ -268,6 +270,15 @@ class UserService
             $user->nip = $request->nip;
             $user->phone_number = $request->phone_number;
             $user->position = $request->position;
+            if($role_id == $this->guest_role_id){
+                //default for guest
+                $user->company_id = 0;
+                $user->position = "Guest";
+            }else{
+                $company = Company::find($request->company_id);
+                if(!$company) return ["success" => false, "message" => "Company Id Tidak Ditemukan", "status" => 400];
+                $user->company_id = $request->company_id;
+            }
             $user->save();
 
             if($request->hasFile('profile_image')) {
@@ -316,9 +327,7 @@ class UserService
     public function updateGuestDetail($data, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        //default for guest
-        $data->company_id = 0;
-        $data->position = "Guest";;
+       
         return $this->updateUserDetail($data, $this->guest_role_id);
     }
 
