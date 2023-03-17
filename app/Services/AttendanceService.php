@@ -318,8 +318,6 @@ class AttendanceService{
         $fileArray = []; // index => [ "key" : value, "value" : value ]
         $old_activity_details = $attendance_activity->details;
         foreach($attendance_form->details as $form_detail){
-            print_r($form_detail);
-            echo "<br>";
             $search = array_search($form_detail['key'], array_column($activity_details, 'key'));
             if($search === false) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum diisi" , "status" => 400];
             if($form_detail['type'] === 6){
