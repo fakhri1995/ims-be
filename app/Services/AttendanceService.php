@@ -328,13 +328,22 @@ class AttendanceService{
                 $file = $request->file("details.$search.value",NULL);
                 $isFile = is_file($file);
                 $search_old = array_search($form_detail['key'], array_column($old_activity_details, 'key'));
-                if($form_detail['required'] && !$isFile && $old_activity_details[$search_old]['value'] == NULL) return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe file" , "status" => 400];
+                // if($form_detail['required'] && !$isFile && $old_activity_details[$search_old]['value'] == NULL) return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe file" , "status" => 400];
+                // else if($isFile) {
+                //     $activity_details[$search]['value'] = true;
+                // }else {
+                //     if(!isset($activity_details[$search]['value'])) $activity_details[$search]['value'] = NULL;
+                //     else $activity_details[$search]['value'] = $activity_details[$search]['value'] == $old_activity_details[$search_old]['value'] ? $activity_details[$search]['value'] : NULL;
+                // }
+                $activity_details[$search]['value'] = isset($activity_details[$search]['value']) && $activity_details[$search]['value'] ? $activity_details[$search]['value'] : NULL ;
+                $isSameValue = $activity_details[$search]['value'] == $old_activity_details[$search_old]['value'];
+                if($form_detail['required'] && !$isFile && (!$activity_details[$search]['value'] || !$isSameValue)) return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe file" , "status" => 400];
                 else if($isFile) {
                     $activity_details[$search]['value'] = true;
                 }else {
-                    if(!isset($activity_details[$search]['value'])) $activity_details[$search]['value'] = NULL;
-                    else $activity_details[$search]['value'] = $activity_details[$search]['value'] == $old_activity_details[$search_old]['value'] ? $activity_details[$search]['value'] : NULL;
+                    $activity_details[$search]['value'] = $isSameValue? $activity_details[$search]['value'] : NULL;
                 }
+
 
                 $fileArray[$search] = [
                     "key" => $form_detail['key'],
