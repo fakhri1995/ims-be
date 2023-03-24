@@ -333,4 +333,12 @@ class EmployeeController extends Controller
         if($response['success'] === false) return response()->json($response, $response['status']);
         return $response['data'];
     }
+
+    public function postedEmployeeLastPayslips(Request $request)
+    {
+        $route_name = "EMPLOYEE_LAST_PAYSLIP_POSTED";
+
+        $response = $this->employeeService->postedEmployeeLastPayslips($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }

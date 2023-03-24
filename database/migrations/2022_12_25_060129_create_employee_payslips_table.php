@@ -29,6 +29,8 @@ class CreateEmployeePayslipsTable extends Migration
             $table->integer("total_gross_pengurangan")->nullable();
             $table->integer("take_home_pay")->nullable();
             $table->boolean("is_posted")->nullable();
+            $table->integer("year")->nullable();
+            $table->integer("month")->nullable();
             $table->dateTime('created_at');
             $table->dateTime('updated_at');
             $table->unsignedBigInteger('created_by');

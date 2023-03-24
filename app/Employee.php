@@ -37,4 +37,11 @@ class Employee extends Model
     public function user(){
         return $this->belongsTo(User::class, "user_id", "id");
     }
+
+    public function last_month_payslip(){
+        $lastDate = explode("-",date("Y-m",strtotime("-1 month")));
+        $year = $lastDate[0]; //current month - 1
+        $month = $lastDate[1];
+        return $this->hasOne(EmployeePayslip::class, "employee_id", "id")->where(["year" => $year, "month" => $month]);
+    }
 }
