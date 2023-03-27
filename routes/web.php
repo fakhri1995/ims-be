@@ -576,14 +576,15 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteEmployeeSalaryColumn', 'EmployeeController@deleteEmployeeSalaryColumn');
 
     // Employee Payslip
-    // $router->get('/getEmployeePayslip', 'EmployeeController@getEmployeePayslip');
-    // $router->get('/getEmployeePayslips', 'EmployeeController@getEmployeePayslips');
-    // $router->post('/addEmployeePayslip', 'EmployeeController@addEmployeePayslip');
-    // $router->put('/updateEmployeePayslip', 'EmployeeController@updateEmployeePayslip');
-    // $router->delete('/deleteEmployeePayslip', 'EmployeeController@deleteEmployeePayslip');
-    // $router->get('/getEmployeePayslipStatusCount', 'EmployeeController@getEmployeePayslipStatusCount');
-    // $router->get('/getEmployeePayslipsEmpty', 'EmployeeController@getEmployeePayslipsEmpty');
-    // $router->get('/downloadEmployeePayslip', 'EmployeeController@downloadEmployeePayslip');
+    $router->get('/getEmployeePayslip', 'EmployeeController@getEmployeePayslip');
+    $router->get('/getEmployeePayslips', 'EmployeeController@getEmployeePayslips');
+    $router->post('/addEmployeePayslip', 'EmployeeController@addEmployeePayslip');
+    $router->put('/updateEmployeePayslip', 'EmployeeController@updateEmployeePayslip');
+    $router->delete('/deleteEmployeePayslip', 'EmployeeController@deleteEmployeePayslip');
+    $router->get('/getEmployeePayslipStatusCount', 'EmployeeController@getEmployeePayslipStatusCount');
+    $router->get('/getEmployeePayslipsEmpty', 'EmployeeController@getEmployeePayslipsEmpty');
+    $router->get('/downloadEmployeePayslip', 'EmployeeController@downloadEmployeePayslip');
+    $router->get('/postedEmployeeLastPayslips', 'EmployeeController@postedEmployeeLastPayslips');
 
 
     $router->get('/getBankLists', "BankListController@getBankLists");
