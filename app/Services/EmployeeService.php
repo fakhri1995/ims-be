@@ -622,6 +622,7 @@ class EmployeeService{
                     ],
                     [
                         "value" => $salaryValue,
+                        "is_amount_for_bpjs" => $employeeSalaryColumn->is_amount_for_bpjs
                     ]
                 );
             }
@@ -1216,7 +1217,7 @@ class EmployeeService{
         }
     }
 
-    public function getEmployeePayslips($request, $route_name)
+    public function getEmployeesPayslip($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
@@ -1226,7 +1227,8 @@ class EmployeeService{
             "rows" => "numeric",
             "limit" => "numeric",
             "sort_type" => "in:asc,desc",
-            "is_employee_active" => "boolean"
+            "is_employee_active" => "boolean",
+            "is_posted" => "boolean"
         ]);
 
         if($validator->fails()){
@@ -1240,7 +1242,8 @@ class EmployeeService{
         $contract_status_ids = $request->contract_status_ids ? explode(",",$request->contract_status_ids) : NULL;
         $is_employee_active = $request->is_employee_active == NULL? 1 : $request->is_employee_active;
         $rows = $request->rows ?? 5;
-        
+        $is_posted = $request->is_posted ?? NULL;
+
         $current_timestamp = date("Y-m-d");
         $employees = Employee::with(["contract","contract.role","contract.contract_status","last_month_payslip"])->where('is_posted',1);
 
@@ -1258,7 +1261,10 @@ class EmployeeService{
 
         // filter
         $employees = filter($employees, $keyword, $is_employee_active, $role_ids, $placements, $contract_status_ids);
-        
+        if($is_posted) $employees = $employees->whereHas('contract', function($q) use ($is_posted){
+            $q->where("is_posted",$is_posted);
+        });
+
         // sort
         $sort_by = $request->sort_by ?? NULL;
         $sort_type = $request->sort_type == 'desc' ? 'desc' : 'asc';
@@ -1279,71 +1285,32 @@ class EmployeeService{
         }
     }
     
-    // public function getEmployeePayslips($request, $route_name)
-    // {
-    //     $access = $this->globalService->checkRoute($route_name);
-    //     if($access["success"] === false) return $access;
+    public function getEmployeePayslips($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
 
-    //     $validator = Validator::make($request->all(), [
-    //         "employee_id" => "numeric"
-    //     ]);
+        $validator = Validator::make($request->all(), [
+            "employee_id" => "numeric|required",
+            "rows" => "numeric",
+            "limit" => "numeric"
+        ]);
 
-    //     if($validator->fails()){
-    //         $errors = $validator->errors()->all();
-    //         return ["success" => false, "message" => $errors, "status" => 400];
-    //     }
+        $rows = $request->rows ?? 5;
 
-    //         $keyword = $request->keyword ?? NULL;
-    //         $role_ids = $request->role_ids ? explode(",",$request->role_ids) : NULL;
-    //         $placements = $request->placements ? explode(",",$request->placements) : NULL;
-    //         $is_posted = $request->is_posted ?? NULL;
-    //         $pay_year = $request->pay_year ?? NULL;
-    //         $pay_month = $request->pay_month ?? NULL;
-    //         $rows = $request->rows ?? 5;
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
 
-
-    //         $employee_id = $request->employee_id ?? NULL;
-    //         $employeePayslips = EmployeePayslip::with([
-    //             "employee" => function ($query) use ($keyword) {
-    //                 if($keyword) $query->where("name","LIKE", "%$keyword%");
-    //                 return $query;
-    //             },
-    //             "employee.contract" => function ($query) use ($role_ids, $placements) {
-    //                 if($role_ids) $query->whereIn("role_id",$role_ids);
-    //                 if($placements) $query->whereIn("placement",$placements);
-    //                 return $query;
-    //             },
-    //             "employee.contract.role"]);
-
-    //         if($employee_id) $employeePayslips = $employeePayslips->where("employee_id",$employee_id);
-
-    //         // filter
-    //         if($is_posted != NULL) $employeePayslips = $employeePayslips->where("is_posted", $is_posted);
-    //         if($pay_year) $employeePayslips = $employeePayslips->whereYear("tanggal_dibayarkan", $pay_year);
-    //         if($pay_month) $employeePayslips = $employeePayslips->whereMonth("tanggal_dibayarkan", $pay_month);
-    //         // $employeePayslips = $employeePayslips->whereHas("employee", function ($query) use ($keyword) {
-    //         //     if($keyword) $query->where("name","LIKE", "%$keyword%");
-    //         //     return $query;
-    //         // });
-    //         // $employeePayslips = $employeePayslips->whereHas("employee.contract", function ($query) use ($role_ids, $placements) {
-    //         //     if($role_ids) $query->whereIn("role_id",$role_ids);
-    //         //     if($placements) $query->whereIn("placement",$placements);
-    //         //     return $query;
-    //         // });
+        $employeePayslips = Employee::with("payslips")->paginate($rows);
             
-    //         // sort
-    //         $sort_by = $request->sort_by ?? NULL;
-    //         $sort_type = $request->sort_type ?? 'desc';
-
-    //         if($sort_by == "name") $employeePayslips = $employeePayslips->orderBy('name',$sort_type);
-
-    //         $employeePayslips = $employeePayslips->paginate($rows);
-    //     try{
-    //         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employeePayslips, "status" => 200];
-    //     }catch(Exception $err){
-    //         return ["success" => false, "message" => $err, "status" => 400];
-    //     }
-    // }
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employeePayslips, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
 
 
 
@@ -1388,32 +1355,74 @@ class EmployeeService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
         $employee_id = $request->employee_id;
-        $employee = Employee::find($employee_id);
+        $employee = Employee::with("contract")->find($employee_id);
         if(!$employee) return ["success" => false, "message" => "Employee id tidak ditemukan", "status" => 400];
+        if(!$employee->contract) return ["success" => false, "message" => "Employee contract belum ada", "status" => 400];
 
             $employeePayslip = new EmployeePayslip();
             $current_timestamp = date("Y-m-d H:i:s");
             $employeePayslip->employee_id = $request->employee_id;
             $employeePayslip->total_hari_kerja = $request->total_hari_kerja;
             $employeePayslip->tanggal_dibayarkan = $request->tanggal_dibayarkan;
-            $employeePayslip->total_gross_penerimaan = 0; //sum of penerimaan
-            $employeePayslip->total_gross_pengurangan = 0; //sum of pengeluaran
-            $total_pemasukan = 0;
-            $employeePayslip->gaji_pokok = $total_pemasukan;
-            $employeePayslip->bpjs_ks = $total_pemasukan * 0.05; //5%
-            $employeePayslip->bpjs_tk_jht = $total_pemasukan * 0.057; // 0.057%
-            $employeePayslip->bpjs_tk_jkk = $total_pemasukan * 0.0024; //0,24 %
-            $employeePayslip->bpjs_tk_jkm = $total_pemasukan * 0.003; //0,3 %
-            $employeePayslip->bpjs_tk_jp = $total_pemasukan * 0.03; //3%
-            $employeePayslip->pph21 = 0;
-            $employeePayslip->take_home_pay = $employeePayslip->total_gross_penerimaan - $employeePayslip->total_gross_pengurangan;
+            $employeePayslip->gaji_pokok = $employee->contract->gaji_pokok;
+            $employeePayslip->bpjs_ks = $employee->contract->bpjs_ks; //5%
+            $employeePayslip->bpjs_tk_jht = $employee->contract->bpjs_tk_jht; // 0.057%
+            $employeePayslip->bpjs_tk_jkk = $employee->contract->bpjs_tk_jkk; //0,24 %
+            $employeePayslip->bpjs_tk_jkm = $employee->contract->bpjs_tk_jkm; //0,3 %
+            $employeePayslip->bpjs_tk_jp = $employee->contract->bpjs_tk_jp; //3%
+            $employeePayslip->pph21 = $employee->contract->pph21;
             $employeePayslip->is_posted = $request->is_posted;
             $employeePayslip->month = $request->month;
             $employeePayslip->year = $request->year;
             $employeePayslip->created_at = $current_timestamp;
             $employeePayslip->updated_at = $current_timestamp;
             $employeePayslip->created_by = auth()->user()->id;
+
+            
+            $total_gross_penerimaan = $employeePayslip->gaji_pokok; //sum of penerimaan
+
+            $total_gross_pengurangan = $employeePayslip->pph21 +
+                $employeePayslip->bpjs_ks +
+                $employeePayslip->bpjs_tk_jht +
+                $employeePayslip->bpjs_tk_jkk +
+                $employeePayslip->bpjs_tk_jkm +
+                $employeePayslip->bpjs_tk_jp;
+
+            $salaries = $employee->contract->salaries ?? [];
+            $employeePayslipSalary = [];
+            foreach($salaries as $salary){
+                $salary = (object)$salary;
+                $employeePayslipSalaryColumn = EmployeeSalaryColumn::find($salary->employee_salary_column_id);
+                if(!$employeePayslipSalaryColumn) continue;
+
+                $salaryValue = $salary->value;
+
+                if($employeePayslipSalaryColumn->type == 1) {
+                    $total_gross_penerimaan+=$salaryValue;
+                }
+                else if($employeePayslipSalaryColumn->type == 2) $total_gross_pengurangan+=$salaryValue;
+
+                $employeePayslipSalary[] = [
+                    [
+                        "employee_salary_column_id" => $salary->employee_salary_column_id,
+                    ],
+                    [
+                        "value" => $salaryValue,
+                        "is_amount_for_bpjs" => $salary->is_amount_for_bpjs
+                    ]
+                ];
+            }
+
+            $employeePayslip->total_gross_penerimaan = $total_gross_penerimaan;
+            $employeePayslip->total_gross_pengurangan = $total_gross_pengurangan;
+
+            $employeePayslip->take_home_pay = $employeePayslip->total_gross_penerimaan - $employeePayslip->total_gross_pengurangan;
             $employeePayslip->save();
+
+            foreach($employeePayslipSalary as $eps){
+                $eps[0]['employee_payslip_id'] = $employeePayslip->id;
+                EmployeeSalary::updateOrCreate($eps[0], $eps[1]);
+            }
 
         try{
             return ["success" => true, "message" => "Data Berhasil Dibuat", "data" => $employeePayslip, "status" => 200];
@@ -1449,6 +1458,8 @@ class EmployeeService{
             $total_amount_for_bpjs = $gaji_pokok ?? 0;
             $employee_salary_column_ids = [];
             $salaries = $request->salaries ?? [];
+
+            $deleteEmployeeSalary = EmployeeSalary::where("employee_payslip_id",$id)->delete();
             foreach($salaries as $salary){
                 $salary = (object)$salary;
                 $employeePayslipSalaryColumn = EmployeeSalaryColumn::find($salary->employee_salary_column_id);
@@ -1460,7 +1471,7 @@ class EmployeeService{
 
                 if($employeePayslipSalaryColumn->type == 1) {
                     $total_gross_penerimaan+=$salaryValue;
-                    if($employeePayslipSalaryColumn->is_amount_for_bpjs) $total_amount_for_bpjs+=$salaryValue;
+                    if($salary->is_amount_for_bpjs) $total_amount_for_bpjs+=$salaryValue;
                 }
                 else if($employeePayslipSalaryColumn->type == 2) $total_gross_pengurangan+=$salaryValue;
 
@@ -1471,11 +1482,12 @@ class EmployeeService{
                     ],
                     [
                         "value" => $salaryValue,
+                        "is_amount_for_bpjs" => $salary->is_amount_for_bpjs
                     ]
                 );
             }
 
-            $deleteEmployeeSalary = EmployeeSalary::where("employee_payslip_id",$id)->whereNotIn("employee_salary_column_id",$employee_salary_column_ids)->delete();
+            
 
             $employeePayslip->gaji_pokok = $gaji_pokok;
             $employeePayslip->bpjs_ks = $total_amount_for_bpjs * 0.05; //5%
@@ -1543,8 +1555,9 @@ class EmployeeService{
         if($access["success"] === false) return $access;
 
         try{
+            $current_year = date("Y");
             $current_month = date("m");
-            $employeePayslip = EmployeePayslip::selectRaw("is_posted, count(*) as total")->groupBy("is_posted")->whereMonth("created_at",$current_month)->get();
+            $employeePayslip = EmployeePayslip::selectRaw("is_posted, count(*) as total")->groupBy("is_posted")->whereMonth("year",$current_year)->whereMonth("month",$current_month)->get();
             
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employeePayslip, "status" => 200];
         }catch(Exception $err){
@@ -1552,33 +1565,33 @@ class EmployeeService{
         }
     }
     
-    public function downloadEmployeePayslip($request, $route_name)
-    {
-        $data = ['payslip' => ""];
-        // $pdf = PDF::setEncryption("password")->loadView('pdf.employee_payslip', $data);
+    // public function downloadEmployeePayslip($request, $route_name)
+    // {
+    //     $data = ['payslip' => ""];
+    //     // $pdf = PDF::setEncryption("password")->loadView('pdf.employee_payslip', $data);
 
-        $options = new Options();
-        $options->set('defaultFont', 'Courier');
-        $options->set('isHtml5ParserEnabled ', true);
+    //     $options = new Options();
+    //     $options->set('defaultFont', 'Courier');
+    //     $options->set('isHtml5ParserEnabled ', true);
 
-        $pdf = new Dompdf($options);
-        // $pdf->getCanvas();
-        // ->get_cpdf()
-        // ->setEncryption('test123', 'test456', ['print', 'modify', 'copy', 'add']);
-        $html = view('pdf.employee_payslip')->render();
-        $pdf->loadHtml($html);
-        $pdf->setPaper('A4', 'landscape');
-        $pdf->render();
-        $output = $pdf->output();
-        $res = new Response ($output, 200, array(
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' =>  'attachment; filename="test.pdf"',
-            'Content-Length' => strlen($output),
-        ));
-        // file_put_contents('output.pdf', $pdf->output());
-        // return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $pdf->download('Payslip Test.pdf'), "status" => 200];
-        return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $res, "status" => 200];
-    }
+    //     $pdf = new Dompdf($options);
+    //     // $pdf->getCanvas();
+    //     // ->get_cpdf()
+    //     // ->setEncryption('test123', 'test456', ['print', 'modify', 'copy', 'add']);
+    //     $html = view('pdf.employee_payslip')->render();
+    //     $pdf->loadHtml($html);
+    //     $pdf->setPaper('A4', 'landscape');
+    //     $pdf->render();
+    //     $output = $pdf->output();
+    //     $res = new Response ($output, 200, array(
+    //         'Content-Type' => 'application/pdf',
+    //         'Content-Disposition' =>  'attachment; filename="test.pdf"',
+    //         'Content-Length' => strlen($output),
+    //     ));
+    //     // file_put_contents('output.pdf', $pdf->output());
+    //     // return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $pdf->download('Payslip Test.pdf'), "status" => 200];
+    //     return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $res, "status" => 200];
+    // }
 
     public function postedEmployeeLastPayslips($request, $route_name){
         
@@ -1590,5 +1603,39 @@ class EmployeeService{
 
         return ["success" => true, "message" => "Berhasil Menerbitkan Payslip", "data" => "", "status" => 200];
     } 
+
+    public function downloadEmployeePayslip($request, $route_name)
+    {
+        $data = ['payslip' => ""];
+        // $pdf = PDF::setEncryption("password")->loadView('pdf.employee_payslip', $data);
+
+        $options = new Options();
+        $options->set('isHtml5ParserEnabled ', true);
+        $options->set("isPhpEnabled", true);
+        $options->set("isRemoteEnabled", true);
+        $options->set("dpi", 150);
+        // $options->set("isJavascriptEnabled", true);
+
+        $pdf = new Dompdf($options);
+        
+        $html = view('pdf.employee_payslip')->render();
+        $pdf->setPaper('A4', 'portrait');
+        $pdf->loadHtml($html);
+        $pdf->render();
+        // $pdf->getCanvas()
+        //     ->get_cpdf()
+        //     ->setEncryption('test123', 'test456', ['print', 'modify', 'copy', 'add']);
+        $output = $pdf->output();
+        $files = file_put_contents('output.pdf', $pdf->output());
+        $res = new Response ($output, 200, array(
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' =>  'attachment; filename="test.pdf"',
+            'Content-Length' => strlen($output),
+        ));
+        
+        return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $res, "status" => 200];
+        // return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $res, "status" => 200];
+    }
+
     
 }
