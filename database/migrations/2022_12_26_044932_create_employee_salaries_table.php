@@ -18,6 +18,7 @@ class CreateEmployeeSalariesTable extends Migration
             $table->unsignedBigInteger('employee_salary_column_id');
             $table->unsignedBigInteger('employee_payslip_id');
             $table->integer('value');
+            $table->boolean("is_amount_for_bpjs")->default(false);
             $table->dateTime('created_at');
             $table->dateTime('updated_at');
             $table->softDeletes();
