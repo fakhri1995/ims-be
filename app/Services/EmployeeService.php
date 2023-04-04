@@ -1302,8 +1302,13 @@ class EmployeeService{
             $errors = $validator->errors()->all();
             return ["success" => false, "message" => $errors, "status" => 400];
         }
+        
+        $employee_id = $request->employee_id;
 
-        $employeePayslips = Employee::with("payslips")->paginate($rows);
+        $employeePayslips = EmployeePayslip::where('employee_id',$employee_id)
+        ->orderBy('year','desc')
+        ->orderBy('month','desc')
+        ->paginate($rows);
             
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employeePayslips, "status" => 200];
