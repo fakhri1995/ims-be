@@ -578,6 +578,7 @@ $router->group(['middleware' => 'auth'], function($router){
     // Employee Payslip
     $router->get('/getEmployeePayslip', 'EmployeeController@getEmployeePayslip');
     $router->get('/getEmployeePayslips', 'EmployeeController@getEmployeePayslips');
+    $router->get('/getEmployeesPayslip', 'EmployeeController@getEmployeesPayslip');
     $router->post('/addEmployeePayslip', 'EmployeeController@addEmployeePayslip');
     $router->put('/updateEmployeePayslip', 'EmployeeController@updateEmployeePayslip');
     $router->delete('/deleteEmployeePayslip', 'EmployeeController@deleteEmployeePayslip');
