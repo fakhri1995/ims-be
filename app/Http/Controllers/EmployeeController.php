@@ -276,6 +276,15 @@ class EmployeeController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getEmployeesPayslip(Request $request)
+    {
+        $route_name = "EMPLOYEES_PAYSLIP_GET";
+
+        $response = $this->employeeService->getEmployeesPayslip($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+
     public function getEmployeePayslipEmpty(Request $request)
     {
         $route_name = "EMPLOYEE_PAYSLIP_EMPTY_GET";
