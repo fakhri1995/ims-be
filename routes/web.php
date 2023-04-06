@@ -307,6 +307,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/saveFilesTask', 'TaskController@saveFilesTask');
     $router->put('/changeStatusToggle', 'TaskController@changeStatusToggle');
     $router->put('/changeAttendanceToggle', 'TaskController@changeAttendanceToggle');
+    $router->put('/rejectTask', 'TaskController@rejectTask');
     $router->put('/approveTask', 'TaskController@approveTask');
     $router->put('/submitTask', 'TaskController@submitTask');
     $router->put('/declineTask', 'TaskController@declineTask');

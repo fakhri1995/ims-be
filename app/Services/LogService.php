@@ -267,7 +267,7 @@ class LogService
     {
         $special_logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', 'Note Khusus')->orderBy('created_at','desc')->get();
         $logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', '<>', 'Note Khusus')->orderBy('created_at','desc')->get();
-        $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
+        $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled', 'Rejected'];
         $normal_logs = [];
         foreach($logs as $log){
             if($log->description === 'Association Item'){
@@ -938,7 +938,7 @@ class LogService
     public function getLogTaskFunction($id)
     {
 
-        $logStatusArray = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
+        $logStatusArray = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled', 'Rejected'];
 
         $typeArray = [
             "task_status" => [
