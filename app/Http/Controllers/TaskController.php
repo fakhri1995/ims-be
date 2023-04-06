@@ -213,6 +213,14 @@ class TaskController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function rejectTask(Request $request)
+    {
+        $route_name = "TASK_REJECT";
+
+        $response = $this->taskService->rejectTask($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function approveTask(Request $request)
     {
         $route_name = "TASK_APPROVE";

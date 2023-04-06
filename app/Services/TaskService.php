@@ -766,7 +766,7 @@ class TaskService{
                 $task->reference->creator->company->makeHidden('topParent');
                 $task->reference->resolved_times = $this->globalService->diffForHuman($task->reference->resolved_times);
                 $task->reference->deadline = $task->reference->deadline ? date("d M Y, H:i", strtotime($task->reference->deadline)) : "-";
-                $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled'];
+                $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled', 'Rejected'];
                 $task->reference->status_name = $statuses[$task->reference->status];
                 $task->reference->ticketable->asset_type_name = $task->reference->ticketable->assetType->name ?? "-";
                 $task->reference->ticketable->original_incident_time = date("Y-m-d H:i:s" ,strtotime($task->reference->ticketable->incident_time));
@@ -1257,6 +1257,50 @@ class TaskService{
                 ];
                 $logNotes = $task->status == 4 ? $request->notes : NULL;
                 $logService->addLogTask($task->id, $login_id, "Updated", $logProperties, $logNotes);
+
+                
+                return ["success" => true, "message" => "Berhasil Merubah Status Task", "status" => 200];
+            } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Task Ini.", "status" => 400];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function rejectTask($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $id = $request->get('id', null);
+        $notes = $request->get('notes', null);
+        $task = Task::with('users')->find($id);
+        if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
+        try{
+            $login_id = auth()->user()->id;
+            $search = $task->users->search(function ($item) use ($login_id) {
+                return $item->id === $login_id;
+            });
+
+            if($search !== false){
+                $old_status = $task->status;
+                $task->status = 8;
+                $task->on_hold_at = date('Y-m-d H:i:s');
+                $task->notes = $notes;
+                $task->save();
+                
+                $logService = new LogService;
+                if($task->is_from_ticket){
+                    $logService->updateStatusLogTicket($task->reference_id, $login_id, $old_status, $task->status, $notes);
+                }
+
+                // $logService = new LogService;
+                // $logProperties = [
+                //     "log_type" => "task_status",
+                //     "old_task_status_id" => $old_status,
+                //     "new_task_status_id" => $task->status
+                // ];
+                // $logNotes = $task->status == 4 ? $request->notes : NULL;
+                // $logService->addLogTask($task->id, $login_id, "Updated", $logProperties, $logNotes);
 
                 
                 return ["success" => true, "message" => "Berhasil Merubah Status Task", "status" => 200];

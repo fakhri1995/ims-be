@@ -539,6 +539,22 @@ class EmployeeService{
             $employeeContract->employee_id = $employee_id;
             $employeeContract->save();
 
+            $employeeSalaryColumn = EmployeeSalaryColumn::where("required",1)->get();
+
+            foreach($employeeSalaryColumn as $salary){
+                $employeeSalary = EmployeeBenefit::updateOrCreate(
+                    [
+                        "employee_contract_id" => $employeeContract->id,
+                        "employee_salary_column_id" => $salary->id,
+                    ],
+                    [
+                        "value" => 0,
+                        "is_amount_for_bpjs" => $salary->is_amount_for_bpjs
+                    ]
+                );
+            }
+
+
             if($employee->last_contract_id == NULL) {
                 $employee->last_contract_id = $employeeContract->id;
                 $employee->save();
@@ -622,7 +638,7 @@ class EmployeeService{
                     ],
                     [
                         "value" => $salaryValue,
-                        "is_amount_for_bpjs" => $employeeSalaryColumn->is_amount_for_bpjs
+                        "is_amount_for_bpjs" => $salary->is_amount_for_bpjs
                     ]
                 );
             }
@@ -643,7 +659,7 @@ class EmployeeService{
             $employeeContract->save();
             
             if($is_employee_active == true) {
-                EmployeeContract::where('employee_id',$employee_id)->update(['is_employee_active' => 0]);
+                EmployeeContract::where('employee_id',$employee_id)->where('id',"!=",$id)->update(['is_employee_active' => 0]);
                 $employeeContract->employee->last_contract_id = $id;
                 $employeeContract->employee->save();
             }  
@@ -1249,7 +1265,7 @@ class EmployeeService{
 
         function filter($employees, $keyword, $is_employee_active, $role_ids, $placements, $contract_status_ids){
             if($keyword) $employees = $employees->where("name","LIKE", "%$keyword%");
-            $employees = $employees->whereHas("contract", function ($query) use($is_employee_active,$role_ids,$placements,$contract_status_ids) {
+            $employees = $employees->whereHas("contract", function ($query) use($role_ids,$placements,$contract_status_ids) {
                 $query->where('is_employee_active', 1);
                 if($role_ids) $query->whereIn('role_id', $role_ids);
                 if($placements) $query->whereIn('placement', $placements);
@@ -1258,10 +1274,10 @@ class EmployeeService{
             });
             return $employees;
         }
-
+        
         // filter
         $employees = filter($employees, $keyword, $is_employee_active, $role_ids, $placements, $contract_status_ids);
-        if($is_posted) $employees = $employees->whereHas('contract', function($q) use ($is_posted){
+        if($is_posted === 1 || $is_posted === 0) $employees = $employees->whereHas('last_month_payslip', function($q) use ($is_posted){
             $q->where("is_posted",$is_posted);
         });
 
