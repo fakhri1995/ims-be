@@ -11,6 +11,7 @@ use App\EmployeePayslip;
 use App\EmployeeSalary;
 use App\EmployeeSalaryColumn;
 use App\RecruitmentRole;
+use App\Role;
 use Exception;
 use App\Services\GlobalService;
 use App\User;
@@ -20,6 +21,7 @@ use Dompdf\Options;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
@@ -175,8 +177,8 @@ class EmployeeService{
                 ->whereColumn("employees.last_contract_id","employee_contracts.id"),$sort_type);
         }
         if($sort_by == "name") $employees = $employees->orderBy('name',$sort_type);
-        if($sort_by == "role") $employees = $employees->orderBy(RecruitmentRole::select("name")
-                ->whereColumn("employee_roles.id","employees.employee_role_id"),$sort_type);
+        if($sort_by == "role") $employees = $employees->orderBy(RecruitmentRole::selectRaw("id,name")
+                ->whereColumn("recruitment_roles.id","employee_contracts.role_id"),$sort_type);
         
         
         if($is_employee_active){
@@ -184,7 +186,8 @@ class EmployeeService{
                 $query->selectRaw("*, DATEDIFF(contract_end_at, '$current_timestamp') as contract_end_countdown");
             },"contract.role","contract.contract_status"])->where('updating_by',auth()->user()->id)->where('is_posted',0);
             $employeesDraft = filter($employeesDraft, $keyword, NULL, $role_ids, $placements, $contract_status_ids);
-            
+            $employeesDraft = $employeesDraft->orWhere('last_contract_id', NULL);
+
             $employeesDraftCount = $employeesDraft->count();
             $employeeCount = $employees->count();
             $employeeTotalCount = $employeesDraftCount + $employeeCount;
@@ -339,6 +342,7 @@ class EmployeeService{
             $employee->created_at = $current_timestamp;
             $employee->updated_at = $current_timestamp;
             $employee->created_by = auth()->user()->id;
+            $employee->updating_by = auth()->user()->id;
             $employee->save();
 
             
@@ -629,7 +633,7 @@ class EmployeeService{
 
                 
                 
-                if($employeeSalaryColumn->is_amount_for_bpjs) $total_amount_for_bpjs+=$salaryValue;
+                if($salary->is_amount_for_bpjs) $total_amount_for_bpjs+=$salaryValue;
 
                 $employeeSalary = EmployeeBenefit::updateOrCreate(
                     [
@@ -1363,9 +1367,11 @@ class EmployeeService{
     }
 
     public function addEmployeePayslip($request, $route_name)
-    {
-        $access = $this->globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+    {   
+        if($route_name != "BYPASS"){
+            $access = $this->globalService->checkRoute($route_name);
+            if($access["success"] === false) return $access;
+        }
          
         $validator = Validator::make($request->all(), [
             "employee_id" => "numeric|integer|exists:App\Employee,id"
@@ -1626,20 +1632,30 @@ class EmployeeService{
     } 
 
     public function downloadEmployeePayslip($request, $route_name)
-    {
-        $data = ['payslip' => ""];
-        // $pdf = PDF::setEncryption("password")->loadView('pdf.employee_payslip', $data);
+    {   
+
+        $id = $request->id;
+        $password = $request->password;
+        
+        $employeePayslip = EmployeePayslip::with('employee','employee.contract','employee.contract.role',
+        "employee.contract.contract_status")->find($id);
+        if(!$employeePayslip) return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400];
+        $isUserSuperAdmin = $this->globalService->isUserSuperAdmin();
+        if(!$isUserSuperAdmin && $employeePayslip->employee_id != auth()->user()->id) return ["success" => false, "message" => "Payslip tidak sesuai dengan employee", "status" => 400];
+        if(!$isUserSuperAdmin && !Hash::check(auth()->user()->password,$password)) return ["success" => false, "message" => "Validasi kata sandiA salah", "status" => 400];
+        // dd($employeePayslip);
+        
+        
 
         $options = new Options();
         $options->set('isHtml5ParserEnabled ', true);
         $options->set("isPhpEnabled", true);
         $options->set("isRemoteEnabled", true);
         $options->set("dpi", 150);
-        // $options->set("isJavascriptEnabled", true);
 
         $pdf = new Dompdf($options);
         
-        $html = view('pdf.employee_payslip')->render();
+        $html = view('pdf.employee_payslip', ["payslip" => $employeePayslip])->render();
         $pdf->setPaper('A4', 'portrait');
         $pdf->loadHtml($html);
         $pdf->render();
@@ -1647,7 +1663,6 @@ class EmployeeService{
         //     ->get_cpdf()
         //     ->setEncryption('test123', 'test456', ['print', 'modify', 'copy', 'add']);
         $output = $pdf->output();
-        $files = file_put_contents('output.pdf', $pdf->output());
         $res = new Response ($output, 200, array(
             'Content-Type' => 'application/pdf',
             'Content-Disposition' =>  'attachment; filename="test.pdf"',
@@ -1655,7 +1670,43 @@ class EmployeeService{
         ));
         
         return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $res, "status" => 200];
-        // return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $res, "status" => 200];
+    }
+
+    public function raiseLastPeriodPayslip(Request $request)
+    {
+
+                
+            $lastDate = explode("-",date("Y-m",strtotime("-1 month")));
+            $year = $lastDate[0]; //current month - 1
+            $month = $lastDate[1];
+
+            $employee = Employee::with('last_month_payslip')->get();
+            
+            $payload = new Request([
+                "total_hari_kerja" => 25,
+                "tanggal_dibayarkan" => "$year-$month-25",
+                "is_posted" => false,
+                "month" => $month,
+                "year" => $year
+            ]);
+            $payload->setMethod("POST");
+
+            $payslipData = [];
+            foreach($employee as $e){
+                if(!$e->last_month_payslip){
+                    $payload->replace(['employee_id' => $e->id]);
+                    $employeePayslip = $this->addEmployeePayslip($payload,"BYPASS");
+                    if($employeePayslip["success"]) $payslipData[] = $employeePayslip["data"];
+                }
+            }
+
+            try{
+            return ["success" => true, "message" => "Data Berhasil Dibuat", "data" => $payslipData, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+
+        
     }
 
     

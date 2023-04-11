@@ -1293,17 +1293,17 @@ class TaskService{
                     $logService->updateStatusLogTicket($task->reference_id, $login_id, $old_status, $task->status, $notes);
                 }
 
-                // $logService = new LogService;
-                // $logProperties = [
-                //     "log_type" => "task_status",
-                //     "old_task_status_id" => $old_status,
-                //     "new_task_status_id" => $task->status
-                // ];
-                // $logNotes = $task->status == 4 ? $request->notes : NULL;
-                // $logService->addLogTask($task->id, $login_id, "Updated", $logProperties, $logNotes);
+                $logService = new LogService;
+                $logProperties = [
+                    "log_type" => "task_status",
+                    "old_task_status_id" => $old_status,
+                    "new_task_status_id" => $task->status
+                ];
+                $logNotes = $task->status == 4 ? $request->notes : NULL;
+                $logService->addLogTask($task->id, $login_id, "Updated", $logProperties, $logNotes);
 
                 
-                return ["success" => true, "message" => "Berhasil Merubah Status Task", "status" => 200];
+                return ["success" => true, "message" => "Berhasil Menolak Task", "status" => 200];
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Task Ini.", "status" => 400];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];

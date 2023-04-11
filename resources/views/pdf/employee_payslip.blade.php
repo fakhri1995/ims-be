@@ -167,7 +167,7 @@
           Name
         </td>
         <td width="20%">
-          Bunga Mawar Indah
+          {{ $payslip->employee->name }}
         </td>
         <td width="10%">
         </td>
@@ -175,7 +175,7 @@
           Jabatan
         </td>
         <td width="20%">
-          Admin Operasional
+          {{ $payslip->employee->contract->role->name }}
         </td>
       </tr>
       <tr class="textCaptionBold">
@@ -183,7 +183,7 @@
           NIP
         </td>
         <td width="20%">
-          71231922
+        {{ $payslip->employee->nip }}
         </td>
         <td width="10%">
         </td>
@@ -191,7 +191,7 @@
           Status
         </td>
         <td width="20%">
-          Tetap
+        {{ $payslip->employee->contract->contract_status->name }}
         </td>
       </tr>
       <tr class="textCaptionBold">
@@ -199,7 +199,7 @@
           Total Hari Kerja
         </td>
         <td width="20%">
-          10 hari
+        {{ $payslip->total_hari_kerja }} hari
         </td>
         <td width="10%">
         </td>
@@ -207,7 +207,7 @@
           Tanggal Mulai Kerja
         </td>
         <td width="20%">
-          3 Januari 2022
+        {{ $payslip->employee->contract->contract_start_at }}
         </td>
       </tr>
     </table>

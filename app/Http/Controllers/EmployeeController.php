@@ -350,4 +350,12 @@ class EmployeeController extends Controller
         $response = $this->employeeService->postedEmployeeLastPayslips($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    
+    public function raiseLastPeriodPayslip(Request $request)
+    {
+        $route_name = "EMPLOYEE_PAYSLIP_RAISE";
+
+        $response = $this->employeeService->raiseLastPeriodPayslip($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }

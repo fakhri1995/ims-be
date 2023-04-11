@@ -106,4 +106,33 @@ class GlobalService
         $responseKeys = json_decode($response,true);
         return $responseKeys; 
     }
+
+    public function isUserSuperAdmin()
+    {
+        $super_admin_role = Role::where('name', 'Super Admin')->first();
+        $user_super_admin = auth()->user()->roles->where('id', $super_admin_role->id)->first();
+        if($user_super_admin) return true;
+        return false;
+    }
+
+    public function getIndonesiaMonth($monthInNumber)
+    {   
+        $monthInNumber = (int)$monthInNumber;
+        if($monthInNumber < 1 && $monthInNumber > 12) return "Bulan tidak valid";
+        $month = [
+            1 => "Januari",
+            2 => "Februari",
+            3 => "Maret",
+            4 => "April",
+            5 => "Mei",
+            6 => "Juni",
+            7 => "Juli",
+            8 => "Agustus",
+            9 => "September",
+            10 => "Oktober",
+            11 => "November",
+            12 => "Desember",
+        ];
+        return $month[$monthInNumber];
+    }
 }
