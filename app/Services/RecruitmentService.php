@@ -6,6 +6,7 @@ use App\ActivityLogRecruitment;
 use App\Exports\RecruitmentExportTemplate;
 use App\Mail\RecruitmentMail;
 use App\Recruitment;
+use App\RecruitmentAccountRoleTemplate;
 use App\RecruitmentEmailTemplate;
 use App\RecruitmentJalurDaftar;
 use App\RecruitmentRole;
@@ -303,6 +304,8 @@ class RecruitmentService{
             "recruitment_jalur_daftar_id" => "required|numeric",
             "recruitment_stage_id" => "required|numeric",
             "recruitment_status_id" => "required|numeric",
+            "lampiran.*.judul_lampiran" => "required_with:lampiran.*.isi_lampiran",
+            "lampiran.*.isi_lampiran" => "required_with:lampiran.*.judul_lampiran",
         ]);
 
         if($validator->fails()){
@@ -322,6 +325,7 @@ class RecruitmentService{
             $recruitment_jalur_daftar_id = $request->recruitment_jalur_daftar_id ?? NULL;
             $recruitment_stage_id = $request->recruitment_stage_id ?? NULL;
             $recruitment_status_id = $request->recruitment_status_id ?? NULL;
+            $lampiranRaw = $request->lampiran ?? [];
             
             if(!RecruitmentRole::find($recruitment_role_id)) return ["success" => false, "message" => "Recruitment Role yang dipilih tidak tersedia", "status" => 400];
             if(!RecruitmentJalurDaftar::find($recruitment_jalur_daftar_id)) return ["success" => false, "message" => "Recruitment Jalur daftar yang dipilih tidak tersedia", "status" => 400];
@@ -336,6 +340,18 @@ class RecruitmentService{
             $recruitment->recruitment_jalur_daftar_id = $request->recruitment_jalur_daftar_id ?? "";
             $recruitment->recruitment_stage_id = $request->recruitment_stage_id ?? "";
             $recruitment->recruitment_status_id = $request->recruitment_status_id ?? "";
+
+            $lampiran = [];
+            foreach($lampiranRaw as $l){
+                if(isset($l['judul_lampiran'])){
+                    $lampiran[] = [
+                        "judul_lampiran" => $l['judul_lampiran'],
+                        "isi_lampiran" => $l['isi_lampiran']
+                    ];
+                }
+            }
+
+            $recruitment->lampiran = $lampiran;
 
 
             $current_timestamp = date('Y-m-d H:i:s');
@@ -807,7 +823,7 @@ class RecruitmentService{
 
         $validator = Validator::make($request->all(), [
             "id" => "required|numeric",
-            "role_ids" => "array"
+            // "role_ids" => "array"
         ]);
         
         if($validator->fails()){
@@ -822,7 +838,9 @@ class RecruitmentService{
             
             $userService = new UserService();
 
-            $role_ids = is_array($request->role_ids) ? $request->role_ids : json_decode($request->role_ids) ?? [] ;
+            // $role_ids = is_array($request->role_ids) ? $request->role_ids : json_decode($request->role_ids) ?? [] ;
+            $role_ids = RecruitmentAccountRoleTemplate::pluck("role_id")->toArray();
+            
             $userData = (object)[
                 "fullname" => $recruitment->name,
                 "email" => $recruitment->email,
