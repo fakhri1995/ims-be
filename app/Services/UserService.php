@@ -125,7 +125,7 @@ class UserService
         $users = User::with(['company:id,parent_id,name,top_parent_id', 'company.topParent', 'profileImage','roles'])
         ->select('id','name', 'nip', 'email','role','company_id', 'position','phone_number','created_time','is_enabled')
         ->where('users.role', $role_id);
-        if($company_id !== 1){
+        if(($company_id !== 1) && ($role_id != $this->guest_role_id)){
             $company_service = new CompanyService;
             $company_list = $company_service->checkNoSubCompanyList($company_id);
             $users = $users->whereIn('users.company_id', $company_list);

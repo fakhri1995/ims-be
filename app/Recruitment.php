@@ -10,6 +10,11 @@ class Recruitment extends Model
     use SoftDeletes;
     public $timestamps = false;
 
+    protected $casts = [
+        'lampiran' => 'array',
+    ];
+    
+
     public function role()
     {
         return $this->belongsTo(RecruitmentRole::class, 'recruitment_role_id');
