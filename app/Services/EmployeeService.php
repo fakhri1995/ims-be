@@ -1385,7 +1385,7 @@ class EmployeeService{
         $employee = Employee::with("contract")->find($employee_id);
         if(!$employee) return ["success" => false, "message" => "Employee id tidak ditemukan", "status" => 400];
         if(!$employee->contract) return ["success" => false, "message" => "Employee contract belum ada", "status" => 400];
-
+        
             $employeePayslip = new EmployeePayslip();
             $current_timestamp = date("Y-m-d H:i:s");
             $employeePayslip->employee_id = $request->employee_id;
@@ -1407,7 +1407,7 @@ class EmployeeService{
 
             
             $total_gross_penerimaan = $employeePayslip->gaji_pokok; //sum of penerimaan
-
+            $total_gross_pengurangan = 0;
             $total_gross_pengurangan = $employeePayslip->pph21 +
                 $employeePayslip->bpjs_ks +
                 $employeePayslip->bpjs_tk_jht +

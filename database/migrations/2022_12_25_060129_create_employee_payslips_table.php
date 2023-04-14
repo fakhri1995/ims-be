@@ -19,12 +19,12 @@ class CreateEmployeePayslipsTable extends Migration
             $table->string("total_hari_kerja")->nullable();
             $table->date("tanggal_dibayarkan")->nullable();
             $table->integer("gaji_pokok")->nullable();
-            $table->string("bpjs_ks")->nullable();
-            $table->string("bpjs_tk_jht")->nullable();
-            $table->string("bpjs_tk_jkk")->nullable();
-            $table->string("bpjs_tk_jkm")->nullable();
-            $table->string("bpjs_tk_jp")->nullable();
-            $table->string("pph21")->nullable();
+            $table->integer("bpjs_ks")->nullable();
+            $table->integer("bpjs_tk_jht")->nullable();
+            $table->integer("bpjs_tk_jkk")->nullable();
+            $table->integer("bpjs_tk_jkm")->nullable();
+            $table->integer("bpjs_tk_jp")->nullable();
+            $table->integer("pph21")->nullable();
             $table->integer("total_gross_penerimaan")->nullable();
             $table->integer("total_gross_pengurangan")->nullable();
             $table->integer("take_home_pay")->nullable();
