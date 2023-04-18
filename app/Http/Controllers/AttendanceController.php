@@ -125,6 +125,22 @@ class AttendanceController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getAttendancesUsersPaginate(Request $request)
+    {
+        $route_name = "ATTENDANCES_USERS_PAGINATE_GET";
+
+        $response = $this->attendanceService->getAttendancesUsersPaginate($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getAttendancesUsersCount(Request $request)
+    {
+        $route_name = "ATTENDANCES_USERS_COUNT_GET";
+
+        $response = $this->attendanceService->getAttendancesUsersStatistic($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getAttendancesUser(Request $request)
     {
         $route_name = "ATTENDANCES_USER_GET";

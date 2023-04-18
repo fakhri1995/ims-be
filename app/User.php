@@ -79,4 +79,9 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     {
         return $this->hasOne(Employee::class, 'user_id', 'id');
     }
+
+    public function attendance_user()
+    {
+        return $this->hasOne(AttendanceUser::class, 'user_id', 'id');
+    }
 }

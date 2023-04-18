@@ -71,7 +71,7 @@ class TaskController extends Controller
 
     public function getTaskReports(Request $request)
     {
-        $route_name = "TASK_REPORT_ADD";
+        $route_name = "TASK_REPORTS_GET";
 
         $response = $this->taskService->getTaskReports($request, $route_name);
         return response()->json($response, $response['status']);
@@ -79,7 +79,7 @@ class TaskController extends Controller
 
     public function getTaskReport(Request $request)
     {
-        $route_name = "TASK_REPORT_ADD";
+        $route_name = "TASK_REPORT_GET";
 
         $response = $this->taskService->getTaskReport($request, $route_name);
         return response()->json($response, $response['status']);
@@ -87,7 +87,7 @@ class TaskController extends Controller
 
     public function deleteTaskReport(Request $request)
     {
-        $route_name = "TASK_REPORT_ADD";
+        $route_name = "TASK_REPORT_DELETE";
 
         $response = $this->taskService->deleteTaskReport($request, $route_name);
         return response()->json($response, $response['status']);
