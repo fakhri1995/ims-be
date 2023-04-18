@@ -149,7 +149,11 @@ class EmployeeService{
         $employees = Employee::with(["contract" => function ($query) use($current_timestamp) {
             $query->selectRaw("*, DATEDIFF(contract_end_at, '$current_timestamp') as contract_end_countdown");
             // $query->orderBy("contract_end_countdown", "desc");
-        },"contract.role","contract.contract_status"])->where('is_posted',1);
+        },"contract.role","contract.contract_status"])
+        ->leftJoin("employee_contracts","employees.last_contract_id","=","employee_contracts.id")
+        ->leftJoin("recruitment_roles","employee_contracts.role_id","=","recruitment_roles.id")
+        ->select("employees.*","recruitment_roles.name as role_name")
+        ->where("is_posted",1);
 
         function filter($employees, $keyword, $is_employee_active, $role_ids, $placements, $contract_status_ids){
             if($keyword) $employees = $employees->where("name","LIKE", "%$keyword%");
@@ -177,14 +181,17 @@ class EmployeeService{
                 ->whereColumn("employees.last_contract_id","employee_contracts.id"),$sort_type);
         }
         if($sort_by == "name") $employees = $employees->orderBy('name',$sort_type);
-        if($sort_by == "role") $employees = $employees->orderBy(RecruitmentRole::selectRaw("id,name")
-                ->whereColumn("recruitment_roles.id","employee_contracts.role_id"),$sort_type);
-        
+        if($sort_by == "role") $employees = $employees->orderBy("recruitment_roles.name",$sort_type);
+           
         
         if($is_employee_active){
             $employeesDraft = Employee::with(["contract" => function ($query) use($current_timestamp) {
                 $query->selectRaw("*, DATEDIFF(contract_end_at, '$current_timestamp') as contract_end_countdown");
-            },"contract.role","contract.contract_status"])->where('updating_by',auth()->user()->id)->where('is_posted',0);
+            },"contract.role","contract.contract_status"])
+            ->leftJoin("employee_contracts","employees.last_contract_id","=","employee_contracts.id")
+            ->leftJoin("recruitment_roles","employee_contracts.role_id","=","recruitment_roles.id")
+            ->select("employees.*","recruitment_roles.name as role_name")
+            ->where('updating_by',auth()->user()->id)->where('is_posted',0);
             $employeesDraft = filter($employeesDraft, $keyword, NULL, $role_ids, $placements, $contract_status_ids);
             $employeesDraft = $employeesDraft->orWhere('last_contract_id', NULL);
 
@@ -1281,7 +1288,8 @@ class EmployeeService{
         
         // filter
         $employees = filter($employees, $keyword, $is_employee_active, $role_ids, $placements, $contract_status_ids);
-        if($is_posted === 1 || $is_posted === 0) $employees = $employees->whereHas('last_month_payslip', function($q) use ($is_posted){
+        echo $is_posted === 0;
+        if($is_posted != NULL) $employees = $employees->whereHas('last_month_payslip', function($q) use ($is_posted){
             $q->where("is_posted",$is_posted);
         });
 
@@ -1316,6 +1324,8 @@ class EmployeeService{
             "limit" => "numeric"
         ]);
 
+
+        $keyword = $request->keyword ?? NULL;
         $rows = $request->rows ?? 5;
 
         if($validator->fails()){
@@ -1326,6 +1336,12 @@ class EmployeeService{
         $employee_id = $request->employee_id;
 
         $employeePayslips = EmployeePayslip::where('employee_id',$employee_id)
+        ->leftJoin("indonesia_months","employee_payslips.month","=","indonesia_months.month_number")
+        ->selectRaw("employee_payslips.* , CONCAT(indonesia_months.month,' ',employee_payslips.year) as month_string");
+        
+        if($keyword) $employeePayslips = $employeePayslips->where(DB::raw("CONCAT(indonesia_months.month,' ',employee_payslips.year)"),"LIKE","%$keyword%");
+        
+        $employeePayslips = $employeePayslips
         ->orderBy('year','desc')
         ->orderBy('month','desc')
         ->paginate($rows);
@@ -1374,7 +1390,9 @@ class EmployeeService{
         }
          
         $validator = Validator::make($request->all(), [
-            "employee_id" => "numeric|integer|exists:App\Employee,id"
+            "employee_id" => "numeric|integer|exists:App\Employee,id",
+            "month" => "numeric|between:1,12",
+            "year" => "numeric|min:1970"
         ]);
 
         if($validator->fails()){
@@ -1385,6 +1403,15 @@ class EmployeeService{
         $employee = Employee::with("contract")->find($employee_id);
         if(!$employee) return ["success" => false, "message" => "Employee id tidak ditemukan", "status" => 400];
         if(!$employee->contract) return ["success" => false, "message" => "Employee contract belum ada", "status" => 400];
+
+        $month = $request->month;
+        $year = $request->year;
+        $employeePayslip = EmployeePayslip::where([
+            "employee_id" => $employee_id,
+            "month" => $month,
+            "year" => $year
+        ])->first();
+        if(count($employeePayslip)) return ["success" => false, "message" => "Employee payslip bulan $month tahun $year sudah pernah dibuat", "status" => 400];
         
             $employeePayslip = new EmployeePayslip();
             $current_timestamp = date("Y-m-d H:i:s");
@@ -1465,7 +1492,9 @@ class EmployeeService{
 
         $validator = Validator::make($request->all(), [
             "id" => "numeric|required",
-            "salaries.*.employee_salary_column_id" => "numeric|required|exists:App\EmployeeSalaryColumn,id"
+            "salaries.*.employee_salary_column_id" => "numeric|required|exists:App\EmployeeSalaryColumn,id",
+            "month" => "numeric|between:1,12",
+            "year" => "numeric|min:1970"
         ]);
 
         if($validator->fails()){
@@ -1476,6 +1505,15 @@ class EmployeeService{
             $id = $request->id;
             $employeePayslip = EmployeePayslip::find($id);
             if(!$employeePayslip) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+
+            $month = $request->month;
+            $year = $request->year;
+            $employeePayslip = EmployeePayslip::where([
+                "employee_id" => $employeePayslip->employee_id,
+                "month" => $month,
+                "year" => $year
+            ])->first();
+            if(count($employeePayslip)) return ["success" => false, "message" => "Employee payslip bulan $month tahun $year sudah pernah dibuat", "status" => 400];
 
             $current_timestamp = date("Y-m-d H:i:s");
 

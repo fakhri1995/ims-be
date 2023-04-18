@@ -18,6 +18,7 @@ use App\AttendanceProjectCategory;
 use App\Company;
 use App\Exports\AttendanceActivitiesExport;
 use App\File;
+use Illuminate\Support\Facades\Validator;
 
 class AttendanceService{
     public function __construct()
@@ -475,6 +476,70 @@ class AttendanceService{
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
+    }
+
+    public function getAttendancesUsersPaginate($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "is_hadir" => "boolean|required",
+            "is_late" => "boolean",
+            "sort_by" => "in:name",
+            "sort_type" => "in:asc,desc"
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $is_hadir = $request->is_hadir;
+        $is_late = $request->is_late ?? NULL;
+        $keyword = $request->keyword ?? NULL;
+        $rows = $request->rows ?? NULL;
+        $sort_by = $request->sort_by ?? NULL;
+        $sort_type = $request->sort_type ?? NULL;
+        // try{
+            $current_time = date('Y-m-d');
+            $users_attendances = User::select("id","name")->with(["attendance_user" => function($q) use($current_time){
+                $q->select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
+                ->whereDate("check_in","=",$current_time)
+                ->join('long_lat_lists AS check_in_list', function ($join) {
+                    $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
+                })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
+                    $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
+                });
+            }]);
+
+            //filter
+            if($keyword) $users_attendances = $users_attendances->where("name","LIKE","%$keyword%");
+            if($is_late != NULL) $users_attendances = $users_attendances->whereHas("attendance_user", function($q) use($is_late){
+                $q->where("is_late",$is_late);
+            });
+            if($is_hadir) $users_attendances = $users_attendances->whereHas("attendance_user", function($q) use($current_time){
+                $q->whereDate("check_in","=",$current_time);
+            });
+            else $users_attendances = $users_attendances->whereDoesntHave("attendance_user", function($q) use($current_time){
+                $q->whereDate("check_in","=",$current_time);
+            });
+
+
+            //sort
+            if($sort_by == "name") $users_attendances = $users_attendances->orderBy("name",$sort_type);
+
+            $users_attendances = $users_attendances->paginate($rows);
+            foreach($users_attendances as $user_attendance){
+                if($user_attendance->attendance_user != NULL){
+                    $user_attendance->attendance_user->geo_loc_check_in = json_decode($user_attendance->attendance_user->geo_loc_check_in);
+                    $user_attendance->attendance_user->geo_loc_check_out = json_decode($user_attendance->attendance_user->geo_loc_check_out);
+                }
+            }
+            return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $users_attendances, "status" => 200];
+        // } catch(Exception $err){
+        //     return ["success" => false, "message" => $err, "status" => 400];
+        // }
     }
 
     public function getAttendancesUser($request, $route_name)
