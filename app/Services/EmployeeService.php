@@ -1620,11 +1620,27 @@ class EmployeeService{
         if($access["success"] === false) return $access;
 
         try{
-            $current_year = date("Y");
-            $current_month = date("m");
-            $employeePayslip = EmployeePayslip::selectRaw("is_posted, count(*) as total")->groupBy("is_posted")->whereMonth("year",$current_year)->whereMonth("month",$current_month)->get();
+            $lastDate = explode("-",date("Y-m",strtotime("-1 month")));
+            $year = $lastDate[0]; //current month - 1
+            $month = $lastDate[1];
+            $employeePayslip = EmployeePayslip::selectRaw("is_posted, count(*) as total")->groupBy("is_posted")->where("year",$year)->where("month",$month)->get();
+            $data = [
+                0 => [
+                    "is_posted" => 0,
+                    "total" => 0,
+                ],
+                1 => [
+                    "is_posted" => 1,
+                    "total" => 0,
+                ],
+            ];
             
-            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employeePayslip, "status" => 200];
+            foreach($employeePayslip as $e){
+                if($e->is_posted == 0 || $e->is_posted == 1){ 
+                    $data[$e->is_posted]['total'] = $e->total;
+                }
+            }
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
