@@ -145,6 +145,9 @@ class RecruitmentService{
             "recruitment_jalur_daftar_id" => "required|numeric",
             "recruitment_stage_id" => "required|numeric",
             "recruitment_status_id" => "required|numeric",
+            "lampiran" => "array",
+            "lampiran.*.judul_lampiran" => "required_with:lampiran.*.isi_lampiran",
+            "lampiran.*.isi_lampiran" => "required_with:lampiran.*.judul_lampiran",
         ]);
 
         if($validator->fails()){
@@ -163,6 +166,7 @@ class RecruitmentService{
             $recruitment_stage_id = $request->recruitment_stage_id ?? NULL;
             $recruitment_status_id = $request->recruitment_status_id ?? NULL;
 
+            $lampiranRaw = $request->lampiran ?? [];
             
             
             if(!RecruitmentRole::find($recruitment_role_id)) return ["success" => false, "message" => "Recruitment Role yang dipilih tidak tersedia", "status" => 400];
@@ -179,7 +183,17 @@ class RecruitmentService{
             $recruitment->recruitment_jalur_daftar_id = $request->recruitment_jalur_daftar_id ?? "";
             $recruitment->recruitment_stage_id = $request->recruitment_stage_id ?? "";
             $recruitment->recruitment_status_id = $request->recruitment_status_id ?? "";
+            $lampiran = [];
+            foreach($lampiranRaw as $l){
+                if(isset($l['judul_lampiran'])){
+                    $lampiran[] = [
+                        "judul_lampiran" => $l['judul_lampiran'],
+                        "isi_lampiran" => $l['isi_lampiran']
+                    ];
+                }
+            }
 
+            $recruitment->lampiran = $lampiran;
 
             $current_timestamp = date('Y-m-d H:i:s');
             $recruitment->created_at = $current_timestamp;
@@ -215,6 +229,9 @@ class RecruitmentService{
             "*.recruitment_jalur_daftar_id" => "required|numeric",
             "*.recruitment_stage_id" => "required|numeric",
             "*.recruitment_status_id" => "required|numeric",
+            "*.lampiran" => "array",
+            "*.lampiran.*.judul_lampiran" => "required_with:*.lampiran.*.isi_lampiran",
+            "*.lampiran.*.isi_lampiran" => "required_with:*.lampiran.*.judul_lampiran",
         ]);
 
         if($validator->fails()){
@@ -258,7 +275,17 @@ class RecruitmentService{
                 $recruitment->recruitment_jalur_daftar_id = $req->recruitment_jalur_daftar_id;
                 $recruitment->recruitment_stage_id = $req->recruitment_stage_id;
                 $recruitment->recruitment_status_id = $req->recruitment_status_id;
-
+                $lampiranRaw = $req->lampiran ?? [];
+                $lampiran = [];
+                foreach($lampiranRaw as $l){
+                    if(isset($l['judul_lampiran'])){
+                        $lampiran[] = [
+                            "judul_lampiran" => $l['judul_lampiran'],
+                            "isi_lampiran" => $l['isi_lampiran']
+                        ];
+                    }
+                }
+                $recruitment->lampiran = $lampiran;
                 $recruitment->created_at = $current_timestamp;
                 $recruitment->updated_at = $current_timestamp;
                 $recruitment->created_by = auth()->user()->id;
@@ -304,6 +331,7 @@ class RecruitmentService{
             "recruitment_jalur_daftar_id" => "required|numeric",
             "recruitment_stage_id" => "required|numeric",
             "recruitment_status_id" => "required|numeric",
+            "lampiran" => "array",
             "lampiran.*.judul_lampiran" => "required_with:lampiran.*.isi_lampiran",
             "lampiran.*.isi_lampiran" => "required_with:lampiran.*.judul_lampiran",
         ]);
