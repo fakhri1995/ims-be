@@ -502,7 +502,7 @@ class AttendanceService{
         $rows = $request->rows ?? NULL;
         $sort_by = $request->sort_by ?? NULL;
         $sort_type = $request->sort_type ?? NULL;
-        $company_ids = $request->company_ids ? explode(",",$request->placements) : NULL;
+        $company_ids = $request->company_ids ? explode(",",$request->company_ids) : NULL;
         // try{
             $current_time = date('Y-m-d');
             $users_attendances = User::select("id","name", "company_id")->with(["attendance_user" => function($q) use($current_time, $is_late){
@@ -532,10 +532,7 @@ class AttendanceService{
 
             
             
-            if($company_ids) $users_attendances = $users_attendances->orWhereHas("company", function($q) use($company_ids){
-                $q->whereIn("id", $company_ids);
-                return $q;
-            });
+            if($company_ids) $users_attendances = $users_attendances->whereIn("company_id", $company_ids);
 
             //sort
             if($sort_by == "name") $users_attendances = $users_attendances->orderBy("name",$sort_type);
