@@ -1513,7 +1513,7 @@ class EmployeeService{
                 "month" => $month,
                 "year" => $year
             ])->first();
-            if(count($employeePayslip)) return ["success" => false, "message" => "Employee payslip bulan $month tahun $year sudah pernah dibuat", "status" => 400];
+            if($employeePayslip) return ["success" => false, "message" => "Employee payslip bulan $month tahun $year sudah pernah dibuat", "status" => 400];
 
             $current_timestamp = date("Y-m-d H:i:s");
 

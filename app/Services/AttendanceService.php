@@ -18,6 +18,7 @@ use App\AttendanceProjectCategory;
 use App\Company;
 use App\Exports\AttendanceActivitiesExport;
 use App\File;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Validator;
 
 class AttendanceService{
@@ -501,9 +502,10 @@ class AttendanceService{
         $rows = $request->rows ?? NULL;
         $sort_by = $request->sort_by ?? NULL;
         $sort_type = $request->sort_type ?? NULL;
+        $company_ids = $request->company_ids ? explode(",",$request->placements) : NULL;
         // try{
             $current_time = date('Y-m-d');
-            $users_attendances = User::select("id","name")->with(["attendance_user" => function($q) use($current_time){
+            $users_attendances = User::select("id","name", "company_id")->with(["attendance_user" => function($q) use($current_time, $is_late){
                 $q->select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
                 ->whereDate("check_in","=",$current_time)
                 ->join('long_lat_lists AS check_in_list', function ($join) {
@@ -511,25 +513,36 @@ class AttendanceService{
                 })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
                     $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
                 });
-            }]);
+            }, "profileImage", "company"]);
 
             //filter
             if($keyword) $users_attendances = $users_attendances->where("name","LIKE","%$keyword%");
-            if($is_late != NULL) $users_attendances = $users_attendances->whereHas("attendance_user", function($q) use($is_late){
-                $q->where("is_late",$is_late);
-            });
-            if($is_hadir) $users_attendances = $users_attendances->whereHas("attendance_user", function($q) use($current_time){
+            
+
+
+            if($is_hadir) $users_attendances = $users_attendances->whereHas("attendance_user", function($q) use($current_time, $is_late){
+                if($is_late != NULL) $q->where("is_late",$is_late);
                 $q->whereDate("check_in","=",$current_time);
+                return $q;
             });
             else $users_attendances = $users_attendances->whereDoesntHave("attendance_user", function($q) use($current_time){
                 $q->whereDate("check_in","=",$current_time);
+                return $q;
             });
 
+            
+            
+            if($company_ids) $users_attendances = $users_attendances->orWhereHas("company", function($q) use($company_ids){
+                $q->whereIn("id", $company_ids);
+                return $q;
+            });
 
             //sort
             if($sort_by == "name") $users_attendances = $users_attendances->orderBy("name",$sort_type);
 
+            // dd($users_attendances->get());
             $users_attendances = $users_attendances->paginate($rows);
+            
             foreach($users_attendances as $user_attendance){
                 if($user_attendance->attendance_user != NULL){
                     $user_attendance->attendance_user->geo_loc_check_in = json_decode($user_attendance->attendance_user->geo_loc_check_in);
