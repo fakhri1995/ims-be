@@ -15,9 +15,8 @@ class CreateIndonesiaMonthsTable extends Migration
     public function up()
     {
         Schema::create('indonesia_months', function (Blueprint $table) {
-            $table->integer('month_number')->unsigned();
+            $table->tinyIncrements('month_number');
             $table->string("month");
-            $table->primary('month_number');
         });
 
         DB::table('indonesia_months')->insert([
