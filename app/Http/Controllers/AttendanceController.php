@@ -127,7 +127,7 @@ class AttendanceController extends Controller
 
     public function getAttendancesUsersPaginate(Request $request)
     {
-        $route_name = "ATTENDANCES_USERS_PAGINATE_GET";
+        $route_name = "ATTENDANCE_USERS_PAGINATE_GET";
 
         $response = $this->attendanceService->getAttendancesUsersPaginate($request, $route_name);
         return response()->json($response, $response['status']);
