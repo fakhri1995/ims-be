@@ -156,7 +156,7 @@ class EmployeeService{
         ->where("is_posted",1);
 
         function filter($employees, $keyword, $is_employee_active, $role_ids, $placements, $contract_status_ids){
-            if($keyword) $employees = $employees->where("name","LIKE", "%$keyword%");
+            if($keyword) $employees = $employees->where("employees.name","LIKE", "%$keyword%");
             $employees = $employees->whereHas("contract", function ($query) use($is_employee_active,$role_ids,$placements,$contract_status_ids) {
                 if($is_employee_active != NULL) $query->where('is_employee_active', $is_employee_active);
                 if($role_ids) $query->whereIn('role_id', $role_ids);
@@ -1255,7 +1255,7 @@ class EmployeeService{
             "limit" => "numeric",
             "sort_type" => "in:asc,desc",
             "is_employee_active" => "boolean",
-            "is_posted" => "boolean"
+            "is_posted" => "in:-1,0,1"
         ]);
 
         if($validator->fails()){
@@ -1289,7 +1289,8 @@ class EmployeeService{
         // filter
         $employees = filter($employees, $keyword, $is_employee_active, $role_ids, $placements, $contract_status_ids);
         echo $is_posted === 0;
-        if($is_posted != NULL) $employees = $employees->whereHas('last_month_payslip', function($q) use ($is_posted){
+        if($is_posted == -1) $employees = $employees->whereDoesntHave('last_month_payslip');
+        else if($is_posted != NULL) $employees = $employees->whereHas('last_month_payslip', function($q) use ($is_posted){
             $q->where("is_posted",$is_posted);
         });
 
@@ -1402,7 +1403,9 @@ class EmployeeService{
         $employee_id = $request->employee_id;
         $employee = Employee::with("contract")->find($employee_id);
         if(!$employee) return ["success" => false, "message" => "Employee id tidak ditemukan", "status" => 400];
+        if(!$employee->is_posted) return ["success" => false, "message" => "Employee masih dalam draft", "status" => 400];
         if(!$employee->contract) return ["success" => false, "message" => "Employee contract belum ada", "status" => 400];
+        if(!$employee->contract->is_employee_active) return ["success" => false, "message" => "Employee contract tidak aktif", "status" => 400];
 
         $month = $request->month;
         $year = $request->year;
@@ -1508,12 +1511,13 @@ class EmployeeService{
 
             $month = $request->month;
             $year = $request->year;
-            $employeePayslip = EmployeePayslip::where([
+            $employeePayslipCheck = EmployeePayslip::where([
                 "employee_id" => $employeePayslip->employee_id,
                 "month" => $month,
-                "year" => $year
+                "year" => $year,
+                "id" => "!= $id"
             ])->first();
-            if($employeePayslip) return ["success" => false, "message" => "Employee payslip bulan $month tahun $year sudah pernah dibuat", "status" => 400];
+            if($employeePayslipCheck) return ["success" => false, "message" => "Employee payslip bulan $month tahun $year sudah pernah dibuat", "status" => 400];
 
             $current_timestamp = date("Y-m-d H:i:s");
 
@@ -1529,7 +1533,8 @@ class EmployeeService{
                 $salary = (object)$salary;
                 $employeePayslipSalaryColumn = EmployeeSalaryColumn::find($salary->employee_salary_column_id);
                 if(!$employeePayslipSalaryColumn) continue;
-
+                $salary->value = isset($salary->value) ? $salary->value : 0;
+                $salary->is_amount_for_bpjs = isset($salary->is_amount_for_bpjs) ? $salary->is_amount_for_bpjs : $employeePayslipSalaryColumn->is_amount_for_bpjs;
                 $employee_salary_column_ids[] = $salary->employee_salary_column_id;
                 $salaryValue = $salary->value;
                 if($employeePayslipSalaryColumn->percent > 0) $salaryValue = $employeePayslipSalaryColumn->percent/100 * $gaji_pokok;
@@ -1734,8 +1739,14 @@ class EmployeeService{
             $year = $lastDate[0]; //current month - 1
             $month = $lastDate[1];
 
-            $employee = Employee::with('last_month_payslip')->get();
-            
+            $employees = Employee::with(["contract","contract.role","contract.contract_status","last_month_payslip"])->where('is_posted',1);
+            $employees = $employees->whereHas("contract", function ($query) {
+                $query->where('is_employee_active', 1);
+                return $query;
+            })->get();
+
+
+
             $payload = new Request([
                 "total_hari_kerja" => 25,
                 "tanggal_dibayarkan" => "$year-$month-25",
@@ -1746,11 +1757,14 @@ class EmployeeService{
             $payload->setMethod("POST");
 
             $payslipData = [];
-            foreach($employee as $e){
+            foreach($employees as $e){
                 if(!$e->last_month_payslip){
                     $payload->replace(['employee_id' => $e->id]);
                     $employeePayslip = $this->addEmployeePayslip($payload,"BYPASS");
-                    if($employeePayslip["success"]) $payslipData[] = $employeePayslip["data"];
+                    if($employeePayslip["success"]) {
+                        $employeePayslip["data"]['employee'] = $e;
+                        $payslipData[] = $employeePayslip["data"];
+                    }
                 }
             }
 
