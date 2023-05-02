@@ -15,6 +15,6 @@ class EmployeeSalary extends Model
 
     public function column()
     {
-        return $this->hasOne(EmployeeSalaryColumn::class, "id", "employee_salary_column_id",);
+        return $this->hasOne(EmployeeSalaryColumn::class, "id", "employee_salary_column_id",)->withTrashed();
     }
 }

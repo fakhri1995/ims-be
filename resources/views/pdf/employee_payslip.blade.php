@@ -137,6 +137,10 @@
       border-width: 1px 0px;
       padding: 35px 0px 20px;
     }
+
+    #invoice-data tr, #invoice-data td * {
+      vertical-align: top;
+    }
   </style>
 
 <body>
@@ -152,7 +156,7 @@
         </td>
         <td width="40%" style="text-align: right; vertical-align: top;">
           <h2>SLIP GAJI</h2>
-          <h6 class="text-green text-bold letter-spacing">OKTOBER 2022</h6>
+          <h6 class="text-green text-bold letter-spacing">{{ $salaries['periode'] }}</h6>
         </td>
       </tr>
     </table>
@@ -222,48 +226,35 @@
           <th width="22%" class="text-header border-header">DESKRIPSI</th>
           <th width="18%" class="text-header border-header">PENGURANGAN (IDR)</th>
         </tr>
-        <tr style="font-size: 22px;">
+        <!-- <tr style="font-size: 22px;">
           <td>Gaji Pokok</td>
-          <td class="text-bold text-right">5.000.000</td>
+          <td class="text-bold text-right">{{ $payslip->gaji_pokok }}</td>
           <td></td>
           <td>PPh 21</td>
-          <td class="text-bold text-right">125.000</td>
-        </tr>
+          <td class="text-bold text-right">{{ $payslip->pph21 }}</td>
+        </tr> -->
+        @for ($i = 0; $i < $salaries['len']; $i++)
         <tr style="font-size: 22px;">
-          <td>Tunjangan Makan</td>
-          <td class="text-bold text-right">550.000</td>
+          <td>{{ $salaries['penerimaan'][$i]['name'] }}</td>
+          <td class="text-bold text-right">{{ $salaries['penerimaan'][$i]['value'] }}</td>
           <td></td>
-          <td>BPJS KS (5% Perusahaan)</td>
-          <td class="text-bold text-right">299.250</td>
+          <td>{{ $salaries['pengurangan'][$i]['name'] }}</td>
+          <td class="text-bold text-right">{{ $salaries['pengurangan'][$i]['value'] }}</td>
         </tr>
-        <tr style="font-size: 22px;">
-          <td></td>
-          <td></td>
-          <td></td>
-          <td>BPJS TK-JKK (0,24% Perusahaan)</td>
-          <td class="text-bold text-right">12.600</td>
-        </tr>
-        <tr style="font-size: 22px;">
-          <td></td>
-          <td></td>
-          <td></td>
-          <td>BPJS TK-JKM (0,3% Perusahaan)</td>
-          <td class="text-bold text-right">15.750</td>
-        </tr>
+        @endfor
         <tr style="font-size: 22px;">
           <td class="text-bold border">Total Penerimaan</td>
-          <td class="text-bold text-right border">5.550.000</td>
+          <td class="text-bold text-right border">{{ $salaries['total_gross_penerimaan'] }}</td>
           <td></td>
           <td class="text-bold border">Total Pengurangan</td>
-          <td class="text-bold text-right border">452.600</td>
+          <td class="text-bold text-right border">{{ $salaries['total_gross_pengurangan'] }}</td>
         </tr>
         <tr>
           <td class="text-bold border">Jumlah Diterima</td>
-          <td class="text-bold text-right text-green border">5.250.000</td>
+          <td class="text-bold text-right text-green border">{{ $salaries['total_penerimaan'] }}</td>
           <td></td>
           <td class="text-bold border">Terbilang</td>
-          <td class="text-right text-green border" style="font-size: 20px;">Lima Juta Dua Ratus Lima Puluh Ribu Rupiah
-          </td>
+          <td class="text-right text-green border" style="font-size: 20px;">{{ $salaries['terbilang'] }}</td>
         </tr>
       </table>
     </div>
@@ -273,7 +264,7 @@
     <table style="width: 100%; vertical-align: top;">
       <tr>
         <td colspan="2">
-          Telah dibayarkan pada tanggal <span class="text-bold">28 Oktober 2022</span>
+          Telah dibayarkan pada tanggal <span class="text-bold">{{ $salaries["dibayarkan"] }}</span>
           <br><br>
         </td>
       </tr>

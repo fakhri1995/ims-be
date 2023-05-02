@@ -1322,13 +1322,17 @@ class EmployeeService{
         $validator = Validator::make($request->all(), [
             "employee_id" => "numeric|required",
             "rows" => "numeric",
-            "limit" => "numeric"
+            "limit" => "numeric",
+            "sort_by" => "in:period|nullable",
+            "sort_type" => "in:asc,desc"
         ]);
 
 
         $keyword = $request->keyword ?? NULL;
         $rows = $request->rows ?? 5;
-
+        $sort_by = $request->sort_by ?? "period";
+        $sort_type = $request->sort_type ?? "desc";
+        
         if($validator->fails()){
             $errors = $validator->errors()->all();
             return ["success" => false, "message" => $errors, "status" => 400];
@@ -1342,10 +1346,9 @@ class EmployeeService{
         
         if($keyword) $employeePayslips = $employeePayslips->where(DB::raw("CONCAT(indonesia_months.month,' ',employee_payslips.year)"),"LIKE","%$keyword%");
         
-        $employeePayslips = $employeePayslips
-        ->orderBy('year','desc')
-        ->orderBy('month','desc')
-        ->paginate($rows);
+        if($sort_by == "period") $employeePayslips = $employeePayslips->orderBy('year',$sort_type)->orderBy('month',$sort_type);
+        
+        $employeePayslips = $employeePayslips->paginate($rows);
             
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employeePayslips, "status" => 200];
@@ -1695,15 +1698,55 @@ class EmployeeService{
 
         $id = $request->id;
         $password = $request->password;
-        
         $employeePayslip = EmployeePayslip::with('employee','employee.contract','employee.contract.role',
-        "employee.contract.contract_status")->find($id);
+        "employee.contract.contract_status","salaries","salaries.column")->find($id);
         if(!$employeePayslip) return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400];
         $isUserSuperAdmin = $this->globalService->isUserSuperAdmin();
         if(!$isUserSuperAdmin && $employeePayslip->employee_id != auth()->user()->id) return ["success" => false, "message" => "Payslip tidak sesuai dengan employee", "status" => 400];
         if(!$isUserSuperAdmin && !Hash::check(auth()->user()->password,$password)) return ["success" => false, "message" => "Validasi kata sandiA salah", "status" => 400];
         // dd($employeePayslip);
         
+
+        $tgl_dibayarkan = explode("-",$employeePayslip->tanggal_dibayarkan);
+
+
+        $salaries = [
+            "penerimaan" => [
+                [ "name" => "Gaji Pokok", "value" => number_format($employeePayslip->gaji_pokok) ]
+            ],
+            "pengurangan" => [
+                [ "name" => "Pph 21", "value" => number_format($employeePayslip->pph21) ],
+                [ "name" => "BPJS KS (5% Perusahaan)", "value" => number_format($employeePayslip->bpjs_ks) ],
+                [ "name" => "BPJS TK-JHT", "value" => number_format($employeePayslip->bpjs_tk_jht) ],
+                [ "name" => "BPJS TK-JKK (0,24% Perusahaan)", "value" => number_format($employeePayslip->bpjs_tk_jkk) ],
+                [ "name" => "BPJS TK-JKM (0,3% Perusahaan)", "value" => number_format($employeePayslip->bpjs_tk_jkm) ],
+                [ "name" => "BPJS TK-JP", "value" => number_format($employeePayslip->bpjs_tk_jp) ],
+            ],
+            "total_gross_penerimaan" => number_format($employeePayslip->total_gross_penerimaan),
+            "total_gross_pengurangan" => number_format($employeePayslip->total_gross_pengurangan),
+            "total_penerimaan" => number_format($employeePayslip->total_gross_penerimaan - $employeePayslip->total_gross_pengurangan),
+            "terbilang" => ucwords($this->globalService->terbilang($employeePayslip->total_gross_penerimaan - $employeePayslip->total_gross_pengurangan))." Rupiah",
+            "dibayarkan" => $tgl_dibayarkan[2]." ".$this->globalService->getIndonesiaMonth($tgl_dibayarkan[1])." ".$tgl_dibayarkan[0],
+            "periode" => $this->globalService->getIndonesiaMonth($employeePayslip->month)." ".$employeePayslip->year,
+        ];
+
+        foreach($employeePayslip->salaries as $s){
+            if($s->column->type == 1){
+                $salaries["penerimaan"][] =  [ "name" => $s->column->name, "value" => number_format($s->value) ];
+            }else if($s->column->type == 2){
+                $salaries["pengurangan"][] =  [ "name" => $s->column->name, "value" => number_format($s->value) ];
+            }
+        }
+
+        $lenPenerimaan = count($salaries['penerimaan']);
+        $lenPengurangan = count($salaries['pengurangan']);
+        $diff = abs($lenPenerimaan - $lenPengurangan);
+        $lower = $lenPenerimaan < $lenPengurangan ? "penerimaan" : "pengurangan";
+        $salaries["len"] = $lenPenerimaan > $lenPengurangan ? $lenPenerimaan : $lenPengurangan;
+        
+        for($i = 0; $i < $diff; $i++){
+            $salaries[$lower][] =  [ "name" => "", "value" => "" ];
+        }
         
 
         $options = new Options();
@@ -1714,17 +1757,20 @@ class EmployeeService{
 
         $pdf = new Dompdf($options);
         
-        $html = view('pdf.employee_payslip', ["payslip" => $employeePayslip])->render();
+        $html = view('pdf.employee_payslip', ["payslip" => $employeePayslip, "salaries" => $salaries])->render();
         $pdf->setPaper('A4', 'portrait');
         $pdf->loadHtml($html);
         $pdf->render();
-        // $pdf->getCanvas()
-        //     ->get_cpdf()
-        //     ->setEncryption('test123', 'test456', ['print', 'modify', 'copy', 'add']);
+        if($password != NULL){
+            $pdf->getCanvas()
+            ->get_cpdf()
+            ->setEncryption($password, $password, ['print', 'modify', 'copy', 'add']);
+        }
         $output = $pdf->output();
+        $filename = $employeePayslip->employee->name." - Payslip ".$salaries['periode'];
         $res = new Response ($output, 200, array(
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' =>  'attachment; filename="test.pdf"',
+            'Content-Disposition' =>  'attachment; filename="'.$filename.'.pdf"',
             'Content-Length' => strlen($output),
         ));
         
