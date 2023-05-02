@@ -1702,7 +1702,7 @@ class EmployeeService{
         "employee.contract.contract_status","salaries","salaries.column")->find($id);
         if(!$employeePayslip) return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400];
         $isUserSuperAdmin = $this->globalService->isUserSuperAdmin();
-        if(!$isUserSuperAdmin && $employeePayslip->employee_id != auth()->user()->id) return ["success" => false, "message" => "Payslip tidak sesuai dengan employee", "status" => 400];
+        if(!$isUserSuperAdmin && $employeePayslip->employee->user_id != auth()->user()->id) return ["success" => false, "message" => "Payslip tidak sesuai dengan employee", "status" => 400];
         if(!$isUserSuperAdmin && !Hash::check(auth()->user()->password,$password)) return ["success" => false, "message" => "Validasi kata sandiA salah", "status" => 400];
         // dd($employeePayslip);
         

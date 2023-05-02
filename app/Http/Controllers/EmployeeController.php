@@ -14,7 +14,7 @@ class EmployeeController extends Controller
 
     public function getEmployeePlacementsCount(Request $request)
     {
-        $route_name = "";
+        $route_name = "EMPLOYEE_PLACEMENTS_COUNT_GET";
 
         $response = $this->employeeService->getEmployeePlacementsCount($request, $route_name);
         return response()->json($response, $response['status']);
@@ -22,7 +22,7 @@ class EmployeeController extends Controller
 
     public function getEmployeeRolesCount(Request $request)
     {
-        $route_name = "";
+        $route_name = "EMPLOYEE_ROLES_COUNT_GET";
 
         $response = $this->employeeService->getEmployeeRolesCount($request, $route_name);
         return response()->json($response, $response['status']);
@@ -30,7 +30,7 @@ class EmployeeController extends Controller
 
     public function getEmployeeStatusesCount(Request $request)
     {
-        $route_name = "";
+        $route_name = "EMPLOYEE_STATUSES_COUNT_GET";
 
         $response = $this->employeeService->getEmployeeStatusesCount($request, $route_name);
         return response()->json($response, $response['status']);
