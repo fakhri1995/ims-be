@@ -345,7 +345,7 @@ class EmployeeController extends Controller
 
     public function postedEmployeeLastPayslips(Request $request)
     {
-        $route_name = "EMPLOYEE_LAST_PAYSLIP_POSTED";
+        $route_name = "EMPLOYEES_PAYSLIPS_POST";
 
         $response = $this->employeeService->postedEmployeeLastPayslips($request, $route_name);
         return response()->json($response, $response['status']);
