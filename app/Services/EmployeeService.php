@@ -193,7 +193,7 @@ class EmployeeService{
             ->select("employees.*","recruitment_roles.name as role_name")
             ->where('updating_by',auth()->user()->id)->where('is_posted',0);
             $employeesDraft = filter($employeesDraft, $keyword, NULL, $role_ids, $placements, $contract_status_ids);
-            $employeesDraft = $employeesDraft->orWhere('last_contract_id', NULL);
+            // $employeesDraft = $employeesDraft->orWhere('last_contract_id', NULL);
 
             $employeesDraftCount = $employeesDraft->count();
             $employeeCount = $employees->count();
