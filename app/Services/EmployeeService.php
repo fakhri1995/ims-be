@@ -765,7 +765,7 @@ class EmployeeService{
 
         $employee_id = $request->employee_id;
 
-        $employeeInventories = EmployeeInventory::with(["employee","devices"])->where(["employee_id" => $employee_id])->get();
+        $employeeInventories = EmployeeInventory::with(["employee","devices","delivery_file","return_file"])->where(["employee_id" => $employee_id])->get();
 
         try{
 
