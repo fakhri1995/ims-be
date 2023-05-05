@@ -591,6 +591,25 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/raiseLastPeriodPayslip', 'EmployeeController@raiseLastPeriodPayslip');
 
 
+    // Project & Task Management - Project
+    $router->get('/getProject', 'ProjectTaskController@getProject');
+    $router->get('/getProjects', 'ProjectTaskController@getProjects');
+    $router->post('/addProject', 'ProjectTaskController@addProject');
+    $router->put('/updateProject', 'ProjectTaskController@updateProject');
+    $router->delete('/deleteProject', 'ProjectTaskController@deleteProject');
+    // Project & Task Management - Task
+    $router->get('/getProjectTask', 'ProjectTaskController@getProjectTask');
+    $router->get('/getProjectTasks', 'ProjectTaskController@getProjectTasks');
+    $router->post('/addProjectTask', 'ProjectTaskController@addProjectTask');
+    $router->put('/updateProjectTask', 'ProjectTaskController@updateProjectTask');
+    $router->delete('/deleteProjectTask', 'ProjectTaskController@deleteProjectTask');
+    // Project & Task Management - Project Status
+    $router->get('/getProjectStatus', 'ProjectTaskController@getProjectStatus');
+    $router->get('/getProjectStatuses', 'ProjectTaskController@getProjectStatuses');
+    $router->post('/addProjectStatus', 'ProjectTaskController@addProjectStatus');
+    $router->put('/updateProjectStatus', 'ProjectTaskController@updateProjectStatus');
+    $router->delete('/deleteProjectStatus', 'ProjectTaskController@deleteProjectStatus');
+
     $router->get('/getBankLists', "BankListController@getBankLists");
 });
 
