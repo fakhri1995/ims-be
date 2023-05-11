@@ -365,6 +365,7 @@ class ProjectTaskService{
         $projectTask->start_date = $request->start_date;
         $projectTask->end_date = $request->end_date;
         $projectTask->project_id = $project_id;
+        $projectTask->description = $request->description;
         $currect_time = date("Y-m-d H:i:s");
         $projectTask->created_by = auth()->user()->id;
         $projectTask->created_at = $currect_time;
