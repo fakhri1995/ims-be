@@ -113,6 +113,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteGuest', 'UserController@deleteGuest');
 
     $router->get('/getFilterGroups', 'GroupController@getFilterGroups');
+    $router->get('/getFilterGroupsWithUsers', 'GroupController@getFilterGroupsWithUsers');
     
     //Agent Group Routes
     $router->get('/getAgentGroups', 'GroupController@getAgentGroups');
@@ -594,6 +595,7 @@ $router->group(['middleware' => 'auth'], function($router){
     // Project & Task Management - Project
     $router->get('/getProject', 'ProjectTaskController@getProject');
     $router->get('/getProjects', 'ProjectTaskController@getProjects');
+    $router->get('/getProjectsList', 'ProjectTaskController@getProjectsList');
     $router->post('/addProject', 'ProjectTaskController@addProject');
     $router->put('/updateProject', 'ProjectTaskController@updateProject');
     $router->delete('/deleteProject', 'ProjectTaskController@deleteProject');

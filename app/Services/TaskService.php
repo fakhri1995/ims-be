@@ -94,7 +94,7 @@ class TaskService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $status_list_name = ["-", "Overdue", "Open", "On progress", "On hold", "Completed", "Closed"];
+        $status_list_name = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled', 'Rejected'];
         try{
             $location = $request->get('location', null);
             $from = $request->get('from', null);
@@ -559,7 +559,7 @@ class TaskService{
         ->join('tasks', 'task_user.task_id', '=', 'tasks.id');
         if($from && $to) $user_tasks = $user_tasks->whereBetween('tasks.created_at', [$from, $to]);
         $user_tasks = $user_tasks->groupBy('users.id','tasks.status')->get()->groupBy('id');
-        $status_list_name = ["-", "Overdue", "Open", "On progress", "On hold", "Completed", "Closed"];
+        $status_list_name = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled', 'Rejected'];
         foreach($users as $user){
             $status_list = $user_tasks[$user->id] ?? collect([(object)["id" => $user->id, "status" => 1, "status_count" => 0]]); 
             $list = new Collection();
@@ -602,7 +602,7 @@ class TaskService{
         if($from && $to) $status_list = $status_list->whereBetween('deadline', [$from, $to]);
         
         $status_list = $status_list->select(DB::raw('status, count(*) as status_count'))->groupBy('status')->get();
-        $status_list_name = ["-", "Overdue", "Open", "On progress", "On hold", "Completed", "Closed"];
+        $status_list_name = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled', 'Rejected'];
         
         $list = new Collection();
         $active_task = 0;

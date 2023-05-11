@@ -4,9 +4,10 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class ActivityLogTask extends Model
+class ActivityLogProjectTask extends Model
 {
     public $timestamps = false;
+    protected $table = "activity_log_projects_tasks";
     protected $casts = ['properties' => 'object'];
     protected $with = ['causer','causer.imageProfile'];
 
@@ -19,5 +20,15 @@ class ActivityLogTask extends Model
                 "name" => "-"
             ]
         ])->select('id', 'name')->with('roles:name');
+    }
+
+    public function task()
+    {
+        return $this->belongsTo(ProjectTask::class, 'task_id');
+    }
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class, 'project_id');
     }
 }
