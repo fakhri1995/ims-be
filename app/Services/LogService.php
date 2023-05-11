@@ -22,8 +22,10 @@ use App\ActivityLogPurchaseOrder;
 use App\StatusConditionInventory;
 use App\ActivityLogInventoryPivot;
 use App\ActivityLogInventoryRelationship;
+use App\ActivityLogProjectTask;
 use App\ActivityLogRecruitment;
 use App\ActivityLogTask;
+use App\ProjectStatus;
 use App\RecruitmentStage;
 use App\RecruitmentStatus;
 use Exception;
@@ -971,6 +973,161 @@ class LogService
             return ["error" => $err];
         }
     }
+
+
+    public function addLogProjectTask($project_id = NULL, $task_id = NULL, $causer_id, $log_name, $properties, $notes = null)
+    {   
+        $type = $task_id == NULL ? "project" : "task";
+
+        $log_name_option = [
+            "Created", "Updated", "Deleted"
+        ];
+
+        $log_type_option = [
+            "created_project", "updated_project", "deleted_project",
+            "created_task", "updated_task", "deleted_task",
+        ];
+
+        //project and task column var just for column without relation
+        // ["status_id", "project_staffs", "proposed_bys"]; with relation
+        $project_column = [
+            ["column" => "name", "string" => "nama"], 
+            ["column" => "start_date", "string" => "waktu mulai"], 
+            ["column" => "end_date", "string" => "waktu estimasi berakhir"], 
+            ["column" => "description", "string" => "deskripsi"]
+        ]; 
+
+        // ["status_id", "task_staffs", "project_id"]; with relation
+        $task_column = [
+            ["column" => "name", "string" => "nama"], 
+            ["column" => "start_date", "string" => "waktu mulai"], 
+            ["column" => "end_date", "string" => "waktu estimasi berakhir"], 
+            ["column" => "description", "string" => "deskripsi"]
+        ]; 
+
+        $statuses = ProjectStatus::get();
+        $statusList = [];
+        foreach($statuses as $s){
+            $statusList[$s->id] = $s->name;
+        }
+        
+        if(!in_array($log_name, $log_name_option)) throw new Exception('log_name invalid');
+        if(!in_array($properties['log_type'], $log_type_option)) throw new Exception('log_type invalid');
+        if($project_id == NULL && $task_id == NULL) throw new Exception('project_id and task_id can\'n be null at the same time');
+        $description = "";
+        if($log_name == "Created"){
+            $description = ucfirst($type)." ".$properties['new']['name']." dibuat.";
+        }
+
+        if($log_name == "Updated"){
+            $column = $type == "project" ? $project_column : $task_column;
+
+            $description = "Terjadi perubahan pada $type ".$properties['old']['name'].". ";
+            foreach($column as $c){
+                if($properties['old'][$c['column']] != $properties['new'][$c['column']]){
+                    $description .= ucfirst($c['string'])." $type dari ".$properties['old'][$c['column']]." menjadi ".$properties['new'][$c['column']].". ";
+                }
+            }
+
+            if($properties['old']['status_id'] != $properties['new']['status_id']){
+                $status_old = ProjectStatus::withTrashed()->select("id","name")->find($properties['old']['status_id']);
+                $status_new = ProjectStatus::withTrashed()->select("id","name")->find($properties['new']['status_id']);
+                
+                $status_old_str = $status_old ? $status_old->name : "kosong";
+                $status_new_str = $status_new ? $status_new->name : "kosong";
+                
+
+                $description .= "Status $type dari ".$status_old_str." menjadi ".$status_new_str.". ";
+            }
+
+            if($type == "project"){
+                $project_staffs_removed = array_diff($properties['old']['project_staffs'],$properties['new']['project_staffs']);
+                $project_staffs_added = array_diff($properties['new']['project_staffs'],$properties['old']['project_staffs']);
+                $project_staffs_diff = array_merge($project_staffs_removed, $project_staffs_added);
+
+                $proposed_bys_removed = array_diff($properties['old']['proposed_bys'],$properties['new']['proposed_bys']);
+                $proposed_bys_added = array_diff($properties['new']['proposed_bys'],$properties['old']['proposed_bys']);
+                $proposed_bys_diff = array_merge($proposed_bys_removed, $proposed_bys_added);
+
+                $users_merge = array_merge($project_staffs_diff, $proposed_bys_diff);
+                sort($users_merge);
+                $users_diff = array_unique($users_merge);
+
+                if(count($users_diff)){
+                    $users = User::withTrashed()->whereIn("id",$users_diff)->get()->toArray();
+                    $usersArray = array_column($users, "name", "id");
+                }
+
+                $project_staffs_added_name = "";
+                $proposed_bys_added_name = "";
+                $project_staffs_removed_name = "";
+                $proposed_bys_removed_name = "";
+                foreach($project_staffs_added as $i){
+                    $project_staffs_added_name .= $usersArray[$i].", ";
+                }
+
+                foreach($proposed_bys_added as $i){
+                    $proposed_bys_added_name .= $usersArray[$i].", ";
+                }
+
+                foreach($project_staffs_removed as $i){
+                    $project_staffs_removed_name .= $usersArray[$i].", ";
+                }
+
+                foreach($proposed_bys_removed as $i){
+                    $proposed_bys_removed_name .= $usersArray[$i].", ";
+                }
+
+                if($project_staffs_removed_name) $description .= $project_staffs_removed_name."dihapus dari project staff. ";
+                if($project_staffs_added_name) $description .= $project_staffs_added_name."ditambah ke project staff. ";
+                if($proposed_bys_removed_name) $description .= $proposed_bys_removed_name."dihapus dari pengaju project. ";
+                if($proposed_bys_added_name) $description .= $proposed_bys_added_name."ditambah ke pengaju project. ";
+
+            }else if($type == "task"){
+                $task_staffs_removed = array_diff($properties['old']['task_staffs'],$properties['new']['task_staffs']);
+                $task_staffs_added = array_diff($properties['new']['task_staffs'],$properties['old']['task_staffs']);
+                $task_staffs_diff = array_merge($task_staffs_removed, $task_staffs_added);
+
+                sort($task_staffs_diff);
+                $users_diff = array_unique($task_staffs_diff);
+
+                if(count($users_diff)){
+                    $users = User::withTrashed()->whereIn("id",$users_diff)->get()->toArray();
+                    $usersArray = array_column($users, "name", "id");
+                }
+
+                $task_staffs_added_name = "";
+                $task_staffs_removed_name = "";
+                foreach($task_staffs_added as $i){
+                    $task_staffs_added_name .= $usersArray[$i].", ";
+                }
+
+                foreach($task_staffs_removed as $i){
+                    $task_staffs_removed_name .= $usersArray[$i].", ";
+                }
+
+                if($task_staffs_removed_name) $description .= $task_staffs_removed_name."dihapus dari task staff. ";
+                if($task_staffs_added_name) $description .= $task_staffs_added_name."ditambah ke task staff. ";
+            }
+
+        }
+
+        if($log_name == "Deleted"){
+            $description = ucfirst($type)." ".$properties['old']['name']." dihapus.";
+        }
+
+        $log = new ActivityLogProjectTask();
+        $log->project_id = $project_id;
+        $log->task_id = $task_id;
+        $log->causer_id = $causer_id;
+        $log->log_name = $log_name;
+        $log->properties = $properties;
+        $log->notes = $notes;
+        $log->description = $description;
+        $log->created_at = date("Y-m-d H:i:s");
+        $log->save();
+    }
+
 
     
 }

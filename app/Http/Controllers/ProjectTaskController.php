@@ -37,6 +37,14 @@ class ProjectTaskController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getProjectsList(Request $request)
+    {
+        $route_name = "PROJECTS_LIST_GET";
+
+        $response = $this->projectTaskService->getProjectsList($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function updateProject(Request $request)
     {
         $route_name = "PROJECT_UPDATE";
@@ -99,7 +107,7 @@ class ProjectTaskController extends Controller
     //STATUS SECTION
     public function addProjectStatus(Request $request)
     {
-        $route_name = "PROJECT_TASK_ADD";
+        $route_name = "PROJECT_STATUS_ADD";
 
         $response = $this->projectTaskService->addProjectStatus($request, $route_name);
         return response()->json($response, $response['status']);
@@ -107,7 +115,7 @@ class ProjectTaskController extends Controller
 
     public function getProjectStatus(Request $request)
     {
-        $route_name = "PROJECT_TASK_GET";
+        $route_name = "PROJECT_STATUS_GET";
 
         $response = $this->projectTaskService->getProjectStatus($request, $route_name);
         return response()->json($response, $response['status']);
@@ -115,7 +123,7 @@ class ProjectTaskController extends Controller
 
     public function getProjectStatuses(Request $request)
     {
-        $route_name = "PROJECT_TASKS_GET";
+        $route_name = "PROJECT_STATUSES_GET";
 
         $response = $this->projectTaskService->getProjectStatuses($request, $route_name);
         return response()->json($response, $response['status']);
@@ -123,7 +131,7 @@ class ProjectTaskController extends Controller
 
     public function updateProjectStatus(Request $request)
     {
-        $route_name = "PROJECT_TASK_UPDATE";
+        $route_name = "PROJECT_STATUS_UPDATE";
 
         $response = $this->projectTaskService->updateProjectStatus($request, $route_name);
         return response()->json($response, $response['status']);
@@ -131,7 +139,7 @@ class ProjectTaskController extends Controller
 
     public function deleteProjectStatus(Request $request)
     {
-        $route_name = "PROJECT_TASK_DELETE";
+        $route_name = "PROJECT_STATUS_DELETE";
 
         $response = $this->projectTaskService->deleteProjectStatus($request, $route_name);
         return response()->json($response, $response['status']);

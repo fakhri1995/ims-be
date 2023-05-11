@@ -51,6 +51,25 @@ class GroupService{
         }
     }
 
+    public function getFilterGroupsWithUsers($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        try{
+            $name = $request->get('name', null);
+            $type = $request->get('type', null);
+            $groups = Group::with("users")->select('id', 'name');
+            if($type == 1) $groups = $groups->where('is_agent', true);
+            else if($type == 2) $groups = $groups->where('is_agent', false);
+            if($name) $groups = $groups->where('groups.name', 'like', "%".$name."%");
+            $data = $groups->limit(50)->get();
+            
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     // Client Groups
     public function getGroups($is_agent)
     {
