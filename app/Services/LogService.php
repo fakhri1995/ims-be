@@ -6,16 +6,13 @@ use App\Group;
 use App\Ticket;
 use App\Vendor;
 use App\Company;
-use App\Incident;
 use App\Inventory;
 use App\Manufacturer;
 use App\Relationship;
-use App\TicketStatus;
 use App\ModelInventory;
 use App\ActivityLogTicket;
 use App\ActivityLogCompany;
 use App\ActivityLogInventory;
-use App\ModelInventoryColumn;
 use App\StatusUsageInventory;
 use App\Services\GlobalService;
 use App\ActivityLogPurchaseOrder;
@@ -25,10 +22,13 @@ use App\ActivityLogInventoryRelationship;
 use App\ActivityLogProjectTask;
 use App\ActivityLogRecruitment;
 use App\ActivityLogTask;
+use App\Project;
 use App\ProjectStatus;
 use App\RecruitmentStage;
 use App\RecruitmentStatus;
+use App\Task;
 use Exception;
+use Illuminate\Support\Facades\Validator;
 
 class LogService
 {
@@ -974,52 +974,65 @@ class LogService
         }
     }
 
+    public function addProjectLogFuntion($project_id, $task_id, $causer_id, $log_name, $properties, $notes, $description){
+        try{
+            $log_name_option = [
+                "Created", "Updated", "Deleted", "Notes"
+            ];
+    
+            $log_type_option = [
+                "created_project", "updated_project", "deleted_project",
+                "created_task", "updated_task", "deleted_task",
+            ];
+    
+            if(!in_array($log_name, $log_name_option)) throw new Exception('log_name invalid');
+            if($log_name != "Notes" && !in_array($properties['log_type'], $log_type_option)) throw new Exception('log_type invalid');
+            if($project_id == NULL && $task_id == NULL) throw new Exception('project_id and task_id can\'n be null at the same time');
+            
+            $log = new ActivityLogProjectTask();
+            $log->project_id = $project_id;
+            $log->task_id = $task_id;
+            $log->causer_id = $causer_id;
+            $log->log_name = $log_name;
+            $log->properties = $properties;
+            $log->notes = $notes;
+            $log->description = $description;
+            $log->created_at = date("Y-m-d H:i:s");
+            $log->save();
+
+            return true;
+        }catch(Exception $e){
+            return false;
+        }
+       
+    }
 
     public function addLogProjectTask($project_id = NULL, $task_id = NULL, $causer_id, $log_name, $properties, $notes = null)
     {   
         $type = $task_id == NULL ? "project" : "task";
-
-        $log_name_option = [
-            "Created", "Updated", "Deleted"
-        ];
-
-        $log_type_option = [
-            "created_project", "updated_project", "deleted_project",
-            "created_task", "updated_task", "deleted_task",
-        ];
-
-        //project and task column var just for column without relation
-        // ["status_id", "project_staffs", "proposed_bys"]; with relation
-        $project_column = [
-            ["column" => "name", "string" => "nama"], 
-            ["column" => "start_date", "string" => "waktu mulai"], 
-            ["column" => "end_date", "string" => "waktu estimasi berakhir"], 
-            ["column" => "description", "string" => "deskripsi"]
-        ]; 
-
-        // ["status_id", "task_staffs", "project_id"]; with relation
-        $task_column = [
-            ["column" => "name", "string" => "nama"], 
-            ["column" => "start_date", "string" => "waktu mulai"], 
-            ["column" => "end_date", "string" => "waktu estimasi berakhir"], 
-            ["column" => "description", "string" => "deskripsi"]
-        ]; 
-
-        $statuses = ProjectStatus::get();
-        $statusList = [];
-        foreach($statuses as $s){
-            $statusList[$s->id] = $s->name;
-        }
-        
-        if(!in_array($log_name, $log_name_option)) throw new Exception('log_name invalid');
-        if(!in_array($properties['log_type'], $log_type_option)) throw new Exception('log_type invalid');
-        if($project_id == NULL && $task_id == NULL) throw new Exception('project_id and task_id can\'n be null at the same time');
         $description = "";
+
+        
         if($log_name == "Created"){
             $description = ucfirst($type)." ".$properties['new']['name']." dibuat.";
         }
+        else if($log_name == "Updated"){
+            //project and task column var just for column without relation
+            // ["status_id", "project_staffs", "proposed_bys"]; with relation
+            $project_column = [
+                ["column" => "name", "string" => "nama"], 
+                ["column" => "start_date", "string" => "waktu mulai"], 
+                ["column" => "end_date", "string" => "waktu estimasi berakhir"], 
+                ["column" => "description", "string" => "deskripsi"]
+            ]; 
 
-        if($log_name == "Updated"){
+            // ["status_id", "task_staffs", "project_id"]; with relation
+            $task_column = [
+                ["column" => "name", "string" => "nama"], 
+                ["column" => "start_date", "string" => "waktu mulai"], 
+                ["column" => "end_date", "string" => "waktu estimasi berakhir"], 
+                ["column" => "description", "string" => "deskripsi"]
+            ]; 
             $column = $type == "project" ? $project_column : $task_column;
 
             $description = "Terjadi perubahan pada $type ".$properties['old']['name'].". ";
@@ -1110,24 +1123,69 @@ class LogService
                 if($task_staffs_added_name) $description .= $task_staffs_added_name."ditambah ke task staff. ";
             }
 
-        }
-
-        if($log_name == "Deleted"){
+        }else if($log_name == "Deleted"){
             $description = ucfirst($type)." ".$properties['old']['name']." dihapus.";
         }
 
-        $log = new ActivityLogProjectTask();
-        $log->project_id = $project_id;
-        $log->task_id = $task_id;
-        $log->causer_id = $causer_id;
-        $log->log_name = $log_name;
-        $log->properties = $properties;
-        $log->notes = $notes;
-        $log->description = $description;
-        $log->created_at = date("Y-m-d H:i:s");
-        $log->save();
+        $this->addProjectLogFuntion($project_id, $task_id, $causer_id, $log_name, $properties, $notes, $description);
     }
 
+    public function getProjectLogs($request, $route_name){
+        $globalService = new GlobalService;
+        $access = $globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
 
+        $validator = Validator::make($request->all(), [
+            "project_id" => "required|numeric",
+            "rows" => "numeric",
+            "page" => "numeric" 
+        ]);
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $project_id = $request->project_id;
+        $keyword = $request->keyword ??  NULL;
+        $rows = $request->rows ?? NULL;
+        $projectLog = ActivityLogProjectTask::where("project_id", $project_id)
+            ->where("log_name", "!=", "Notes")
+            ->where("description", "LIKE", "%$keyword%")
+            ->orderBy("id","desc");
+        $projectLog = $projectLog->paginate($rows);
+
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projectLog, "status" => 200];
+    }
+
+    public function getProjectLogNotes($request, $route_name){
+        $globalService = new GlobalService;
+        $access = $globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "project_id" => "required|numeric",
+            "rows" => "numeric",
+            "page" => "numeric" 
+        ]);
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $project_id = $request->project_id;
+        $keyword = $request->keyword ??  NULL;
+        $rows = $request->rows ?? NULL;
+        $projectLog = ActivityLogProjectTask::where("project_id", $project_id)
+            ->where("log_name", "Notes")
+            ->where("notes", "LIKE", "%$keyword%")
+            ->orderBy("id","desc");
+        $projectLog = $projectLog->paginate($rows);
+
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projectLog, "status" => 200];
+    }
+
+    
     
 }

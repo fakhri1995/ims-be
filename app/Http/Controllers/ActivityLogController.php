@@ -65,4 +65,19 @@ class ActivityLogController extends Controller
         $response = $this->logService->getRecruitmentLog($id, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    // Project
+    public function getProjectLogs(Request $request){
+        $route_name = "PROJECT_LOGS_GET";   
+        
+        $response = $this->logService->getProjectLogs($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getProjectLogNotes(Request $request){
+        $route_name = "PROJECT_LOG_NOTES_GET";   
+        
+        $response = $this->logService->getProjectLogNotes($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }

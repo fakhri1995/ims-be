@@ -611,6 +611,10 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addProjectStatus', 'ProjectTaskController@addProjectStatus');
     $router->put('/updateProjectStatus', 'ProjectTaskController@updateProjectStatus');
     $router->delete('/deleteProjectStatus', 'ProjectTaskController@deleteProjectStatus');
+    // Project & Task Management - Project Log
+    $router->get('/getProjectLogs', 'ActivityLogController@getProjectLogs');
+    $router->post('/addProjectLogNotes', 'ProjectTaskController@addProjectLogNotes');
+    $router->get('/getProjectLogNotes', 'ActivityLogController@getProjectLogNotes');
 
     $router->get('/getBankLists', "BankListController@getBankLists");
 });
