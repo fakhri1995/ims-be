@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\ActivityLogProjectTask;
 use App\Helpers\MockApiHelper;
 use App\Project;
 use App\ProjectStatus;
@@ -414,7 +415,7 @@ class ProjectTaskService{
         }
 
         $id = $request->id;
-        $projectTask = ProjectTask::with("project")->find($id);
+        $projectTask = ProjectTask::with("project","task_staffs")->find($id);
         if(!$projectTask) return ["success" => false, "message" => "Data tidak ditemukan", "status" => "400"];
 
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projectTask, "status" => 200];
@@ -707,6 +708,46 @@ class ProjectTaskService{
 
         return ["success" => true, "message" => "Data Berhasil Dihapus", "status" => 200];
     }
+
+    public function addProjectLogNotes($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "project_id" => "numeric|nullable|required_without:task_id",
+            "task_id" => "numeric|nullable",
+            "notes" => "required",
+        ]);
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $project_id = $request->project_id ?? NULL;
+        $task_id = $request->task_id ?? NULL;
+        $notes = $request->notes ?? NULL;
+
+        $description = "Menambahkan sebuah catatan pada ";
+
+        if(!$task_id) {
+            $project = Project::find($project_id);
+            if(!$project) return ["success" => false, "message" => "Project tidak ditemukan.", "status" => 400];
+            $description .= "proyek $project->name.";
+        }
+        else{
+            $task = ProjectTask::find($task_id);
+            if(!$task) return ["success" => false, "message" => "Task tidak ditemukan.", "status" => 400];
+            $description .= "task $task->name.";
+        }
+
+        if($this->logService->addProjectLogFuntion($project_id, $task_id, auth()->user()->id , "Notes", NULL, $notes, $description)){
+            return ["success" => true, "message" => "Notes berhasil ditambahkan.", "status" => 200]; 
+        };
+        return ["success" => false, "message" => "Gagal menambahkan notes.", "status" => 400];
+        
+    }
+    
 
 
 }

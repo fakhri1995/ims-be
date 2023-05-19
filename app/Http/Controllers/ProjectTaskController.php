@@ -145,4 +145,12 @@ class ProjectTaskController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    // Project
+    public function addProjectLogNotes(Request $request){
+        $route_name = "PROJECT_LOG_NOTES_ADD";   
+        
+        $response = $this->projectTaskService->addProjectLogNotes($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
 }

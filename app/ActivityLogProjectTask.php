@@ -9,7 +9,7 @@ class ActivityLogProjectTask extends Model
     public $timestamps = false;
     protected $table = "activity_log_projects_tasks";
     protected $casts = ['properties' => 'object'];
-    protected $with = ['causer','causer.imageProfile'];
+    protected $with = ['causer','causer.profileImage'];
 
     public function causer()
     {
