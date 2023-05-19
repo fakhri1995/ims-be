@@ -58,7 +58,7 @@ class GroupService{
         try{
             $name = $request->get('name', null);
             $type = $request->get('type', null);
-            $groups = Group::with("users")->select('id', 'name');
+            $groups = Group::with("users","users.profileImage")->select('id', 'name');
             if($type == 1) $groups = $groups->where('is_agent', true);
             else if($type == 2) $groups = $groups->where('is_agent', false);
             if($name) $groups = $groups->where('groups.name', 'like', "%".$name."%");
