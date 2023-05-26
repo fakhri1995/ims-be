@@ -138,7 +138,9 @@ class ProjectTaskService{
         if($user_id) $projects = $projects->whereHas("project_staffs", function($q) use ($user_id){
             $q->where("id", $user_id);
         });
-        if($keyword) $projects = $projects->where("name","LIKE","%$keyword%");
+        if($keyword) $projects = $projects->where("name","LIKE","%$keyword%")->orWhereHas("proposed_bys", function($q) use ($keyword){
+            $q->where("name","LIKE","%$keyword%");
+        });
         if($status_ids) $projects = $projects->whereIn("status_id", $status_ids);
         if($from) $projects = $projects->where(function ($q) use ($from){
             $q->where("start_date", ">=", $from)
@@ -152,7 +154,7 @@ class ProjectTaskService{
 
         //sorting
         if(in_array($sort_by, ["name","start_date","end_date"])) $projects = $projects->orderBy($sort_by,$sort_type);
-        if($sort_by == "status") $projects = $projects->orderBy(ProjectStatus::select("name")
+        if($sort_by == "status") $projects = $projects->orderBy(ProjectStatus::select("display_order")
         ->whereColumn("project_statuses.id","projects.status_id"),$sort_type);
 
         $projects = $projects->paginate($rows);
@@ -541,7 +543,7 @@ class ProjectTaskService{
 
         //sorting
         if($sort_by == "deadline") $projectTasks = $projectTasks->orderBy("end_date",$sort_type);
-        if($sort_by == "status") $projectTasks = $projectTasks->orderBy(ProjectStatus::select("name")
+        if($sort_by == "status") $projectTasks = $projectTasks->orderBy(ProjectStatus::select("display_order")
         ->whereColumn("project_statuses.id","project_tasks.status_id"),$sort_type);
 
         $projectTasks = $projectTasks->paginate($rows);
