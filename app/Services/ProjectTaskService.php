@@ -955,7 +955,7 @@ class ProjectTaskService{
             $description .= "task $task->name.";
         }
 
-        if($this->logService->addProjectLogFuntion($project_id, $task_id, auth()->user()->id , "Notes", NULL, $notes, $description)){
+        if($this->logService->addProjectLogFunction($project_id, $task_id, auth()->user()->id , "Notes", NULL, $notes, $description)){
             return ["success" => true, "message" => "Notes berhasil ditambahkan.", "status" => 200]; 
         };
         return ["success" => false, "message" => "Gagal menambahkan notes.", "status" => 400];
@@ -975,7 +975,7 @@ class ProjectTaskService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        $logId = $request->logId;
+        $logId = $request->id;
         
         return $this->logService->deleteProjectLogNotes($logId);
         

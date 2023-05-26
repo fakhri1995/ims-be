@@ -1186,11 +1186,10 @@ class LogService
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projectLog, "status" => 200];
     }
 
-    public function deleteProjectLogNotes($id){
+    public function deleteProjectLogNotes(int $id){
        
-        $projectLog = ActivityLogProjectTask::find($id);
-
-        if(!$projectLog) ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
+        $projectLog = ActivityLogProjectTask::where("log_name","Notes")->find($id);
+        if(!$projectLog) return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
         $projectLog->delete();
         return ["success" => true, "message" => "Data berhasil dihapus", "status" => 200]; 
     }

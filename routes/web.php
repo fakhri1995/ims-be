@@ -621,7 +621,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getProjectLogs', 'ActivityLogController@getProjectLogs');
     $router->post('/addProjectLogNotes', 'ProjectTaskController@addProjectLogNotes');
     $router->get('/getProjectLogNotes', 'ActivityLogController@getProjectLogNotes');
-    $router->get('/deleteProjectLogNotes', 'ActivityLogController@deleteProjectLogNotes');
+    $router->delete('/deleteProjectLogNotes', 'ProjectTaskController@deleteProjectLogNotes');
 
     $router->get('/getBankLists', "BankListController@getBankLists");
 });
