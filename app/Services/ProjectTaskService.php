@@ -15,111 +15,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class ProjectTaskService{
-    // public $projectJson = [
-    //     "id" => 1,
-    //     "name" => "Fikri Ilmi",
-    //     "proposed_bys" => [
-    //         [
-    //             [
-    //                 "id" => 1,
-    //                 "name" => "Lesti",
-    //                 "profile_image" => [
-    //                     "id" => 0,
-    //                     "link" => "staging\/Users\/default_user.png",
-    //                     "description" => "profile_image"
-    //                 ]
-    //             ]
-    //         ],
-    //     ],
-    //     "start_date" => "2022-01-01",
-    //     "end_date" => "2022-02-02",
-    //     "description" => "",
-    //     "project_staffs" => [
-    //         [
-    //             "id" => 1,
-    //             "name" => "Yasmin",
-    //             "profile_image" => [
-    //                 "id" => 0,
-    //                 "link" => "staging\/Users\/default_user.png",
-    //                 "description" => "profile_image"
-    //             ]
-    //         ]
-    //     ],
-    //     "status_id" => 1,
-    //     "created_by" => 1,
-    //     "created_at" => "2022-01-01 11:50:20",
-    //     "updated_at" => "2022-01-01 11:50:20",
-    //     "deleted_at" => NULL,
-    // ];
-
-    // public $taskJson1 = [
-    //     "id" => 1,
-    //     "project_id" => NULL,
-    //     "project" => NULL,
-    //     "name" => "Nama Task",
-    //     "start_date" => "2022-01-01",
-    //     "end_date" => "2022-01-02",
-    //     "task_staffs" => [
-    //         [
-    //             "id" => 1,
-    //             "name" => "Yasmin",
-    //             "profile_image" => [
-    //                 "id" => 0,
-    //                 "link" => "staging\/Users\/default_user.png",
-    //                 "description" => "profile_image"
-    //             ]
-    //         ]
-    //     ],
-    //     "description" => "text",
-    //     "status_id" => 1,
-    //     "created_by" => 1,
-    //     "created_at" => "2022-01-01 11:50:20",
-    //     "updated_at" => "2022-01-01 11:50:20",
-    //     "deleted_at" => NULL,
-    // ];
-
-    // public $taskJson2 = [
-    //     "id" => 2,
-    //     "project_id" => 1,
-    //     "name" => "Nama Task",
-    //     "start_date" => "2022-01-01",
-    //     "end_date" => "2022-01-02",
-    //     "task_staffs" => [
-    //         [
-    //             "id" => 1,
-    //             "name" => "Yasmin",
-    //             "profile_image" => [
-    //                 "id" => 0,
-    //                 "link" => "staging\/Users\/default_user.png",
-    //                 "description" => "profile_image"
-    //             ]
-    //         ]
-    //     ],
-    //     "description" => "description",
-    //     "status_id" => 1,
-    //     "created_by" => 1,
-    //     "created_at" => "2022-01-01 11:50:20",
-    //     "updated_at" => "2022-01-01 11:50:20",
-    //     "deleted_at" => NULL,
-    // ];
-
-    // public $statusJson = [
-    //     "id" => 1,
-    //     "name" => "On-Going",
-    //     "color" => "#ABC123",
-    //     "display_order" => 1
-    // ];
-
     
-
     public function __construct()
     {
         $this->globalService = new GlobalService;
         $this->logService = new LogService;
-        // $this->taskJson2['project'] = $this->projectJson;
-        // $this->projectJson['status'] = $this->statusJson;
-        // $this->taskJson1['status'] = $this->statusJson;
-        // $this->taskJson2['status'] = $this->statusJson;
     }
 
 
@@ -151,7 +51,6 @@ class ProjectTaskService{
         $currect_time = date("Y-m-d H:i:s");
         $project->created_at = $currect_time;
         $project->updated_at = $currect_time;
-        
         
         
         $project_staffs = $request->project_staffs;
@@ -203,9 +102,60 @@ class ProjectTaskService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
+        $rules = [
+            "user_id" => "numeric",
+            "page" => "numeric",
+            "rows" => "numeric|max:50",
+            "sort_by" => "in:name,start_date,end_date,status",
+            "sort_type" => "in:asc,desc"
+        ];
+
+        if($request->to && $request->from){
+            $rules["from"] = "date|before:to";
+            $rules["to"] = "date|after:from";
+        }
+
+        $validator = Validator::make($request->all(), $rules);
+
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        
+
         $projects = Project::with(["proposed_bys","status"]);
-            
-        $projects = $projects->paginate();
+        
+        $rows = $request->rows ?? 5;
+        $user_id = $request->user_id;
+        $keyword = $request->keyword;
+        $from = $request->from ?? NULL;
+        $to = $request->to ?? NULL;
+        $sort_by = $request->sort_by ?? NULL;
+        $sort_type = $request->sort_type ?? 'asc';
+        $status_ids = $request->status_ids ? explode(",",$request->status_ids) : NULL;
+
+        if($user_id) $projects = $projects->whereHas("project_staffs", function($q) use ($user_id){
+            $q->where("id", $user_id);
+        });
+        if($keyword) $projects = $projects->where("name","LIKE","%$keyword%");
+        if($status_ids) $projects = $projects->whereIn("status_id", $status_ids);
+        if($from) $projects = $projects->where(function ($q) use ($from){
+            $q->where("start_date", ">=", $from)
+            ->orWhere("end_date", ">=", $from);
+        });
+        if($to) $projects = $projects->where(function ($q) use ($to){
+            $q->where("start_date", "<=", $to)
+            ->orWhere("end_date", "<=", $to);
+        });
+
+
+        //sorting
+        if(in_array($sort_by, ["name","start_date","end_date"])) $projects = $projects->orderBy($sort_by,$sort_type);
+        if($sort_by == "status") $projects = $projects->orderBy(ProjectStatus::select("name")
+        ->whereColumn("project_statuses.id","projects.status_id"),$sort_type);
+
+        $projects = $projects->paginate($rows);
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projects, "status" => 200];
     }
     
@@ -332,6 +282,131 @@ class ProjectTaskService{
         return ["success" => true, "message" => "Data Berhasil Dihapus", "status" => 200];
     }
 
+    public function updateProject_status(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        $validator = Validator::make($request->all(), [
+            "id" => "numeric|required",
+            "status_id" => "numeric",
+        ]);
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $id = $request->id;
+        $project = Project::find($id);
+        if(!$project) return ["success" => false, "message" => "Data project tidak ditemukan", "status" => 400];
+
+        $status_id = $request->status_id;
+        $projectStatus = ProjectStatus::find($status_id);
+        if(!$projectStatus) return ["success" => false, "message" => "Project status tidak ditemukan", "status" => 400];
+
+        //oldLog
+        $logDataOld = clone $project;
+        $logDataOld->project_staffs = $logDataOld->project_staffs()->pluck("id")->toArray();
+        $logDataOld->proposed_bys = $logDataOld->proposed_bys()->pluck("id")->toArray();
+        
+
+        $project->status_id = $request->status_id;
+        $currect_time = date("Y-m-d H:i:s");
+        $project->updated_at = $currect_time;
+        $project->save();
+
+        $logDataNew = clone $logDataOld;
+        $logDataNew->status_id = $request->status_id;
+
+        $logProperties = [
+            "log_type" => "updated_project",
+            "old" => $logDataOld,
+            "new" => $logDataNew
+        ];
+
+        unset($logDataNew->updated_at);
+        unset($logDataOld->updated_at);
+
+
+        //if the data is not same, then the write the log
+        if(json_encode($logDataOld) != json_encode($logDataNew)){
+            $this->logService->addLogProjectTask($project->id, NULL, auth()->user()->id, "Updated", $logProperties, null);
+        }
+
+        return ["success" => true, "message" => "Data Berhasil Diubah", "status" => 200];
+
+    }
+
+    public function getProjectsCount(Request $request, $route_name)
+    {
+
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $projectsStatus = ProjectStatus::withCount('projects')->get();
+
+        $total = 0;
+
+        foreach($projectsStatus as $p){
+            $total += $p->projects_count;
+        }
+
+        $data = [
+            "status" => $projectsStatus,
+            "total" => $total
+        ];
+        
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
+    }
+
+    public function getProjectsDeadline(Request $request, $route_name)
+    {   
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        $validator = Validator::make($request->all(), [
+            "year" => "numeric"
+        ]);
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        
+        $year = $request->year ?? date('Y');
+        $yearMonth = date('Y-m');
+        $yearMonthPast3Month = date('Y-m', strtotime('-3 month'));
+        $yearMonthNext3Month = date('Y-m', strtotime('+3 month'));
+        $yearPast3Month = explode('-', $yearMonthPast3Month)[0];
+        $monthPast3Month = explode('-', $yearMonthPast3Month)[1];
+        $yearNext3Month = explode('-', $yearMonthNext3Month)[0];
+        $monthNext3Month = explode('-', $yearMonthNext3Month)[1];
+
+        $projects = Project::select(DB::raw("count(*) as total, CAST(DATE_FORMAT(end_date, '%m') as int) as month, CAST(DATE_FORMAT(end_date, '%Y') as int) as year"))
+        ->whereYear('end_date' , '=', $yearPast3Month)
+        ->whereYear('end_date' , '=', $yearNext3Month, 'or')
+        ->whereMonth('end_date' , '=', $monthPast3Month)
+        ->whereMonth('end_date' , '=', $monthNext3Month, 'or')
+        ->groupBy(DB::raw("DATE_FORMAT(end_date, '%m')"))
+        ->get();
+
+        $data = [];
+        for($i = 1; $i <= 12; $i++){
+            $data[] = [
+                "total" => 0,
+                "month" => $i,
+                "year" => $year,
+                "month_string" => $this->globalService->getIndonesiaMonth($i),
+            ];
+        }
+
+        foreach($projects as $p){
+            $data[$p->month-1] = $p;
+            $data[$p->month-1]["month_string"] = $this->globalService->getIndonesiaMonth($p->month);
+        }
+
+        
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
+    }
+
     //TASK SECTION
     public function addProjectTask(Request $request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
@@ -425,12 +500,54 @@ class ProjectTaskService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
-        $projectTasks = new ProjectTask();
-        $projectTasks = $projectTasks->paginate();
+        $rules = [
+            "user_id" => "numeric",
+            "project_id" => "numeric",
+            "page" => "numeric",
+            "rows" => "numeric|max:50",
+            "sort_by" => "in:deadline",
+            "sort_type" => "in:asc,desc"
+        ];
+
+        if($request->to && $request->from){
+            $rules["from"] = "date|before:to";
+            $rules["to"] = "date|after:from";
+        }
+
+        $validator = Validator::make($request->all(), $rules);
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $projectTasks = ProjectTask::with('task_staffs');
+
+        $rows = $request->rows ?? 5;
+        $user_id = $request->user_id;
+        $project_id = $request->project_id;
+        $keyword = $request->keyword;
+        $sort_by = $request->sort_by ?? NULL;
+        $sort_type = $request->sort_type ?? 'asc';
+        $status_ids = $request->status_ids ? explode(",",$request->status_ids) : NULL;
+
+        if($project_id) $projectTasks = $projectTasks->where("project_id", $project_id);
+        if($user_id) $projectTasks = $projectTasks->whereHas("task_staffs", function($q) use ($user_id){
+            $q->where("id", $user_id);
+        });
+        if($keyword) $projectTasks = $projectTasks->where("name","LIKE","%$keyword%");
+        if($status_ids) $projectTasks = $projectTasks->whereIn("status_id", $status_ids);
+       
+
+
+        //sorting
+        if($sort_by == "deadline") $projectTasks = $projectTasks->orderBy("end_date",$sort_type);
+        if($sort_by == "status") $projectTasks = $projectTasks->orderBy(ProjectStatus::select("name")
+        ->whereColumn("project_statuses.id","project_tasks.status_id"),$sort_type);
+
+        $projectTasks = $projectTasks->paginate($rows);
         
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projectTasks, "status" => 200];
     }
-
 
 
     public function updateProjectTask(Request $request, $route_name){
@@ -553,6 +670,101 @@ class ProjectTaskService{
         $this->logService->addLogProjectTask($projectTask->project_id, $id, auth()->user()->id, "Deleted", $logProperties, null);
 
         return ["success" => true, "message" => "Data Berhasil Dihapus", "status" => 200];
+    }
+
+    public function updateProjectTask_status(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        $validator = Validator::make($request->all(), [
+            "id" => "numeric|required",
+            "status_id" => "numeric",
+        ]);
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $id = $request->id;
+        $projectTask = ProjectTask::find($id);
+        if(!$projectTask) return ["success" => false, "message" => "Data tidak ditemukan", "status" => "400"];
+        $project_id = $projectTask->project_id;
+
+        $status_id = $request->status_id;
+        $projectStatus = ProjectStatus::find($status_id);
+        if(!$projectStatus) return ["success" => false, "message" => "Project  status tidak ditemukan", "status" => 400];
+        
+        //oldLog
+        $logDataOld = clone $projectTask;
+        $logDataOld->task_staffs = $logDataOld->task_staffs()->pluck("id")->toArray();
+
+        $currect_time = date("Y-m-d H:i:s");
+        $projectTask->updated_at = $currect_time;
+        $projectTask->status_id = $request->status_id;
+
+        $projectTask->save();
+
+        $logDataNew = clone $logDataOld;
+        $logDataNew->status_id = $request->status_id;
+
+        $logProperties = [
+            "log_type" => "updated_project",
+            "old" => $logDataOld,
+            "new" => $logDataNew
+        ];
+
+        unset($logDataNew->updated_at);
+        unset($logDataOld->updated_at);
+
+
+        //if the data is not same, then the write the log
+        if(json_encode($logDataOld) != json_encode($logDataNew)){
+            $this->logService->addLogProjectTask($project_id, $id, auth()->user()->id, "Updated", $logProperties, null);
+        }
+
+        return ["success" => true, "message" => "Data Berhasil Diubah", "status" => 200];
+
+    }
+
+    public function getProjectTasksCount(Request $request, $route_name)
+    {
+
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "project_id" => "numeric",
+        ]);
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $project_id = $request->project_id ?? NULL;
+
+        $projectTasksStatus = new ProjectStatus;
+        $projectTasksStatus = $projectTasksStatus->withCount(['project_tasks' => function ($q) use ($project_id){
+            if($project_id) $q->where("project_id", $project_id);
+            return $q;
+        }])->get();
+
+        $projectTasksStatusArray = [];
+        
+        $total = 0;
+
+        foreach($projectTasksStatus as $p){
+            $projectTasksStatusArray[] = $p;
+            $total += $p->project_tasks_count;
+        }
+
+
+        $data = [
+            "status" => $projectTasksStatusArray,
+            "total" => $total
+        ];
+        
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
     }
 
     // PROJECT STATUS
@@ -709,6 +921,8 @@ class ProjectTaskService{
         return ["success" => true, "message" => "Data Berhasil Dihapus", "status" => 200];
     }
 
+
+    //NOTES
     public function addProjectLogNotes($request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
@@ -741,13 +955,30 @@ class ProjectTaskService{
             $description .= "task $task->name.";
         }
 
-        if($this->logService->addProjectLogFuntion($project_id, $task_id, auth()->user()->id , "Notes", NULL, $notes, $description)){
+        if($this->logService->addProjectLogFunction($project_id, $task_id, auth()->user()->id , "Notes", NULL, $notes, $description)){
             return ["success" => true, "message" => "Notes berhasil ditambahkan.", "status" => 200]; 
         };
         return ["success" => false, "message" => "Gagal menambahkan notes.", "status" => 400];
         
     }
-    
 
+    public function deleteProjectLogNotes($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "id" => "required|numeric"
+        ]);
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $logId = $request->id;
+        
+        return $this->logService->deleteProjectLogNotes($logId);
+        
+    }
 
 }

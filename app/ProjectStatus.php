@@ -11,10 +11,10 @@ class ProjectStatus extends Model
     public $timestamps = false;
 
     public function projects(){
-        return $this->hasMany(Project::class);
+        return $this->hasMany(Project::class, 'status_id');
     }
 
     public function project_tasks(){
-        return $this->hasMany(ProjectTask::class);
+        return $this->hasMany(ProjectTask::class, 'status_id');
     }
 }
