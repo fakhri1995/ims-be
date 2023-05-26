@@ -201,4 +201,11 @@ class ProjectTaskController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function deleteProjectLogNotes(Request $request){
+        $route_name = "PROJECT_LOG_NOTES_DELETE";   
+        
+        $response = $this->projectTaskService->deleteProjectLogNotes($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
 }

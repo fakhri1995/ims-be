@@ -921,6 +921,8 @@ class ProjectTaskService{
         return ["success" => true, "message" => "Data Berhasil Dihapus", "status" => 200];
     }
 
+
+    //NOTES
     public function addProjectLogNotes($request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
