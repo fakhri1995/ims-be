@@ -507,7 +507,7 @@ class ProjectTaskService{
             "project_id" => "numeric",
             "page" => "numeric",
             "rows" => "numeric|max:50",
-            "sort_by" => "in:deadline",
+            "sort_by" => "in:deadline,status",
             "sort_type" => "in:asc,desc"
         ];
 
