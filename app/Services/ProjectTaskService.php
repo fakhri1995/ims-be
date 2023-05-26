@@ -520,7 +520,7 @@ class ProjectTaskService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        $projectTasks = new ProjectTask();
+        $projectTasks = ProjectTask::with('task_staffs');
 
         $rows = $request->rows ?? 5;
         $user_id = $request->user_id;
