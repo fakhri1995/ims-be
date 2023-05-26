@@ -16,7 +16,7 @@ class CreateActivityLogProjectsTasksTable extends Migration
         Schema::create('activity_log_projects_tasks', function (Blueprint $table) {
             $table->id();
             $table->string("log_name");
-            $table->string("notes")->nullable();
+            $table->text("notes")->nullable();
             $table->unsignedBigInteger("project_id")->nullable();
             $table->unsignedBigInteger("task_id")->nullable();
             $table->unsignedBigInteger("causer_id");

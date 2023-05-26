@@ -974,7 +974,7 @@ class LogService
         }
     }
 
-    public function addProjectLogFuntion($project_id, $task_id, $causer_id, $log_name, $properties, $notes, $description){
+    public function addProjectLogFunction($project_id, $task_id, $causer_id, $log_name, $properties, $notes, $description){
         try{
             $log_name_option = [
                 "Created", "Updated", "Deleted", "Notes"
@@ -1127,7 +1127,7 @@ class LogService
             $description = ucfirst($type)." ".$properties['old']['name']." dihapus.";
         }
 
-        $this->addProjectLogFuntion($project_id, $task_id, $causer_id, $log_name, $properties, $notes, $description);
+        $this->addProjectLogFunction($project_id, $task_id, $causer_id, $log_name, $properties, $notes, $description);
     }
 
     public function getProjectLogs($request, $route_name){
@@ -1184,6 +1184,15 @@ class LogService
         $projectLog = $projectLog->paginate($rows);
 
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projectLog, "status" => 200];
+    }
+
+    public function deleteProjectLogNotes($id){
+       
+        $projectLog = ActivityLogProjectTask::find($id);
+
+        if(!$projectLog) ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
+        $projectLog->delete();
+        return ["success" => true, "message" => "Data berhasil dihapus", "status" => 200]; 
     }
 
     

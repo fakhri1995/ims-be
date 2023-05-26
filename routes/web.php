@@ -599,12 +599,18 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addProject', 'ProjectTaskController@addProject');
     $router->put('/updateProject', 'ProjectTaskController@updateProject');
     $router->delete('/deleteProject', 'ProjectTaskController@deleteProject');
+    $router->put('updateProject_status', 'ProjectTaskController@updateProject_status');
+    $router->get('/getProjectsCount', 'ProjectTaskController@getProjectsCount');
+    $router->get('/getProjectsDeadline', 'ProjectTaskController@getProjectsDeadline');
     // Project & Task Management - Task
     $router->get('/getProjectTask', 'ProjectTaskController@getProjectTask');
     $router->get('/getProjectTasks', 'ProjectTaskController@getProjectTasks');
     $router->post('/addProjectTask', 'ProjectTaskController@addProjectTask');
     $router->put('/updateProjectTask', 'ProjectTaskController@updateProjectTask');
     $router->delete('/deleteProjectTask', 'ProjectTaskController@deleteProjectTask');
+    $router->put('/updateProjectTask_status', 'ProjectTaskController@updateProjectTask_status');
+    $router->get('/getProjectTasksCount', 'ProjectTaskController@getProjectTasksCount');
+    $router->get('/getProjectTasksDeadline', 'ProjectTaskController@getProjectTasksDeadline');
     // Project & Task Management - Project Status
     $router->get('/getProjectStatus', 'ProjectTaskController@getProjectStatus');
     $router->get('/getProjectStatuses', 'ProjectTaskController@getProjectStatuses');

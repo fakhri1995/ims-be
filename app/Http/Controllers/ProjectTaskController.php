@@ -61,6 +61,30 @@ class ProjectTaskController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function updateProject_status(Request $request)
+    {
+        $route_name = "PROJECT_UPDATE_STATUS";
+
+        $response = $this->projectTaskService->updateProject_status($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getProjectsCount(Request $request)
+    {
+        $route_name = "PROJECT_COUNT_GET";
+
+        $response = $this->projectTaskService->getProjectsCount($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getProjectsDeadline(Request $request)
+    {
+        $route_name = "PROJECT_DEADLINE_GET";
+
+        $response = $this->projectTaskService->getProjectsDeadline($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     
     //TASK SECTION
     public function addProjectTask(Request $request)
@@ -100,6 +124,30 @@ class ProjectTaskController extends Controller
         $route_name = "PROJECT_TASK_DELETE";
 
         $response = $this->projectTaskService->deleteProjectTask($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateProjectTask_status(Request $request)
+    {
+        $route_name = "PROJECT_TASK_UPDATE_STATUS";
+
+        $response = $this->projectTaskService->updateProjectTask_status($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getProjectTasksCount(Request $request)
+    {
+        $route_name = "PROJECT_COUNT_GET";
+
+        $response = $this->projectTaskService->getProjectTasksCount($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getProjectTasksDeadline(Request $request)
+    {
+        $route_name = "PROJECT_DEADLINE_GET";
+
+        $response = $this->projectTaskService->getProjectTasksDeadline($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
