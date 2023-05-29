@@ -1023,7 +1023,7 @@ class LogService
                 ["column" => "name", "string" => "nama"], 
                 ["column" => "start_date", "string" => "waktu mulai"], 
                 ["column" => "end_date", "string" => "waktu estimasi berakhir"], 
-                ["column" => "description", "string" => "deskripsi"]
+                ["column" => "description", "string" => "deskripsi"],
             ]; 
 
             // ["status_id", "task_staffs", "project_id"]; with relation
@@ -1031,14 +1031,16 @@ class LogService
                 ["column" => "name", "string" => "nama"], 
                 ["column" => "start_date", "string" => "waktu mulai"], 
                 ["column" => "end_date", "string" => "waktu estimasi berakhir"], 
-                ["column" => "description", "string" => "deskripsi"]
+                ["column" => "description", "string" => "deskripsi"],
+                ["column" => "ticket_number", "string" => "nomor tiket"]
             ]; 
             $column = $type == "project" ? $project_column : $task_column;
 
             $description = "Terjadi perubahan pada $type ".$properties['old']['name'].". ";
             foreach($column as $c){
                 if($properties['old'][$c['column']] != $properties['new'][$c['column']]){
-                    $description .= ucfirst($c['string'])." $type dari ".$properties['old'][$c['column']]." menjadi ".$properties['new'][$c['column']].". ";
+                    $dari = $properties['old'][$c['column']] ? " dari ".$properties['old'][$c['column']] : "";
+                    $description .= ucfirst($c['string'])." $type"."$dari menjadi ".$properties['new'][$c['column']].". ";
                 }
             }
 

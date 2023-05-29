@@ -611,6 +611,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/updateProjectTask_status', 'ProjectTaskController@updateProjectTask_status');
     $router->get('/getProjectTasksCount', 'ProjectTaskController@getProjectTasksCount');
     $router->get('/getProjectTasksDeadline', 'ProjectTaskController@getProjectTasksDeadline');
+    $router->get('/getProjectTasksAdmin', 'ProjectTaskController@getProjectTasksAdmin');
     // Project & Task Management - Project Status
     $router->get('/getProjectStatus', 'ProjectTaskController@getProjectStatus');
     $router->get('/getProjectStatuses', 'ProjectTaskController@getProjectStatuses');
