@@ -160,7 +160,7 @@ class ProjectTaskService{
         $projects = $projects->paginate($rows);
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projects, "status" => 200];
     }
-    
+
     public function getProjectsList($request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
@@ -462,6 +462,8 @@ class ProjectTaskService{
         }
 
         $projectTask->save();
+        $projectTask->ticket_number = "T-".sprintf("%04d", $projectTask->id);
+        $projectTask->save();
         $projectTask->task_staffs()->attach($task_staffs);
 
         $logDataNew = clone $projectTask;
@@ -522,7 +524,7 @@ class ProjectTaskService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        $projectTasks = ProjectTask::with('task_staffs');
+        $projectTasks = ProjectTask::with('task_staffs','status');
 
         $rows = $request->rows ?? 5;
         $user_id = $request->user_id;
@@ -767,6 +769,68 @@ class ProjectTaskService{
         ];
         
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
+    }
+
+    public function getProjectTasksAdmin($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $rules = [
+            "page" => "numeric",
+            "rows" => "numeric|max:50",
+            "sort_by" => "in:ticket_number,task_name,project_name,start_date,end_date,status",
+            "sort_type" => "in:asc,desc"
+        ];
+
+        if($request->to && $request->from){
+            $rules["from"] = "date|before:to";
+            $rules["to"] = "date|after:from";
+        }
+
+        $validator = Validator::make($request->all(), $rules);
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $projectTasks = ProjectTask::with('task_staffs','project','status');
+
+        $rows = $request->rows ?? 5;
+        $keyword = $request->keyword;
+        $sort_by = $request->sort_by ?? NULL;
+        $sort_type = $request->sort_type ?? 'asc';
+        $status_ids = $request->status_ids ? explode(",",$request->status_ids) : NULL;
+        $from = $request->from ?? NULL;
+        $to = $request->to ?? NULL;
+
+        if($keyword) $projectTasks = $projectTasks
+            ->where("name","LIKE","%$keyword%")
+            ->orWhere("ticket_number","LIKE","%$keyword%")
+            ->orWhereHas("task_staffs", function($q) use ($keyword){
+                $q->where("name","LIKE","%$keyword%");
+            })
+            ->orWhereHas("project", function($q) use ($keyword){
+                $q->where("name","LIKE","%$keyword%");
+            });
+
+        if($status_ids) $projectTasks = $projectTasks->whereIn("status_id", $status_ids);
+        if($from) $projectTasks = $projectTasks->where("end_date", ">=", $from);
+        if($to) $projectTasks = $projectTasks->where("end_date", "<=", $to);
+
+
+        //sorting
+        if($sort_by == "ticket_number") $projectTasks = $projectTasks->orderBy("ticket_number",$sort_type);
+        if($sort_by == "task_name") $projectTasks = $projectTasks->orderBy("name",$sort_type);
+        if($sort_by == "project_name") $projectTasks = $projectTasks->orderBy(Project::select("name")
+        ->whereColumn("projects.id","project_tasks.project_id"),$sort_type);
+        if($sort_by == "start_date") $projectTasks = $projectTasks->orderBy("start_date",$sort_type);
+        if($sort_by == "end_date") $projectTasks = $projectTasks->orderBy("end_date",$sort_type);
+        if($sort_by == "status") $projectTasks = $projectTasks->orderBy(ProjectStatus::select("display_order")
+        ->whereColumn("project_statuses.id","project_tasks.status_id"),$sort_type);
+
+        $projectTasks = $projectTasks->paginate($rows);
+        
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projectTasks, "status" => 200];
     }
 
     // PROJECT STATUS

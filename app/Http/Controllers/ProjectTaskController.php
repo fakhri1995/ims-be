@@ -150,6 +150,14 @@ class ProjectTaskController extends Controller
         $response = $this->projectTaskService->getProjectTasksDeadline($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    
+    public function getProjectTasksAdmin(Request $request)
+    {
+        $route_name = "PROJECT_TASKS_ADMIN_GET";
+
+        $response = $this->projectTaskService->getProjectTasksAdmin($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 
     
     //STATUS SECTION

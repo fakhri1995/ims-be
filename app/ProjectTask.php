@@ -17,7 +17,7 @@ class ProjectTask extends Model
 
     public function status()
     {
-        return $this->hasOne(ProjectStatus::class);
+        return $this->belongsTo(ProjectStatus::class);
     }
 
     public function project(){
