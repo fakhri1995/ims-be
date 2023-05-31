@@ -9,6 +9,7 @@ use App\ProjectStatus;
 use App\ProjectTask;
 use App\Services\GlobalService;
 use App\User;
+use DateTime;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,9 +30,9 @@ class ProjectTaskService{
         if($access["success"] === false) return $access;
 
         $validator = Validator::make($request->all(), [
-            "name" => "required",
-            "start_date" => "date|before:end_date",
-            "end_date" => "date|after:start_date",
+            "name" => "nullable",
+            "start_date" => "date|before:end_date|nullable",
+            "end_date" => "date|after:start_date|nullable",
             "project_staffs" => "array|nullable",
             "project_staffs.*" => "numeric",
             "description" => "string|nullable"
@@ -53,7 +54,7 @@ class ProjectTaskService{
         $project->updated_at = $currect_time;
         
         
-        $project_staffs = $request->project_staffs;
+        $project_staffs = $request->project_staffs ?? [];
         $project_staffs_arr = User::select("id")->whereIn("id",$project_staffs)->pluck("id")->toArray();
         $project_staffs_diff = array_diff($project_staffs,$project_staffs_arr);
         if(count($project_staffs_diff)) return ["success" => false, "message" => "Project Staff Id : [".implode(", ",$project_staffs_diff)."] tidak ditemukan", "status" => 400];
@@ -176,8 +177,8 @@ class ProjectTaskService{
         $validator = Validator::make($request->all(), [
             "id" => "numeric|required",
             "name" => "required",
-            "start_date" => "date|before:end_date",
-            "end_date" => "date|after:start_date",
+            "start_date" => "date|before:end_date|nullable",
+            "end_date" => "date|after:start_date|nullable",
             "project_staffs" => "array",
             "project_staffs.*" => "numeric",
             "proposed_bys" => "array",
@@ -213,12 +214,12 @@ class ProjectTaskService{
         $currect_time = date("Y-m-d H:i:s");
         $project->updated_at = $currect_time;
         
-        $project_staffs = $request->project_staffs;
+        $project_staffs = $request->project_staffs ?? [];
         $project_staffs_arr = User::select("id")->whereIn("id",$project_staffs)->pluck("id")->toArray();
         $project_staffs_diff = array_diff($project_staffs,$project_staffs_arr);
         if(count($project_staffs_diff)) return ["success" => false, "message" => "Project Staff Id : [".implode(", ",$project_staffs_diff)."] tidak ditemukan", "status" => 400];
 
-        $proposed_bys = $request->proposed_bys;
+        $proposed_bys = $request->proposed_bys ?? [];
         $proposed_bys_arr = User::select("id")->whereIn("id",$proposed_bys)->pluck("id")->toArray();
         $proposed_bys_diff = array_diff($proposed_bys,$proposed_bys_arr);
         if(count($proposed_bys_diff)) return ["success" => false, "message" => "Proposed By Id : [".implode(", ",$proposed_bys_diff)."] tidak ditemukan", "status" => 400];
@@ -360,54 +361,45 @@ class ProjectTaskService{
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
     }
 
-    public function getProjectsDeadline(Request $request, $route_name)
-    {   
+    public function getProjectsDeadline(Request $request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
+
         $validator = Validator::make($request->all(), [
-            "year" => "numeric"
+            "from" => "date_format:Y-m",
+            "to" => "date_format:Y-m",
         ]);
-        
+
         if($validator->fails()){
             $errors = $validator->errors()->all();
             return ["success" => false, "message" => $errors, "status" => 400];
         }
         
-        $year = $request->year ?? date('Y');
-        $yearMonth = date('Y-m');
-        $yearMonthPast3Month = date('Y-m', strtotime('-3 month'));
-        $yearMonthNext3Month = date('Y-m', strtotime('+3 month'));
-        $yearPast3Month = explode('-', $yearMonthPast3Month)[0];
-        $monthPast3Month = explode('-', $yearMonthPast3Month)[1];
-        $yearNext3Month = explode('-', $yearMonthNext3Month)[0];
-        $monthNext3Month = explode('-', $yearMonthNext3Month)[1];
 
-        $projects = Project::select(DB::raw("count(*) as total, CAST(DATE_FORMAT(end_date, '%m') as int) as month, CAST(DATE_FORMAT(end_date, '%Y') as int) as year"))
-        ->whereYear('end_date' , '=', $yearPast3Month)
-        ->whereYear('end_date' , '=', $yearNext3Month, 'or')
-        ->whereMonth('end_date' , '=', $monthPast3Month)
-        ->whereMonth('end_date' , '=', $monthNext3Month, 'or')
-        ->groupBy(DB::raw("DATE_FORMAT(end_date, '%m')"))
-        ->get();
-
-        $data = [];
-        for($i = 1; $i <= 12; $i++){
-            $data[] = [
-                "total" => 0,
-                "month" => $i,
-                "year" => $year,
-                "month_string" => $this->globalService->getIndonesiaMonth($i),
-            ];
-        }
-
-        foreach($projects as $p){
-            $data[$p->month-1] = $p;
-            $data[$p->month-1]["month_string"] = $this->globalService->getIndonesiaMonth($p->month);
-        }
-
+        $current_date = date('Y-m');
+        $from = $request->from ? $request->from."-01" : date('Y-m-01', strtotime('-1 month', strtotime($current_date))); 
+        $to = $request->to ? date('Y-m-t',strtotime($request->to)) : date('Y-m-t');
         
-        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
+        $date1 = new DateTime($from);
+        $date2 = new DateTime($to);
+        $interval = $date1->diff($date2);
+        $monthsDiff = $interval->format('%m');
+        if($date1 > $date2) return ["success" => false, "message" => "Waktu akhir harus lebih besar dari waktu awal", "status" => 400];
+        if($monthsDiff < 1) return ["success" => false, "message" => "Perbedaan waktu minimal 1 bulan.", "status" => 400];
+        
+        
+        $project = Project::select(DB::raw("YEAR(end_date) year, MONTH(end_date) month, count(*) total"))
+        ->whereBetween("end_date",[$from, $to])->orderBy("year","asc")->orderBy("month","asc")->groupBy("year","month")->get();
+
+        foreach($project as $p){
+            $p->month_str = $this->globalService->getIndonesiaMonth($p->month);
+            $p->year_month_str = $this->globalService->getIndonesiaMonth($p->month)." ".$p->year;
+        }
+
+        return ["success" => true, "message" => "Data Berhasil Dibuat", "data" => $project, "status" => 200];
+        
     }
+    
 
     //TASK SECTION
     public function addProjectTask(Request $request, $route_name){
@@ -415,10 +407,10 @@ class ProjectTaskService{
         if($access["success"] === false) return $access;
 
         $validator = Validator::make($request->all(), [
-            "name" => "required",
+            "name" => "nullable",
             "project_id" => "numeric|nullable",
-            "start_date" => "date|before:end_date",
-            "end_date" => "date|after:start_date",
+            "start_date" => "date|before:end_date|nullable",
+            "end_date" => "date|after:start_date|nullable",
             "task_staffs" => "array",
             "task_staffs.*" => "numeric"
             
@@ -450,7 +442,7 @@ class ProjectTaskService{
         $projectTask->updated_at = $currect_time;
 
         
-        $task_staffs = $request->task_staffs;
+        $task_staffs = $request->task_staffs ?? [];
         sort($task_staffs);
         if(count($project_staffs_ids)){
             $task_staffs_diff = array_diff($task_staffs,$project_staffs_ids);
@@ -494,7 +486,7 @@ class ProjectTaskService{
         }
 
         $id = $request->id;
-        $projectTask = ProjectTask::with("project","task_staffs")->find($id);
+        $projectTask = ProjectTask::with("project","task_staffs","task_staffs.profileImage")->find($id);
         if(!$projectTask) return ["success" => false, "message" => "Data tidak ditemukan", "status" => "400"];
 
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projectTask, "status" => 200];
@@ -524,7 +516,7 @@ class ProjectTaskService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        $projectTasks = ProjectTask::with('task_staffs','status');
+        $projectTasks = ProjectTask::with('task_staffs',"task_staffs.profileImage",'status');
 
         $rows = $request->rows ?? 5;
         $user_id = $request->user_id;
@@ -561,8 +553,8 @@ class ProjectTaskService{
             "id" => "numeric|required",
             "name" => "string|required",
             "project_id" => "numeric|nullable",
-            "start_date" => "date|before:end_date",
-            "end_date" => "date|after:start_date",
+            "start_date" => "date|before:end_date|nullable",
+            "end_date" => "date|after:start_date|nullable",
             "task_staffs" => "array",
             "task_staffs.*" => "numeric",
             "status_id" => "numeric",
@@ -606,7 +598,7 @@ class ProjectTaskService{
         $projectTask->description = $request->description;
 
         
-        $task_staffs = $request->task_staffs;
+        $task_staffs = $request->task_staffs ?? [];
         sort($task_staffs);
         if(count($project_staffs_ids)){
             $task_staffs_diff = array_diff($task_staffs,$project_staffs_ids);
@@ -831,6 +823,89 @@ class ProjectTaskService{
         $projectTasks = $projectTasks->paginate($rows);
         
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projectTasks, "status" => 200];
+    }
+
+    public function getProjectTasksDeadline($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $project_id = $request->project_id ?? NULL;
+            if($project_id){
+                $project = Project::find($project_id);
+                if(!$project) return ["success" => false, "message" => "Id project tidak ditemukan", "status" => 400];
+            }
+
+            $from = $request->get('from', date('Y-m-01'));
+            $to = $request->get('to', date("Y-m-t"));
+            $from_strtotime = strtotime($from);
+            $check = strtotime($to) - $from_strtotime;
+            if($check < 518400) return ["success" => false, "message" => "Range Minimal Filter Deadline 6 Hari dan tanggal akhir harus lebih besar dari tanggal awal!", "status" => 400];
+            $total = $check / 86400;
+            $range = $total / 3;
+            $mod = $total % 3;
+            
+            if($mod === 2) $second_addition = 1;
+            else if($mod === 1) $second_addition = 0;
+            else $second_addition = 0;
+            
+            $each = floor($range);
+            $first_interval = $each;
+            $second_interval = $each * 2 + $second_addition;
+            
+            $today = date('Y-m-d');
+            $tomorrow = date("Y-m-d", strtotime('+1 day'));
+            
+            $first_start_date = $from;
+            $first_end_date = date("Y-m-d", $from_strtotime + $first_interval * 86400);
+            $second_start_date = date("Y-m-d", $from_strtotime + ($first_interval + 1) * 86400);
+            $second_end_date = date("Y-m-d", $from_strtotime + $second_interval * 86400);
+            $third_start_date = date("Y-m-d", $from_strtotime + ($second_interval + 1) * 86400);
+            $third_end_date = $to;
+
+            $today_deadline = ProjectTask::whereDate('end_date', $today);
+            $tomorrow_deadline = ProjectTask::whereDate('end_date', $tomorrow);
+            $first_range_deadline = ProjectTask::whereBetween('end_date', [$first_start_date, $second_start_date]);
+            $second_range_deadline = ProjectTask::whereBetween('end_date', [$second_start_date, $third_start_date]);
+            $third_range_deadline = ProjectTask::whereBetween('end_date', [$third_start_date, $third_end_date]);
+
+            if($project_id){
+                $today_deadline = $today_deadline->where("project_id", $project_id);
+                $tomorrow_deadline = $tomorrow_deadline->where("project_id", $project_id);
+                $first_range_deadline = $first_range_deadline->where("project_id", $project_id);
+                $second_range_deadline = $second_range_deadline->where("project_id", $project_id);
+                $third_range_deadline = $third_range_deadline->where("project_id", $project_id);
+            }
+           
+            $today_deadline = $today_deadline->count();
+            $tomorrow_deadline = $tomorrow_deadline->count();
+            $first_range_deadline = $first_range_deadline->count();
+            $second_range_deadline = $second_range_deadline->count();
+            $third_range_deadline = $third_range_deadline->count();
+            
+            $data = (object)[
+                "deadline" => (object)[
+                    "today_deadline" => $today_deadline,
+                    "tomorrow_deadline" => $tomorrow_deadline,
+                    "first_range_deadline" => $first_range_deadline,
+                    "second_range_deadline" => $second_range_deadline,
+                    "third_range_deadline" => $third_range_deadline,
+                ],
+                "date" => (object)[
+                    "first_start_date" => $first_start_date,
+                    "first_end_date" => $first_end_date,
+                    "second_start_date" => $second_start_date,
+                    "second_end_date" => $second_end_date,
+                    "third_start_date" => $third_start_date,
+                    "third_end_date" => $third_end_date,
+                ]
+            ];
+            return ["success" => true, "message" => "Data Deadline Project Task Berhasil Diambil", "data" => $data, "status" => 200];
+
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
     }
 
     // PROJECT STATUS
