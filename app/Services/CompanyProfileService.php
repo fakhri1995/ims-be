@@ -10,7 +10,9 @@ use App\Message;
 use App\Career;
 use App\FormSolution;
 use App\FormSolutionDetail;
+use App\Mail\FormSolutionMail;
 use Exception;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class CompanyProfileService{
@@ -147,7 +149,6 @@ class CompanyProfileService{
         $message->budget_to = $request->budget_to;
         $message->meeting_schedule = $request->meeting_schedule;
         $message->kind_form = $request->kind_form;
-        
         try{
             $message->save();
             if(method_exists($request,'hasFile') && $request->hasFile('attachment')) {
@@ -159,7 +160,17 @@ class CompanyProfileService{
                 
                 $add_file_response = $fileService->addFile($message->id, $file, $table, $description, $folder_detail);
             }
-           
+            $data = (object) array(
+                'company_name' => $request->company_name,
+                'email' => $request->company_email,
+                'subject' => "Meeting Request by " . $request->company_name,
+                'contact_name'=>$request->contact_name,
+                'phone_number'=> $request->phone_number,
+                'solution'=> "Software",
+                'solution_detail' => $request->purpose,
+                'meeting_schedule' => date('d F Y H:i',strtotime($request->meeting_schedule)),
+            );
+            $sendMail = Mail::to('mariabinarc@gmail.com')->send(new FormSolutionMail($data));
             return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -170,7 +181,7 @@ class CompanyProfileService{
     {
         $message = new FormSolution;
         $message->company_name = $request->company_name;
-        $message->contact_name = $request->getcontact_name;
+        $message->contact_name = $request->contact_name;
         $message->email = $request->company_email;
         $message->phone_number = $request->phone_number;
         $message->kind_project = $request->kind_project;
@@ -208,7 +219,18 @@ class CompanyProfileService{
                 ];
              }
             FormSolutionDetail::insert($data_save);
-           
+            $data = (object) array(
+                'company_name' => $request->company_name,
+                'email' => $request->company_email,
+                'subject' => "Meeting Request by ". $request->company_name,
+                'contact_name'=>$request->contact_name,
+                'phone_number'=> $request->phone_number,
+                'solution'=> "Talents",
+                'solution_detail' => $request->kind_project,
+                'meeting_schedule' => date('d F Y H:i',strtotime($request->meeting_schedule)),
+            );
+
+            $sendMail = Mail::to('mariabinarc@gmail.com')->send(new FormSolutionMail($data));
             return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -268,7 +290,18 @@ class CompanyProfileService{
                 
              }
             // FormSolutionDetail::insert($data_save);
-           
+            $data = (object) array(
+                'company_name' => $request->company_name,
+                'email' => $request->company_email,
+                'subject' => "Meeting Request by " .$request->company_name,
+                'contact_name'=>$request->contact_name,
+                'phone_number'=> $request->phone_number,
+                'solution'=> "Hardware",
+                'solution_detail' => $request->purpose,
+                'meeting_schedule' => date('d F Y H:i',strtotime($request->meeting_schedule)),
+            );
+
+            $sendMail = Mail::to('mariabinarc@gmail.com')->send(new FormSolutionMail($data));
             return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
