@@ -1440,7 +1440,7 @@ class EmployeeService{
             $employeePayslip->year = $request->year;
             $employeePayslip->created_at = $current_timestamp;
             $employeePayslip->updated_at = $current_timestamp;
-            $employeePayslip->created_by = auth()->user()->id;
+            $employeePayslip->created_by = auth()->user()->id ?? 0;
 
             
             $total_gross_penerimaan = $employeePayslip->gaji_pokok; //sum of penerimaan
@@ -1657,37 +1657,10 @@ class EmployeeService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
-    
-    // public function downloadEmployeePayslip($request, $route_name)
-    // {
-    //     $data = ['payslip' => ""];
-    //     // $pdf = PDF::setEncryption("password")->loadView('pdf.employee_payslip', $data);
-
-    //     $options = new Options();
-    //     $options->set('defaultFont', 'Courier');
-    //     $options->set('isHtml5ParserEnabled ', true);
-
-    //     $pdf = new Dompdf($options);
-    //     // $pdf->getCanvas();
-    //     // ->get_cpdf()
-    //     // ->setEncryption('test123', 'test456', ['print', 'modify', 'copy', 'add']);
-    //     $html = view('pdf.employee_payslip')->render();
-    //     $pdf->loadHtml($html);
-    //     $pdf->setPaper('A4', 'landscape');
-    //     $pdf->render();
-    //     $output = $pdf->output();
-    //     $res = new Response ($output, 200, array(
-    //         'Content-Type' => 'application/pdf',
-    //         'Content-Disposition' =>  'attachment; filename="test.pdf"',
-    //         'Content-Length' => strlen($output),
-    //     ));
-    //     // file_put_contents('output.pdf', $pdf->output());
-    //     // return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $pdf->download('Payslip Test.pdf'), "status" => 200];
-    //     return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $res, "status" => 200];
-    // }
 
     public function postedEmployeeLastPayslips($request, $route_name){
-        
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
 
         $lastDate = explode("-",date("Y-m",strtotime("-1 month")));
         $year = $lastDate[0]; //current month - 1
@@ -1699,7 +1672,8 @@ class EmployeeService{
 
     public function downloadEmployeePayslip($request, $route_name)
     {   
-
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
         $id = $request->id;
         $password = $request->password;
         
@@ -1782,10 +1756,8 @@ class EmployeeService{
         return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $res, "status" => 200];
     }
 
-    public function raiseLastPeriodPayslip(Request $request)
-    {
-
-                
+    public function raiseLastPeriodPayslipFunction(){
+        try{  
             $lastDate = explode("-",date("Y-m",strtotime("-1 month")));
             $year = $lastDate[0]; //current month - 1
             $month = $lastDate[1];
@@ -1819,13 +1791,18 @@ class EmployeeService{
                 }
             }
 
-            try{
             return ["success" => true, "message" => "Data Berhasil Dibuat", "data" => $payslipData, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
+    }
 
+    public function raiseLastPeriodPayslip(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
         
+        return $this->raiseLastPeriodPayslipFunction();
     }
 
     
