@@ -145,7 +145,7 @@ class ProjectTaskController extends Controller
 
     public function getProjectTasksDeadline(Request $request)
     {
-        $route_name = "PROJECT_DEADLINE_GET";
+        $route_name = "PROJECT_TASKS_DEADLINE_GET";
 
         $response = $this->projectTaskService->getProjectTasksDeadline($request, $route_name);
         return response()->json($response, $response['status']);
