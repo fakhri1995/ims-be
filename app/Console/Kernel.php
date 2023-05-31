@@ -68,6 +68,6 @@ class Kernel extends ConsoleKernel
         $schedule->command(GenerateMonthlyTask::class)->cron('0 0 1 * *')->runInBackground();
         $schedule->command(GenerateThricePerYearTask::class)->cron('0 0 1 */4 *')->runInBackground();
         $schedule->command(GenerateFourTimesPerYearTask::class)->cron('0 0 1 */3 *')->runInBackground();
-        $schedule->command(RaiseLastPeriodPayslip::class)->cron('0 0 1 * *')->runInBackground();
+        $schedule->command(RaiseLastPeriodPayslip::class)->cron('35 0 1 * *')->runInBackground();
     }
 }
