@@ -84,4 +84,9 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     {
         return $this->hasOne(AttendanceUser::class, 'user_id', 'id');
     }
+
+    public function project_tasks()
+    {
+        return $this->belongsToMany(ProjectTask::class, 'project_tasks_staffs');
+    }
 }

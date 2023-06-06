@@ -934,6 +934,25 @@ class ProjectTaskService{
         }
     }
 
+    public function getProjectTaskStaffCount($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $total_staff = User::where('role', 1)->count();
+            $total_staff_without_task = User::where('role', 1)->whereDoesntHave('project_tasks')->count();
+            $data = (object)[
+                "total_staff" => $total_staff,
+                "total_staff_without_task" => $total_staff_without_task,
+                "percentage" => round($total_staff_without_task / $total_staff * 100, 2)
+            ];
+            return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $data, "status" => 200];
+
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
 
     // PROJECT STATUS
     public function addProjectStatus(Request $request, $route_name){
