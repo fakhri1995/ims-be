@@ -29,14 +29,19 @@ class ProjectTaskService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $validator = Validator::make($request->all(), [
+        $rules = [
             "name" => "nullable",
-            "start_date" => "date|before:end_date|nullable",
-            "end_date" => "date|after:start_date|nullable",
             "project_staffs" => "array|nullable",
             "project_staffs.*" => "numeric",
             "description" => "string|nullable"
-        ]);
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if($request->start_date && $request->end_date){
+            $rules["start_date"] = "date|before:end_date";
+            $rules["end_date"] = "date|after:start_date";
+        }
         
         if($validator->fails()){
             $errors = $validator->errors()->all();
@@ -174,18 +179,24 @@ class ProjectTaskService{
     public function updateProject(Request $request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        $validator = Validator::make($request->all(), [
+
+        $rules = [
             "id" => "numeric|required",
             "name" => "required",
-            "start_date" => "date|before:end_date|nullable",
-            "end_date" => "date|after:start_date|nullable",
             "project_staffs" => "array",
             "project_staffs.*" => "numeric",
             "proposed_bys" => "array",
             "proposed_bys.*" => "numeric",
             "status_id" => "numeric",
             "description" => "string"
-        ]);
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if($request->start_date && $request->end_date){
+            $rules["start_date"] = "date|before:end_date";
+            $rules["end_date"] = "date|after:start_date";
+        }
         
         if($validator->fails()){
             $errors = $validator->errors()->all();
@@ -197,8 +208,10 @@ class ProjectTaskService{
         if(!$project) return ["success" => false, "message" => "Data project tidak ditemukan", "status" => 400];
 
         $status_id = $request->status_id;
-        $projectStatus = ProjectStatus::find($status_id);
-        if(!$projectStatus) return ["success" => false, "message" => "Project status tidak ditemukan", "status" => 400];
+        if($status_id){
+            $projectStatus = ProjectStatus::find($status_id);
+            if(!$projectStatus) return ["success" => false, "message" => "Project status tidak ditemukan", "status" => 400];
+        }
 
         //oldLog
         $logDataOld = clone $project;
@@ -305,6 +318,7 @@ class ProjectTaskService{
         $status_id = $request->status_id;
         $projectStatus = ProjectStatus::find($status_id);
         if(!$projectStatus) return ["success" => false, "message" => "Project status tidak ditemukan", "status" => 400];
+        
 
         //oldLog
         $logDataOld = clone $project;
@@ -406,15 +420,19 @@ class ProjectTaskService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $validator = Validator::make($request->all(), [
+        $rules = [
             "name" => "nullable",
             "project_id" => "numeric|nullable",
-            "start_date" => "date|before:end_date|nullable",
-            "end_date" => "date|after:start_date|nullable",
             "task_staffs" => "array",
             "task_staffs.*" => "numeric"
-            
-        ]);
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if($request->start_date && $request->end_date){
+            $rules["start_date"] = "date|before:end_date";
+            $rules["end_date"] = "date|after:start_date";
+        }
         
         if($validator->fails()){
             $errors = $validator->errors()->all();
@@ -549,17 +567,23 @@ class ProjectTaskService{
     public function updateProjectTask(Request $request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        $validator = Validator::make($request->all(), [
+
+        $rules = [
             "id" => "numeric|required",
             "name" => "string|required",
             "project_id" => "numeric|nullable",
-            "start_date" => "date|before:end_date|nullable",
-            "end_date" => "date|after:start_date|nullable",
             "task_staffs" => "array",
             "task_staffs.*" => "numeric",
             "status_id" => "numeric",
             "description" => "string"
-        ]);
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if($request->start_date && $request->end_date){
+            $rules["start_date"] = "date|before:end_date";
+            $rules["end_date"] = "date|after:start_date";
+        }
         
         if($validator->fails()){
             $errors = $validator->errors()->all();
@@ -582,8 +606,10 @@ class ProjectTaskService{
 
         
         $status_id = $request->status_id;
-        $projectStatus = ProjectStatus::find($status_id);
-        if(!$projectStatus) return ["success" => false, "message" => "Project  status tidak ditemukan", "status" => 400];
+        if($status_id){
+            $projectStatus = ProjectStatus::find($status_id);
+            if(!$projectStatus) return ["success" => false, "message" => "Project  status tidak ditemukan", "status" => 400];
+        }
         
         //oldLog
         $logDataOld = clone $projectTask;
@@ -907,6 +933,7 @@ class ProjectTaskService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
+
 
     // PROJECT STATUS
     public function addProjectStatus(Request $request, $route_name){
