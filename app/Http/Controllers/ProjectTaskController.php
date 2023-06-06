@@ -159,6 +159,14 @@ class ProjectTaskController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getProjectTaskStaffCount(Request $request)
+    {
+        $route_name = "PROJECT_TASK_STAFF_COUNT_GET";
+
+        $response = $this->projectTaskService->getProjectTaskStaffCount($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     
     //STATUS SECTION
     public function addProjectStatus(Request $request)
