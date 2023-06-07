@@ -184,7 +184,7 @@ class CompanyProfileService{
         $message->contact_name = $request->contact_name;
         $message->email = $request->company_email;
         $message->phone_number = $request->phone_number;
-        $message->kind_project = $request->kind_project;
+        $message->type_project = $request->type_project;
         $message->meeting_schedule = $request->meeting_schedule;
         $message->kind_form = $request->kind_form;
         $message->many_people = $request->many_people;
@@ -223,13 +223,13 @@ class CompanyProfileService{
                 'company_name' => $request->company_name,
                 'email' => $request->company_email,
                 'subject' => "Meeting Request by " . $request->company_name,
-                'contact_name'=>$request->contact_name,
+                'contact_name'=> $request->contact_name,
                 'phone_number'=> $request->phone_number,
                 'solution'=> "Talents",
-                'solution_detail' => $request->kind_project,
+                'solution_detail' => $request->type_project,
                 'meeting_schedule' => date('d F Y H:i',strtotime($request->meeting_schedule)),
             ];
-            Mail::to('mariabinarc@gmail.com')->send(new FormSolutionMail($data));
+            Mail::to('mlbbhan@gmail.com')->send(new FormSolutionMail($data));
             return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
