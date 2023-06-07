@@ -14,6 +14,7 @@ use App\Console\Commands\GenerateThricePerYearTask;
 use App\Console\Commands\GenerateTwicePerMonthTask;
 use App\Console\Commands\GenerateFourTimesPerYearTask;
 use App\Console\Commands\GenerateOneHourLeftTaskNotification;
+use App\Console\Commands\RaiseLastPeriodPayslip;
 use App\Console\Commands\SendAndroidNotificationActivity;
 use App\Console\Commands\SendAndroidNotificationCheckIn;
 use Illuminate\Console\Scheduling\Schedule;
@@ -41,6 +42,8 @@ class Kernel extends ConsoleKernel
         GenerateThricePerYearTask::class,
         GenerateFourTimesPerYearTask::class,
         GenerateOneHourLeftTaskNotification::class,
+        GenerateOneHourLeftTaskNotification::class,
+        RaiseLastPeriodPayslip::class
     ];
 
     /**
@@ -65,5 +68,6 @@ class Kernel extends ConsoleKernel
         $schedule->command(GenerateMonthlyTask::class)->cron('0 0 1 * *')->runInBackground();
         $schedule->command(GenerateThricePerYearTask::class)->cron('0 0 1 */4 *')->runInBackground();
         $schedule->command(GenerateFourTimesPerYearTask::class)->cron('0 0 1 */3 *')->runInBackground();
+        $schedule->command(RaiseLastPeriodPayslip::class)->cron('35 0 1 * *')->runInBackground();
     }
 }
