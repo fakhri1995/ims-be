@@ -491,7 +491,7 @@ class ProjectTaskService{
         ];
 
         $this->logService->addLogProjectTask($project_id, $projectTask->id, auth()->user()->id, "Created", $logProperties, null);
-        
+
         return ["success" => true, "message" => "Data Berhasil Dibuat", "data" => ["id" => $projectTask->id], "status" => 200];
     }
 
