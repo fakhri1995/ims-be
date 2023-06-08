@@ -492,7 +492,12 @@ class ProjectTaskService{
 
         $this->logService->addLogProjectTask($project_id, $projectTask->id, auth()->user()->id, "Created", $logProperties, null);
 
-        return ["success" => true, "message" => "Data Berhasil Dibuat", "data" => ["id" => $projectTask->id], "status" => 200];
+        $data = [
+            "id" => $projectTask->id,
+            "proposed_bys" => $projectTask->proposed_bys,
+        ];
+        
+        return ["success" => true, "message" => "Data Berhasil Dibuat", "data" => $data, "status" => 200];
     }
 
     public function getProjectTask(Request $request, $route_name){
