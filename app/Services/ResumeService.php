@@ -176,7 +176,7 @@ class ResumeService{
             "experience.role" => "required_with:experience",
             "experience.company" => "required_with:experience",
             "experience.start_date" => "required_with:experience|date",
-            "experience.end_date" => "required_with:experience|date",
+            "experience.end_date" => "date|nullable",
             "experience.description" => "required_with:experience",
             
             "project" => "filled|array",
@@ -317,7 +317,7 @@ class ResumeService{
             "experience.role" => "required_with:experience",
             "experience.company" => "required_with:experience",
             "experience.start_date" => "required_with:experience|date",
-            "experience.end_date" => "required_with:experience|date",
+            "experience.end_date" => "date|nullable",
             "experience.description" => "required_with:experience",
             
             "project" => "filled|array",
