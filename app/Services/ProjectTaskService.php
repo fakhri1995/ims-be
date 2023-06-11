@@ -80,7 +80,12 @@ class ProjectTaskService{
 
         $this->logService->addLogProjectTask($project->id, NULL, auth()->user()->id, "Created", $logProperties, null);
 
-        return ["success" => true, "message" => "Data Berhasil Dibuat", "data" => ["id" => $project->id], "status" => 200];
+        $data = [
+            "id" => $project->id,
+            "proposed_bys" => $project->proposed_bys,
+        ];
+
+        return ["success" => true, "message" => "Data Berhasil Dibuat", "data" => $data, "status" => 200];
         
     }
 
@@ -594,8 +599,13 @@ class ProjectTaskService{
         $projectTask = ProjectTask::find($id);
         if(!$projectTask) return ["success" => false, "message" => "Data tidak ditemukan", "status" => "400"];
 
+
         $project_id = $request->project_id ?? NULL;
-        if($projectTask->project_id != $project_id) return ["success" => false, "message" => "Project dari task yang telah dibuat, tidak dapat diganti.", "status" => "400"];
+        if($projectTask->task_staffs->isEmpty() && $projectTask->project_id == NULL); //pass the condition
+        else if($projectTask->project_id != $project_id) return ["success" => false, "message" => "Project dari task yang telah dibuat, tidak dapat diganti.", "status" => "400"];
+        
+
+        
 
         $project_staffs_ids = [];
         if($project_id){
@@ -963,6 +973,7 @@ class ProjectTaskService{
             "name" => "required",
             "color" => "string|nullable",
             "after_id" => "numeric|nullable",
+            "is_active" => "boolean"
         ]);
         
         if($validator->fails()){
@@ -979,7 +990,7 @@ class ProjectTaskService{
         $projectStatus = new ProjectStatus();
         $projectStatus->name = $request->name;
         $projectStatus->color = $request->color;
-        $projectStatus->name = $request->name;
+        $projectStatus->is_active = $request->is_active;
 
         
         $projectStatuses = new ProjectStatus();
@@ -1034,7 +1045,8 @@ class ProjectTaskService{
             "id" => "numeric|required",
             "name" => "string|required",
             "color" => "string|required",
-            "after_id" => "numeric|nullable"
+            "after_id" => "numeric|nullable",
+            "is_active" => "boolean"
         ]);
         
         if($validator->fails()){
@@ -1056,7 +1068,7 @@ class ProjectTaskService{
 
         $projectStatus->name = $request->name;
         $projectStatus->color = $request->color;
-        $projectStatus->name = $request->name;
+        $projectStatus->is_active = $request->is_active;
 
         
         $projectStatuses = new ProjectStatus();
