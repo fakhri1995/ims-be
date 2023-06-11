@@ -229,7 +229,7 @@ class CompanyProfileService{
                 'solution_detail' => $request->type_project,
                 'meeting_schedule' => date('d F Y H:i',strtotime($request->meeting_schedule)),
             ];
-            Mail::to('mlbbhan@gmail.com')->send(new FormSolutionMail($data));
+            Mail::to('mariabinarc@gmail.com')->send(new FormSolutionMail($data));
             return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
