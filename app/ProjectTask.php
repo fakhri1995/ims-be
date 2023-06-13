@@ -12,7 +12,7 @@ class ProjectTask extends Model
 
     public function task_staffs()
     {
-        return $this->belongsToMany(User::class, "project_tasks_staffs")->select("id","name","position");;
+        return $this->belongsToMany(User::class, "project_tasks_staffs")->select("users.id","users.name","users.position");;
     }
 
     public function status()
