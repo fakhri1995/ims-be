@@ -21,6 +21,7 @@ class CreateEmployeeContractsTable extends Migration
             $table->string("contract_status_id")->nullable();
             // dokumen_kontrak morph files
             $table->string("pkwt_reference")->nullable();
+            $table->date("join_at")->nullable();
             $table->date("contract_start_at")->nullable();
             $table->date("contract_end_at")->nullable();
             $table->string("placement")->nullable();

@@ -14,6 +14,7 @@ class CreateInventoryLocationsTable extends Migration
     public function up()
     {
         Schema::create('inventory_locations', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger('inventory_id');
             $table->unsignedBigInteger('company_id');
             $table->integer('quantity');
