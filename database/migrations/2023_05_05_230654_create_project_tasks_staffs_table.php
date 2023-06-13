@@ -14,6 +14,7 @@ class CreateProjectTasksStaffsTable extends Migration
     public function up()
     {
         Schema::create('project_tasks_staffs', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger('project_task_id');
             $table->unsignedBigInteger('user_id');
 

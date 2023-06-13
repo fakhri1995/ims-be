@@ -14,6 +14,7 @@ class CreateInventoryTaskTable extends Migration
     public function up()
     {
         Schema::create('inventory_task', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger('task_id');
             $table->unsignedBigInteger('inventory_id');
             $table->unsignedBigInteger('user_id')->nullable();

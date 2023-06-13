@@ -14,6 +14,7 @@ class CreateAttendanceFormUsersTable extends Migration
     public function up()
     {
         Schema::create('attendance_form_user', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger('attendance_form_id');
             $table->unsignedBigInteger('user_id');
 

@@ -25,6 +25,7 @@ class CreateRecruitmentsTable extends Migration
             $table->dateTime('created_at');
             $table->dateTime('updated_at');
             $table->unsignedBigInteger('created_by');
+            $table->text("lampiran");
             $table->softDeletes();
             $table->unsignedBigInteger('owner_id')->nullable();
         });

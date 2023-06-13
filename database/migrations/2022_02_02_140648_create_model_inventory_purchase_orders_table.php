@@ -14,6 +14,7 @@ class CreateModelInventoryPurchaseOrdersTable extends Migration
     public function up()
     {
         Schema::create('model_inventory_purchase_order', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger('model_inventory_id');
             $table->unsignedBigInteger('purchase_order_id');
             $table->unsignedBigInteger('price');
