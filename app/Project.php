@@ -12,12 +12,12 @@ class Project extends Model
 
     public function project_staffs()
     {
-        return $this->belongsToMany(User::class, "projects_staffs")->select("id","name","position");
+        return $this->belongsToMany(User::class, "projects_staffs")->select("users.id","users.name","users.position");
     }
 
     public function proposed_bys()
     {
-        return $this->belongsToMany(User::class, "projects_proposes")->select("id","name","position");
+        return $this->belongsToMany(User::class, "projects_proposes")->select("users.id","users.name","users.position");
     }
 
     public function status()
