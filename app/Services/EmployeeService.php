@@ -480,7 +480,7 @@ class EmployeeService{
         }
 
         $id = $request->id;
-        $employeeContract = EmployeeContract::with(["employee","role","contract_status","contract_file","salaries","salaries.column"])->find($id);
+        $employeeContract = EmployeeContract::with(["employee","role","contract_status","contract_files","salaries","salaries.column"])->find($id);
         if(!$employeeContract) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
 
@@ -588,7 +588,9 @@ class EmployeeService{
 
         $validator = Validator::make($request->all(), [
             "id" => "numeric|required",
-            "employee_id" => "numeric|required"
+            "employee_id" => "numeric|required",
+            "contract_file_delete_ids" => "array",
+            "contract_file_delete_ids.*" => "numeric"
         ]);
 
         if($validator->fails()){
@@ -679,15 +681,22 @@ class EmployeeService{
                 $employeeContract->employee->save();
             }  
 
-            $file = $request->file('contract_file',NULL);
-            if($file){
-                $old_file_id = $employeeContract->contract_file->id ?? NULL;
-                $fileService = new FileService;
-                $add_file_response = $fileService->addFile($employeeContract->id, $file, 'App\EmployeeContract', 'employee_contract_file', 'EmployeeContract', false);
-                if($add_file_response['success'] && $old_file_id) {
-                    $fileService->deleteForceFile($old_file_id);
+            $old_files = $employeeContract->contract_files->pluck('id')->toArray();
+            $fileService = new FileService;
+            $files = $request->file('contract_files',[]);
+            foreach($files as $file){
+                if($file){
+                    $fileService->addFile($employeeContract->id, $file, 'App\EmployeeContract', 'employee_contract_file', 'EmployeeContract', false);
                 }
             }
+
+            $file_delete_ids = $request->contract_file_delete_ids ?? [];
+            foreach($file_delete_ids as $file_delete_id){
+                if(in_array($file_delete_id, $old_files)){
+                    $fileService->deleteForceFile($file_delete_id);
+                }
+            }
+
         try{
             return ["success" => true, "message" => "Data Berhasil Diupdate", "data" => $employeeContract, "status" => 200];
         }catch(Exception $err){
