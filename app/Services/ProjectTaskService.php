@@ -551,7 +551,7 @@ class ProjectTaskService{
 
         if($project_id) $projectTasks = $projectTasks->where("project_id", $project_id);
         if($user_id) $projectTasks = $projectTasks->whereHas("task_staffs", function($q) use ($user_id){
-            $q->where("id", $user_id);
+            $q->where("users.id", $user_id);
         });
         if($keyword) $projectTasks = $projectTasks->where("name","LIKE","%$keyword%");
         if($status_ids) $projectTasks = $projectTasks->whereIn("status_id", $status_ids);
