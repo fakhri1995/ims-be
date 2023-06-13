@@ -26,7 +26,7 @@ class NotificationService
         ->limit(10)->get();
 
         $check_is_unread_exist = DB::table('notification_user')->where('user_id', $login_id)
-        ->select('id')
+        ->select('notifications.id')
         ->join('notifications', 'notifications.id', '=', 'notification_user.notification_id')
         ->where('is_read', false)
         ->limit(1)->get();
