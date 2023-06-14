@@ -168,7 +168,7 @@ class ResumeService{
             "education" => "filled|array",
             "education.university" => "required_with:education",
             "education.major" => "required_with:education",
-            "education.gpa" => "numeric|between:0.00,4.00",
+            "education.gpa" => "numeric|between:0.00,4.00|nullable",
             "education.graduation_year" => "required_with:education|date",
             
             "experience" => "filled|array",
@@ -307,7 +307,7 @@ class ResumeService{
             "education.id" => "required_with:education|exists:App\ResumeEducation,id",
             "education.university" => "required_with:education",
             "education.major" => "required_with:education",
-            "education.gpa" => "numeric|between:0.00,4.00",
+            "education.gpa" => "numeric|between:0.00,4.00|nullable",
             "education.graduation_year" => "required_with:education|date",
             
             "experience" => "filled|array",
