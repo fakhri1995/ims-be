@@ -220,7 +220,7 @@ class ResumeService{
             $education = new ResumeEducation();
             $education->university = $requestEducation->university;
             $education->major = $requestEducation->major;
-            $education->gpa = $requestEducation->gpa;
+            $education->gpa = !$requestEducation->gpa ? NULL : $requestEducation->gpa;
             $education->graduation_year = $requestEducation->graduation_year;
             if(!$resume->educations()->save($education)) return ["success" => false, "message" => "Gagal Mengubah Education Resume", "status" => 400];
             return ["success" => true, "message" => "Data Education Berhasil Ditambah",  "status" => 200];
@@ -405,7 +405,7 @@ class ResumeService{
             if(!$education) return ["success" => false, "message" => "Education ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
             $education->university = $requestEducation->university;
             $education->major = $requestEducation->major;
-            $education->gpa = $requestEducation->gpa;
+            $education->gpa = !$requestEducation->gpa ? NULL : $requestEducation->gpa;
             $education->graduation_year = $requestEducation->graduation_year;
             if(!$education->save()) return ["success" => false, "message" => "Gagal Mengubah Education Resume", "status" => 400];
             return ["success" => true, "message" => "Data Education Berhasil Diubah", "id" => $resume->id, "status" => 200];
