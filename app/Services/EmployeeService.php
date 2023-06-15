@@ -663,12 +663,12 @@ class EmployeeService{
             $deleteEmployeeSalary = EmployeeBenefit::where("employee_contract_id",$id)->whereNotIn("employee_salary_column_id",$employee_salary_column_ids)->delete();
 
             $employeeContract->gaji_pokok = $total_pemasukan;
-            $employeeContract->bpjs_ks = $total_amount_for_bpjs * 0.05; //5%
-            $employeeContract->bpjs_tk_jht = $total_amount_for_bpjs * 0.057; // 0.057%
-            $employeeContract->bpjs_tk_jkk = $total_amount_for_bpjs * 0.0024; //0,24 %
-            $employeeContract->bpjs_tk_jkm = $total_amount_for_bpjs * 0.003; //0,3 %
-            $employeeContract->bpjs_tk_jp = $total_amount_for_bpjs * 0.03; //3%
-            $employeeContract->pph21 = $request->pph21;
+            $employeeContract->bpjs_ks = $request->bpjs_ks == NULL ? NULL : $total_amount_for_bpjs * 0.05; //5%
+            $employeeContract->bpjs_tk_jht = $request->bpjs_tk_jht == NULL ? NULL : $total_amount_for_bpjs * 0.057; // 0.057%
+            $employeeContract->bpjs_tk_jkk = $request->bpjs_tk_jkk == NULL ? NULL : $total_amount_for_bpjs * 0.0024; //0,24 %
+            $employeeContract->bpjs_tk_jkm = $request->bpjs_tk_jkm == NULL ? NULL : $total_amount_for_bpjs * 0.003; //0,3 %
+            $employeeContract->bpjs_tk_jp = $request->bpjs_tk_jp == NULL ? NULL : $total_amount_for_bpjs * 0.03; //3%
+            $employeeContract->pph21 = $request->pph21 == NULL ? NULL : $request->pph21;
 
 
             $employeeContract->is_employee_active = $is_employee_active;
@@ -1576,12 +1576,12 @@ class EmployeeService{
             
 
             $employeePayslip->gaji_pokok = $gaji_pokok;
-            $employeePayslip->bpjs_ks = $total_amount_for_bpjs * 0.05; //5%
-            $employeePayslip->bpjs_tk_jht = $total_amount_for_bpjs * 0.057; // 0.057%
-            $employeePayslip->bpjs_tk_jkk = $total_amount_for_bpjs * 0.0024; //0,24 %
-            $employeePayslip->bpjs_tk_jkm = $total_amount_for_bpjs * 0.003; //0,3 %
-            $employeePayslip->bpjs_tk_jp = $total_amount_for_bpjs * 0.03; //3%
-            $employeePayslip->pph21 = $request->pph21;
+            $employeePayslip->bpjs_ks = $request->bpjs_ks == NULL ? NULL : $total_amount_for_bpjs * 0.05; //5%
+            $employeePayslip->bpjs_tk_jht = $request->bpjs_tk_jht == NULL ? NULL : $total_amount_for_bpjs * 0.057; // 0.057%
+            $employeePayslip->bpjs_tk_jkk = $request->bpjs_tk_jkk == NULL ? NULL : $total_amount_for_bpjs * 0.0024; //0,24 %
+            $employeePayslip->bpjs_tk_jkm = $request->bpjs_tk_jkm == NULL ? NULL : $total_amount_for_bpjs * 0.003; //0,3 %
+            $employeePayslip->bpjs_tk_jp = $request->bpjs_tk_jp == NULL ? NULL : $total_amount_for_bpjs * 0.03; //3%
+            $employeePayslip->pph21 = $request->pph21 == NULL ? NULL : $request->pph21;
 
             $total_gross_pengurangan = $total_gross_pengurangan +
                 $employeePayslip->bpjs_ks +
