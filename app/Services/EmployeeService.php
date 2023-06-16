@@ -420,6 +420,7 @@ class EmployeeService{
             $employee->acc_name_another = $request->acc_name_another ?? NULL;
             $employee->acc_number_another = $request->acc_number_another ?? NULL;
             $employee->user_id = $user_id;
+            $employee->join_at = $request->join_at;
             $employee->is_posted = $request->is_posted;
             if(!$request->is_posted) $employee->updating_by = auth()->user()->id;
             else $employee->updating_by = NULL;
