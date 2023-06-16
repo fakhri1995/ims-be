@@ -21,7 +21,6 @@ class CreateEmployeeContractsTable extends Migration
             $table->string("contract_status_id")->nullable();
             // dokumen_kontrak morph files
             $table->string("pkwt_reference")->nullable();
-            $table->date("join_at")->nullable();
             $table->date("contract_start_at")->nullable();
             $table->date("contract_end_at")->nullable();
             $table->string("placement")->nullable();
@@ -35,6 +34,7 @@ class CreateEmployeeContractsTable extends Migration
             $table->integer("bpjs_tk_jkm")->nullable();
             $table->integer("bpjs_tk_jp")->nullable();
             $table->integer("pph21")->nullable();
+            $table->boolean("show_all_benefit")->default(0);
             $table->unsignedBigInteger('employee_id'); //refernece employee.id
             $table->dateTime('created_at');
             $table->dateTime('updated_at');
