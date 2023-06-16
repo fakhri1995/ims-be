@@ -17,6 +17,7 @@ class CreateEmployeesTable extends Migration
             $table->id();
             // id card file
             $table->string("name")->nullable();
+            $table->date("join_at")->nullable();
             $table->string("nip")->nullable();
             $table->string("nik")->nullable();
             $table->string("alias")->nullable();
