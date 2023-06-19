@@ -1454,6 +1454,7 @@ class EmployeeService{
             $employeePayslip->bpjs_tk_jkm = $employee->contract->bpjs_tk_jkm; //0,3 %
             $employeePayslip->bpjs_tk_jp = $employee->contract->bpjs_tk_jp; //3%
             $employeePayslip->pph21 = $employee->contract->pph21;
+            $employeePayslip->show_all_benefit = $employee->contract->show_all_benefit;
             $employeePayslip->is_posted = $request->is_posted;
             $employeePayslip->month = $request->month;
             $employeePayslip->year = $request->year;
