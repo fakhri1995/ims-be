@@ -28,6 +28,7 @@ class CreateEmployeePayslipsTable extends Migration
             $table->integer("total_gross_penerimaan")->nullable();
             $table->integer("total_gross_pengurangan")->nullable();
             $table->integer("take_home_pay")->nullable();
+            $table->boolean("show_all_benefit")->default(0);
             $table->boolean("is_posted")->nullable();
             $table->integer("year")->nullable();
             $table->integer("month")->nullable();

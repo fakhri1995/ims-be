@@ -560,6 +560,7 @@ class EmployeeService{
             $employeeContract->bpjs_tk_jkm = 0; //0,3 %
             $employeeContract->bpjs_tk_jp = 0; //3%
             $employeeContract->pph21 = 0;
+            $employeeContract->show_all_benefit = 0;
             $employeeContract->save();
 
             $employeeSalaryColumn = EmployeeSalaryColumn::where("required",1)->get();
@@ -626,6 +627,7 @@ class EmployeeService{
             $employeeContract->new_office = $request->new_office ?? NULL;
             $employeeContract->resign_at = $request->resign_at ?? NULL;
             $employeeContract->annual_leave = $request->annual_leave ?? NULL;
+            $employeeContract->show_all_benefit = $request->show_all_benefit ?? NULL;
             $salaries = $request->salaries ?? [];
             
 
@@ -1452,6 +1454,7 @@ class EmployeeService{
             $employeePayslip->bpjs_tk_jkm = $employee->contract->bpjs_tk_jkm; //0,3 %
             $employeePayslip->bpjs_tk_jp = $employee->contract->bpjs_tk_jp; //3%
             $employeePayslip->pph21 = $employee->contract->pph21;
+            $employeePayslip->show_all_benefit = $employee->contract->show_all_benefit;
             $employeePayslip->is_posted = $request->is_posted;
             $employeePayslip->month = $request->month;
             $employeePayslip->year = $request->year;
