@@ -14,6 +14,7 @@ class CreateInventoryValuesTable extends Migration
     public function up()
     {
         Schema::create('inventory_values', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger('inventory_id');
             $table->unsignedBigInteger('model_inventory_column_id');
             $table->string('value');

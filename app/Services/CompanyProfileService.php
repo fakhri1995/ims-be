@@ -167,7 +167,10 @@ class CompanyProfileService{
                 'contact_name'=>$request->contact_name,
                 'phone_number'=> $request->phone_number,
                 'solution'=> "Software",
-                'solution_detail' => $request->purpose,
+                'solution_detail' => $request->kind_project,
+                'type_project' => $request->type_project,
+                'budget_from' => $request->budget_from,
+                'budget_to' => $request->budget_to,
                 'meeting_schedule' => date('d F Y H:i',strtotime($request->meeting_schedule)),
             ];
             Mail::to('mariabinarc@gmail.com')->send(new FormSolutionMail($data));
@@ -219,17 +222,16 @@ class CompanyProfileService{
                 ];
              }
             FormSolutionDetail::insert($data_save);
-            $data = [
-                'company_name' => $request->company_name,
-                'email' => $request->company_email,
-                'subject' => "Meeting Request by " . $request->company_name,
-                'contact_name'=> $request->contact_name,
-                'phone_number'=> $request->phone_number,
-                'solution'=> "Talents",
-                'solution_detail' => $request->type_project,
-                'meeting_schedule' => date('d F Y H:i',strtotime($request->meeting_schedule)),
-            ];
-            Mail::to('mlbbhan@gmail.com')->send(new FormSolutionMail($data));
+            $data_talent2 = $request->talent_list;
+            $data = array('company_name' => $request->company_name,
+            'email' => $request->company_email,
+            'subject' => "Meeting Request by " . $request->company_name,
+            'contact_name'=> $request->contact_name,
+            'phone_number'=> $request->phone_number,
+            'solution'=> "Talents",
+            'solution_detail' => $data_save,
+            'meeting_schedule' => date('d F Y H:i',strtotime($request->meeting_schedule)));
+            Mail::to('mariabinarc@gmail.com')->send(new FormSolutionMail($data));
             return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -274,6 +276,15 @@ class CompanyProfileService{
                 $hardware_detail->details = $hardware['details'];
                 $hardware_detail->form_solution_id = $message->id;
                 $hardware_detail->save();
+                $data_save[] = [
+                    'kind_of_product' => $hardware['kind_of_product'],
+                    'list_product' => $product_list,
+                    'many_product' => $hardware['manyTalent'],
+                    'urgently' => $hardware['urgently'],
+                    'time_used' => $hardware['timeUsed'],
+                    'maximum_budget' => $hardware['maxBudget'],
+                    'details' => $hardware['details'],
+                ];
                 $fileService = new FileService;
                 if($hardware['attachment']!=null) {
                     $file = $hardware['attachment'];
@@ -289,16 +300,14 @@ class CompanyProfileService{
                 
              }
             // FormSolutionDetail::insert($data_save);
-            $data = [
-                'company_name' => $request->company_name,
-                'email' => $request->company_email,
-                'subject' => "Meeting Request by " . $request->company_name,
-                'contact_name'=>$request->contact_name,
-                'phone_number'=> $request->phone_number,
-                'solution'=> "Hardware",
-                'solution_detail' => $request->purpose,
-                'meeting_schedule' => date('d F Y H:i',strtotime($request->meeting_schedule)),
-            ];
+            $data =array('company_name' => $request->company_name,
+            'email' => $request->company_email,
+            'subject' => "Meeting Request by " . $request->company_name,
+            'contact_name'=>$request->contact_name,
+            'phone_number'=> $request->phone_number,
+            'solution'=> "Hardware",
+            'solution_detail' => $data_save,
+            'meeting_schedule' => date('d F Y H:i',strtotime($request->meeting_schedule)),);
             Mail::to('mariabinarc@gmail.com')->send(new FormSolutionMail($data));
             return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
         } catch(Exception $err){

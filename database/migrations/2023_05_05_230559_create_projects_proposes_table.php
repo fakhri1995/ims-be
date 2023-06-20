@@ -14,6 +14,7 @@ class CreateProjectsProposesTable extends Migration
     public function up()
     {
         Schema::create('projects_proposes', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger('project_id');
             $table->unsignedBigInteger('user_id');
 

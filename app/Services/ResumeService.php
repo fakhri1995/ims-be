@@ -167,16 +167,15 @@ class ResumeService{
 
             "education" => "filled|array",
             "education.university" => "required_with:education",
-            "education.university" => "required_with:education",
             "education.major" => "required_with:education",
-            "education.gpa" => "required_with:education|numeric|between:0.00,4.00",
+            "education.gpa" => "numeric|between:0.00,4.00|nullable",
             "education.graduation_year" => "required_with:education|date",
             
             "experience" => "filled|array",
             "experience.role" => "required_with:experience",
             "experience.company" => "required_with:experience",
             "experience.start_date" => "required_with:experience|date",
-            "experience.end_date" => "required_with:experience|date",
+            "experience.end_date" => "date|nullable",
             "experience.description" => "required_with:experience",
             
             "project" => "filled|array",
@@ -221,7 +220,7 @@ class ResumeService{
             $education = new ResumeEducation();
             $education->university = $requestEducation->university;
             $education->major = $requestEducation->major;
-            $education->gpa = $requestEducation->gpa;
+            $education->gpa = !$requestEducation->gpa ? NULL : $requestEducation->gpa;
             $education->graduation_year = $requestEducation->graduation_year;
             if(!$resume->educations()->save($education)) return ["success" => false, "message" => "Gagal Mengubah Education Resume", "status" => 400];
             return ["success" => true, "message" => "Data Education Berhasil Ditambah",  "status" => 200];
@@ -307,9 +306,8 @@ class ResumeService{
             "education" => "filled|array",
             "education.id" => "required_with:education|exists:App\ResumeEducation,id",
             "education.university" => "required_with:education",
-            "education.university" => "required_with:education",
             "education.major" => "required_with:education",
-            "education.gpa" => "required_with:education|numeric|between:0.00,4.00",
+            "education.gpa" => "numeric|between:0.00,4.00|nullable",
             "education.graduation_year" => "required_with:education|date",
             
             "experience" => "filled|array",
@@ -317,7 +315,7 @@ class ResumeService{
             "experience.role" => "required_with:experience",
             "experience.company" => "required_with:experience",
             "experience.start_date" => "required_with:experience|date",
-            "experience.end_date" => "required_with:experience|date",
+            "experience.end_date" => "date|nullable",
             "experience.description" => "required_with:experience",
             
             "project" => "filled|array",
@@ -407,7 +405,7 @@ class ResumeService{
             if(!$education) return ["success" => false, "message" => "Education ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
             $education->university = $requestEducation->university;
             $education->major = $requestEducation->major;
-            $education->gpa = $requestEducation->gpa;
+            $education->gpa = !$requestEducation->gpa ? NULL : $requestEducation->gpa;
             $education->graduation_year = $requestEducation->graduation_year;
             if(!$education->save()) return ["success" => false, "message" => "Gagal Mengubah Education Resume", "status" => 400];
             return ["success" => true, "message" => "Data Education Berhasil Diubah", "id" => $resume->id, "status" => 200];

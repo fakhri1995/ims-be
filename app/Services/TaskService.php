@@ -643,18 +643,18 @@ class TaskService{
             $login_id = auth()->user()->id;
             $location = $request->get('location', null);
             if($location){
-                $task_type_counts = TaskType::select('id', 'name')->withCount(['tasks' => function ($query) use($login_id){
+                $task_type_counts = TaskType::select('task_types.id', 'name')->withCount(['tasks' => function ($query) use($login_id){
                     $query->where('location_id', $login_id)->where(function ($q) use($login_id){
                         $q->where('created_by', $login_id)->orWhereHas('users', function ($q1) use($login_id){
-                            $q1->where('id', $login_id);
+                            $q1->where('users.id', $login_id);
                         });
                     } );
                 }]);
             } else {
-                $task_type_counts = TaskType::select('id', 'name')->withCount(['tasks' => function ($query) use($login_id){
+                $task_type_counts = TaskType::select('task_types.id', 'name')->withCount(['tasks' => function ($query) use($login_id){
                     $query->where(function ($q) use($login_id){
                         $q->where('created_by', $login_id)->orWhereHas('users', function ($q1) use($login_id){
-                            $q1->where('id', $login_id);
+                            $q1->where('users.id', $login_id);
                         });
                     } );
                 }]);

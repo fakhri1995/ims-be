@@ -30,9 +30,9 @@ class EmployeeContract extends Model
         return $this->belongsTo(RecruitmentRoleType::class, "contract_status_id");
     }
 
-    public function contract_file()
+    public function contract_files()
     {
-        return $this->morphOne(File::class, 'fileable');
+        return $this->morphMany(File::class, 'fileable');
     }
 
     public function salaries()

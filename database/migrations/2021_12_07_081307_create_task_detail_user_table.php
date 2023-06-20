@@ -14,6 +14,7 @@ class CreateTaskDetailUserTable extends Migration
     public function up()
     {
         Schema::create('task_detail_user', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger('task_detail_id');
             $table->unsignedBigInteger('user_id');
 

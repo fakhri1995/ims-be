@@ -14,6 +14,7 @@ class CreatePurchaseQCDetailAttributesTable extends Migration
     public function up()
     {
         Schema::create('purchase_q_c_detail_attributes', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger('purchase_q_c_detail_id');
             $table->unsignedBigInteger('model_inventory_column_id');
             $table->boolean('is_checked');

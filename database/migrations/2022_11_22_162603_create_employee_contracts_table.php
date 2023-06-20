@@ -34,6 +34,7 @@ class CreateEmployeeContractsTable extends Migration
             $table->integer("bpjs_tk_jkm")->nullable();
             $table->integer("bpjs_tk_jp")->nullable();
             $table->integer("pph21")->nullable();
+            $table->boolean("show_all_benefit")->default(0);
             $table->unsignedBigInteger('employee_id'); //refernece employee.id
             $table->dateTime('created_at');
             $table->dateTime('updated_at');

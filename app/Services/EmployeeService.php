@@ -347,6 +347,7 @@ class EmployeeService{
             $employee->acc_number_bukopin = $request->acc_number_bukopin ?? NULL;
             $employee->acc_number_another = $request->acc_number_another ?? NULL;
             $employee->is_posted = false;
+            $employee->join_at = $request->join_at ?? NULL;
             $employee->user_id = $user_id;
 
             $current_timestamp = date("Y-m-d H:i:s");
@@ -419,6 +420,7 @@ class EmployeeService{
             $employee->acc_name_another = $request->acc_name_another ?? NULL;
             $employee->acc_number_another = $request->acc_number_another ?? NULL;
             $employee->user_id = $user_id;
+            $employee->join_at = $request->join_at;
             $employee->is_posted = $request->is_posted;
             if(!$request->is_posted) $employee->updating_by = auth()->user()->id;
             else $employee->updating_by = NULL;
@@ -480,7 +482,7 @@ class EmployeeService{
         }
 
         $id = $request->id;
-        $employeeContract = EmployeeContract::with(["employee","role","contract_status","contract_file","salaries","salaries.column"])->find($id);
+        $employeeContract = EmployeeContract::with(["employee","role","contract_status","contract_files","salaries","salaries.column"])->find($id);
         if(!$employeeContract) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
 
@@ -552,6 +554,13 @@ class EmployeeService{
             $employeeContract->created_by = auth()->user()->id;
             $employeeContract->is_employee_active = false;
             $employeeContract->employee_id = $employee_id;
+            $employeeContract->bpjs_ks = 0; //5%
+            $employeeContract->bpjs_tk_jht = 0; // 0.057%
+            $employeeContract->bpjs_tk_jkk = 0; //0,24 %
+            $employeeContract->bpjs_tk_jkm = 0; //0,3 %
+            $employeeContract->bpjs_tk_jp = 0; //3%
+            $employeeContract->pph21 = 0;
+            $employeeContract->show_all_benefit = 0;
             $employeeContract->save();
 
             $employeeSalaryColumn = EmployeeSalaryColumn::where("required",1)->get();
@@ -588,7 +597,9 @@ class EmployeeService{
 
         $validator = Validator::make($request->all(), [
             "id" => "numeric|required",
-            "employee_id" => "numeric|required"
+            "employee_id" => "numeric|required",
+            "contract_file_delete_ids" => "array",
+            "contract_file_delete_ids.*" => "numeric"
         ]);
 
         if($validator->fails()){
@@ -616,6 +627,7 @@ class EmployeeService{
             $employeeContract->new_office = $request->new_office ?? NULL;
             $employeeContract->resign_at = $request->resign_at ?? NULL;
             $employeeContract->annual_leave = $request->annual_leave ?? NULL;
+            $employeeContract->show_all_benefit = $request->show_all_benefit ?? NULL;
             $salaries = $request->salaries ?? [];
             
 
@@ -661,12 +673,12 @@ class EmployeeService{
             $deleteEmployeeSalary = EmployeeBenefit::where("employee_contract_id",$id)->whereNotIn("employee_salary_column_id",$employee_salary_column_ids)->delete();
 
             $employeeContract->gaji_pokok = $total_pemasukan;
-            $employeeContract->bpjs_ks = $total_amount_for_bpjs * 0.05; //5%
-            $employeeContract->bpjs_tk_jht = $total_amount_for_bpjs * 0.057; // 0.057%
-            $employeeContract->bpjs_tk_jkk = $total_amount_for_bpjs * 0.0024; //0,24 %
-            $employeeContract->bpjs_tk_jkm = $total_amount_for_bpjs * 0.003; //0,3 %
-            $employeeContract->bpjs_tk_jp = $total_amount_for_bpjs * 0.03; //3%
-            $employeeContract->pph21 = $request->pph21;
+            $employeeContract->bpjs_ks = $request->bpjs_ks == NULL ? NULL : $total_amount_for_bpjs * 0.05; //5%
+            $employeeContract->bpjs_tk_jht = $request->bpjs_tk_jht == NULL ? NULL : $total_amount_for_bpjs * 0.057; // 0.057%
+            $employeeContract->bpjs_tk_jkk = $request->bpjs_tk_jkk == NULL ? NULL : $total_amount_for_bpjs * 0.0024; //0,24 %
+            $employeeContract->bpjs_tk_jkm = $request->bpjs_tk_jkm == NULL ? NULL : $total_amount_for_bpjs * 0.003; //0,3 %
+            $employeeContract->bpjs_tk_jp = $request->bpjs_tk_jp == NULL ? NULL : $total_amount_for_bpjs * 0.03; //3%
+            $employeeContract->pph21 = $request->pph21 == NULL ? NULL : $request->pph21;
 
 
             $employeeContract->is_employee_active = $is_employee_active;
@@ -679,15 +691,22 @@ class EmployeeService{
                 $employeeContract->employee->save();
             }  
 
-            $file = $request->file('contract_file',NULL);
-            if($file){
-                $old_file_id = $employeeContract->contract_file->id ?? NULL;
-                $fileService = new FileService;
-                $add_file_response = $fileService->addFile($employeeContract->id, $file, 'App\EmployeeContract', 'employee_contract_file', 'EmployeeContract', false);
-                if($add_file_response['success'] && $old_file_id) {
-                    $fileService->deleteForceFile($old_file_id);
+            $old_files = $employeeContract->contract_files->pluck('id')->toArray();
+            $fileService = new FileService;
+            $files = $request->file('contract_files',[]);
+            foreach($files as $file){
+                if($file){
+                    $fileService->addFile($employeeContract->id, $file, 'App\EmployeeContract', 'employee_contract_file', 'EmployeeContract', false);
                 }
             }
+
+            $file_delete_ids = $request->contract_file_delete_ids ?? [];
+            foreach($file_delete_ids as $file_delete_id){
+                if(in_array($file_delete_id, $old_files)){
+                    $fileService->deleteForceFile($file_delete_id);
+                }
+            }
+
         try{
             return ["success" => true, "message" => "Data Berhasil Diupdate", "data" => $employeeContract, "status" => 200];
         }catch(Exception $err){
@@ -1435,6 +1454,7 @@ class EmployeeService{
             $employeePayslip->bpjs_tk_jkm = $employee->contract->bpjs_tk_jkm; //0,3 %
             $employeePayslip->bpjs_tk_jp = $employee->contract->bpjs_tk_jp; //3%
             $employeePayslip->pph21 = $employee->contract->pph21;
+            $employeePayslip->show_all_benefit = $employee->contract->show_all_benefit;
             $employeePayslip->is_posted = $request->is_posted;
             $employeePayslip->month = $request->month;
             $employeePayslip->year = $request->year;
@@ -1530,7 +1550,7 @@ class EmployeeService{
 
             $gaji_pokok = $request->gaji_pokok ?? 0;
             $total_gross_penerimaan = $gaji_pokok;
-            $total_gross_pengurangan = $request->pph21 ?? 0;
+            $total_gross_pengurangan = 0;
             $total_amount_for_bpjs = $gaji_pokok ?? 0;
             $employee_salary_column_ids = [];
             $salaries = $request->salaries ?? [];
@@ -1567,26 +1587,36 @@ class EmployeeService{
             
 
             $employeePayslip->gaji_pokok = $gaji_pokok;
-            $employeePayslip->bpjs_ks = $total_amount_for_bpjs * 0.05; //5%
-            $employeePayslip->bpjs_tk_jht = $total_amount_for_bpjs * 0.057; // 0.057%
-            $employeePayslip->bpjs_tk_jkk = $total_amount_for_bpjs * 0.0024; //0,24 %
-            $employeePayslip->bpjs_tk_jkm = $total_amount_for_bpjs * 0.003; //0,3 %
-            $employeePayslip->bpjs_tk_jp = $total_amount_for_bpjs * 0.03; //3%
-            $employeePayslip->pph21 = $request->pph21;
+            $employeePayslip->bpjs_ks = $request->bpjs_ks == NULL ? NULL : $total_amount_for_bpjs * 0.05; //5%
+            $employeePayslip->bpjs_tk_jht = $request->bpjs_tk_jht == NULL ? NULL : $total_amount_for_bpjs * 0.057; // 0.057%
+            $employeePayslip->bpjs_tk_jkk = $request->bpjs_tk_jkk == NULL ? NULL : $total_amount_for_bpjs * 0.0024; //0,24 %
+            $employeePayslip->bpjs_tk_jkm = $request->bpjs_tk_jkm == NULL ? NULL : $total_amount_for_bpjs * 0.003; //0,3 %
+            $employeePayslip->bpjs_tk_jp = $request->bpjs_tk_jp == NULL ? NULL : $total_amount_for_bpjs * 0.03; //3%
+            $employeePayslip->pph21 = $request->pph21 == NULL ? NULL : $request->pph21;
 
-            $total_gross_pengurangan = $total_gross_pengurangan +
-                $employeePayslip->bpjs_ks +
-                $employeePayslip->bpjs_tk_jht +
-                $employeePayslip->bpjs_tk_jkk +
-                $employeePayslip->bpjs_tk_jkm +
-                $employeePayslip->bpjs_tk_jp;
+            $total_pengurangan_mandatory = $employeePayslip->pph21 +
+            $employeePayslip->bpjs_ks +
+            $employeePayslip->bpjs_tk_jht +
+            $employeePayslip->bpjs_tk_jkk +
+            $employeePayslip->bpjs_tk_jkm +
+            $employeePayslip->bpjs_tk_jp;
+            
+            $total_gross_pengurangan = $total_gross_pengurangan;
 
             $employeePayslip->employee_id = $request->employee_id;
             $employeePayslip->total_hari_kerja = $request->total_hari_kerja;
             $employeePayslip->tanggal_dibayarkan = $request->tanggal_dibayarkan;
             $employeePayslip->total_gross_penerimaan = $total_gross_penerimaan; //sum of penerimaan
-            $employeePayslip->total_gross_pengurangan = $total_gross_pengurangan;
-            $employeePayslip->take_home_pay = $total_gross_penerimaan - $total_gross_pengurangan;
+            $employeePayslip->total_gross_pengurangan = $total_gross_pengurangan + $total_pengurangan_mandatory;
+            $employeePayslip->show_all_benefit = $request->show_all_benefit ?? 0;
+            
+            if($employeePayslip->show_all_benefit) $employeePayslip->total_gross_penerimaan+=$total_pengurangan_mandatory;
+            $employeePayslip->take_home_pay = $employeePayslip->total_gross_penerimaan - $employeePayslip->total_gross_pengurangan;
+
+            
+
+            
+            
             $employeePayslip->is_posted = $request->is_posted;
             $employeePayslip->month = $request->month;
             $employeePayslip->year = $request->year;
@@ -1708,6 +1738,18 @@ class EmployeeService{
             "dibayarkan" => $tgl_dibayarkan[2]." ".$this->globalService->getIndonesiaMonth($tgl_dibayarkan[1])." ".$tgl_dibayarkan[0],
             "periode" => $this->globalService->getIndonesiaMonth($employeePayslip->month)." ".$employeePayslip->year,
         ];
+
+        if($employeePayslip->show_all_benefit){
+            $salaries["penerimaan"] = [
+                [ "name" => "Gaji Pokok", "value" => number_format($employeePayslip->gaji_pokok) ],
+                [ "name" => "Pph 21", "value" => number_format($employeePayslip->pph21) ],
+                [ "name" => "BPJS KS (5% Perusahaan)", "value" => number_format($employeePayslip->bpjs_ks) ],
+                [ "name" => "BPJS TK-JHT", "value" => number_format($employeePayslip->bpjs_tk_jht) ],
+                [ "name" => "BPJS TK-JKK (0,24% Perusahaan)", "value" => number_format($employeePayslip->bpjs_tk_jkk) ],
+                [ "name" => "BPJS TK-JKM (0,3% Perusahaan)", "value" => number_format($employeePayslip->bpjs_tk_jkm) ],
+                [ "name" => "BPJS TK-JP", "value" => number_format($employeePayslip->bpjs_tk_jp) ],
+            ];
+        }
 
         foreach($employeePayslip->salaries as $s){
             if($s->column->type == 1){
