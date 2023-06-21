@@ -21,7 +21,7 @@ class InventoryController extends Controller
     {
         $route_name = "PRODUCT_INVENTORIES_GET";
         
-        $response = $this->inventoryService->getProductInventories($route_name);
+        $response = $this->inventoryService->getProductInventories($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -29,7 +29,7 @@ class InventoryController extends Controller
     {
         $route_name = "PRODUCT_INVENTORY_GET";
         
-        $response = $this->inventoryService->getProductInventory($route_name);
+        $response = $this->inventoryService->getProductInventory($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -37,7 +37,7 @@ class InventoryController extends Controller
     {
         $route_name = "PRODUCT_INVENTORY_ADD";
         
-        $response = $this->inventoryService->addProductInventory($route_name);
+        $response = $this->inventoryService->addProductInventory($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -45,7 +45,7 @@ class InventoryController extends Controller
     {
         $route_name = "PRODUCT_INVENTORY_UPDATE";
         
-        $response = $this->inventoryService->updateProductInventory($route_name);
+        $response = $this->inventoryService->updateProductInventory($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -53,7 +53,7 @@ class InventoryController extends Controller
     {
         $route_name = "PRODUCT_INVENTORY_DELETE";
         
-        $response = $this->inventoryService->deleteProductInventory($route_name);
+        $response = $this->inventoryService->deleteProductInventory($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -61,7 +61,7 @@ class InventoryController extends Controller
     {
         $route_name = "PRODUCT_INVENTORY_BY_SEARCH_GET";
         
-        $response = $this->inventoryService->getInventoryBySearch($route_name);
+        $response = $this->inventoryService->getInventoryBySearch($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
