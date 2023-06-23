@@ -22,6 +22,7 @@ class CreateProductInventoriesTable extends Migration
             $table->unsignedBigInteger('price_option_id');
             $table->unsignedBigInteger('model_id')->nullable();
             $table->unsignedBigInteger('category_id')->nullable();
+            $table->boolean('is_active')->default(true);
 
             $table->index('model_id');
         });
