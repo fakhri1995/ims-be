@@ -6,8 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProductInventoryCategory extends Model
 {
-    public function category()
+    public $timestamps = false;
+
+    public function products()
     {
-        return $this->hasMany(ProductInventory::class, 'category_id');
+        return $this->hasMany(ProductInventory::class, 'category_id', 'id');
     }
 }
