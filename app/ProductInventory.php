@@ -3,9 +3,12 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProductInventory extends Model
 {
+    use SoftDeletes;
+
     public function modelInventory()
     {
         return $this->belongsTo(ModelInventory::class, 'model_id')->withDefault([
@@ -24,11 +27,6 @@ class ProductInventory extends Model
 
     public function category()
     {
-        return $this->belongsTo(ProductInventoryCategory::class, 'category_id');
-    }
-
-    public function priceOptions()
-    {
-        return $this->belongsTo(ProductInventoryPriceOption::class, 'price_option_id');
+        return $this->belongsTo(Category::class, 'category_id');
     }
 }
