@@ -207,10 +207,11 @@ class InventoryService
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+        $keyword = $request->keyword;
         try{
-            $products = Category::with(['products'])->withCount('products')->get();
-            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $products, "status" => 200];
+            $products = Category::with(['products'])->withCount('products');
+            if($keyword) $products = $products->where("name","LIKE", "%$keyword%");
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $products->get(), "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err->getMessage(), "status" => 400];
         }
