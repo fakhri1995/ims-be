@@ -26,7 +26,8 @@ class InventoryService
             "page" => "numeric",
             "rows" => "numeric|between:1,100",
             "sort_by" => "in:name,count,price",
-            "sort_type" => "in:asc,desc"
+            "sort_type" => "in:asc,desc",
+            "is_active" => "numeric|in:0,1"
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -100,7 +101,8 @@ class InventoryService
             "price" => "required|numeric",
             "price_option" => "required",
             "model_id" => "numeric|nullable",
-            "category_id" => "numeric|nullable"
+            "category_id" => "numeric|nullable",
+            "is_active" => "numeric|in:0,1"
         ]);
 
         if($validator->fails()){
@@ -157,7 +159,8 @@ class InventoryService
             "price" => "numeric|nullable",
             "price_option" => "nullable",
             "model_id" => "numeric|nullable",
-            "category_id" => "numeric|nullable"
+            "category_id" => "numeric|nullable",
+            "is_active" => "numeric|in:0,1"
         ]);
         
 
