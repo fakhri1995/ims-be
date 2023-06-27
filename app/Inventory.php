@@ -39,6 +39,11 @@ class Inventory extends Model
         return $this->belongsTo(StatusUsageInventory::class, 'status_usage');
     }
 
+    public function statusRent()
+    {
+        return $this->belongsTo(StatusRentInventory::class, 'status_rent');
+    }
+
     public function locationInventory()
     {
         return $this->belongsTo(Company::class, 'location')->withDefault([
