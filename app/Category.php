@@ -3,11 +3,11 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ProductInventoryCategory extends Model
+class Category extends Model
 {
-    public $timestamps = false;
-
+    use SoftDeletes;
     public function products()
     {
         return $this->hasMany(ProductInventory::class, 'category_id', 'id');

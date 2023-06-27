@@ -135,12 +135,14 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addProductInventory', 'InventoryController@addProductInventory');
     $router->put('/updateProductInventory', 'InventoryController@updateProductInventory');
     $router->delete('/deleteProductInventory', 'InventoryController@deleteProductInventory');
+    $router->get('/getProductInventoryId', 'InventoryController@getProductInventoryId');
 
-    $router->get('/getProductInventoryCategories', 'InventoryController@getProductInventoryCategories');
-    $router->get('/getProductInventoryCategory', 'InventoryController@getProductInventoryCategory');
-    $router->post('/addProductInventoryCategory', 'InventoryController@addProductInventoryCategory');
-    $router->put('/updateProductInventoryCategory', 'InventoryController@updateProductInventoryCategory');
-    $router->delete('/deleteProductInventoryCategory', 'InventoryController@deleteProductInventoryCategory');
+
+    $router->get('/getCategories', 'InventoryController@getCategories');
+    $router->get('/getCategory', 'InventoryController@getCategory');
+    $router->post('/addCategory', 'InventoryController@addCategory');
+    $router->put('/updateCategory', 'InventoryController@updateCategory');
+    $router->delete('/deleteCategory', 'InventoryController@deleteCategory');
 
     //General Company Routes
     $router->get('/getCompanyRelationshipInventory', 'AssetController@getCompanyRelationshipInventory');

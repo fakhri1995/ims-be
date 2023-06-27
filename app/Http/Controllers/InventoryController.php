@@ -58,43 +58,51 @@ class InventoryController extends Controller
     }
 
     //PRODUCT CATEGORY
-    public function getProductInventoryCategories(Request $request)
+    public function getCategories(Request $request)
     {
-        $route_name = "PRODUCT_INVENTORY_CATEGORIES_GET";
+        $route_name = "CATEGORIES_GET";
         
-        $response = $this->inventoryService->getProductInventoryCategories($request, $route_name);
+        $response = $this->inventoryService->getCategories($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
-    public function getProductInventoryCategory(Request $request)
+    public function getCategory(Request $request)
     {
-        $route_name = "PRODUCT_INVENTORY_GET";
+        $route_name = "CATEGORY_GET";
         
-        $response = $this->inventoryService->getProductInventoryCategory($request, $route_name);
+        $response = $this->inventoryService->getCategory($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
-    public function addProductInventoryCategory(Request $request)
+    public function addCategory(Request $request)
     {
-        $route_name = "PRODUCT_INVENTORY_CATEGORY__ADD";
+        $route_name = "PRODUCT_INVENTORY_CATEGORY_ADD";
         
-        $response = $this->inventoryService->addProductInventoryCategory($request, $route_name);
+        $response = $this->inventoryService->addCategory($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
-    public function updateProductInventoryCategory(Request $request)
+    public function updateCategory(Request $request)
     {
-        $route_name = "PRODUCT_INVENTORY_CATEGORY__UPDATE";
+        $route_name = "PRODUCT_INVENTORY_CATEGORY_UPDATE";
         
-        $response = $this->inventoryService->updateProductInventoryCategory($request, $route_name);
+        $response = $this->inventoryService->updateCategory($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
-    public function deleteProductInventoryCategory(Request $request)
+    public function deleteCategory(Request $request)
     {
-        $route_name = "PRODUCT_INVENTORY_CATEGORY__DELETE";
+        $route_name = "PRODUCT_INVENTORY_CATEGORY_DELETE";
         
-        $response = $this->inventoryService->deleteProductInventoryCategory($request, $route_name);
+        $response = $this->inventoryService->deleteCategory($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getProductInventoryId(Request $request)
+    {
+        $route_name = "PRODUCT_INVENTORY_GET_ID";
+        
+        $response = $this->inventoryService->getProductInventoryId($request, $route_name);
         return response()->json($response, $response['status']);
     }
 }
