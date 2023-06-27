@@ -25,6 +25,7 @@ use App\StatusConditionInventory;
 use App\Imports\InventoriesImport;
 use Illuminate\Support\Facades\DB;
 use App\Services\GlobalService;
+use App\StatusRentInventory;
 use Validator;
 
 class AssetService{
@@ -786,11 +787,13 @@ class AssetService{
             $vendors = Vendor::select('id', 'name')->get();
             $status_condition = StatusConditionInventory::get();
             $status_usage = StatusUsageInventory::get();
+            $status_rent = StatusRentInventory::get();
             
             $this->companyService = new CompanyService;
             $tree_companies = $this->companyService->getCompanyTreeSelect(auth()->user()->company_id, 'noSubChild');
             
-            $data = (object)['vendors' => $vendors, 'manufacturers' => $manufacturers, 'status_condition' => $status_condition, 'status_usage' => $status_usage, 'tree_companies' => $tree_companies];
+            $data = (object)['vendors' => $vendors, 'manufacturers' => $manufacturers, 'status_condition' => $status_condition, 
+            'status_usage' => $status_usage, 'status_rent' => $status_rent, 'tree_companies' => $tree_companies];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -809,6 +812,7 @@ class AssetService{
             $mig_id = $request->get('mig_id', null);
             $status_condition = $request->get('status_condition', null);
             $status_usage = $request->get('status_usage', null);
+            $status_rent = $request->get('status_rent', null);
             $name = $request->get('name', null);
             $rows = $request->get('rows', 10);
             $sort_by = $request->get('sort_by', null);
@@ -818,7 +822,7 @@ class AssetService{
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
             
-            $inventories = Inventory::with(['statusCondition', 'statusUsage', 'locationInventory', 'modelInventory.asset:id,name,code,deleted_at'])->select('id', 'model_id', 'mig_id', 'status_condition', 'status_usage', 'location');
+            $inventories = Inventory::with(['statusCondition', 'statusUsage', 'statusRent', 'locationInventory', 'modelInventory.asset:id,name,code,deleted_at'])->select('id', 'model_id', 'mig_id', 'status_condition', 'status_usage', 'status_rent','location');
 
             if($asset_id){
                 $assetChildrenTreeList = $this->assetChildrenTreeList($asset_id);
@@ -843,10 +847,14 @@ class AssetService{
             if($status_usage){
                 $inventories = $inventories->where('status_usage', $status_usage);
             }
+            if($status_rent){
+                $inventories = $inventories->where('status_rent', $status_rent);
+            }
 
             if($sort_by){
                 if($sort_by === 'status_usage') $inventories = $inventories->orderBy('status_usage', $sort_type);
                 else if($sort_by === 'status_condition') $inventories = $inventories->orderBy('status_condition', $sort_type);
+                else if($sort_by === 'status_rent') $inventories = $inventories->orderBy('status_rent', $sort_type);
                 else if($sort_by === 'mig_id') $inventories = $inventories->orderBy('mig_id', $sort_type);
             }
             
@@ -1120,6 +1128,7 @@ class AssetService{
         $new_inventory->vendor_id = $inventory['vendor_id'];
         $new_inventory->status_condition = $inventory['status_condition'];
         $new_inventory->status_usage = 1;
+        $new_inventory->status_rent = 1;
         $new_inventory->location = $location;
         $new_inventory->deskripsi = $inventory['deskripsi'];
         $new_inventory->manufacturer_id = $inventory['manufacturer_id'];
@@ -1301,6 +1310,7 @@ class AssetService{
         $inventory->vendor_id = $request->get('vendor_id');
         $inventory->status_condition = $request->get('status_condition');
         $inventory->status_usage = $request->get('status_usage');
+        if($inventory->status_usage === 1) $inventory->status_rent = $request->get('status_rent');
         $inventory->location = $location;
         $inventory->deskripsi = $request->get('deskripsi');
         $inventory->manufacturer_id = $request->get('manufacturer_id');
@@ -1912,6 +1922,39 @@ class AssetService{
             $inventory->status_condition = $status_condition;
             $inventory->save();
             $properties['attributes'] = ['status_condition' => $status_condition];
+            
+            if($properties['attributes'] !== $properties['old']){
+                $logService = new LogService;
+                $logService->updateLogInventory($id, $causer_id, $properties, $notes);
+            }
+            return ["success" => true, "message" => "Status Kondisi Inventory Berhasil Diubah", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function changeStatusRent($data, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $data['id'];
+        $notes = $data['notes'];
+        $status_rent = $data['status_rent'];
+        $causer_id = auth()->user()->id;
+        try{
+            if($status_rent < 1 || $status_rent > 2){
+                return ["success" => false, "message" => "Status Rent Tidak Tepat", "status" => 400];
+            }
+            $inventory = Inventory::find($id);
+            if($inventory === null) return ["success" => false, "message" => "Inventory Tidak Ditemukan", "status" => 400];
+            if($inventory->status_usage !== 1){
+                return ["success" => false, "message" => "Status Usage Harus In Used Rent", "status" => 400];
+            }
+            $properties['old'] = ['status_rent' => $inventory->status_rent];
+            $inventory->status_rent = $status_rent;
+            $inventory->save();
+            $properties['attributes'] = ['status_rent' => $status_rent];
             
             if($properties['attributes'] !== $properties['old']){
                 $logService = new LogService;

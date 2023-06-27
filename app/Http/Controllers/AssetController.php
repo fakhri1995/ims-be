@@ -276,6 +276,19 @@ class AssetController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function changeStatusRent(Request $request){
+        $route_name = "INVENTORY_STATUS_RENT";
+        
+        $data_request = [
+            'id' => $request->get('id', null),
+            'status_rent' => $request->get('status_rent', null),
+            'notes' => $request->get('notes', null),
+        ];
+        
+        $response = $this->assetService->changeStatusRent($data_request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function changeStatusUsage(Request $request)
     {
         $route_name = "INVENTORY_STATUS_USAGE";
