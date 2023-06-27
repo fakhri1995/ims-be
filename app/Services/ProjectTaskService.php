@@ -192,7 +192,7 @@ class ProjectTaskService{
             "project_staffs.*" => "numeric",
             "proposed_bys" => "array",
             "proposed_bys.*" => "numeric",
-            "status_id" => "numeric",
+            "status_id" => "numeric|nullable",
             "description" => "string"
         ];
 
@@ -320,9 +320,11 @@ class ProjectTaskService{
         $project = Project::find($id);
         if(!$project) return ["success" => false, "message" => "Data project tidak ditemukan", "status" => 400];
 
-        $status_id = $request->status_id;
-        $projectStatus = ProjectStatus::find($status_id);
-        if(!$projectStatus) return ["success" => false, "message" => "Project status tidak ditemukan", "status" => 400];
+        $status_id = $request->status_id ?? NULL;
+        if($status_id){
+            $projectStatus = ProjectStatus::find($status_id);
+            if(!$projectStatus) return ["success" => false, "message" => "Project status tidak ditemukan", "status" => 400];
+        }
         
 
         //oldLog
@@ -579,7 +581,7 @@ class ProjectTaskService{
             "project_id" => "numeric|nullable",
             "task_staffs" => "array",
             "task_staffs.*" => "numeric",
-            "status_id" => "numeric",
+            "status_id" => "numeric|nullable",
             "description" => "string"
         ];
 
@@ -615,10 +617,10 @@ class ProjectTaskService{
         }
 
         
-        $status_id = $request->status_id;
+        $status_id = $request->status_id ?? NULL;
         if($status_id){
             $projectStatus = ProjectStatus::find($status_id);
-            if(!$projectStatus) return ["success" => false, "message" => "Project  status tidak ditemukan", "status" => 400];
+            if(!$projectStatus) return ["success" => false, "message" => "Project status tidak ditemukan", "status" => 400];
         }
         
         //oldLog
@@ -709,7 +711,7 @@ class ProjectTaskService{
         if($access["success"] === false) return $access;
         $validator = Validator::make($request->all(), [
             "id" => "numeric|required",
-            "status_id" => "numeric",
+            "status_id" => "numeric|nullable",
         ]);
         
         if($validator->fails()){
@@ -722,9 +724,11 @@ class ProjectTaskService{
         if(!$projectTask) return ["success" => false, "message" => "Data tidak ditemukan", "status" => "400"];
         $project_id = $projectTask->project_id;
 
-        $status_id = $request->status_id;
-        $projectStatus = ProjectStatus::find($status_id);
-        if(!$projectStatus) return ["success" => false, "message" => "Project  status tidak ditemukan", "status" => 400];
+        $status_id = $request->status_id ?? NULL;
+        if($status_id){
+            $projectStatus = ProjectStatus::find($status_id);
+            if(!$projectStatus) return ["success" => false, "message" => "Project status tidak ditemukan", "status" => 400];
+        }
         
         //oldLog
         $logDataOld = clone $projectTask;
