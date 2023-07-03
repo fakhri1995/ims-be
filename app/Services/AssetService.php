@@ -1973,7 +1973,7 @@ class AssetService{
 
         try{
             $status_usage = $data['status_usage'];
-            if($status_usage < 1 || $status_usage > 3){
+            if($status_usage < 1 || $status_usage > 4){
                 return ["success" => false, "message" => "Status Usage Tidak Tepat", "status" => 400];
             }
             $id = $data['id'];
