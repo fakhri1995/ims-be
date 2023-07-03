@@ -54,7 +54,7 @@ class InventoryService
             $sort_by = $request->sort_by ?? NULL;
             $sort_type = $request->get('sort_type','asc');
             if($sort_by == "name") $products = $products->orderBy('name',$sort_type);
-            //if($sort_by == "count") $products = $products->orderBy('model_inventory.inventories_count',$sort_type); TODO
+            //if($sort_by == "count") $products = $products->orderBy($products->modelInventory->inventories_count, $sort_type);
             if($sort_by == "price") $products = $products->orderBy('price',$sort_type);
 
             $products = $products->paginate($rows);
@@ -306,6 +306,11 @@ class InventoryService
         if(!$category) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
         try{
+            $products = ProductInventory::where('category_id', $id)->get();
+            foreach($products as $product){
+                $product->category_id = NULL;
+                $product->save();
+            }
             $category->delete();
             return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $category, "status" => 200];
         }catch(Exception $err){
