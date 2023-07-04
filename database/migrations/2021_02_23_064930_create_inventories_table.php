@@ -19,6 +19,7 @@ class CreateInventoriesTable extends Migration
             $table->unsignedBigInteger('vendor_id')->nullable();
             $table->integer('status_condition');
             $table->integer('status_usage');
+            $table->integer('status_rent')->nullable();
             $table->integer('location')->nullable();
             $table->string('deskripsi')->nullable();
             $table->integer('manufacturer_id')->nullable();

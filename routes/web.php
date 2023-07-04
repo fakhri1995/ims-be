@@ -135,7 +135,14 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addProductInventory', 'InventoryController@addProductInventory');
     $router->put('/updateProductInventory', 'InventoryController@updateProductInventory');
     $router->delete('/deleteProductInventory', 'InventoryController@deleteProductInventory');
-    $router->get('/getInventoryBySearch', 'InventoryController@getInventoryBySearch');
+    $router->get('/getProductInventoryId', 'InventoryController@getProductInventoryId');
+
+
+    $router->get('/getCategories', 'InventoryController@getCategories');
+    $router->get('/getCategory', 'InventoryController@getCategory');
+    $router->post('/addCategory', 'InventoryController@addCategory');
+    $router->put('/updateCategory', 'InventoryController@updateCategory');
+    $router->delete('/deleteCategory', 'InventoryController@deleteCategory');
 
     //General Company Routes
     $router->get('/getCompanyRelationshipInventory', 'AssetController@getCompanyRelationshipInventory');
@@ -227,6 +234,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/updateInventory', 'AssetController@updateInventory');
     $router->put('/replaceInventoryPart', 'AssetController@replaceInventoryPart');
     $router->put('/changeStatusUsage', 'AssetController@changeStatusUsage');
+    $router->put('/changeStatusRent', 'AssetController@changeStatusRent');
     $router->put('/changeStatusCondition', 'AssetController@changeStatusCondition');
     $router->delete('/removeInventoryPart', 'AssetController@removeInventoryPart');
     $router->delete('/deleteInventory', 'AssetController@deleteInventory');
