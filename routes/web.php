@@ -634,6 +634,14 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteProjectLogNotes', 'ProjectTaskController@deleteProjectLogNotes');
 
     $router->get('/getBankLists', "BankListController@getBankLists");
+
+    
+    //Contract Routes
+    $router->get('/getContracts', 'ContractController@getContracts');
+    $router->get('/getContract', 'ContractController@getContract');
+    $router->post('/addContract', 'ContractController@addContract');
+    $router->put('/updateContract', 'ContractController@updateContract');
+    $router->delete('/deleteContract', 'ContractController@deleteContract');
 });
 
 // //Incident Routes
@@ -657,25 +665,7 @@ $router->put('/publishingServiceItem', 'ServiceController@publishingServiceItem'
 $router->put('/depublishingServiceItem', 'ServiceController@depublishingServiceItem');
 $router->delete('/deleteServiceItem', 'ServiceController@deleteServiceItem');
 
-//Service Item Contract Routes
-$router->put('/activatingServiceItemContract', 'ContractController@activatingServiceItemContract');
-$router->put('/deactivatingServiceItemContract', 'ContractController@deactivatingServiceItemContract');
 
-//Contract Type Routes
-$router->get('/getContractTypes', 'ContractController@getContractTypes');
-$router->post('/addContractType', 'ContractController@addContractType');
-$router->put('/updateContractType', 'ContractController@updateContractType');
-$router->delete('/deleteContractType', 'ContractController@deleteContractType');
-
-//Contract Routes
-$router->get('/getContractInputData', 'ContractController@getContractInputData');
-$router->get('/getContracts', 'ContractController@getContracts');
-$router->get('/getContract', 'ContractController@getContract');
-$router->post('/addContract', 'ContractController@addContract');
-$router->put('/updateContract', 'ContractController@updateContract');
-$router->put('/activatingContract', 'ContractController@activatingContract');
-$router->put('/deactivatingContract', 'ContractController@deactivatingContract');
-$router->delete('/deleteContract', 'ContractController@deleteContract');
 
 //Depreciation Routes
 $router->get('/getDepreciations', 'DepreciationController@getDepreciations');
