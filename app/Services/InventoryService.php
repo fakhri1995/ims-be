@@ -41,7 +41,7 @@ class InventoryService
             $model_id = $request->model_id ?? NULL;
             $keyword = $request->keyword ?? NULL;
             $category_id = $request->category_id ?? NULL;
-            $products = ProductInventory::with(['modelInventory', 'category']);
+            $products = ProductInventory::withCount('inventories')->with(['modelInventory', 'category']);
             $rows = $request->rows ?? 5;
             $is_active = $request->is_active ?? NULL;
             // filter
@@ -54,7 +54,7 @@ class InventoryService
             $sort_by = $request->sort_by ?? NULL;
             $sort_type = $request->get('sort_type','asc');
             if($sort_by == "name") $products = $products->orderBy('name',$sort_type);
-            //if($sort_by == "count") $products = $products->orderBy($products->modelInventory->inventories_count, $sort_type);
+            if($sort_by == "count") $products = $products->orderBy('inventories_count',$sort_type);
             if($sort_by == "price") $products = $products->orderBy('price',$sort_type);
 
             $products = $products->paginate($rows);
