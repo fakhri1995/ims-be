@@ -648,7 +648,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getContracts', 'ContractController@getContracts');
     $router->get('/getContract', 'ContractController@getContract');
     $router->post('/addContract', 'ContractController@addContract');
-    $router->put('/updateContract', 'ContractController@updateContract');
+    $router->post('/updateContract', 'ContractController@updateContract');
     $router->delete('/deleteContract', 'ContractController@deleteContract');
 });
 
