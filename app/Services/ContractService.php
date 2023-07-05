@@ -100,6 +100,20 @@ class ContractService{
             $contract->is_posted = $request->is_posted ?? NULL;
             $current_time = date('Y-m-d H:i:s');          
             $contract->updated_at = $current_time;
+
+            $extras_arr = $request->extras ?? [];
+            $extras = [];
+            foreach($extras_arr as $e){
+                $extra = [];
+                $extra["key"] = Str::uuid()->toString();
+                $extra["type"] = $e['type'];
+                $extra["name"] = $e['name'];
+                $extra["value"] = $e['value'];
+                $extras[] = $extra;
+            }
+
+            $contract->extras = $extras;
+            
             $contract->save();
             return ["success" => true, "message" => "Data Berhasil Diubah", "data" => $contract, "status" => 200];
         }catch(Exception $err){
