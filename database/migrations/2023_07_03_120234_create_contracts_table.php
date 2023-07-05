@@ -22,7 +22,7 @@ class CreateContractsTable extends Migration
             $table->date('initial_date')->nullable();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
-            $table->text('extras')->default("[]");
+            $table->text('extras')->default(NULL);
             $table->boolean('is_posted')->default(0);
             $table->unsignedBigInteger('created_by');
             $table->dateTime('created_at');
