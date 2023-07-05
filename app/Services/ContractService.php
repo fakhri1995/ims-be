@@ -86,7 +86,6 @@ class ContractService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
-        try{
             $id = $request->id;
             $contract = Contract::find($id);
             $contract->contract_number = $request->contract_number ?? NULL;
@@ -115,6 +114,7 @@ class ContractService{
             $contract->extras = $extras;
             
             $contract->save();
+            try{
             return ["success" => true, "message" => "Data Berhasil Diubah", "data" => $contract, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
