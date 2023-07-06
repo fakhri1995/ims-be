@@ -46,4 +46,7 @@ class Resume extends Model
         return $this->hasMany(ResumeAssessmentResult::class, 'resume_id');
     }
 
+    public function summaries(){
+        return $this->hasOne(ResumeSummary::class, 'resume_id');
+    }
 }
