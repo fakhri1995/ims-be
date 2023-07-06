@@ -25,7 +25,7 @@ class InventoryService
         $rules = [
             "page" => "numeric",
             "rows" => "numeric|between:1,100",
-            "sort_by" => "in:name,count,price",
+            "sort_by" => "in:name,inventories_count,price",
             "sort_type" => "in:asc,desc",
             "is_active" => "numeric|in:0,1"
         ];
@@ -54,7 +54,7 @@ class InventoryService
             $sort_by = $request->sort_by ?? NULL;
             $sort_type = $request->get('sort_type','asc');
             if($sort_by == "name") $products = $products->orderBy('name',$sort_type);
-            if($sort_by == "count") $products = $products->orderBy('inventories_count',$sort_type);
+            if($sort_by == "inventories_count") $products = $products->orderBy('inventories_count',$sort_type);
             if($sort_by == "price") $products = $products->orderBy('price',$sort_type);
 
             $products = $products->paginate($rows);
@@ -151,9 +151,10 @@ class InventoryService
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
+        $id = $request->id ?? NULL;
         $validator = Validator::make($request->all(), [
             "id" => "required|exists:App\ProductInventory,id",
-            "product_id" => "unique:App\ProductInventory,product_id",
+            "product_id" => "unique:App\ProductInventory,product_id,$id",
             "name" => "nullable",
             "description" => "nullable",
             "price" => "numeric|nullable",
@@ -169,7 +170,6 @@ class InventoryService
             return ["success" => false, "message" => $errors, "status" => 400];
         }
         
-        $id = $request->id;
         $product = ProductInventory::find($id);
         if(!$product) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         $is_active = $request->is_active ?? NULL;
@@ -182,19 +182,27 @@ class InventoryService
         $product->updated_at = Date('Y-m-d H:i:s');
         $product->updated_by = auth()->user()->id;
         // if model changes
-        if($request->model_id){
+        $model_id = $request->model_id ?? NULL;
+        if($model_id){
             $model = ModelInventory::find($request->model_id);
             if(!$model) return ["success" => false, "message" => "Data Model Tidak Ditemukan", "status" => 400];
 
             $product->model_id = $request->model_id;
         }
+        if($model_id === 0){
+            $product->model_id = NULL;
+        }
 
         // if category changes
-        if($request->category_id){
+        $category_id = $request->category_id ?? NULL;
+        if($category_id){
             $category = Category::find($request->category_id);
             if(!$category) return ["success" => false, "message" => "Data Category Tidak Ditemukan", "status" => 400];
 
             $product->category_id = $request->category_id;
+        }
+        if($category_id === 0){
+            $product->category_id = NULL;
         }
 
         if(!$product->save()) return ["success" => false, "message" => "Gagal Mengubah Produk", "status" => 400];
