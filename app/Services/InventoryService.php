@@ -177,7 +177,7 @@ class InventoryService
         if($request->product_id)$product->product_id = $request->product_id;
         if($request->description)$product->description = $request->description;
         if($request->price)$product->price = $request->price;
-        if($request->price_option)$product->price = $request->price_option;
+        if($request->price_option)$product->price_option = $request->price_option;
         if($is_active === 0 or $is_active === 1)$product->is_active = $request->is_active;
         $product->updated_at = Date('Y-m-d H:i:s');
         $product->updated_by = auth()->user()->id;
