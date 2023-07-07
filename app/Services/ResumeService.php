@@ -16,6 +16,7 @@ use App\ResumeProject;
 use App\ResumeSkill;
 use App\ResumeSkillLists;
 use App\ResumeTraining;
+use App\ResumeSummary;
 use Exception;
 use App\Services\GlobalService;
 use Illuminate\Http\Request;
@@ -49,7 +50,7 @@ class ResumeService{
         try{
             $assessment_ids = $request->assessment_ids ? explode(",",$request->assessment_ids) : NULL;
             $keyword = $request->keyword ?? NULL;
-            // $resumes = Resume::with(['educations', 'experiences', 'projects', 'skills', 'trainings', 'certificates', 'achievements', 'assessmentResults']);
+            // $resumes = Resume::with(['educations', 'experiences', 'projects', 'skills', 'trainings', 'certificates', 'achievements', 'assessmentResults', 'summaries']);
             $resumes = Resume::with("assessment");
             if(auth()->user()->role == $this->globalService->guest_role_id){
                 $resumes = $resumes->where("owner_id", auth()->user()->id);
@@ -91,7 +92,7 @@ class ResumeService{
         }
         
         $id = $request->id;
-        $resume = resume::with(['educations', 'experiences', 'projects', 'skills', 'trainings', 'certificates', 'achievements', 'assessment', 'assessmentResults'])->find($id);
+        $resume = resume::with(['educations', 'experiences', 'projects', 'skills', 'trainings', 'certificates', 'achievements', 'assessment', 'assessmentResults', 'summaries'])->find($id);
         if(!$resume) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         if(auth()->user()->role == $this->globalService->guest_role_id && $resume->owner_id != auth()->user()->id){
             return ["success" => false, "message" => "Anda tidak memiliki akses ke resume ini", "status" => 400];
@@ -199,7 +200,10 @@ class ResumeService{
             "achievement" => "filled|array",
             "achievement.name" => "required_with:achievement",
             "achievement.organizer" => "string|nullable",
-            "achievement.year" => "date|nullable"
+            "achievement.year" => "date|nullable",
+
+            "summary" => "filled|array",
+            "summary.description" => "required_with:summary"
         ]);
         
 
@@ -281,6 +285,13 @@ class ResumeService{
             return ["success" => true, "message" => "Data Achievement Berhasil Ditambah", "status" => 200];
         }  
         
+        else if($request->summary){
+            $requestSummary = (object)$request->summary;
+            $summary = new ResumeSummary();
+            $summary->description = $requestSummary->description;
+            if(!$resume->summaries()->save($summary)) return ["success" => false, "message" => "Gagal Mengubah Summary Resume", "status" => 400];
+            return ["success" => true, "message" => "Data Summary Berhasil Ditambah", "status" => 200];
+        } 
         try{
             return ["success" => true, "message" => "Data Berhasil Ditambah", "status" => 200];
         }catch(Exception $err){
@@ -344,7 +355,10 @@ class ResumeService{
             "achievement.id" => "required_with:achievement|exists:App\ResumeAchievement,id",
             "achievement.name" => "required_with:achievement",
             "achievement.organizer" => "string|nullable",
-            "achievement.year" => "date|nullable"
+            "achievement.year" => "date|nullable",
+
+            "summary" => "filled|array",
+            "summary.description" => "required_with:summary"
         ]);
         
 
@@ -477,7 +491,14 @@ class ResumeService{
             if(!$achievement->save()) return ["success" => false, "message" => "Gagal Mengubah Achievement Resume", "status" => 400];
             return ["success" => true, "message" => "Data Achievement Berhasil Diubah", "status" => 200];
         }  
-        
+        else if($request->summary){
+            $requestSummary = (object)$request->summary;
+            $summary = $resume->summaries;
+            $summary->description = $requestSummary->description;
+            if(!$summary->save()) return ["success" => false, "message" => "Gagal Mengubah Summary Resume", "status" => 400];
+            return ["success" => true, "message" => "Data Summary Berhasil Diubah", "status" => 200];
+        }
+
         try{
             return ["success" => true, "message" => "Data Berhasil Diubah", "status" => 200];
         }catch(Exception $err){
@@ -528,6 +549,7 @@ class ResumeService{
             "training_id" => "filled|exists:App\ResumeTraining,id",
             "certificate_id" => "filled|exists:App\ResumeCertificate,id",
             "achievement_id" => "filled|exists:App\ResumeAchievement,id",
+            "summary_id" => "filled|exists:App\ResumeSummary,id",
         ]);
 
         if($validator->fails()){
@@ -582,6 +604,12 @@ class ResumeService{
                 if(!$model) return ["success" => false, "message" => "Data Achievement yang dihapus tidak valid", "status" => 400];
                 if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Achievement Resume", "status" => 400];
                 return ["success" => true, "message" => "Data Resume Achievement Dihapus", "status" => 200];
+            }
+            else if($request->summary_id){
+                $model = $resume->summaries()->find($request->summary_id);
+                if(!$model) return ["success" => false, "message" => "Data Summary yang dihapus tidak valid", "status" => 400];
+                if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Summary Resume", "status" => 400];
+                return ["success" => true, "message" => "Data Resume Summary Dihapus", "status" => 200];
             }
 
             return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $resume, "status" => 200];
