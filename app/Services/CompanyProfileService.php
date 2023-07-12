@@ -173,7 +173,7 @@ class CompanyProfileService{
                 'budget_to' => $request->budget_to,
                 'meeting_schedule' => date('d F Y H:i',strtotime($request->meeting_schedule)),
             ];
-            Mail::to('mariabinarc@gmail.com')->send(new FormSolutionMail($data));
+            Mail::to('Opt@mitrasolusi.group')->send(new FormSolutionMail($data));
             return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -231,7 +231,7 @@ class CompanyProfileService{
             'solution'=> "Talents",
             'solution_detail' => $data_save,
             'meeting_schedule' => date('d F Y H:i',strtotime($request->meeting_schedule)));
-            Mail::to('mariabinarc@gmail.com')->send(new FormSolutionMail($data));
+            Mail::to('Opt@mitrasolusi.group')->send(new FormSolutionMail($data));
             return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -308,7 +308,7 @@ class CompanyProfileService{
             'solution'=> "Hardware",
             'solution_detail' => $data_save,
             'meeting_schedule' => date('d F Y H:i',strtotime($request->meeting_schedule)),);
-            Mail::to('mariabinarc@gmail.com')->send(new FormSolutionMail($data));
+            Mail::to('Opt@mitrasolusi.group')->send(new FormSolutionMail($data));
             return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
