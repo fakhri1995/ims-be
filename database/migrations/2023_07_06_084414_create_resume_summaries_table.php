@@ -15,7 +15,7 @@ class CreateResumeSummariesTable extends Migration
     {
         Schema::create('resume_summaries', function (Blueprint $table) {
             $table->id();
-            $table->string("description", 600);
+            $table->string("description", 4000);
             $table->unsignedBigInteger("resume_id");
         });
     }
