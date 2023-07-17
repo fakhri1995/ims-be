@@ -19,7 +19,7 @@ use App\AttendanceTaskActivity;
 use App\Company;
 use App\Exports\AttendanceActivitiesExport;
 use App\File;
-use App\Task;
+use App\ProjectTask;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Validator;
 
@@ -1058,7 +1058,7 @@ class AttendanceService{
         if($access["success"] === false) return $access;
 
         $task_id = $request->get('task_id');
-        $task = Task::find($task_id);
+        $task = ProjectTask::find($task_id);
         if($task === null) return ["success" => false, "message" => "Task Tidak Ditemukan", "status" => 400];
         try{
             $task_activity = new AttendanceTaskActivity();
