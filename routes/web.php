@@ -396,6 +396,11 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/updateAttendanceActivity', 'AttendanceController@updateAttendanceActivity');
     $router->post('/updateAttendanceActivity', 'AttendanceController@updateAttendanceActivity');
     $router->delete('/deleteAttendanceActivity', 'AttendanceController@deleteAttendanceActivity');
+    $router->get('/getAttendanceTaskActivity', 'AttendanceController@getAttendanceTaskActivity');
+    $router->get('/getAttendanceTaskActivities', 'AttendanceController@getAttendanceTaskActivities');
+    $router->post('/addAttendanceTaskActivity', 'AttendanceController@addAttendanceTaskActivity');
+    $router->put('/updateAttendanceTaskActivity', 'AttendanceController@updateAttendanceTaskActivity');
+    $router->delete('/deleteAttendanceTaskActivity', 'AttendanceController@deleteAttendanceTaskActivity');
 
     //Attendance User
     $router->get('/getAttendancesUsers', 'AttendanceController@getAttendancesUsers');
