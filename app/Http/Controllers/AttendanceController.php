@@ -322,4 +322,44 @@ class AttendanceController extends Controller
         $response = $this->attendanceService->deleteAttendanceProjectCategory($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    public function getAttendanceTaskActivity(Request $request)
+    {
+        $route_name = "ATTENDANCE_TASK_ACTVITIY_GET";
+
+        $response = $this->attendanceService->getAttendanceTaskActivity($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getAttendanceTaskActivities(Request $request)
+    {
+        $route_name = "ATTENDANCE_TASK_ACTVITIIES_GET";
+
+        $response = $this->attendanceService->getAttendanceTaskActivities($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function addAttendanceTaskActivity(Request $request)
+    {
+        $route_name = "ATTENDANCE_TASK_ACTVITIY_ADD";
+
+        $response = $this->attendanceService->addAttendanceTaskActivity($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateAttendanceTaskActivity(Request $request)
+    {
+        $route_name = "ATTENDANCE_TASK_ACTVITIY_UPDATE";
+
+        $response = $this->attendanceService->updateAttendanceTaskActivity($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteAttendanceTaskActivity(Request $request)
+    {
+        $route_name = "ATTENDANCE_TASK_ACTVITIY_DELETE";
+
+        $response = $this->attendanceService->deleteAttendanceTaskActivity($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }

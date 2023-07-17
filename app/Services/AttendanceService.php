@@ -15,9 +15,11 @@ use App\Services\FileService;
 use App\AttendanceProjectType;
 use App\AttendanceProjectStatus;
 use App\AttendanceProjectCategory;
+use App\AttendanceTaskActivity;
 use App\Company;
 use App\Exports\AttendanceActivitiesExport;
 use App\File;
+use App\Task;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Validator;
 
@@ -1014,6 +1016,93 @@ class AttendanceService{
             return ["success" => true, "message" => "Project Category berhasil dihapus", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getAttendanceTaskActivity($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $task_activity = AttendanceTaskActivity::find($id);
+        if($task_activity === null) return ["success" => false, "message" => "Task Activity Tidak Ditemukan", "status" => 400];
+        try{
+            return ["success" => true, "message" => $task_activity, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err->getLine(), "status" => 400];
+        }
+    }
+
+    public function getAttendanceTaskActivities($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        try{
+            $last_two_month = date("Y-m-d", strtotime("-2 months"));
+            $today = date('Y-m-d');
+            $login_id = auth()->user()->id;
+            $today_attendance_activities = AttendanceTaskActivity::where('user_id', $login_id)->whereDate('updated_at', '=', $today)->get();
+            $last_two_month_attendance_activities = AttendanceTaskActivity::where('user_id', $login_id)->whereDate('updated_at', '>', $last_two_month)->whereDate('updated_at', '<>', $today)->get();
+            $data = (object)[
+                "today_activities" => $today_attendance_activities,
+                "last_two_month_activities" => $last_two_month_attendance_activities
+            ];
+            return ["success" => true, "message" => "Attendance Activities Berhasil Diambil", "data" => $data, "status" => 200];
+
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addAttendanceTaskActivity($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $task_id = $request->get('task_id');
+        $task = Task::find($task_id);
+        if($task === null) return ["success" => false, "message" => "Task Tidak Ditemukan", "status" => 400];
+        try{
+            $task_activity = new AttendanceTaskActivity();
+            $task_activity->user_id = auth()->user()->id;
+            $task_activity->task_id = $task_id;
+            $task_activity->updated_at = date('Y-m-d H:i:s');
+            $task_activity->activity = $task->name;
+            $task_activity->save();
+            return ["success" => true, "message" => "Task Activity berhasil di Import", "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err->getLine(), "status" => 400];
+        }
+        
+    }
+
+    public function updateAttendanceTaskActivity($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $task_activity = AttendanceTaskActivity::find($id);
+        if($task_activity === null) return ["success" => false, "message" => "Task Activity Tidak Ditemukan", "status" => 400];
+        try{
+            $task_activity->updated_at = date('Y-m-d H:i:s');
+            $task_activity->activity = $request->get('activity');
+            $task_activity->save();
+            return ["success" => true, "message" => "Task berhasil di Update", "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err->getLine(), "status" => 400];
+        }
+    }
+
+    public function deleteAttendanceTaskActivity($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $task_activity = AttendanceTaskActivity::find($id);
+        if($task_activity === null) return ["success" => false, "message" => "Task Tidak Ditemukan", "status" => 400];
+        try{
+            $task_activity->delete();
+            return ["success" => true, "message" => "Task berhasil di Hapus", "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err->getLine(), "status" => 400];
         }
     }
 }
