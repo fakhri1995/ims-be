@@ -299,7 +299,7 @@ class ContractService{
 
             // SERVICES
             ContractProduct::where("contract_id",$contract->id)->delete();
-            $services = $request->services ?? NULL;
+            $services = $request->services ?? [];
             $serviceData = [];
             foreach($services as $s){
                 $s = (object)$s;
@@ -315,7 +315,7 @@ class ContractService{
             };
             $contract->save();
             $services = ContractProduct::insert($serviceData);
-            
+
             try{
             return ["success" => true, "message" => "Data Berhasil Diubah", "data" => $contract, "status" => 200];
         }catch(Exception $err){
