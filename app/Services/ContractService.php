@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Contract;
+use App\ContractProduct;
+use App\Product;
 use Exception;
 use App\Services\GlobalService;
 use Illuminate\Http\Request;
@@ -52,7 +54,7 @@ class ContractService{
 
         try{
             $id = $request->id;
-            $contract = Contract::with(["client","requester"])->find($id);
+            $contract = Contract::with(["client","requester","services"])->find($id);
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $contract, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -207,7 +209,12 @@ class ContractService{
                     }
                 }
             ],
-            "extras.*.is_deleted" => "boolean|nullable"
+            "extras.*.is_deleted" => "boolean|nullable",
+            "services" => "array|nullable",
+            "services.*.product_id" => "required_with:services|numeric",
+            "services.*.pax" => "required_with:services",
+            "services.*.price" => "required_with:services",
+            "services.*.unit" => "required_with:services:in:jam,hari,bulan,tahun"
         ]);
 
         if($validator->fails()){
@@ -225,57 +232,90 @@ class ContractService{
             $contract->extras = $request->extras ?? NULL;
             $contract->is_posted = $request->is_posted ?? NULL;
             $current_time = date('Y-m-d H:i:s');          
-            $contract->updated_at = $current_time;
+            $contract->updated_at = $current_time; 
 
-
+            // Extra Section
+            $fileService = new FileService;
             $extras_arr = $request->extras ?? [];
             $extras = [];
-            $fileService = new FileService;
-            foreach($extras_arr as $e){
-                $e = (object)$e;
-                $keyInArray = in_array($e->key,$old_extra_key_array);
-                $key =  $keyInArray ? $e->key : NULL;
+            $extra_key_array = [];
+            foreach($extras_arr as $k => $e){
                 $extra = [];
-                if($key == NULL) $extra["key"] = Str::uuid()->toString();
-                else $extra["key"] = $key;
-
-                if($keyInArray){
-                    if($e->is_deleted){
-                        if($type == 3){
-                            
+                // $extra["key"] = Str::uuid()->toString();
+                $isset_key = isset($e["key"]);
+                $is_deleted = isset($e["is_deleted"]) ? $e["is_deleted"] : false;
+                $extra["key"] = $key = $isset_key ? $e["key"] : Str::uuid()->toString();
+                $extra_key_array[] = $key;
+                $extra["type"] = $e['type'];
+                $extra["name"] = $e['name'];
+                
+                if($isset_key){
+                    if($is_deleted){ // for_delete
+                        if($e["type"] == 3){
+                            $fileService->deleteForceFile($old_extras_remap[$key]["value"]["id"]);
+                        }
+                        unset($old_extras_remap[$key]);
+                        unset($extras_arr[$k]);
+                        continue;
+                    }else{
+                        if($e["type"] == 3){ //for_update
+                            if(is_a($e["value"], "Illuminate\Http\UploadedFile")){
+                                $fileService->deleteForceFile($old_extras_remap[$key]["value"]['id']);
+                                $file = $e["value"];
+                                $add_file_response = $fileService->addFile($contract->id, $file, 'App\Contract', 'contract_extra_file', 'Contract', false);
+                                if($add_file_response["success"]){
+                                    $extra["value"] = $add_file_response["new_data"];
+                                }
+                            }
+                        }else{
+                            $extra["value"] = $e['value'];
                         }
                     }
-                    
                 }else{
-
+                    // skip if new but is_deleted true
+                    if($is_deleted) continue;
+                    // new data
+                    if($e['type'] == 3) {
+                        $file = $e['value'];
+                        $add_file_response = $fileService->addFile($contract->id, $file, 'App\Contract', 'contract_extra_file', 'Contract', false);
+                        if($add_file_response["success"]){
+                            $extra['value'] = $add_file_response["new_data"];
+                        }
+                    }else{
+                        $extra["value"] = $e['value'];
+                    }
                 }
-
-                
-
-                // if($key != NULL){
-                //     $old = (object)$old_extras_remap[$key];
-                //     // if(($e->type != $old->type) && $old->type == 3) {
-                //     //     $fileService->deleteForceFile($old->value['id']);
-                //     //     $extra['value'] = $e->value;
-                //     // }
-                //     // else if(($e->type != $old->type) && $e->type == 3){
-                //     //     $file = $e->value;
-                //     //     if((!is_a($file, "Illuminate\Http\UploadedFile") || !$file->isValid())) return ["success" => false, "message" => "Data tidak ditemukan.", "status" => 400];
-                //     //     $add_file_response = $fileService->addFile($contract->id, $file, 'App\Contract', 'contract_extra_file', 'Contract', false);
-                //     //     if($add_file_response["success"]){
-                //     //         $extra['value'] = $add_file_response["new_data"];
-                //     //     }
-                //     // }
-                // }
-                // $extra["type"] = $e['type'];
-                // $extra["name"] = $e['name'];
-                // $extra["value"] = $e['value'];
-                // $extras[] = $extra;
+                $extras[] = $extra;
             }
 
+            $diff_extra = array_diff($old_extra_key_array, $extra_key_array);
+            $old_extras = [];
+            foreach($diff_extra as $d){
+                $old_extras[] = $old_extras_remap[$d];
+            }
+
+            $extras = array_merge($old_extras,$extras);
             $contract->extras = $extras;
-            
+
+            // SERVICES
+            ContractProduct::where("contract_id",$contract->id)->delete();
+            $services = $request->services ?? NULL;
+            $serviceData = [];
+            foreach($services as $s){
+                $s = (object)$s;
+                $serviceData = [
+                    "product_id" => $s->product_id,
+                    "pax" => $s->pax,
+                    "price" => $s->price,
+                    "unit" => $s->unit,
+                    "contract_id" => $contract->id,
+                    "created_at" => $current_time,
+                    "updated_at" => $current_time,
+                ];
+            };
             $contract->save();
+            $services = ContractProduct::insert($serviceData);
+            
             try{
             return ["success" => true, "message" => "Data Berhasil Diubah", "data" => $contract, "status" => 200];
         }catch(Exception $err){
