@@ -347,6 +347,14 @@ class AttendanceController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function addAttendanceTaskActivities(Request $request)
+    {
+        $route_name = "ATTENDANCE_TASK_ACTVITIIES_ADD";
+
+        $response = $this->attendanceService->addAttendanceTaskActivities($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function updateAttendanceTaskActivity(Request $request)
     {
         $route_name = "ATTENDANCE_TASK_ACTVITIY_UPDATE";
