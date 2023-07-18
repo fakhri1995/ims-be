@@ -1024,7 +1024,7 @@ class AttendanceService{
         if($access["success"] === false) return $access;
 
         $id = $request->get('id');
-        $task_activity = AttendanceTaskActivity::find($id);
+        $task_activity = AttendanceTaskActivity::with('task')->find($id);
         if($task_activity === null) return ["success" => false, "message" => "Task Activity Tidak Ditemukan", "status" => 400];
         try{
             return ["success" => true, "message" => $task_activity, "status" => 200];
@@ -1040,8 +1040,8 @@ class AttendanceService{
             $last_two_month = date("Y-m-d", strtotime("-2 months"));
             $today = date('Y-m-d');
             $login_id = auth()->user()->id;
-            $today_attendance_activities = AttendanceTaskActivity::where('user_id', $login_id)->whereDate('updated_at', '=', $today)->get();
-            $last_two_month_attendance_activities = AttendanceTaskActivity::where('user_id', $login_id)->whereDate('updated_at', '>', $last_two_month)->whereDate('updated_at', '<>', $today)->get();
+            $today_attendance_activities = AttendanceTaskActivity::with('task')->where('user_id', $login_id)->whereDate('updated_at', '=', $today)->get();
+            $last_two_month_attendance_activities = AttendanceTaskActivity::with('task')->where('user_id', $login_id)->whereDate('updated_at', '>', $last_two_month)->whereDate('updated_at', '<>', $today)->get();
             $data = (object)[
                 "today_activities" => $today_attendance_activities,
                 "last_two_month_activities" => $last_two_month_attendance_activities
