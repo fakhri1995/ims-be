@@ -1069,7 +1069,30 @@ class AttendanceService{
             $task_activity->save();
             return ["success" => true, "message" => "Task Activity berhasil di Import", "status" => 200];
         }catch(Exception $err){
-            return ["success" => false, "message" => $err->getLine(), "status" => 400];
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+        
+    }
+
+    public function addAttendanceTaskActivities($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $task_ids = $request->get('task_ids', []);
+        try{
+            foreach($task_ids as $task_id){
+                $task = ProjectTask::find($task_id);
+                if($task === null) return ["success" => false, "message" => "Task Tidak Ditemukan", "status" => 400];
+                $task_activity = new AttendanceTaskActivity();
+                $task_activity->user_id = auth()->user()->id;
+                $task_activity->task_id = $task_id;
+                $task_activity->updated_at = date('Y-m-d H:i:s');
+                $task_activity->activity = $task->name;
+                $task_activity->save();
+            }
+            return ["success" => true, "message" => "Task Activities berhasil di Import", "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
         }
         
     }
