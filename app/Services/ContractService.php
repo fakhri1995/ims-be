@@ -260,7 +260,11 @@ class ContractService{
                     }else{
                         if($e["type"] == 3){ //for_update
                             if(is_a($e["value"], "Illuminate\Http\UploadedFile")){
-                                $fileService->deleteForceFile($old_extras_remap[$key]["value"]['id']);
+                                try{
+                                    $fileService->deleteForceFile($old_extras_remap[$key]["value"]['id']);
+                                }catch(Exception $err){
+                                    echo $err;
+                                }
                                 $file = $e["value"];
                                 $add_file_response = $fileService->addFile($contract->id, $file, 'App\Contract', 'contract_extra_file', 'Contract', false);
                                 if($add_file_response["success"]){
