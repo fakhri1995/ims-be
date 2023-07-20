@@ -15,6 +15,7 @@ class ContractService{
     public function __construct()
     {
         $this->globalService = new GlobalService;
+        $this->logService = new LogService;
     }  
 
     
@@ -141,6 +142,15 @@ class ContractService{
             $contract->extras = $extras;
             $contract->save();
 
+            $logDataNew = clone $contract;
+            $logDataNew->services();
+
+            $logProperties = [
+                "log_type" => "created_contract",
+                "old" => null,
+                "new" => $logDataNew
+            ];
+            $this->logService->addLogContract($contract->id, auth()->user()->id, "Created", $logProperties, null);
             try{ 
             return ["success" => true, "message" => "Data Berhasil Ditambahkan", "data" => $contract, "status" => 200];
         }catch(Exception $err){
@@ -154,8 +164,9 @@ class ContractService{
         if($access["success"] === false) return $access;
         
         $id = $request->id;
-        $contract = Contract::find($id);
+        $contract = Contract::with("services")->find($id);
         if(!$contract) return ["success" => false, "message" => "Data tidak ditemukan.", "status" => 400];
+        $logDataOld = clone $contract;
         $old_extras = $contract->extras;
         $old_extras_remap = [];
         $old_extra_key_array = [];
@@ -225,13 +236,13 @@ class ContractService{
             
             $contract->contract_number = $request->contract_number ?? NULL;
             $contract->title = $request->title ?? NULL;
-            $contract->client_id = $request->client_id ?? NULL;
-            $contract->requester_id = $request->requester_id ?? NULL;
+            $contract->client_id = (int)$request->client_id ?? NULL;
+            $contract->requester_id = (int)$request->requester_id ?? NULL;
             $contract->initial_date = $request->initial_date ?? NULL;
             $contract->start_date = $request->start_date ?? NULL;
             $contract->end_date = $request->end_date ?? NULL;
             $contract->extras = $request->extras ?? NULL;
-            $contract->is_posted = $request->is_posted ?? NULL;
+            $contract->is_posted = (int)$request->is_posted ?? NULL;
             $current_time = date('Y-m-d H:i:s');          
             $contract->updated_at = $current_time; 
 
@@ -326,6 +337,24 @@ class ContractService{
             };
             $contract->save();
             $services = ContractProduct::insert($serviceData);
+            $contract->services();
+
+            $logDataNew = clone $contract;
+
+            $logProperties = [
+                "log_type" => "updated_contract",
+                "old" => $logDataOld,
+                "new" => $logDataNew
+            ];
+
+            unset($logDataOld->updated_at);
+            unset($logDataNew->updated_at);
+
+            //if the data is not same, then the write the log
+            if(json_encode($logDataOld) != json_encode($logDataNew)){
+                $this->logService->addLogContract($contract->id, auth()->user()->id, "Updated", $logProperties, null);
+            }
+
 
             try{
             return ["success" => true, "message" => "Data Berhasil Diubah", "data" => $contract, "status" => 200];
@@ -351,12 +380,70 @@ class ContractService{
 
             $id = $request->id;
             $contract = Contract::find($id);
+            $logDataOld = clone $contract;
+            if(!$contract)  return ["success" => false, "message" => "Data tidak ditemukan.", "status" => 400];
             $contract->delete();
+            $logProperties = [
+                "log_type" => "deleted_contract",
+                "old" => $logDataOld,
+                "new" => null
+            ];
+
+            $this->logService->addLogContract($contract->id, auth()->user()->id, "Deleted", $logProperties, null);
             return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $contract, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
         
+    }
+
+    //NOTES
+    public function addContractLogNotes($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "contract_id" => "required|numeric",
+            "notes" => "required",
+        ]);
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $contract_id = $request->contract_id ?? NULL;
+        $notes = $request->notes ?? NULL;
+
+        $description = "Menambahkan sebuah catatan pada kontrak.";
+
+        
+        $contract = Contract::find($contract_id);
+        if(!$contract) return ["success" => false, "message" => "Task tidak ditemukan.", "status" => 400];
+
+        if($this->logService->addLogContractFunction($contract_id, auth()->user()->id , "Notes", NULL, $notes, $description)){
+            return ["success" => true, "message" => "Notes berhasil ditambahkan.", "status" => 200]; 
+        };
+        return ["success" => false, "message" => "Gagal menambahkan notes.", "status" => 400];
+        
+    }
+
+    public function deleteContractLogNotes($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "id" => "required|numeric"
+        ]);
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $logId = $request->id;
+        
+        return $this->logService->deleteContractLogNotes($logId);
     }
 
 }
