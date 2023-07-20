@@ -1056,18 +1056,14 @@ class AttendanceService{
     public function getAttendanceTaskActivitiesAdmin($request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        try{
-            $last_two_month = date("Y-m-d", strtotime("-2 months"));
-            $today = date('Y-m-d');
-            $login_id = $request->get('user_id');
-            $today_attendance_activities = AttendanceTaskActivity::with('task')->where('user_id', $login_id)->whereDate('updated_at', '=', $today)->get();
-            $last_two_month_attendance_activities = AttendanceTaskActivity::with('task')->where('user_id', $login_id)->whereDate('updated_at', '>', $last_two_month)->whereDate('updated_at', '<>', $today)->get();
-            $data = (object)[
-                "today_activities" => $today_attendance_activities,
-                "last_two_month_activities" => $last_two_month_attendance_activities
-            ];
-            return ["success" => true, "message" => "Attendance Activities Berhasil Diambil", "data" => $data, "status" => 200];
 
+        try{
+            
+            $id = $request->get('id');
+            $user_attendance = AttendanceUser::find($id);
+            if(!$user_attendance) return ["success" => false, "message" => "User Attendance Tidak Ditemukan" , "status" => 400];
+            $data = AttendanceTaskActivity::with('task')->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
+            return ["success" => true, "message" => "Berhasil Mengambil Data Attendance", "data" => $data, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
