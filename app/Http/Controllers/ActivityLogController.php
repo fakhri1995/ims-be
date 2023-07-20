@@ -80,4 +80,19 @@ class ActivityLogController extends Controller
         $response = $this->logService->getProjectLogNotes($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    // Contract
+    public function getContractLogs(Request $request){
+        $route_name = "CONTRACT_LOGS_GET";   
+        
+        $response = $this->logService->getContractLogs($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getContractLogNotes(Request $request){
+        $route_name = "CONTRACT_LOG_NOTES_GET";   
+        
+        $response = $this->logService->getContractLogNotes($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }

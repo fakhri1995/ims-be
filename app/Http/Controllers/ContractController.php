@@ -53,4 +53,19 @@ class ContractController extends Controller
         return response()->json($response, $response['status']);
     }
  
+
+    // Notes
+    public function addContractLogNotes(Request $request){
+        $route_name = "CONTRACT_LOG_NOTES_ADD";   
+        
+        $response = $this->contractService->addContractLogNotes($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteContractLogNotes(Request $request){
+        $route_name = "CONTRACT_LOG_NOTES_DELETE";   
+        
+        $response = $this->contractService->deleteContractLogNotes($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }
