@@ -54,7 +54,8 @@ class ContractService{
 
         try{
             $id = $request->id;
-            $contract = Contract::with(["client","requester","services"])->find($id);
+            $contract = Contract::with(["client","requester","services","services.product"])->find($id);
+            if(!$contract) return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $contract, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];

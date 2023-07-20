@@ -5,6 +5,7 @@ namespace App;
 use App\Services\ContractService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class Contract extends Model
 {
@@ -22,6 +23,6 @@ class Contract extends Model
     }
 
     public function services(){
-        return $this->hasMany(ContractProduct::class,'contract_id');
+        return $this->hasMany(ContractProduct::class,'contract_id')->select()->addSelect(DB::raw('pax*price as subtotal'));
     }
 }
