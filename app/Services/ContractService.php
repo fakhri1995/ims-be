@@ -313,7 +313,7 @@ class ContractService{
             $serviceData = [];
             foreach($services as $s){
                 $s = (object)$s;
-                $serviceData = [
+                $serviceData[] = [
                     "product_id" => $s->product_id,
                     "pax" => $s->pax,
                     "price" => $s->price,
