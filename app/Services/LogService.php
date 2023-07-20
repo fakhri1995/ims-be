@@ -12,6 +12,7 @@ use App\Relationship;
 use App\ModelInventory;
 use App\ActivityLogTicket;
 use App\ActivityLogCompany;
+use App\ActivityLogContract;
 use App\ActivityLogInventory;
 use App\StatusUsageInventory;
 use App\Services\GlobalService;
@@ -1193,6 +1194,113 @@ class LogService
         $projectLog = ActivityLogProjectTask::where("log_name","Notes")->find($id);
         if(!$projectLog) return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
         $projectLog->delete();
+        return ["success" => true, "message" => "Data berhasil dihapus", "status" => 200]; 
+    }
+
+    public function addLogContractFunction($contract_id, $causer_id, $log_name, $properties, $notes, $description){
+        
+            $log_name_option = [
+                "Created", "Updated", "Deleted", "Notes"
+            ];
+    
+            $log_type_option = [
+                "created_contract", "updated_contract", "deleted_contract",
+            ];
+    
+            if(!in_array($log_name, $log_name_option)) throw new Exception('log_name invalid');
+            if($log_name != "Notes" && !in_array($properties['log_type'], $log_type_option)) throw new Exception('log_type invalid');
+            if($contract_id == NULL) throw new Exception('contract_id is required.');
+            
+            $log = new ActivityLogContract();
+            $log->contract_id = $contract_id;
+            $log->causer_id = $causer_id;
+            $log->log_name = $log_name;
+            $log->properties = $properties;
+            $log->notes = $notes;
+            $log->description = $description;
+            $log->created_at = date("Y-m-d H:i:s");
+            $log->save();
+        try{
+            return true;
+        }catch(Exception $e){
+            return false;
+        }
+       
+    }
+
+    public function addLogContract($contract_id, $causer_id, $log_name, $properties, $notes = null){
+        $description = "";
+        if($log_name == "Created"){
+            $description = "Kontrak dibuat.";
+        }else if($log_name == "Updated"){
+            $description = "Terjadi perubahan pada kontrak.";
+        }else if($log_name == "Deleted"){
+            $description = "Kontrak telah dihapus.";
+        }
+        $this->addLogContractFunction($contract_id, $causer_id, $log_name, $properties, $notes, $description);
+    }
+
+    public function getContractLogs($request, $route_name){
+        $globalService = new GlobalService;
+        $access = $globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "contract_id" => "required|numeric",
+            "rows" => "numeric",
+            "page" => "numeric" 
+        ]);
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $contract_id = $request->contract_id;
+        $keyword = $request->keyword ??  NULL;
+        $rows = $request->rows ?? NULL;
+        $contractLog = ActivityLogContract::where("contract_id", $contract_id)
+            ->where("log_name", "!=", "Notes")
+            ->where("description", "LIKE", "%$keyword%")
+            ->orderBy("id","desc");
+        $contractLog = $contractLog->paginate($rows);
+
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $contractLog, "status" => 200];
+    }
+
+    public function getContractLogNotes($request, $route_name){
+        $globalService = new GlobalService;
+        $access = $globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "contract_id" => "required|numeric",
+            "rows" => "numeric",
+            "page" => "numeric" 
+        ]);
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $contract_id = $request->contract_id;
+        $keyword = $request->keyword ??  NULL;
+        $rows = $request->rows ?? NULL;
+        $contractLog = ActivityLogContract::where("contract_id", $contract_id)
+            ->where("log_name", "Notes")
+            ->where("notes", "LIKE", "%$keyword%")
+            ->orderBy("id","desc");
+        $contractLog = $contractLog->paginate($rows);
+
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $contractLog, "status" => 200];
+    }
+
+    public function deleteContractLogNotes(int $id){
+       
+        $contractLog = ActivityLogContract::where("log_name","Notes")->find($id);
+        if(!$contractLog) return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
+        $contractLog->delete();
         return ["success" => true, "message" => "Data berhasil dihapus", "status" => 200]; 
     }
 
