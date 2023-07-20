@@ -270,6 +270,12 @@ class ContractService{
                                 if($add_file_response["success"]){
                                     $extra["value"] = $add_file_response["new_data"];
                                 }
+                            }else{
+                                try{
+                                    $extra["value"] = $old_extras_remap[$key]["value"]['id'];
+                                }catch(Exception $err){
+                                    echo $err;
+                                }
                             }
                         }else{
                             $extra["value"] = $e['value'];
