@@ -8,6 +8,7 @@ use App\Product;
 use Exception;
 use App\Services\GlobalService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -40,26 +41,45 @@ class ContractService{
             $errors = $validator->errors()->all();
             return ["success" => false, "message" => $errors, "status" => 400];
         }
-        try{
-            $contracts = Contract::with(["client","requester"]);
+            $contracts = Contract::select()->addSelect(DB::raw(
+                "CASE 
+                    WHEN contracts.is_posted = 0 THEN 'draft'
+                    WHEN CURDATE() > contracts.end_date THEN 'selesai'
+                    WHEN DATEDIFF(contracts.end_date, CURDATE()) < 14 THEN 'segeraberakhir'
+                    WHEN DATEDIFF(contracts.end_date, CURDATE()) > 14 THEN 'berlangsung'
+                END AS status,
+                DATEDIFF(CURDATE(), contracts.end_date) as duration
+                "
+            ))->with(["client","requester"]);
             $rows = $request->rows ?? 5;
             $keyword = $request->keyword;
             $from = $request->from ?? NULL;
             $to = $request->to ?? NULL;
             $sort_by = $request->sort_by ?? NULL;
             $sort_type = $request->sort_type ?? 'asc';
-            $status_ids = $request->status_ids ? explode(",",$request->status_ids) : NULL;
+            $status_types = $request->status_types ? explode(",",$request->status_types) : NULL;
             $client_ids = $request->client_ids ? explode(",",$request->client_ids) : NULL;
 
-
             if($keyword) $contracts = $contracts->where("contract_number","LIKE","%$keyword%")->orWhere("title","LIKE","%$keyword%");
-            // if($status_ids) $contracts = $contracts->whereIn("status_id");
+            if($status_types) $contracts = $contracts->fromSub(function ($query) {
+                $query->from('contracts')
+                    ->select('*', DB::raw(
+                        "CASE 
+                            WHEN contracts.is_posted = 0 THEN 'draft'
+                            WHEN CURDATE() > contracts.end_date THEN 'selesai'
+                            WHEN DATEDIFF(contracts.end_date, CURDATE()) < 14 THEN 'segeraberakhir'
+                            WHEN DATEDIFF(contracts.end_date, CURDATE()) > 14 THEN 'berlangsung'
+                        END AS status"
+                    ));
+            }, 'contracts')
+            ->whereIn('status', $status_types);
             if($client_ids) $contracts = $contracts->whereIn("client_id", $client_ids);
 
             if(in_array($sort_by, ["contract_number","title","start_date"])) $contracts = $contracts->orderBy($sort_by,$sort_type);
             
             $contracts = $contracts->paginate($rows);
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $contracts , "status" => 200];
+            try{
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -309,13 +329,13 @@ class ContractService{
                                 }
                             }else{
                                 try{
-                                    $extra["value"] = $old_extras_remap[$key]["value"]['id'];
+                                    $extra["value"] = $old_extras_remap[$key]["value"];
                                 }catch(Exception $err){
                                     echo $err;
                                 }
                             }
                         }else{
-                            $extra["value"] = $old_extras_remap[$key]["value"];
+                            $extra["value"] = $e["value"];
                         }
                     }
                 }else{
