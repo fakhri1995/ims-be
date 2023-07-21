@@ -290,7 +290,7 @@ class ContractService{
                                 }
                             }
                         }else{
-                            $extra["value"] = $e['value'];
+                            $extra["value"] = $old_extras_remap[$key]["value"];
                         }
                     }
                 }else{
