@@ -23,17 +23,42 @@ class ContractService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $validator = Validator::make($request->all(), [
+        $rules = [
             "page" => "numeric",
             "rows" => "numeric|max:50",
-        ]);
+            "sort_by" => "in:contract_number,title,start_date,duration,status|nullable",
+            "sort_type" => "in:asc,desc"
+        ];
+        
+        if($request->to && $request->from){
+            $rules["from"] = "date|before:to";
+            $rules["to"] = "date|after:from";
+        }
+        $validator = Validator::make($request->all(), $rules);
 
         if($validator->fails()){
             $errors = $validator->errors()->all();
             return ["success" => false, "message" => $errors, "status" => 400];
         }
         try{
-            $contracts = Contract::with(["client","requester"])->paginate();
+            $contracts = Contract::with(["client","requester"]);
+            $rows = $request->rows ?? 5;
+            $keyword = $request->keyword;
+            $from = $request->from ?? NULL;
+            $to = $request->to ?? NULL;
+            $sort_by = $request->sort_by ?? NULL;
+            $sort_type = $request->sort_type ?? 'asc';
+            $status_ids = $request->status_ids ? explode(",",$request->status_ids) : NULL;
+            $client_ids = $request->client_ids ? explode(",",$request->client_ids) : NULL;
+
+
+            if($keyword) $contracts = $contracts->where("contract_number","LIKE","%$keyword%")->orWhere("title","LIKE","%$keyword%");
+            // if($status_ids) $contracts = $contracts->whereIn("status_id");
+            if($client_ids) $contracts = $contracts->whereIn("client_id", $client_ids);
+
+            if(in_array($sort_by, ["contract_number","title","start_date"])) $contracts = $contracts->orderBy($sort_by,$sort_type);
+            
+            $contracts = $contracts->paginate($rows);
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $contracts , "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -395,6 +420,23 @@ class ContractService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
         
+    }
+
+    public function getContractActiveCount($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $contract = Contract::where("is_posted",1)->count();
+
+        $data = [
+            "total" => $contract,
+        ];
+
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
     }
 
     //NOTES
