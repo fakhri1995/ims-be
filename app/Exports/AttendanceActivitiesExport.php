@@ -34,6 +34,7 @@ class AttendanceActivitiesExport implements WithMultipleSheets
     {
         $sheets = [];
         $sheets[] = new ActivitiesExport($this->from, $this->to, $this->attendance_form, $this->form_ids, $this->multiple, $this->user_ids);
+        $sheets[] = new TaskActivitiesExport($this->from, $this->to, $this->multiple, $this->user_ids);
         $sheets[] = new AttendancesExport($this->from, $this->to, $this->multiple, $this->user_ids);
         return $sheets;
     }
