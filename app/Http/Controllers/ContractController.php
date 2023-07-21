@@ -52,7 +52,13 @@ class ContractController extends Controller
         $response = $this->contractService->deleteContract($request, $route_name);
         return response()->json($response, $response['status']);
     }
- 
+    
+    public function getContractActiveCount(Request $request){
+        $route_name = "CONTRACT_ACTIVE_COUNT_GET";
+
+        $response = $this->contractService->getContractActiveCount($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 
     // Notes
     public function addContractLogNotes(Request $request){
