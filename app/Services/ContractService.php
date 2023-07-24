@@ -42,12 +42,20 @@ class ContractService{
             $errors = $validator->errors()->all();
             return ["success" => false, "message" => $errors, "status" => 400];
         }   
-            $fieldStatusQuery = "CASE 
+            $fieldStatusQuery = "
+            CASE 
                 WHEN contracts.is_posted = 0 THEN 'draft'
                 WHEN CURDATE() > contracts.end_date THEN 'selesai'
                 WHEN DATEDIFF(contracts.end_date, CURDATE()) < 14 THEN 'segeraberakhir'
                 WHEN DATEDIFF(contracts.end_date, CURDATE()) > 14 THEN 'berlangsung'
-            END AS status";
+            END AS status,
+            CASE 
+                WHEN contracts.is_posted = 0 THEN '2'
+                WHEN CURDATE() > contracts.end_date THEN '4'
+                WHEN DATEDIFF(contracts.end_date, CURDATE()) < 14 THEN '1'
+                WHEN DATEDIFF(contracts.end_date, CURDATE()) > 14 THEN '3'
+            END AS status_order
+            ";
             // $contracts = Contract::select()->addSelect(DB::raw(
             //     "$fieldStatusQuery,
             //     DATEDIFF(contracts.end_date, CURDATE()) as duration
@@ -71,9 +79,10 @@ class ContractService{
             if($keyword) $contracts = $contracts->where("contract_number","LIKE","%$keyword%")->orWhere("title","LIKE","%$keyword%");
             if($status_types) $contracts = $contracts->whereIn('status', $status_types);
             if($client_ids) $contracts = $contracts->whereIn("client_id", $client_ids);
-            if($duration) $contract = $contracts->where('duration','<', $duration)->where('duration','>', 0);
+            if($duration) $contracts = $contracts->where('duration','<', $duration)->where('duration','>', 0);
 
-            if(in_array($sort_by, ["contract_number","title","start_date","duration","status"])) $contracts = $contracts->orderBy($sort_by,$sort_type);
+            if(in_array($sort_by, ["contract_number","title","start_date","duration"])) $contracts = $contracts->orderBy($sort_by,$sort_type);
+            if($sort_by == "status") $contracts = $contracts->orderBy("status_order",$sort_type);
             
             $contracts = $contracts->paginate($rows);
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $contracts , "status" => 200];
