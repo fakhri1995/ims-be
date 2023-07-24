@@ -657,6 +657,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addContract', 'ContractController@addContract');
     $router->post('/updateContract', 'ContractController@updateContract');
     $router->delete('/deleteContract', 'ContractController@deleteContract');
+    $router->get('/getContractActiveCount', 'ContractController@getContractActiveCount');
     // Contract Management - Contract Log
     $router->get('/getContractLogs', 'ActivityLogController@getContractLogs');
     $router->post('/addContractLogNotes', 'ContractController@addContractLogNotes');

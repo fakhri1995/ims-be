@@ -8,6 +8,7 @@ use App\Product;
 use Exception;
 use App\Services\GlobalService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -23,18 +24,69 @@ class ContractService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $validator = Validator::make($request->all(), [
+        $rules = [
             "page" => "numeric",
             "rows" => "numeric|max:50",
-        ]);
+            "sort_by" => "in:contract_number,title,start_date,duration,status|nullable",
+            "sort_type" => "in:asc,desc",
+            "duration" => "numeric|nullable"
+        ];
+        
+        if($request->to && $request->from){
+            $rules["from"] = "date|before:to";
+            $rules["to"] = "date|after:from";
+        }
+        $validator = Validator::make($request->all(), $rules);
 
         if($validator->fails()){
             $errors = $validator->errors()->all();
             return ["success" => false, "message" => $errors, "status" => 400];
-        }
-        try{
-            $contracts = Contract::with(["client","requester"])->paginate();
+        }   
+            $fieldStatusQuery = "
+            CASE 
+                WHEN contracts.is_posted = 0 THEN 'draft'
+                WHEN CURDATE() > contracts.end_date THEN 'selesai'
+                WHEN DATEDIFF(contracts.end_date, CURDATE()) < 14 THEN 'segeraberakhir'
+                WHEN DATEDIFF(contracts.end_date, CURDATE()) > 14 THEN 'berlangsung'
+            END AS status,
+            CASE 
+                WHEN contracts.is_posted = 0 THEN '2'
+                WHEN CURDATE() > contracts.end_date THEN '4'
+                WHEN DATEDIFF(contracts.end_date, CURDATE()) < 14 THEN '1'
+                WHEN DATEDIFF(contracts.end_date, CURDATE()) > 14 THEN '3'
+            END AS status_order
+            ";
+            // $contracts = Contract::select()->addSelect(DB::raw(
+            //     "$fieldStatusQuery,
+            //     DATEDIFF(contracts.end_date, CURDATE()) as duration
+            //     "
+            // ))->with(["client","requester"]);
+            $contracts = Contract::fromSub(function ($query) use ($fieldStatusQuery) {
+                $query->from('contracts')
+                    ->select('*', DB::raw(
+                        "$fieldStatusQuery,
+                        DATEDIFF(contracts.end_date, CURDATE()) as duration"
+                    ));
+            }, 'contracts')->with(["client","requester"]);
+            $rows = $request->rows ?? 5;
+            $keyword = $request->keyword;
+            $sort_by = $request->sort_by ?? NULL;
+            $sort_type = $request->sort_type ?? 'asc';
+            $status_types = $request->status_types ? explode(",",$request->status_types) : NULL;
+            $client_ids = $request->client_ids ? explode(",",$request->client_ids) : NULL;
+            $duration = $request->duration ?? NULL;
+
+            if($keyword) $contracts = $contracts->where("contract_number","LIKE","%$keyword%")->orWhere("title","LIKE","%$keyword%");
+            if($status_types) $contracts = $contracts->whereIn('status', $status_types);
+            if($client_ids) $contracts = $contracts->whereIn("client_id", $client_ids);
+            if($duration) $contracts = $contracts->where('duration','<', $duration)->where('duration','>', 0);
+
+            if(in_array($sort_by, ["contract_number","title","start_date","duration"])) $contracts = $contracts->orderBy($sort_by,$sort_type);
+            if($sort_by == "status") $contracts = $contracts->orderBy("status_order",$sort_type);
+            
+            $contracts = $contracts->paginate($rows);
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $contracts , "status" => 200];
+            try{
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -55,7 +107,18 @@ class ContractService{
 
         try{
             $id = $request->id;
-            $contract = Contract::with(["client","requester","services","services.product"])->find($id);
+            $fieldStatusQuery = "CASE 
+                WHEN contracts.is_posted = 0 THEN 'draft'
+                WHEN CURDATE() > contracts.end_date THEN 'selesai'
+                WHEN DATEDIFF(contracts.end_date, CURDATE()) < 14 THEN 'segeraberakhir'
+                WHEN DATEDIFF(contracts.end_date, CURDATE()) > 14 THEN 'berlangsung'
+            END AS status";
+            $contract = Contract::select()->addSelect(DB::raw(
+                "$fieldStatusQuery,
+                DATEDIFF(contracts.end_date, CURDATE()) as duration
+                "
+            ))->with(["client","requester","services","services.product"])->find($id);
+
             if(!$contract) return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $contract, "status" => 200];
         }catch(Exception $err){
@@ -284,13 +347,13 @@ class ContractService{
                                 }
                             }else{
                                 try{
-                                    $extra["value"] = $old_extras_remap[$key]["value"]['id'];
+                                    $extra["value"] = $old_extras_remap[$key]["value"];
                                 }catch(Exception $err){
                                     echo $err;
                                 }
                             }
                         }else{
-                            $extra["value"] = $e['value'];
+                            $extra["value"] = $e["value"];
                         }
                     }
                 }else{
@@ -395,6 +458,23 @@ class ContractService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
         
+    }
+
+    public function getContractActiveCount($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $contract = Contract::where("is_posted",1)->count();
+
+        $data = [
+            "total" => $contract,
+        ];
+
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
     }
 
     //NOTES

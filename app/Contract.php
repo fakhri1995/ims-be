@@ -14,6 +14,7 @@ class Contract extends Model
 
     protected $casts = ['extras' => 'array'];
 
+
     public function client(){
         return $this->hasOne(Company::class,'id','client_id')->select('id','name');
     } 
@@ -25,4 +26,5 @@ class Contract extends Model
     public function services(){
         return $this->hasMany(ContractProduct::class,'contract_id')->select()->addSelect(DB::raw('pax*price as subtotal'));
     }
+
 }
