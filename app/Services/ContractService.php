@@ -71,7 +71,7 @@ class ContractService{
             if($keyword) $contracts = $contracts->where("contract_number","LIKE","%$keyword%")->orWhere("title","LIKE","%$keyword%");
             if($status_types) $contracts = $contracts->whereIn('status', $status_types);
             if($client_ids) $contracts = $contracts->whereIn("client_id", $client_ids);
-            if($duration) $contract = $contracts->where('duration','<', $duration);
+            if($duration) $contract = $contracts->where('duration','<', $duration)->where('duration','>', 0);
 
             if(in_array($sort_by, ["contract_number","title","start_date","duration","status"])) $contracts = $contracts->orderBy($sort_by,$sort_type);
             
