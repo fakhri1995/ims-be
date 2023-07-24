@@ -631,6 +631,7 @@ class ProjectTaskService{
         $logDataOld->task_staffs = $logDataOld->task_staffs()->pluck("id")->toArray();
 
         $projectTask->name = $request->name;
+        $projectTask->project_id = $request->project_id ?? NULL;
         $projectTask->start_date = $request->start_date;
         $projectTask->end_date = $request->end_date;
         $currect_time = date("Y-m-d H:i:s");
