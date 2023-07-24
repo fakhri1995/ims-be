@@ -542,7 +542,7 @@ class ProjectTaskService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        $projectTasks = ProjectTask::with('task_staffs',"task_staffs.profileImage",'status');
+        $projectTasks = ProjectTask::with('task_staffs',"task_staffs.profileImage",'status', 'project');
 
         $rows = $request->rows ?? 5;
         $user_id = $request->user_id;
