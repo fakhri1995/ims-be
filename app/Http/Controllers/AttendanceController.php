@@ -325,7 +325,7 @@ class AttendanceController extends Controller
 
     public function getAttendanceTaskActivity(Request $request)
     {
-        $route_name = "ATTENDANCE_TASK_ACTVITIY_GET";
+        $route_name = "ATTENDANCE_TASK_ACTIVITY_GET";
 
         $response = $this->attendanceService->getAttendanceTaskActivity($request, $route_name);
         return response()->json($response, $response['status']);
@@ -333,7 +333,7 @@ class AttendanceController extends Controller
 
     public function getAttendanceTaskActivities(Request $request)
     {
-        $route_name = "ATTENDANCE_TASK_ACTVITIIES_GET";
+        $route_name = "ATTENDANCE_TASK_ACTIVITIES_GET";
 
         $response = $this->attendanceService->getAttendanceTaskActivities($request, $route_name);
         return response()->json($response, $response['status']);
@@ -341,7 +341,7 @@ class AttendanceController extends Controller
 
     public function getAttendanceTaskActivitiesAdmin(Request $request)
     {
-        $route_name = "ATTENDANCE_TASK_ACTVITIIES_ADMIN_GET";
+        $route_name = "ATTENDANCE_TASK_ACTIVITIES_ADMIN_GET";
 
         $response = $this->attendanceService->getAttendanceTaskActivitiesAdmin($request, $route_name);
         return response()->json($response, $response['status']);
@@ -349,7 +349,7 @@ class AttendanceController extends Controller
 
     public function addAttendanceTaskActivity(Request $request)
     {
-        $route_name = "ATTENDANCE_TASK_ACTVITIY_ADD";
+        $route_name = "ATTENDANCE_TASK_ACTIVITY_ADD";
 
         $response = $this->attendanceService->addAttendanceTaskActivity($request, $route_name);
         return response()->json($response, $response['status']);
@@ -357,7 +357,7 @@ class AttendanceController extends Controller
 
     public function addAttendanceTaskActivities(Request $request)
     {
-        $route_name = "ATTENDANCE_TASK_ACTVITIIES_ADD";
+        $route_name = "ATTENDANCE_TASK_ACTIVITIES_ADD";
 
         $response = $this->attendanceService->addAttendanceTaskActivities($request, $route_name);
         return response()->json($response, $response['status']);
@@ -365,7 +365,7 @@ class AttendanceController extends Controller
 
     public function updateAttendanceTaskActivity(Request $request)
     {
-        $route_name = "ATTENDANCE_TASK_ACTVITIY_UPDATE";
+        $route_name = "ATTENDANCE_TASK_ACTIVITY_UPDATE";
 
         $response = $this->attendanceService->updateAttendanceTaskActivity($request, $route_name);
         return response()->json($response, $response['status']);
@@ -373,7 +373,7 @@ class AttendanceController extends Controller
 
     public function deleteAttendanceTaskActivity(Request $request)
     {
-        $route_name = "ATTENDANCE_TASK_ACTVITIY_DELETE";
+        $route_name = "ATTENDANCE_TASK_ACTIVITY_DELETE";
 
         $response = $this->attendanceService->deleteAttendanceTaskActivity($request, $route_name);
         return response()->json($response, $response['status']);
