@@ -333,7 +333,7 @@ class AttendanceController extends Controller
 
     public function getAttendanceTaskActivities(Request $request)
     {
-        $route_name = "ATTENDANCE_TASK_ACTVITIES_GET";
+        $route_name = "ATTENDANCE_TASK_ACTIVITIES_GET";
 
         $response = $this->attendanceService->getAttendanceTaskActivities($request, $route_name);
         return response()->json($response, $response['status']);
