@@ -245,7 +245,6 @@ class ProjectTaskService{
             $project->categories()->sync($categories_list_ids);
         }
         
-        exit();
         
 
         //oldLog
