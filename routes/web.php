@@ -647,6 +647,8 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addProjectLogNotes', 'ProjectTaskController@addProjectLogNotes');
     $router->get('/getProjectLogNotes', 'ActivityLogController@getProjectLogNotes');
     $router->delete('/deleteProjectLogNotes', 'ProjectTaskController@deleteProjectLogNotes');
+    // Project & Task Management -
+    $router->get('/getProjectCategoryList', 'ProjectTaskController@getProjectCategoryList');
 
     $router->get('/getBankLists', "BankListController@getBankLists");
 
