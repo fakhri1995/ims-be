@@ -5,6 +5,8 @@ namespace App\Services;
 use App\ActivityLogProjectTask;
 use App\Helpers\MockApiHelper;
 use App\Project;
+use App\ProjectCategory;
+use App\ProjectCategoryList;
 use App\ProjectStatus;
 use App\ProjectTask;
 use App\Services\GlobalService;
@@ -103,7 +105,7 @@ class ProjectTaskService{
         }
 
         $id = $request->id;
-        $project = Project::with(["project_staffs","project_staffs.profileImage","proposed_bys.profileImage","status","tasks"])->find($id);
+        $project = Project::with(["project_staffs","project_staffs.profileImage","proposed_bys.profileImage","status","tasks","categories"])->find($id);
         if(!$project) return ["success" => false, "message" => "Data project tidak ditemukan", "status" => 400];
 
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $project, "status" => 200];
@@ -135,7 +137,7 @@ class ProjectTaskService{
         }
         
 
-        $projects = Project::with(["proposed_bys","status"]);
+        $projects = Project::with(["proposed_bys","status","categories"]);
         
         $rows = $request->rows ?? 5;
         $user_id = $request->user_id;
@@ -149,7 +151,10 @@ class ProjectTaskService{
         if($user_id) $projects = $projects->whereHas("project_staffs", function($q) use ($user_id){
             $q->where("id", $user_id);
         });
-        if($keyword) $projects = $projects->where("name","LIKE","%$keyword%")->orWhereHas("proposed_bys", function($q) use ($keyword){
+        if($keyword) $projects = $projects->where("name","LIKE","%$keyword%")
+        ->orWhereHas("proposed_bys", function($q) use ($keyword){
+            $q->where("name","LIKE","%$keyword%");
+        })->orWhereHas("categories", function($q) use ($keyword){
             $q->where("name","LIKE","%$keyword%");
         });
         if($status_ids) $projects = $projects->whereIn("status_id", $status_ids);
@@ -193,7 +198,9 @@ class ProjectTaskService{
             "proposed_bys" => "array",
             "proposed_bys.*" => "numeric",
             "status_id" => "numeric|nullable",
-            "description" => "string"
+            "description" => "string",
+            "categories" => "array",
+            "categories.*" => "string"
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -218,6 +225,29 @@ class ProjectTaskService{
             if(!$projectStatus) return ["success" => false, "message" => "Project status tidak ditemukan", "status" => 400];
         }
 
+        $currect_time = date("Y-m-d H:i:s");
+        $categories = $request->categories ?? [];
+        $categorie_arr = [];
+        if($categories){
+            $categories_list = ProjectCategoryList::whereIn("name",$categories)->get();
+            $categories_list_name = $categories_list->pluck("name")->toArray();
+            $categories_list_ids = $categories_list->pluck("id")->toArray();
+            $categories_name_diff = array_udiff($categories, $categories_list_name, 'strcasecmp');
+            foreach($categories_name_diff as $cnf){
+                $category = new ProjectCategoryList;
+                $category->name = ucfirst($cnf);
+                $category->created_at = $currect_time;
+                $category->updated_at = $currect_time;
+                $category->save();
+                $categories_list_ids[] = $category->id;
+            }
+
+            $project->categories()->sync($categories_list_ids);
+        }
+        
+        exit();
+        
+
         //oldLog
         $logDataOld = clone $project;
         $logDataOld->project_staffs = $logDataOld->project_staffs()->pluck("id")->toArray();
@@ -229,7 +259,6 @@ class ProjectTaskService{
         $project->end_date = $request->end_date;
         $project->description = $request->description;
         $project->status_id = $request->status_id;
-        $currect_time = date("Y-m-d H:i:s");
         $project->updated_at = $currect_time;
         
         $project_staffs = $request->project_staffs ?? [];
@@ -1186,6 +1215,21 @@ class ProjectTaskService{
         
         return $this->logService->deleteProjectLogNotes($logId);
         
+    }
+
+    public function getProjectCategoryList($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $name = $request->name ?? NULL;
+            $projectCategoryList = ProjectCategoryList::limit(10);
+            if($name) $projectCategoryList->select("name")->where("name","LIKE","%$name%");
+            $projectCategoryList = $projectCategoryList->get();
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projectCategoryList, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
     }
 
 }

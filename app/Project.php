@@ -9,7 +9,6 @@ class Project extends Model
 {   
     use SoftDeletes;
     public $timestamps = false;
-
     public function project_staffs()
     {
         return $this->belongsToMany(User::class, "projects_staffs")->select("users.id","users.name","users.position");
@@ -28,4 +27,9 @@ class Project extends Model
     public function tasks(){
         return $this->hasMany(ProjectTask::class);
     }
+
+    public function categories(){
+        return $this->belongsToMany(ProjectCategoryList::class, "project_categories")->select("project_category_lists.id","project_category_lists.name");
+    }
+    
 }
