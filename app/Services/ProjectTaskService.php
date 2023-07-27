@@ -151,7 +151,10 @@ class ProjectTaskService{
         if($user_id) $projects = $projects->whereHas("project_staffs", function($q) use ($user_id){
             $q->where("id", $user_id);
         });
-        if($keyword) $projects = $projects->where("name","LIKE","%$keyword%")->orWhereHas("proposed_bys", function($q) use ($keyword){
+        if($keyword) $projects = $projects->where("name","LIKE","%$keyword%")
+        ->orWhereHas("proposed_bys", function($q) use ($keyword){
+            $q->where("name","LIKE","%$keyword%");
+        })->orWhereHas("categories", function($q) use ($keyword){
             $q->where("name","LIKE","%$keyword%");
         });
         if($status_ids) $projects = $projects->whereIn("status_id", $status_ids);
