@@ -160,7 +160,7 @@ class ProjectTaskService{
         });
         if($status_ids) $projects = $projects->whereIn("status_id", $status_ids);
         if($category_ids) $projects = $projects->whereHas("categories", function($q) use ($category_ids){
-            $q->whereIn("project_categories.id", $category_ids);
+            $q->whereIn("project_category_list_id", $category_ids);
         });
         if($from) $projects = $projects->where(function ($q) use ($from){
             $q->where("start_date", ">=", $from)
