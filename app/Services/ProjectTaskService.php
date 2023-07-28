@@ -147,6 +147,7 @@ class ProjectTaskService{
         $sort_by = $request->sort_by ?? NULL;
         $sort_type = $request->sort_type ?? 'asc';
         $status_ids = $request->status_ids ? explode(",",$request->status_ids) : NULL;
+        $category_ids = $request->category_ids ? explode(",",$request->category_ids) : NULL;
 
         if($user_id) $projects = $projects->whereHas("project_staffs", function($q) use ($user_id){
             $q->where("id", $user_id);
@@ -158,6 +159,9 @@ class ProjectTaskService{
             $q->where("name","LIKE","%$keyword%");
         });
         if($status_ids) $projects = $projects->whereIn("status_id", $status_ids);
+        if($category_ids) $projects = $projects->whereHas("categories", function($q) use ($category_ids){
+            $q->whereIn("project_categories.id", $category_ids);
+        });
         if($from) $projects = $projects->where(function ($q) use ($from){
             $q->where("start_date", ">=", $from)
             ->orWhere("end_date", ">=", $from);
