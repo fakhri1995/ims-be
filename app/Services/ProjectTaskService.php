@@ -591,7 +591,7 @@ class ProjectTaskService{
         });
         if($keyword) $projectTasks = $projectTasks->where("name","LIKE","%$keyword%");
         if($status_ids) $projectTasks = $projectTasks->whereIn("status_id", $status_ids);
-        if($is_active) $projectTasks = $projectTasks->whereDate("end_date", ">=", date("Y-m-d"));
+        if($is_active) $projectTasks = $projectTasks->whereNull("end_date")->orWhereDate("end_date", ">=", date("Y-m-d"));
        
 
 
