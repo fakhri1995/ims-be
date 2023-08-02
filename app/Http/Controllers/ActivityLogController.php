@@ -75,7 +75,7 @@ class ActivityLogController extends Controller
     }
 
     public function getProjectLogNotes(Request $request){
-        $route_name = "PROJECT_LOG_NOTES_GET";   
+        $route_name = "PROJECT_NOTES_GET";   
         
         $response = $this->logService->getProjectLogNotes($request, $route_name);
         return response()->json($response, $response['status']);

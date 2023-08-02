@@ -211,14 +211,14 @@ class ProjectTaskController extends Controller
 
     // Project
     public function addProjectLogNotes(Request $request){
-        $route_name = "PROJECT_LOG_NOTES_ADD";   
+        $route_name = "PROJECT_NOTE_ADD";   
         
         $response = $this->projectTaskService->addProjectLogNotes($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function deleteProjectLogNotes(Request $request){
-        $route_name = "PROJECT_LOG_NOTES_DELETE";   
+        $route_name = "PROJECT_NOTE_DELETE";   
         
         $response = $this->projectTaskService->deleteProjectLogNotes($request, $route_name);
         return response()->json($response, $response['status']);
