@@ -226,7 +226,7 @@ class ProjectTaskController extends Controller
 
     //Project Category
     public function getProjectCategoryList(Request $request){
-        $route_name = "PROJECT_CATEGORY_LIST_GET";   
+        $route_name = "PROJECT_CATEGORIES_GET";   
         
         $response = $this->projectTaskService->getProjectCategoryList($request, $route_name);
         return response()->json($response, $response['status']);
