@@ -489,8 +489,8 @@ class ProjectTaskService{
 
         $projectTask = new ProjectTask();
         $projectTask->name = $request->name;
-        $projectTask->start_date = $request->start_date;
-        $projectTask->end_date = $request->end_date;
+        if($request->start_date !== "") $projectTask->start_date = $request->start_date;
+        if($request->end_date !== "") $projectTask->end_date = $request->end_date;
         $projectTask->project_id = $project_id;
         $projectTask->description = $request->description;
         $currect_time = date("Y-m-d H:i:s");
@@ -664,8 +664,8 @@ class ProjectTaskService{
 
         $projectTask->name = $request->name;
         $projectTask->project_id = $request->project_id ?? NULL;
-        $projectTask->start_date = $request->start_date;
-        $projectTask->end_date = $request->end_date;
+        if($request->start_date !== "") $projectTask->start_date = $request->start_date;
+        if($request->end_date !== "") $projectTask->end_date = $request->end_date;
         $currect_time = date("Y-m-d H:i:s");
         $projectTask->updated_at = $currect_time;
         $projectTask->status_id = $request->status_id;
