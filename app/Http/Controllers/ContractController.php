@@ -74,4 +74,20 @@ class ContractController extends Controller
         $response = $this->contractService->deleteContractLogNotes($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    // Template
+    public function updateContractTemplate(Request $request){
+        $route_name = "CONTRACT_TEMPLATE_UPDATE";   
+        
+        $response = $this->contractService->updateContractTemplate($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getContractTemplate(Request $request){
+        $route_name = "CONTRACT_TEMPLATE_GET";   
+        
+        $response = $this->contractService->getContractTemplate($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
 }
