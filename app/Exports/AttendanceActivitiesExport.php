@@ -36,7 +36,7 @@ class AttendanceActivitiesExport implements WithMultipleSheets
     public function sheets(): array
     {
         $sheets = [];
-        $access_activities = $this->globalService->checkRoute('ATTENDANCES_USER_GET');
+        $access_activities = $this->globalService->checkRoute('ATTENDANCE_ACTIVITIES_GET');
         $access_task = $this->globalService->checkRoute('ATTENDANCE_TASK_ACTIVITIES_GET');
         if($access_activities["success"] === true) {
             $sheets[] = new ActivitiesExport($this->from, $this->to, $this->attendance_form, $this->form_ids, $this->multiple, $this->user_ids);
