@@ -3,7 +3,10 @@
 namespace App\Services;
 
 use App\Contract;
+use App\ContractInvoiceTemplate;
 use App\ContractProduct;
+use App\ContractProductTemplate;
+use App\ContractProductTemplateValue;
 use App\Product;
 use Exception;
 use App\Services\GlobalService;
@@ -499,7 +502,7 @@ class ContractService{
 
         
         $contract = Contract::find($contract_id);
-        if(!$contract) return ["success" => false, "message" => "Task tidak ditemukan.", "status" => 400];
+        if(!$contract) return ["success" => false, "message" => "Contract tidak ditemukan.", "status" => 400];
 
         if($this->logService->addLogContractFunction($contract_id, auth()->user()->id , "Notes", NULL, $notes, $description)){
             return ["success" => true, "message" => "Notes berhasil ditambahkan.", "status" => 200]; 
@@ -524,6 +527,116 @@ class ContractService{
         $logId = $request->id;
         
         return $this->logService->deleteContractLogNotes($logId);
+    }
+
+    // Contract Template
+    public function updateContractTemplate($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "contract_id" => "required|numeric",
+            "invoice_template" => "array",
+            "service_template" => "array",
+            "service_template_values" => "array",
+            "service_template_values.contract_service_id" => "integer|required_with:service_template_values.values",
+            "service_template_values.values" => "array|required_with:service_template_values.contract_service_id"
+        ]);
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $contract_id = $request->contract_id;
+        $contract = Contract::find($contract_id);
+        if(!$contract) return ["success" => false, "message" => "Contract tidak ditemukan.", "status" => 400];
+
+        $invoice_template = $request->invoice_template ?? [];
+        $service_template = $request->service_template ?? [];
+        $service_template_values = $request->service_template_values ?? [];
+
+
+        $current_time = date("Y-m-d H:i:s");
+        // ContractInvoiceTemplate
+        $contractInvoiceTemplate = ContractInvoiceTemplate::where("contract_id",$contract_id)->first();
+        if(!$contractInvoiceTemplate) $contractInvoiceTemplate = new ContractInvoiceTemplate();
+
+        $contractInvoiceTemplate->contract_id = $contract_id;
+        $contractInvoiceTemplate->details = $invoice_template;
+        $contractInvoiceTemplate->created_at = $contractInvoiceTemplate->created_at ?? $current_time;
+        $contractInvoiceTemplate->updated_at = $current_time;
+        $contractInvoiceTemplate->updated_by = auth()->user()->id;
+        $contractInvoiceTemplate->save();
+
+
+        // ContractProductTemplate
+        $contractServiceTemplate = ContractProductTemplate::where("contract_id",$contract_id)->first();
+        if(!$contractServiceTemplate) $contractServiceTemplate = new ContractProductTemplate();
+
+        $contractServiceTemplate->contract_id = $contract_id; 
+        $contractServiceTemplate->details = $service_template;
+        $contractServiceTemplate->created_at = $contractServiceTemplate->created_at ?? $current_time;
+        $contractServiceTemplate->updated_at = $current_time;
+        $contractServiceTemplate->updated_by = auth()->user()->id;
+        $contractServiceTemplate->save();
+
+        
+        // ContractProductTemplateValue
+        $contract_service_ids_request = collect($service_template_values)->pluck("contract_service_id")->toArray();
+        $contract_service_ids = $contract->services()->pluck("id")->toArray();
+        // $contract_service_id_diff = array_diff($contract_service_ids_request, $contract_service_ids);
+        if(count($contract_service_ids_request) != count($contract_service_ids)) return ["success" => false, "message" => "Panjang array service_template_values harus sama dengan jumlah product", "status" => 400];
+        // if(count($contract_service_id_diff) > 0) return ["success" => false, "message" => "contract_service_id [".implode(",",$contract_service_id_diff)."] tidak valid.", "status" => 400];
+        
+        $count_service_template = count($service_template);
+        foreach($service_template_values as $key => $val){
+            $val = (object)$val;
+            if(count($val->values) != $count_service_template) return ["success" => false, "message" => "Panjang array service_template_values.values[$key] harus sama array service_template", "status" => 400];
+            if(!in_array($val->contract_service_id, $contract_service_ids)) return ["success" => false, "message" => "service_template_values.contract_service_id[$key] tidak terdaftar dalam contract.", "status" => 400];
+        }
+
+
+        foreach($service_template_values as $s){
+            $s = (object)$s;
+            $contractServiceTemplateValue = ContractProductTemplateValue::where([
+                "contract_id" => $contract_id, 
+                "contract_product_id" => $s->contract_service_id
+            ])->first();
+            if(!$contractServiceTemplateValue) $contractServiceTemplateValue = new ContractProductTemplateValue();
+
+            $contractServiceTemplateValue->contract_id = $contract_id; 
+            $contractServiceTemplateValue->contract_product_id = $s->contract_service_id; 
+            $contractServiceTemplateValue->details = $s->values ?? [];
+            $contractServiceTemplateValue->created_at = $contractServiceTemplateValue->created_at ?? $current_time;
+            $contractServiceTemplateValue->updated_at = $current_time;
+            $contractServiceTemplateValue->updated_by = auth()->user()->id;
+            $contractServiceTemplateValue->save();
+        }
+
+
+        return ["success" => true, "message" => "Data berhasil diupdate" , "status" => 200];
+    }
+
+    public function getContractTemplate($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "contract_id" => "required|numeric"
+        ]);
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        
+        $contract_id = $request->contract_id;
+        $contract = Contract::with("invoice_template","service_template","services","services.service_template_value")->find($contract_id);
+        if(!$contract) return ["success" => false, "message" => "Contract tidak ditemukan.", "status" => 400]; 
+
+        return ["success" => true, "message" => "Data berhasil diambil", "data" => $contract , "status" => 200];
+
     }
 
 }

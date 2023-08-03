@@ -665,6 +665,9 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addContractLogNotes', 'ContractController@addContractLogNotes');
     $router->get('/getContractLogNotes', 'ActivityLogController@getContractLogNotes');
     $router->delete('/deleteContractLogNotes', 'ContractController@deleteContractLogNotes');
+    // Contract Management - Template
+    $router->get('/getContractTemplate', 'ContractController@getContractTemplate');
+    $router->put('/updateContractTemplate', 'ContractController@updateContractTemplate');
 });
 
 // //Incident Routes

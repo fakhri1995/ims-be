@@ -27,4 +27,12 @@ class Contract extends Model
         return $this->hasMany(ContractProduct::class,'contract_id')->select()->addSelect(DB::raw('pax*price as subtotal'));
     }
 
+    public function invoice_template(){
+        return $this->hasOne(ContractInvoiceTemplate::class,'contract_id');
+    }
+
+    public function service_template(){
+        return $this->hasOne(ContractProductTemplate::class,'contract_id');
+    }
+
 }
