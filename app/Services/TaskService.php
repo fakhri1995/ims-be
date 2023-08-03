@@ -2543,7 +2543,7 @@ class TaskService{
         try{
             $login_id = auth()->user()->id;
             $task_details = TaskDetail::with(['users', 'task.users'  => function($query) use ($login_id){
-                $query->where('id',$login_id);
+                $query->where('users.id',$login_id);
             }])->findMany($ids);
             
             $ids_task_detail = [];
