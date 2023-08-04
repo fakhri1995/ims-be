@@ -633,7 +633,9 @@ class ContractService{
         }
         
         $contract_id = $request->contract_id;
-        $contract = Contract::with("client","requester","invoice_template","service_template","services","services.product","services.service_template_value")->find($contract_id);
+        $contract = Contract::select()->addSelect(DB::raw(
+            "DATEDIFF(contracts.end_date, CURDATE()) as duration"
+        ))->with("client","requester","invoice_template","service_template","services","services.product","services.service_template_value")->find($contract_id);
         if(!$contract) return ["success" => false, "message" => "Contract tidak ditemukan.", "status" => 400]; 
 
         return ["success" => true, "message" => "Data berhasil diambil", "data" => $contract , "status" => 200];
