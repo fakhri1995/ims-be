@@ -539,8 +539,9 @@ class ContractService{
             "invoice_template" => "array",
             "service_template" => "array",
             "service_template_values" => "array",
-            "service_template_values.contract_service_id" => "integer|required_with:service_template_values.values",
-            "service_template_values.values" => "array|required_with:service_template_values.contract_service_id"
+            "service_template_values.*.contract_service_id" => "integer|required_with:service_template_values.values",
+            "service_template_values.*.details" => "required|array",
+            "service_template_values.*.details.*" => "required_with:service_template.*"
         ]);
         
         if($validator->fails()){
@@ -592,7 +593,7 @@ class ContractService{
         $count_service_template = count($service_template);
         foreach($service_template_values as $key => $val){
             $val = (object)$val;
-            if(count($val->values) != $count_service_template) return ["success" => false, "message" => "Panjang array service_template_values.values[$key] harus sama array service_template", "status" => 400];
+            if(count($val->details) != $count_service_template) return ["success" => false, "message" => "Panjang array service_template_values.details[$key] harus sama array service_template", "status" => 400];
             if(!in_array($val->contract_service_id, $contract_service_ids)) return ["success" => false, "message" => "service_template_values.contract_service_id[$key] tidak terdaftar dalam contract.", "status" => 400];
         }
 
@@ -601,13 +602,13 @@ class ContractService{
             $s = (object)$s;
             $contractServiceTemplateValue = ContractProductTemplateValue::where([
                 "contract_id" => $contract_id, 
-                "contract_product_id" => $s->contract_service_id
+                "contract_service_id" => $s->contract_service_id
             ])->first();
             if(!$contractServiceTemplateValue) $contractServiceTemplateValue = new ContractProductTemplateValue();
 
             $contractServiceTemplateValue->contract_id = $contract_id; 
-            $contractServiceTemplateValue->contract_product_id = $s->contract_service_id; 
-            $contractServiceTemplateValue->details = $s->values ?? [];
+            $contractServiceTemplateValue->contract_service_id = $s->contract_service_id; 
+            $contractServiceTemplateValue->details = $s->details ?? [];
             $contractServiceTemplateValue->created_at = $contractServiceTemplateValue->created_at ?? $current_time;
             $contractServiceTemplateValue->updated_at = $current_time;
             $contractServiceTemplateValue->updated_by = auth()->user()->id;
@@ -632,7 +633,7 @@ class ContractService{
         }
         
         $contract_id = $request->contract_id;
-        $contract = Contract::with("invoice_template","service_template","services","services.service_template_value")->find($contract_id);
+        $contract = Contract::with("client","requester","invoice_template","service_template","services","services.product","services.service_template_value")->find($contract_id);
         if(!$contract) return ["success" => false, "message" => "Contract tidak ditemukan.", "status" => 400]; 
 
         return ["success" => true, "message" => "Data berhasil diambil", "data" => $contract , "status" => 200];

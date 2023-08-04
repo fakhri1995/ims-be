@@ -14,6 +14,6 @@ class ContractProduct extends Model
     }
 
     public function service_template_value(){
-        return $this->hasOne(ContractProductTemplateValue::class,'contract_product_id','id');
+        return $this->hasOne(ContractProductTemplateValue::class,'contract_service_id','id');
     }
 }
