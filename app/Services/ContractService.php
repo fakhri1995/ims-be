@@ -540,7 +540,7 @@ class ContractService{
             "service_template" => "array",
             "service_template_values" => "array",
             "service_template_values.*.contract_service_id" => "integer|required_with:service_template_values.values",
-            "service_template_values.*.details" => "required|array",
+            "service_template_values.*.details" => "array",
             "service_template_values.*.details.*" => "required_with:service_template.*"
         ]);
         
@@ -587,7 +587,7 @@ class ContractService{
         $contract_service_ids_request = collect($service_template_values)->pluck("contract_service_id")->toArray();
         $contract_service_ids = $contract->services()->pluck("id")->toArray();
         // $contract_service_id_diff = array_diff($contract_service_ids_request, $contract_service_ids);
-        if(count($contract_service_ids_request) != count($contract_service_ids)) return ["success" => false, "message" => "Panjang array service_template_values harus sama dengan jumlah product", "status" => 400];
+        // if(count($contract_service_ids_request) != count($contract_service_ids)) return ["success" => false, "message" => "Panjang array service_template_values harus sama dengan jumlah product", "status" => 400];
         // if(count($contract_service_id_diff) > 0) return ["success" => false, "message" => "contract_service_id [".implode(",",$contract_service_id_diff)."] tidak valid.", "status" => 400];
         
         $count_service_template = count($service_template);
