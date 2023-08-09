@@ -223,6 +223,24 @@ class AttendanceService{
         }
     }
 
+    public function getAttendanceActivitiesAdmin($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        try{
+            $rows = $request->rows ?? NULL;
+            $id = $request->get('id');
+            $user_attendance = AttendanceUser::find($id);
+            if(!$user_attendance) return ["success" => false, "message" => "User Attendance Tidak Ditemukan" , "status" => 400];
+            $data = AttendanceActivity::where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)));
+            if($rows) $data = $data->paginate($rows);
+            else $data = $data->get();
+            return ["success" => true, "message" => "Berhasil Mengambil Data Attendance", "data" => $data, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     public function getAttendanceActivity($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
@@ -654,9 +672,11 @@ class AttendanceService{
             $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
             $user_attendance->name = $name;
             $attendance_activities = AttendanceActivity::with('attendanceForm:id,name,details')->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
+            $attendance_task_activities = AttendanceTaskActivity::with('task')->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
             $data = (object)[
                 "user_attendance" => $user_attendance,
-                "attendance_activities" => $attendance_activities
+                "attendance_activities" => $attendance_activities,
+                "attendance_task_activities" => $attendance_task_activities
             ];
             return ["success" => true, "message" => "Berhasil Mengambil Data Attendance", "data" => $data, "status" => 200];
         } catch(Exception $err){
@@ -1058,11 +1078,13 @@ class AttendanceService{
         if($access["success"] === false) return $access;
 
         try{
-            
+            $rows = $request->rows ?? NULL;
             $id = $request->get('id');
             $user_attendance = AttendanceUser::find($id);
             if(!$user_attendance) return ["success" => false, "message" => "User Attendance Tidak Ditemukan" , "status" => 400];
-            $data = AttendanceTaskActivity::with('task')->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
+            $data = AttendanceTaskActivity::with('task')->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)));
+            if($rows) $data = $data->paginate($rows);
+            else $data = $data->get();
             return ["success" => true, "message" => "Berhasil Mengambil Data Attendance", "data" => $data, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];

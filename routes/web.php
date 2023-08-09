@@ -391,6 +391,7 @@ $router->group(['middleware' => 'auth'], function($router){
 
     //Activity Routes
     $router->get('/getAttendanceActivities', 'AttendanceController@getAttendanceActivities');
+    $router->get('/getAttendanceActivitiesAdmin', 'AttendanceController@getAttendanceActivitiesAdmin');
     // $router->get('/getAttendanceActivity', 'AttendanceController@getAttendanceActivity');
     $router->post('/addAttendanceActivity', 'AttendanceController@addAttendanceActivity');
     $router->put('/updateAttendanceActivity', 'AttendanceController@updateAttendanceActivity');
