@@ -150,7 +150,7 @@ class ProjectTaskService{
         $category_ids = $request->category_ids ? explode(",",$request->category_ids) : NULL;
 
         if($user_id) $projects = $projects->whereHas("project_staffs", function($q) use ($user_id){
-            $q->where("id", $user_id);
+            $q->where("users.id", $user_id);
         });
         if($keyword) $projects = $projects->where("name","LIKE","%$keyword%")
         ->orWhereHas("proposed_bys", function($q) use ($keyword){
