@@ -648,6 +648,57 @@ class AttendanceService{
         }
     }
 
+    public function getAttendanceLateCount($request, $route_name, $admin = false){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "id" => "required"
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+            $id = $request->get('id');
+            
+            $user_attendances = AttendanceUser::where('user_id', $id)->whereDate('check_in', '>', date("Y-m-d", strtotime("-1 months")))->get();
+
+            $is_late_count = 0;
+            $on_time_count = 0;
+            if($user_attendances->isEmpty()){
+                $data = (object)[
+                    "late_count" => $is_late_count,
+                    "on_time_count" => $on_time_count,
+                ];
+                return ["success" => true, "message" => "Data Attendances Masih Kosong", "data" => $data, "status" => 200];
+            } 
+            
+            $is_late_days = [];
+            foreach($user_attendances as $user_attendance){
+                $attendance_day = date('m-d', strtotime($user_attendance->check_in));
+                $is_late_days[$attendance_day] = $user_attendance->is_late;
+                $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
+                $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
+            }
+
+            foreach($is_late_days as $is_late_day){
+                if($is_late_day) $is_late_count++;
+                else $on_time_count++;
+            }
+            
+            $data = (object)[
+                "late_count" => $is_late_count,
+                "on_time_count" => $on_time_count
+            ];
+            return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $data, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
+        }
+    }
+
     public function getAttendanceUserFunc($request, $route_name, $admin = false)
     {
         $access = $this->globalService->checkRoute($route_name);
