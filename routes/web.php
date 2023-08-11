@@ -404,6 +404,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addAttendanceTaskActivities', 'AttendanceController@addAttendanceTaskActivities');
     $router->put('/updateAttendanceTaskActivity', 'AttendanceController@updateAttendanceTaskActivity');
     $router->delete('/deleteAttendanceTaskActivity', 'AttendanceController@deleteAttendanceTaskActivity');
+    $router->get('/getAttendanceLateCount', 'AttendanceController@getAttendanceLateCount');
 
     //Attendance User
     $router->get('/getAttendancesUsers', 'AttendanceController@getAttendancesUsers');

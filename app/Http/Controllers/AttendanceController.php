@@ -165,6 +165,14 @@ class AttendanceController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getAttendanceLateCount(Request $request)
+    {
+        $route_name = "ATTENDANCE_LATE_COUNT_GET";
+
+        $response = $this->attendanceService->getAttendanceLateCount($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getAttendanceUserAdmin(Request $request)
     {
         $route_name = "ATTENDANCE_USER_ADMIN_GET";
