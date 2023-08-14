@@ -1104,13 +1104,15 @@ class AttendanceService{
         }
     }
 
-    public function getAttendanceTaskActivities($request, $route_name){
+    public function getAttendanceTaskActivities($request, $route_name, $admin = false){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         try{
+            $id = $request->get('id') ?? NULL;
             $last_two_month = date("Y-m-d", strtotime("-2 months"));
             $today = date('Y-m-d');
             $login_id = auth()->user()->id;
+            if($admin && $id) $login_id = $id;
             $today_attendance_activities = AttendanceTaskActivity::with('task')->where('user_id', $login_id)->whereDate('updated_at', '=', $today)->get();
             $last_two_month_attendance_activities = AttendanceTaskActivity::with('task')->where('user_id', $login_id)->whereDate('updated_at', '>', $last_two_month)->whereDate('updated_at', '<>', $today)->get();
             $data = (object)[
@@ -1122,6 +1124,13 @@ class AttendanceService{
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
+    }
+
+    public function getUserAttendanceTaskActivitiesAdmin($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        return $this->getAttendanceTaskActivities($request, $route_name, true);
     }
 
     public function getAttendanceTaskActivitiesAdmin($request, $route_name){
