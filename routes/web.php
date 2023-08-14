@@ -671,6 +671,9 @@ $router->group(['middleware' => 'auth'], function($router){
     // Contract Management - Template
     $router->get('/getContractTemplate', 'ContractController@getContractTemplate');
     $router->put('/updateContractTemplate', 'ContractController@updateContractTemplate');
+    // Contract Management - Invoice
+    $router->get('/getContractInvoices', 'ContractController@getContractInvoices');
+    
 });
 
 // //Incident Routes
