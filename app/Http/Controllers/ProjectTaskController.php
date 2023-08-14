@@ -137,7 +137,7 @@ class ProjectTaskController extends Controller
 
     public function getProjectTasksCount(Request $request)
     {
-        $route_name = "PROJECT_COUNT_GET";
+        $route_name = "PROJECT_TASKS_COUNT_GET";
 
         $response = $this->projectTaskService->getProjectTasksCount($request, $route_name);
         return response()->json($response, $response['status']);
