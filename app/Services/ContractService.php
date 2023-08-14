@@ -642,4 +642,39 @@ class ContractService{
 
     }
 
+    public function getContractInvoices($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "page" => "numeric",
+            "rows" => "numeric"
+        ]);
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $rows = $request->rows ?? 10;
+        
+        $contract = Contract::select()->addSelect(DB::raw(
+            "DATEDIFF(contracts.end_date, CURDATE()) as duration"
+        ))->with("client","requester")->paginate($rows);
+        if(!$contract) return ["success" => false, "message" => "Contract tidak ditemukan.", "status" => 400]; 
+        
+        foreach($contract as $c){
+            $c->invoice_number = "010/000/123";
+            $c->invoice_name = "nama_invoce";
+            $c->invoice_raise_at = "2023-07-20";
+            $c->invoice_total = "Rp. 500000";
+        }
+
+        return ["success" => true, "message" => "Data berhasil diambil", "data" => $contract , "status" => 200];
+
+    }
+    
+
+
+
 }
