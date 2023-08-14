@@ -90,4 +90,12 @@ class ContractController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    //Invoice
+    public function getContractInvoices(Request $request){
+        $route_name = "CONTRACT_INVOICES_GET";   
+        
+        $response = $this->contractService->getContractInvoices($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
 }
