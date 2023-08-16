@@ -900,8 +900,8 @@ class RecruitmentService{
                 $resume->save();
             }
             
-            $loginService = new LoginService();
-            $loginService->mailForgetPassword($recruitment->email);
+            // $loginService = new LoginService();
+            // $loginService->mailForgetPassword($recruitment->email);
 
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitment, "status" => 200];
 
