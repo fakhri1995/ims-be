@@ -561,6 +561,7 @@ class ProjectTaskService{
             "sort_by" => "in:deadline,status",
             "sort_type" => "in:asc,desc",
             "is_active" => "numeric",
+            "has_project" => "numeric",
         ];
 
         if($request->to && $request->from){
@@ -584,6 +585,7 @@ class ProjectTaskService{
         $sort_type = $request->sort_type ?? 'asc';
         $status_ids = $request->status_ids ? explode(",",$request->status_ids) : NULL;
         $is_active = $request->is_active ?? NULL;
+        $has_project = $request->has_project ?? NULL;
 
         if($project_id) $projectTasks = $projectTasks->where("project_id", $project_id);
         if($user_id) $projectTasks = $projectTasks->whereHas("task_staffs", function($q) use ($user_id){
@@ -592,6 +594,8 @@ class ProjectTaskService{
         if($keyword) $projectTasks = $projectTasks->where("name","LIKE","%$keyword%");
         if($status_ids) $projectTasks = $projectTasks->whereIn("status_id", $status_ids);
         if($is_active) $projectTasks = $projectTasks->whereNull("end_date")->orWhereDate("end_date", ">=", date("Y-m-d"));
+        if($has_project == 1) $projectTasks = $projectTasks->whereNotNull("project_id");
+        else if($has_project == 0 && $has_project !== NULL) $projectTasks = $projectTasks->whereNull("project_id");
        
 
 
