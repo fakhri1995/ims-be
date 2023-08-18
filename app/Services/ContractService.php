@@ -688,7 +688,7 @@ class ContractService{
         ]);
 
         $id = $request->id;
-        $contractInvoice = ContractInvoice::with("invoice_services")->find($id);
+        $contractInvoice = ContractInvoice::with("service_attribute_values")->find($id);
         $contract = Contract::select()->addSelect(DB::raw(
             "DATEDIFF(contracts.end_date, CURDATE()) as duration"
         ))->with("client","requester","invoice_template","service_template","services","services.product","services.service_template_value")->find($contractInvoice->contract_template_id);
