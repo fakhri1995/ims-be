@@ -673,6 +673,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/updateContractTemplate', 'ContractController@updateContractTemplate');
     // Contract Management - Invoice
     $router->get('/getContractInvoices', 'ContractController@getContractInvoices');
+    $router->get('/getContractInvoice', 'ContractController@getContractInvoice');
     $router->post('/addContractInvoice', 'ContractController@addContractInvoice');
     $router->put('/updateContractInvoice', 'ContractController@updateContractInvoice');
     
