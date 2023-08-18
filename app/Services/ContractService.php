@@ -688,15 +688,28 @@ class ContractService{
         ]);
 
         $id = $request->id;
-        $contractInvoice = ContractInvoice::with("service_attribute_values")->find($id);
+        $contractInvoice = ContractInvoice::with("service_attribute_values","service_attribute_values.product")->find($id);
+        if(!$contractInvoice) return ["success" => false, "message" => "Data tidak ditemukan.", "status" => 400]; 
         $contract = Contract::select()->addSelect(DB::raw(
             "DATEDIFF(contracts.end_date, CURDATE()) as duration"
-        ))->with("client","requester","invoice_template","service_template","services","services.product","services.service_template_value")->find($contractInvoice->contract_template_id);
+        ))->with("client","requester")->find($contractInvoice->contract_template_id);
 
-        $contract->contract_invoice = $contractInvoice;
-        if(!$contract) return ["success" => false, "message" => "Contract tidak ditemukan.", "status" => 400]; 
+        // $contract->contract_invoice = $contractInvoice;
 
-        return ["success" => true, "message" => "Data berhasil diambil", "data" => $contract , "status" => 200];
+        $data = array_merge($contract->toArray(),$contractInvoice->toArray());
+        $data['invoice_services'] = $data['service_attribute_values'];
+        unset($data['service_attribute_values']);
+
+        foreach($data['invoice_services'] as $key => $value){
+            $data['invoice_services'][$key]['invoice_service_value'] = array(
+                "invoice_service_id" => $data['invoice_services'][$key]['id'],
+                "details" => $data['invoice_services'][$key]['details'],
+            );
+            unset($data['invoice_services'][$key]['details']);
+        }
+
+
+        return ["success" => true, "message" => "Data berhasil diambil", "data" => $data , "status" => 200];
     }
 
     public function addContractInvoice($request, $route_name){
