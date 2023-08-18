@@ -17,6 +17,7 @@ class CreateContractInvoiceTemplatesTable extends Migration
             $table->id();
             $table->unsignedBigInteger('contract_id');
             $table->jsonb('details');
+            $table->integer("invoice_period");
             $table->unsignedBigInteger('updated_by');
             $table->dateTime('created_at');
             $table->dateTime('updated_at');

@@ -98,4 +98,18 @@ class ContractController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function addContractInvoice(Request $request){
+        $route_name = "CONTRACT_INVOICES_ADD";   
+        
+        $response = $this->contractService->addContractInvoice($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateContractInvoice(Request $request){
+        $route_name = "CONTRACT_INVOICES_UPDATE";   
+        
+        $response = $this->contractService->updateContractInvoice($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
 }
