@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Contract;
 use App\ContractInvoice;
 use App\ContractInvoiceProduct;
-use App\ContractInvoiceService;
 use App\ContractInvoiceTemplate;
 use App\ContractProduct;
 use App\ContractProductTemplate;
@@ -678,6 +677,26 @@ class ContractService{
 
         return ["success" => true, "message" => "Data berhasil diambil", "data" => $contractInvoice , "status" => 200];
 
+    }
+
+    public function getContractInvoice($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "id" => "numeric|required",
+        ]);
+
+        $id = $request->id;
+        $contractInvoice = ContractInvoice::with("invoice_services")->find($id);
+        $contract = Contract::select()->addSelect(DB::raw(
+            "DATEDIFF(contracts.end_date, CURDATE()) as duration"
+        ))->with("client","requester","invoice_template","service_template","services","services.product","services.service_template_value")->find($contractInvoice->contract_template_id);
+
+        $contract->contract_invoice = $contractInvoice;
+        if(!$contract) return ["success" => false, "message" => "Contract tidak ditemukan.", "status" => 400]; 
+
+        return ["success" => true, "message" => "Data berhasil diambil", "data" => $contract , "status" => 200];
     }
 
     public function addContractInvoice($request, $route_name){
