@@ -24,6 +24,7 @@ class CreateContractInvoicesTable extends Migration
             $table->integer("invoice_total")->default(0);
             $table->boolean("is_posted")->default(false);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

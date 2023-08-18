@@ -755,6 +755,7 @@ class ContractService{
         if($access["success"] === false) return $access;
 
         $validator = Validator::make($request->all(), [
+            "id" => "required|numeric"
         ]);
         
         if($validator->fails()){
@@ -762,9 +763,9 @@ class ContractService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        $contract_invoice_id = $request->contract_invoice_id;
+        $contract_invoice_id = $request->id;
         $contractInvoice = ContractInvoice::find($contract_invoice_id);
-        if(!$contractInvoice) return ["success" => false, "message" => "Data template tidak ditemukan.", "status" => 400];
+        if(!$contractInvoice) return ["success" => false, "message" => "Data tidak ditemukan.", "status" => 400];
         // dd($contract->services);
 
         $contractInvoice->invoice_name = $request->invoice_name ?? [];
@@ -806,7 +807,29 @@ class ContractService{
         ContractInvoiceProduct::whereIn("id",$service_attribute_deleted)->where("contract_invoice_id",$contract_invoice_id)->delete();
 
         $contractInvoice->save();
-        return ["success" => true, "message" => "Data berhasil diambil", "data" => $contractInvoice , "status" => 200];
+        return ["success" => true, "message" => "Data berhasil diubah", "data" => $contractInvoice , "status" => 200];
+
+    }
+
+    public function deleteContractInvoice($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "id" => "required|numeric"
+        ]);
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $id = $request->id;
+        $contractInvoice = ContractInvoice::find($id);
+        if(!$contractInvoice) return ["success" => false, "message" => "Data tidak ditemukan.", "status" => 400];
+        $contractInvoice->deleted_at = date('Y-m-d H:i:s');
+        $contractInvoice->save();
+        return ["success" => true, "message" => "Data berhasil dihapus", "status" => 200];
 
     }
 

@@ -119,4 +119,12 @@ class ContractController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function deleteContractInvoice(Request $request){
+        $route_name = "CONTRACT_INVOICES_DELETE";   
+        
+        $response = $this->contractService->deleteContractInvoice($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+
 }
