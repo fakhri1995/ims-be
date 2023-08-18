@@ -20,7 +20,7 @@ class CreateContractInvoiceProductsTable extends Migration
             $table->integer("pax");
             $table->integer("price");
             $table->string("unit");
-            $table->jsonb('details')->default('[]');
+            $table->jsonb('details');
             $table->timestamps();
         });
     }
