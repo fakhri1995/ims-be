@@ -683,6 +683,8 @@ class ContractService{
         $month = $request->month ?? NULL;
         $sort_by = $request->sort_by ?? NULL;
         $sort_type = $request->sort_type ?? "asc";
+        $total_max = $request->total_max;
+        $total_min = $request->total_min;
         
         
         $contractInvoice = ContractInvoice::with('contract_template','contract_template.invoice_template');
@@ -694,7 +696,8 @@ class ContractService{
         if($keyword) $contractInvoice = $contractInvoice->where("invoice_name","LIKE","%$keyword%")->orWhere("invoice_number","LIKE","%$keyword%");
         if($year) $contractInvoice = $contractInvoice->whereYear("invoice_raise_at",$year);
         if($month) $contractInvoice = $contractInvoice->whereMonth("invoice_raise_at",$month);
-
+        if($total_max) $contractInvoice = $contractInvoice->where("invoice_total","<=",$total_max);
+        if($total_min) $contractInvoice = $contractInvoice->where("invoice_total",">=",$total_min);
         if($sort_by) $contractInvoice = $contractInvoice->orderBy("invoice_raise_at",$sort_type);
 
         $contractInvoice = $contractInvoice->paginate($rows);
