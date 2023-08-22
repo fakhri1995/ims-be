@@ -657,7 +657,8 @@ class ContractService{
             "sort_type" => "in:asc,desc",
             "sort_by" => "in:invoice_raise_at",
             "total_max" => "numeric|nullable",
-            "total_min" => "numeric|nullable"
+            "total_min" => "numeric|nullable",
+            "is_posted" => "boolean|nullable",
         ];
 
         
@@ -687,9 +688,9 @@ class ContractService{
         $total_min = $request->total_min;
         
         
-        $contractInvoice = ContractInvoice::with('contract_template','contract_template.invoice_template');
+        $contractInvoice = ContractInvoice::with('contract_template','contract_template.invoice_template','contract_template.client','contract_template.requester');
         
-        if($is_posted) $contractInvoice = $contractInvoice->where("is_posted",$is_posted);
+        if($is_posted != NULL) $contractInvoice = $contractInvoice->where("is_posted",$is_posted);
         if($client_ids) $contractInvoice = $contractInvoice->whereHas("contract_template", function($q) use ($client_ids){
             $q->whereIn("client_id",$client_ids);
         });
