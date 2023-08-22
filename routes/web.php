@@ -308,6 +308,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getDeadlineTasks', 'TaskController@getDeadlineTasks');
     $router->get('/getTaskStaffCounts', 'TaskController@getTaskStaffCounts');
     $router->get('/getStaffTaskStatuses', 'TaskController@getStaffTaskStatuses');
+    $router->get('/getClientTaskStatusList', 'TaskController@getClientTaskStatusList');
     $router->get('/getUserTaskStatusList', 'TaskController@getUserTaskStatusList');
     $router->get('/getUserLastTwoTasks', 'TaskController@getUserLastTwoTasks');
     $router->get('/getUserTaskTypeCounts', 'TaskController@getUserTaskTypeCounts');
@@ -621,6 +622,7 @@ $router->group(['middleware' => 'auth'], function($router){
     // Project & Task Management - Project
     $router->get('/getProject', 'ProjectTaskController@getProject');
     $router->get('/getProjects', 'ProjectTaskController@getProjects');
+    $router->get('/getClientProjects', 'ProjectTaskController@getClientProjects');
     $router->get('/getProjectsList', 'ProjectTaskController@getProjectsList');
     $router->post('/addProject', 'ProjectTaskController@addProject');
     $router->put('/updateProject', 'ProjectTaskController@updateProject');

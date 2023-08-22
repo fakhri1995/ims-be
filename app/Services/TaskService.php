@@ -581,6 +581,63 @@ class TaskService{
         return ["success" => true, "data" => $users, "status" => 200];
     }
 
+    public function getClientTaskStatusList($request, $route_name){
+        try{
+        $from = $request->get('from', null);
+        $to = $request->get('to', null);
+        $assigned_only = $request->get('assigned_only', null);
+        $location = $request->get('location', null);
+        
+        $login_id = auth()->user()->id;
+        $user_ids = DB::table('users')->where('company_id', auth()->user()->company_id)->pluck('id');
+        $task_ids = DB::table('task_user')->whereIn('user_id', $user_ids)->pluck('task_id');
+        
+        if($assigned_only) $status_list = DB::table('tasks')->whereIn('id', $task_ids);
+        else {
+            $status_list = DB::table('tasks')->where(function($query) use ($login_id, $task_ids) {
+                $query->where('created_by', $login_id)->orWhereIn('id', $task_ids);
+            });
+        } 
+        
+        if($location) $status_list = $status_list->where('location_id', $location);
+        if($from && $to) $status_list = $status_list->whereBetween('deadline', [$from, $to]);
+        
+        $status_list = $status_list->select(DB::raw('status, count(*) as status_count'))->groupBy('status')->get();
+        $status_list_name = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled', 'Rejected'];
+        
+        $list = new Collection();
+        $active_task = 0;
+        $sum_task = $status_list->sum('status_count');
+        for($i = 1; $i < 7; $i++){
+            $search = $status_list->search(function($query) use($i){
+                return $query->status == $i;
+            });
+
+            if($search !== false){
+                $temp_list = $status_list[$search]; 
+                $temp_list->status_name = $status_list_name[$i];
+                $temp_list->percentage = $sum_task !== 0 ? round(($status_list[$search]->status_count / $sum_task * 100), 2) : 0;
+                $list->push($temp_list);
+                if($i < 5) $active_task += $temp_list->status_count;
+            } else {
+                $list->push((object)["status" => $i, "status_count" => 0, "status_name" => $status_list_name[$i], "percentage" => 0]); 
+            }
+
+        }
+        $data = (object)[
+            "image_profile" => auth()->user()->profileImage,
+            "name" => auth()->user()->company->name,
+            "status_list" => $list,
+            "sum_task" => $sum_task,
+            "active_task" => $active_task,
+        ];
+        
+        return ["success" => true, "data" => $data, "status" => 200];
+    } catch(Exception $err){
+        return ["success" => false, "message" => $err->getMessage(), "status" => 400];
+    }
+    }
+
     public function getUserTaskStatusList($request, $route_name)
     {
         $from = $request->get('from', null);

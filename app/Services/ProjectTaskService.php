@@ -181,6 +181,72 @@ class ProjectTaskService{
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projects, "status" => 200];
     }
 
+    public function getClientProjects($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $rules = [
+            "page" => "numeric",
+            "rows" => "numeric|max:50",
+            "sort_by" => "in:name,start_date,end_date,status",
+            "sort_type" => "in:asc,desc"
+        ];
+
+        if($request->to && $request->from){
+            $rules["from"] = "date|before:to";
+            $rules["to"] = "date|after:from";
+        }
+
+        $validator = Validator::make($request->all(), $rules);
+
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        
+        $user_ids = DB::table('users')->where('company_id', auth()->user()->company_id)->pluck('id');
+        $project_proposes = DB::table('projects_proposes')->whereIn('user_id', $user_ids)->pluck('project_id');
+        $projects = Project::with(["proposed_bys","status","categories"])->whereIn('id', $project_proposes);
+        
+        $rows = $request->rows ?? 5;
+        $keyword = $request->keyword;
+        $from = $request->from ?? NULL;
+        $to = $request->to ?? NULL;
+        $sort_by = $request->sort_by ?? NULL;
+        $sort_type = $request->sort_type ?? 'asc';
+        $status_ids = $request->status_ids ? explode(",",$request->status_ids) : NULL;
+        $category_ids = $request->category_ids ? explode(",",$request->category_ids) : NULL;
+
+        if($keyword) $projects = $projects->where("name","LIKE","%$keyword%")
+        ->orWhereHas("proposed_bys", function($q) use ($keyword){
+            $q->where("name","LIKE","%$keyword%");
+        })->orWhereHas("categories", function($q) use ($keyword){
+            $q->where("name","LIKE","%$keyword%");
+        });
+        if($status_ids) $projects = $projects->whereIn("status_id", $status_ids);
+        if($category_ids) $projects = $projects->whereHas("categories", function($q) use ($category_ids){
+            $q->whereIn("project_category_list_id", $category_ids);
+        });
+        if($from) $projects = $projects->where(function ($q) use ($from){
+            $q->where("start_date", ">=", $from)
+            ->orWhere("end_date", ">=", $from);
+        });
+        if($to) $projects = $projects->where(function ($q) use ($to){
+            $q->where("start_date", "<=", $to)
+            ->orWhere("end_date", "<=", $to);
+        });
+
+
+        //sorting
+        if(in_array($sort_by, ["name","start_date","end_date"])) $projects = $projects->orderBy($sort_by,$sort_type);
+        if($sort_by == "status") $projects = $projects->orderBy(ProjectStatus::select("display_order")
+        ->whereColumn("project_statuses.id","projects.status_id"),$sort_type);
+
+        $projects = $projects->paginate($rows);
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projects, "status" => 200];
+    }
+
     public function getProjectsList($request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
