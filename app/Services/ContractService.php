@@ -651,12 +651,24 @@ class ContractService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $validator = Validator::make($request->all(), [
+        $rules = [
             "page" => "numeric",
             "rows" => "numeric",
             "sort_type" => "in:asc,desc",
-            "sort_by" => "invoice_raise_at"
-        ]);
+            "sort_by" => "in:invoice_raise_at",
+            "total_max" => "numeric|nullable",
+            "total_min" => "numeric|nullable"
+        ];
+
+        
+        $total_min = $request->total_min ?? NULL;
+        $total_max = $request->total_max ?? NULL;
+        if($total_min && $total_max){
+            $rules['total_min'] = "lte:total_max|numeric";
+            $rules['total_max'] = "gte:total_min|numeric";
+        }
+
+        $validator = Validator::make($request->all(), $rules);
         
         if($validator->fails()){
             $errors = $validator->errors()->all();
@@ -664,16 +676,28 @@ class ContractService{
         }
 
         $rows = $request->rows ?? 10;
-        $status = $request->status;
+        $is_posted = $request->is_posted;
         $client_ids = $request->client_ids ? explode(",",$request->client_ids) : NULL;
-        $total_min = $request->total_min ?? NULL;
-        $total_max = $request->total_max ?? NULL;
         $keyword = $request->keyword ?? NULL;
-        $year = $request->year ?? date('Y');
-        $month = $request->month ?? date('m');
+        $year = $request->year ?? NULL;
+        $month = $request->month ?? NULL;
+        $sort_by = $request->sort_by ?? NULL;
+        $sort_type = $request->sort_type ?? "asc";
         
         
-        $contractInvoice = ContractInvoice::with('contract_template','contract_template.invoice_template')->paginate($rows);
+        $contractInvoice = ContractInvoice::with('contract_template','contract_template.invoice_template');
+        
+        if($is_posted) $contractInvoice = $contractInvoice->where("is_posted",$is_posted);
+        if($client_ids) $contractInvoice = $contractInvoice->whereHas("contract_template", function($q) use ($client_ids){
+            $q->whereIn("client_id",$client_ids);
+        });
+        if($keyword) $contractInvoice = $contractInvoice->where("invoice_name","LIKE","%$keyword%")->orWhere("invoice_number","LIKE","%$keyword%");
+        if($year) $contractInvoice = $contractInvoice->whereYear("invoice_raise_at",$year);
+        if($month) $contractInvoice = $contractInvoice->whereMonth("invoice_raise_at",$month);
+
+        if($sort_by) $contractInvoice = $contractInvoice->orderBy("invoice_raise_at",$sort_type);
+
+        $contractInvoice = $contractInvoice->paginate($rows);
 
         return ["success" => true, "message" => "Data berhasil diambil", "data" => $contractInvoice , "status" => 200];
 
@@ -743,7 +767,7 @@ class ContractService{
         // $contractInvoiceProduct->contract_invoice_id = $contractInvoice->id;
         
         $contractInvoiceProductData = [];
-
+        
         foreach($contract->services as $s){
             $s = (object)$s;
             $contractInvoiceProductData[] = [
@@ -759,6 +783,8 @@ class ContractService{
         }
 
         ContractInvoiceProduct::insert($contractInvoiceProductData);
+        $contractInvoice->invoice_total = ContractInvoiceProduct::where("contract_invoice_id",$contractInvoice->id)->sum("price");
+        $contractInvoice->save();
         return ["success" => true, "message" => "Data berhasil diambil", "data" => $contractInvoice , "status" => 200];
 
     }
@@ -786,6 +812,11 @@ class ContractService{
         $contractInvoice->invoice_raise_at = $request->invoice_raise_at ?? [];
         $contractInvoice->invoice_attribute = $request->invoice_attribute ?? [];
         $contractInvoice->service_attribute = $request->service_attribute ?? [];
+        $contractInvoice->is_posted = $request->is_posted ?? 0;
+        if($contractInvoice->is_posted){
+            return ["success" => false, "message" => "Data yang telah diterbitkan tidak dapat diubah", "status" => 400];
+        }
+
         $current_time = date("Y-m-d H:i:s");
         $contractInvoice->updated_at = $current_time;
         // $contractInvoiceProduct->contract_invoice_id = $contractInvoice->id;
@@ -797,7 +828,7 @@ class ContractService{
                 $contractInvoiceProduct = new ContractInvoiceProduct();
             }
             else{
-                if($s->is_delete) $service_attribute_deleted[] = $s->id;
+                if($s->is_delete ?? false) $service_attribute_deleted[] = $s->id;
                 $contractInvoiceProduct = ContractInvoiceProduct::where(
                     ["id" => $s->id,"contract_invoice_id" => $contract_invoice_id]
                 )->first();
@@ -818,7 +849,7 @@ class ContractService{
         }
 
         ContractInvoiceProduct::whereIn("id",$service_attribute_deleted)->where("contract_invoice_id",$contract_invoice_id)->delete();
-
+        $contractInvoice->invoice_total = ContractInvoiceProduct::where("contract_invoice_id",$contractInvoice->id)->sum("price");
         $contractInvoice->save();
         return ["success" => true, "message" => "Data berhasil diubah", "data" => $contractInvoice , "status" => 200];
 
