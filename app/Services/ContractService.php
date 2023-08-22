@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Contract;
+use App\ContractInvoice;
+use App\ContractInvoiceProduct;
 use App\ContractInvoiceTemplate;
 use App\ContractProduct;
 use App\ContractProductTemplate;
@@ -541,7 +543,8 @@ class ContractService{
             "service_template_values" => "array",
             "service_template_values.*.contract_service_id" => "integer|required_with:service_template_values.values",
             "service_template_values.*.details" => "array",
-            "service_template_values.*.details.*" => "required_with:service_template.*"
+            "service_template_values.*.details.*" => "required_with:service_template.*",
+            "invoice_period" => "min:1|max:31"
         ]);
         
         if($validator->fails()){
@@ -556,6 +559,7 @@ class ContractService{
         $invoice_template = $request->invoice_template ?? [];
         $service_template = $request->service_template ?? [];
         $service_template_values = $request->service_template_values ?? [];
+        $invoice_period = $request->invoice_period;
 
 
         $current_time = date("Y-m-d H:i:s");
@@ -566,6 +570,7 @@ class ContractService{
         $contractInvoiceTemplate->contract_id = $contract_id;
         $contractInvoiceTemplate->details = $invoice_template;
         $contractInvoiceTemplate->created_at = $contractInvoiceTemplate->created_at ?? $current_time;
+        $contractInvoiceTemplate->invoice_period = $invoice_period;
         $contractInvoiceTemplate->updated_at = $current_time;
         $contractInvoiceTemplate->updated_by = auth()->user()->id;
         $contractInvoiceTemplate->save();
@@ -646,10 +651,24 @@ class ContractService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $validator = Validator::make($request->all(), [
+        $rules = [
             "page" => "numeric",
-            "rows" => "numeric"
-        ]);
+            "rows" => "numeric",
+            "sort_type" => "in:asc,desc",
+            "sort_by" => "in:invoice_raise_at",
+            "total_max" => "numeric|nullable",
+            "total_min" => "numeric|nullable"
+        ];
+
+        
+        $total_min = $request->total_min ?? NULL;
+        $total_max = $request->total_max ?? NULL;
+        if($total_min && $total_max){
+            $rules['total_min'] = "lte:total_max|numeric";
+            $rules['total_max'] = "gte:total_min|numeric";
+        }
+
+        $validator = Validator::make($request->all(), $rules);
         
         if($validator->fails()){
             $errors = $validator->errors()->all();
@@ -657,24 +676,209 @@ class ContractService{
         }
 
         $rows = $request->rows ?? 10;
+        $is_posted = $request->is_posted;
+        $client_ids = $request->client_ids ? explode(",",$request->client_ids) : NULL;
+        $keyword = $request->keyword ?? NULL;
+        $year = $request->year ?? NULL;
+        $month = $request->month ?? NULL;
+        $sort_by = $request->sort_by ?? NULL;
+        $sort_type = $request->sort_type ?? "asc";
+        $total_max = $request->total_max;
+        $total_min = $request->total_min;
         
-        $contract = Contract::select()->addSelect(DB::raw(
-            "DATEDIFF(contracts.end_date, CURDATE()) as duration"
-        ))->with("client","requester")->paginate($rows);
-        if(!$contract) return ["success" => false, "message" => "Contract tidak ditemukan.", "status" => 400]; 
         
-        foreach($contract as $c){
-            $c->invoice_number = "010/000/123";
-            $c->invoice_name = "nama_invoce";
-            $c->invoice_raise_at = "2023-07-20";
-            $c->invoice_total = "Rp. 500000";
-        }
+        $contractInvoice = ContractInvoice::with('contract_template','contract_template.invoice_template');
+        
+        if($is_posted) $contractInvoice = $contractInvoice->where("is_posted",$is_posted);
+        if($client_ids) $contractInvoice = $contractInvoice->whereHas("contract_template", function($q) use ($client_ids){
+            $q->whereIn("client_id",$client_ids);
+        });
+        if($keyword) $contractInvoice = $contractInvoice->where("invoice_name","LIKE","%$keyword%")->orWhere("invoice_number","LIKE","%$keyword%");
+        if($year) $contractInvoice = $contractInvoice->whereYear("invoice_raise_at",$year);
+        if($month) $contractInvoice = $contractInvoice->whereMonth("invoice_raise_at",$month);
+        if($total_max) $contractInvoice = $contractInvoice->where("invoice_total","<=",$total_max);
+        if($total_min) $contractInvoice = $contractInvoice->where("invoice_total",">=",$total_min);
+        if($sort_by) $contractInvoice = $contractInvoice->orderBy("invoice_raise_at",$sort_type);
 
-        return ["success" => true, "message" => "Data berhasil diambil", "data" => $contract , "status" => 200];
+        $contractInvoice = $contractInvoice->paginate($rows);
+
+        return ["success" => true, "message" => "Data berhasil diambil", "data" => $contractInvoice , "status" => 200];
 
     }
-    
+
+    public function getContractInvoice($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "id" => "numeric|required",
+        ]);
+
+        $id = $request->id;
+        $contractInvoice = ContractInvoice::with("service_attribute_values","service_attribute_values.product")->find($id);
+        if(!$contractInvoice) return ["success" => false, "message" => "Data tidak ditemukan.", "status" => 400]; 
+        $contract = Contract::select()->addSelect(DB::raw(
+            "DATEDIFF(contracts.end_date, CURDATE()) as duration"
+        ))->with("client","requester")->find($contractInvoice->contract_template_id);
+
+        // $contract->contract_invoice = $contractInvoice;
+
+        $data = array_merge($contract->toArray(),$contractInvoice->toArray());
+        $data['invoice_services'] = $data['service_attribute_values'];
+        unset($data['service_attribute_values']);
+
+        foreach($data['invoice_services'] as $key => $value){
+            $data['invoice_services'][$key]['invoice_service_value'] = array(
+                "invoice_service_id" => $data['invoice_services'][$key]['id'],
+                "details" => $data['invoice_services'][$key]['details'],
+            );
+            unset($data['invoice_services'][$key]['details']);
+        }
 
 
+        return ["success" => true, "message" => "Data berhasil diambil", "data" => $data , "status" => 200];
+    }
+
+    public function addContractInvoice($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+        ]);
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $contractInvoice = new ContractInvoice;
+        $contract_id = $request->contract_template_id;
+        $contract = Contract::with("invoice_template","service_template","services","services.product","services.service_template_value")->find($contract_id);
+        if(!$contract) return ["success" => false, "message" => "Data template tidak ditemukan.", "status" => 400];
+        // dd($contract->services);
+        $contractInvoice->contract_template_id = $contract_id;
+        $contractInvoice->invoice_name = $request->invoice_name ?? [];
+        $contractInvoice->invoice_raise_at = $request->invoice_raise_at ?? [];
+        $contractInvoice->invoice_attribute = $contract->invoice_template->details ?? [];
+        $contractInvoice->service_attribute = $contract->service_template->details ?? [];
+        $current_time = date("Y-m-d H:i:s");
+        $contractInvoice->created_at = $current_time;
+        $contractInvoice->updated_at = $current_time;
+        $contractInvoice->save();
+
+        
+        // $contractInvoiceProduct->contract_invoice_id = $contractInvoice->id;
+        
+        $contractInvoiceProductData = [];
+        
+        foreach($contract->services as $s){
+            $s = (object)$s;
+            $contractInvoiceProductData[] = [
+                "contract_invoice_id" => $contractInvoice->id,
+                "product_id" => $s->product_id,
+                "pax" => $s->pax,
+                "price" => $s->price,
+                "unit" => $s->unit,
+                "details" => json_encode($s->service_template_value->details ?? []),
+                "created_at" => $current_time,
+                "updated_at" => $current_time
+            ];
+        }
+
+        ContractInvoiceProduct::insert($contractInvoiceProductData);
+        $contractInvoice->invoice_total = ContractInvoiceProduct::where("contract_invoice_id",$contractInvoice->id)->sum("price");
+        $contractInvoice->save();
+        return ["success" => true, "message" => "Data berhasil diambil", "data" => $contractInvoice , "status" => 200];
+
+    }
+
+    public function updateContractInvoice($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "id" => "required|numeric"
+        ]);
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $contract_invoice_id = $request->id;
+        $contractInvoice = ContractInvoice::find($contract_invoice_id);
+        if(!$contractInvoice) return ["success" => false, "message" => "Data tidak ditemukan.", "status" => 400];
+        // dd($contract->services);
+
+        $contractInvoice->invoice_name = $request->invoice_name ?? [];
+        $contractInvoice->invoice_number = $request->invoice_number ?? [];
+        $contractInvoice->invoice_raise_at = $request->invoice_raise_at ?? [];
+        $contractInvoice->invoice_attribute = $request->invoice_attribute ?? [];
+        $contractInvoice->service_attribute = $request->service_attribute ?? [];
+        if($contractInvoice->is_posted){
+            return ["success" => false, "message" => "Data yang telah diterbitkan tidak dapat diubah", "status" => 400];
+        }
+        $contractInvoice->is_posted = $request->is_posted ?? 0;
+       
+
+        $current_time = date("Y-m-d H:i:s");
+        $contractInvoice->updated_at = $current_time;
+        // $contractInvoiceProduct->contract_invoice_id = $contractInvoice->id;
+        $service_attribute_deleted = [];
+        $service_attribute_values = $request->service_attribute_values ?? [];
+        foreach($service_attribute_values as $s){
+            $s = (object)$s;
+            if(!$s->id){
+                $contractInvoiceProduct = new ContractInvoiceProduct();
+            }
+            else{
+                if($s->is_delete ?? false) $service_attribute_deleted[] = $s->id;
+                $contractInvoiceProduct = ContractInvoiceProduct::where(
+                    ["id" => $s->id,"contract_invoice_id" => $contract_invoice_id]
+                )->first();
+                if(!$contractInvoiceProduct) continue;
+            }
+
+            $contractInvoiceProduct->contract_invoice_id = $contractInvoice->id;
+            $contractInvoiceProduct->product_id = 1; 
+            $contractInvoiceProduct->pax = $s->pax;
+            $contractInvoiceProduct->price = $s->price;
+            $contractInvoiceProduct->unit = $s->unit;
+            $contractInvoiceProduct->details = $s->details ?? [];
+            $contractInvoiceProduct->updated_at = $current_time;
+            if(!$s->id){
+                $contractInvoiceProduct->created_at = $current_time;
+            }
+            $contractInvoiceProduct->save();
+        }
+
+        ContractInvoiceProduct::whereIn("id",$service_attribute_deleted)->where("contract_invoice_id",$contract_invoice_id)->delete();
+        $contractInvoice->invoice_total = ContractInvoiceProduct::where("contract_invoice_id",$contractInvoice->id)->sum("price");
+        $contractInvoice->save();
+        return ["success" => true, "message" => "Data berhasil diubah", "data" => $contractInvoice , "status" => 200];
+
+    }
+
+    public function deleteContractInvoice($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "id" => "required|numeric"
+        ]);
+        
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $id = $request->id;
+        $contractInvoice = ContractInvoice::find($id);
+        if(!$contractInvoice) return ["success" => false, "message" => "Data tidak ditemukan.", "status" => 400];
+        $contractInvoice->deleted_at = date('Y-m-d H:i:s');
+        $contractInvoice->save();
+        return ["success" => true, "message" => "Data berhasil dihapus", "status" => 200];
+
+    }
 
 }
