@@ -657,7 +657,10 @@ class ProjectTaskService{
         if($user_id) $projectTasks = $projectTasks->whereHas("task_staffs", function($q) use ($user_id){
             $q->where("users.id", $user_id);
         });
-        if($keyword) $projectTasks = $projectTasks->where("name","LIKE","%$keyword%");
+        if($keyword) {
+            $project_ids = Project::where("name", "LIKE", "%$keyword%")->pluck("id");
+            $projectTasks = $projectTasks->where("name","LIKE","%$keyword%")->orWhereIn("project_id", $project_ids);
+        }
         if($status_ids) $projectTasks = $projectTasks->whereIn("status_id", $status_ids);
         if($is_active) $projectTasks = $projectTasks->whereNull("end_date")->orWhereDate("end_date", ">=", date("Y-m-d"));
         if($has_project == 1) $projectTasks = $projectTasks->whereNotNull("project_id");
