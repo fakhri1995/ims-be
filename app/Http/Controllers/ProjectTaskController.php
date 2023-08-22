@@ -37,6 +37,14 @@ class ProjectTaskController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getClientProjects(Request $request)
+    {
+        $route_name = "CLIENT_PROJECTS_GET";
+
+        $response = $this->projectTaskService->getClientProjects($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getProjectsList(Request $request)
     {
         $route_name = "PROJECTS_LIST_GET";

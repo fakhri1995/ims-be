@@ -109,6 +109,14 @@ class TaskController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getClientTaskStatusList(Request $request)
+    {
+        $route_name = "TASK_CLIENT_STATUSES_GET";
+        
+        $response = $this->taskService->getClientTaskStatusList($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getUserTaskStatusList(Request $request)
     {
         $route_name = "TASK_USER_STATUSES_GET";
