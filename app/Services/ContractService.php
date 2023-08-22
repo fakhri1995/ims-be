@@ -815,10 +815,11 @@ class ContractService{
         $contractInvoice->invoice_raise_at = $request->invoice_raise_at ?? [];
         $contractInvoice->invoice_attribute = $request->invoice_attribute ?? [];
         $contractInvoice->service_attribute = $request->service_attribute ?? [];
-        $contractInvoice->is_posted = $request->is_posted ?? 0;
         if($contractInvoice->is_posted){
             return ["success" => false, "message" => "Data yang telah diterbitkan tidak dapat diubah", "status" => 400];
         }
+        $contractInvoice->is_posted = $request->is_posted ?? 0;
+       
 
         $current_time = date("Y-m-d H:i:s");
         $contractInvoice->updated_at = $current_time;
