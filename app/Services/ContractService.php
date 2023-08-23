@@ -787,7 +787,7 @@ class ContractService{
         }
 
         ContractInvoiceProduct::insert($contractInvoiceProductData);
-        $contractInvoice->invoice_total = ContractInvoiceProduct::where("contract_invoice_id",$contractInvoice->id)->sum("price");
+        $contractInvoice->invoice_total = ContractInvoiceProduct::where("contract_invoice_id",$contractInvoice->id)->selectRaw("SUM(pax*price) as subtotal")->first();
         $contractInvoice->save();
         return ["success" => true, "message" => "Data berhasil diambil", "data" => $contractInvoice , "status" => 200];
 
@@ -798,7 +798,8 @@ class ContractService{
         if($access["success"] === false) return $access;
 
         $validator = Validator::make($request->all(), [
-            "id" => "required|numeric"
+            "id" => "required|numeric",
+            // "invoice_total" => "numeric|required"
         ]);
         
         if($validator->fails()){
@@ -810,12 +811,13 @@ class ContractService{
         $contractInvoice = ContractInvoice::find($contract_invoice_id);
         if(!$contractInvoice) return ["success" => false, "message" => "Data tidak ditemukan.", "status" => 400];
         // dd($contract->services);
-
+        $invoice_total = $contractInvoice->invoice_total;
         $contractInvoice->invoice_name = $request->invoice_name ?? [];
         $contractInvoice->invoice_number = $request->invoice_number ?? [];
         $contractInvoice->invoice_raise_at = $request->invoice_raise_at ?? [];
         $contractInvoice->invoice_attribute = $request->invoice_attribute ?? [];
         $contractInvoice->service_attribute = $request->service_attribute ?? [];
+        $contractInvoice->invoice_total = $request->invoice_total ?? $invoice_total;
         if($contractInvoice->is_posted){
             return ["success" => false, "message" => "Data yang telah diterbitkan tidak dapat diubah", "status" => 400];
         }
@@ -854,7 +856,7 @@ class ContractService{
         }
 
         ContractInvoiceProduct::whereIn("id",$service_attribute_deleted)->where("contract_invoice_id",$contract_invoice_id)->delete();
-        $contractInvoice->invoice_total = ContractInvoiceProduct::where("contract_invoice_id",$contractInvoice->id)->sum("price");
+        // $contractInvoice->invoice_total = ContractInvoiceProduct::where("contract_invoice_id",$contractInvoice->id)->selectRaw("SUM(pax*price) as subtotal")->first();
         $contractInvoice->save();
         return ["success" => true, "message" => "Data berhasil diubah", "data" => $contractInvoice , "status" => 200];
 
