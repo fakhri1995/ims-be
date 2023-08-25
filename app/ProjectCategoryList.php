@@ -13,4 +13,8 @@ class ProjectCategoryList extends Model
     protected $hidden = [
         'pivot'
     ];
+
+    public function companies(){
+        return $this->belongsToMany(Company::class, "project_category_lists_companies")->select("companies.id","companies.name");
+    }
 }

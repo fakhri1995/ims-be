@@ -62,6 +62,11 @@ class Company extends Model
         return $this->hasMany(self::class, 'parent_id')->select('id', 'name as title', 'id as key', 'id as value', 'parent_id')->where('role', '<>', 3);
     }
 
+    public function projectCategories()
+    {
+        return $this->belongsToMany(ProjectCategoryList::class, 'project_category_lists_companies')->select('project_category_lists.id', 'project_category_lists.name');
+    }
+
     public function parent()
     {
         return $this->belongsTo(self::class, 'parent_id')->select('id', 'name', 'parent_id','role')->withTrashed();

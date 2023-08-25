@@ -308,7 +308,6 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getDeadlineTasks', 'TaskController@getDeadlineTasks');
     $router->get('/getTaskStaffCounts', 'TaskController@getTaskStaffCounts');
     $router->get('/getStaffTaskStatuses', 'TaskController@getStaffTaskStatuses');
-    $router->get('/getClientTaskStatusList', 'TaskController@getClientTaskStatusList');
     $router->get('/getUserTaskStatusList', 'TaskController@getUserTaskStatusList');
     $router->get('/getUserLastTwoTasks', 'TaskController@getUserLastTwoTasks');
     $router->get('/getUserTaskTypeCounts', 'TaskController@getUserTaskTypeCounts');
@@ -410,6 +409,7 @@ $router->group(['middleware' => 'auth'], function($router){
 
     //Attendance User
     $router->get('/getAttendancesUsers', 'AttendanceController@getAttendancesUsers');
+    $router->get('/getAttendancesClient', 'AttendanceController@getAttendancesClient');
     $router->get('/getAttendancesUsersPaginate', 'AttendanceController@getAttendancesUsersPaginate');
     $router->get('/getAttendancesUser', 'AttendanceController@getAttendancesUser');
     $router->get('/getAttendanceUser', 'AttendanceController@getAttendanceUser');
@@ -654,6 +654,8 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteProjectLogNotes', 'ProjectTaskController@deleteProjectLogNotes');
     // Project & Task Management -
     $router->get('/getProjectCategoryList', 'ProjectTaskController@getProjectCategoryList');
+    $router->get('/getProjectCategoryListClient', 'ProjectTaskController@getProjectCategoryListClient');
+    $router->put('/updateProjectCategoryListClient', 'ProjectTaskController@updateProjectCategoryListClient');
 
     $router->get('/getBankLists', "BankListController@getBankLists");
 

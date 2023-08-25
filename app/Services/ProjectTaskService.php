@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\ActivityLogProjectTask;
 use App\Helpers\MockApiHelper;
+use App\Company;
 use App\Project;
 use App\ProjectCategory;
 use App\ProjectCategoryList;
@@ -1305,6 +1306,44 @@ class ProjectTaskService{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projectCategoryList, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getProjectCategoryListClient($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $name = $request->name ?? NULL;
+            $company = auth()->user()->company_id;
+            $projectCategoryList = ProjectCategoryList::whereHas("companies", function($query){
+                return $query->where("companies.id", auth()->user()->company_id);
+            });
+            if($name) $projectCategoryList->select("name")->where("name","LIKE","%$name%");
+            $projectCategoryList = $projectCategoryList->get();
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projectCategoryList, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
+        }
+    }
+
+    public function updateProjectCategoryListClient($request, $route_name){
+        try{
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+            $categories_list_ids = $request->categories_list_ids ? explode(",",$request->categories_list_ids) : [];
+            $company = Company::with("projectCategories")->find(auth()->user()->company_id);
+            foreach($categories_list_ids as $id){
+                $projectCategoryList = ProjectCategoryList::find($id);
+                if(!$projectCategoryList) return ["success" => false, "message" => "Project category tidak ditemukan", "status" => 400];
+            }
+            $company->projectCategories()->sync($categories_list_ids);
+            $company = Company::with("projectCategories")->find(auth()->user()->company_id);
+            
+            return ["success" => true, "message" => "Data Berhasil Diubah", "data" => $company, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
         }
     }
 
