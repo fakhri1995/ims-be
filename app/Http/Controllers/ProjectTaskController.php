@@ -240,4 +240,17 @@ class ProjectTaskController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getProjectCategoryListClient(Request $request){
+        $route_name = "PROJECT_CATEGORIES_CLIENT_GET";   
+        
+        $response = $this->projectTaskService->getProjectCategoryListClient($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateProjectCategoryListClient(Request $request){
+        $route_name = "PROJECT_CATEGORIES_CLIENT_UPDATE";   
+        
+        $response = $this->projectTaskService->updateProjectCategoryListClient($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }
