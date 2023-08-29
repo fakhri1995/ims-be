@@ -13,4 +13,8 @@ class ContractInvoiceTemplate extends Model
     public function service_template(){
         return $this->hasOne(ContractProductTemplate::class, 'contract_id', 'contract_id');
     }
+
+    public function bank(){
+        return $this->hasOne(Bank::class, 'id', 'bank_id');
+    }
 }

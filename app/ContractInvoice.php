@@ -18,4 +18,8 @@ class ContractInvoice extends Model
     public function service_attribute_values(){
         return $this->hasMany(ContractInvoiceProduct::class,'contract_invoice_id','id');
     }  
+
+    public function bank(){
+        return $this->hasOne(Bank::class, 'id', 'bank_id');
+    }
 }

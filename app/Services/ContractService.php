@@ -560,7 +560,7 @@ class ContractService{
         $service_template = $request->service_template ?? [];
         $service_template_values = $request->service_template_values ?? [];
         $invoice_period = $request->invoice_period;
-
+        $bank_id = $request->bank_id ?? NULL;
 
         $current_time = date("Y-m-d H:i:s");
         // ContractInvoiceTemplate
@@ -572,6 +572,7 @@ class ContractService{
         $contractInvoiceTemplate->created_at = $contractInvoiceTemplate->created_at ?? $current_time;
         $contractInvoiceTemplate->invoice_period = $invoice_period;
         $contractInvoiceTemplate->updated_at = $current_time;
+        $contractInvoiceTemplate->bank_id = $bank_id;
         $contractInvoiceTemplate->updated_by = auth()->user()->id;
         $contractInvoiceTemplate->save();
 
@@ -640,7 +641,7 @@ class ContractService{
         $contract_id = $request->contract_id;
         $contract = Contract::select()->addSelect(DB::raw(
             "DATEDIFF(contracts.end_date, CURDATE()) as duration"
-        ))->with("client","requester","invoice_template","service_template","services","services.product","services.service_template_value")->find($contract_id);
+        ))->with("client","requester","invoice_template","service_template","invoice_template.bank","services","services.product","services.service_template_value")->find($contract_id);
         if(!$contract) return ["success" => false, "message" => "Contract tidak ditemukan.", "status" => 400]; 
 
         return ["success" => true, "message" => "Data berhasil diambil", "data" => $contract , "status" => 200];
@@ -716,7 +717,7 @@ class ContractService{
         ]);
 
         $id = $request->id;
-        $contractInvoice = ContractInvoice::with("service_attribute_values","service_attribute_values.product")->find($id);
+        $contractInvoice = ContractInvoice::with("service_attribute_values","service_attribute_values.product","bank")->find($id);
         if(!$contractInvoice) return ["success" => false, "message" => "Data tidak ditemukan.", "status" => 400]; 
         $contract = Contract::select()->addSelect(DB::raw(
             "DATEDIFF(contracts.end_date, CURDATE()) as duration"
@@ -758,8 +759,9 @@ class ContractService{
         if(!$contract) return ["success" => false, "message" => "Data template tidak ditemukan.", "status" => 400];
         // dd($contract->services);
         $contractInvoice->contract_template_id = $contract_id;
-        $contractInvoice->invoice_name = $request->invoice_name ?? [];
-        $contractInvoice->invoice_raise_at = $request->invoice_raise_at ?? [];
+        $contractInvoice->invoice_name = $request->invoice_name ?? NULL;
+        $contractInvoice->invoice_raise_at = $request->invoice_raise_at ?? NULL;
+        $contractInvoice->bank_id = $contract->invoice_template->bank_id;
         $contractInvoice->invoice_attribute = $contract->invoice_template->details ?? [];
         $contractInvoice->service_attribute = $contract->service_template->details ?? [];
         $current_time = date("Y-m-d H:i:s");
@@ -812,9 +814,10 @@ class ContractService{
         if(!$contractInvoice) return ["success" => false, "message" => "Data tidak ditemukan.", "status" => 400];
         // dd($contract->services);
         $invoice_total = $contractInvoice->invoice_total;
-        $contractInvoice->invoice_name = $request->invoice_name ?? [];
-        $contractInvoice->invoice_number = $request->invoice_number ?? [];
-        $contractInvoice->invoice_raise_at = $request->invoice_raise_at ?? [];
+        $contractInvoice->invoice_name = $request->invoice_name ?? NULL;
+        $contractInvoice->invoice_number = $request->invoice_number ?? NULL;
+        $contractInvoice->invoice_raise_at = $request->invoice_raise_at ?? NULL;
+        $contractInvoice->bank_id = $request->bank_id;
         $contractInvoice->invoice_attribute = $request->invoice_attribute ?? [];
         $contractInvoice->service_attribute = $request->service_attribute ?? [];
         $contractInvoice->invoice_total = $request->invoice_total ?? $invoice_total;

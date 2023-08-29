@@ -21,6 +21,7 @@ class CreateContractInvoicesTable extends Migration
             $table->string("invoice_number")->nullable();
             $table->string("invoice_name")->nullable();
             $table->date("invoice_raise_at");
+            $table->unsignedBigInteger('bank_id');
             $table->integer("invoice_total")->default(0);
             $table->boolean("is_posted")->default(false);
             $table->timestamps();
