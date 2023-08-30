@@ -846,7 +846,7 @@ class ContractService{
             }
 
             $contractInvoiceProduct->contract_invoice_id = $contractInvoice->id;
-            $contractInvoiceProduct->product_id = 1; 
+            $contractInvoiceProduct->product_id = $s->id; 
             $contractInvoiceProduct->pax = $s->pax;
             $contractInvoiceProduct->price = $s->price;
             $contractInvoiceProduct->unit = $s->unit;
