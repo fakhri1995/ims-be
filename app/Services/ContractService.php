@@ -122,7 +122,7 @@ class ContractService{
                 "$fieldStatusQuery,
                 DATEDIFF(contracts.end_date, CURDATE()) as duration
                 "
-            ))->with(["client","requester","services","services.product"])->find($id);
+            ))->with(["client","requester","services","services.product","invoice_template"])->find($id);
 
             if(!$contract) return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $contract, "status" => 200];
@@ -773,7 +773,7 @@ class ContractService{
         // $contractInvoiceProduct->contract_invoice_id = $contractInvoice->id;
         
         $contractInvoiceProductData = [];
-        
+        $invoice_total = 0;
         foreach($contract->services as $s){
             $s = (object)$s;
             $contractInvoiceProductData[] = [
@@ -786,10 +786,11 @@ class ContractService{
                 "created_at" => $current_time,
                 "updated_at" => $current_time
             ];
+            $invoice_total+=($s->price*$s->pax);
         }
 
         ContractInvoiceProduct::insert($contractInvoiceProductData);
-        $contractInvoice->invoice_total = ContractInvoiceProduct::where("contract_invoice_id",$contractInvoice->id)->selectRaw("SUM(pax*price) as subtotal")->first();
+        $contractInvoice->invoice_total = $invoice_total;
         $contractInvoice->save();
         return ["success" => true, "message" => "Data berhasil diambil", "data" => $contractInvoice , "status" => 200];
 
