@@ -483,6 +483,50 @@ class ProjectTaskService{
 
         $projectsStatus = ProjectStatus::withCount('projects')->get();
 
+        $projectCategoryList = ProjectCategoryList::whereHas("companies", function($query){
+            return $query->where("companies.id", auth()->user()->company_id);
+        })->pluck("id");
+
+        $projectsStatus = ProjectStatus::withCount([
+            'projects as projects_count' => function($query) use ($projectCategoryList){
+                $query->whereHas('categories', function($q) use ($projectCategoryList){
+                    return $q->whereIn("project_category_list_id", $projectCategoryList);
+                });
+            }
+        ])->get();
+
+        $total = 0;
+
+        foreach($projectsStatus as $p){
+            $total += $p->projects_count;
+        }
+
+        $data = [
+            "status" => $projectsStatus,
+            "total" => $total
+        ];
+        
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
+    }
+
+    public function getClientProjectsCount(Request $request, $route_name)
+    {
+
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $projectCategoryList = ProjectCategoryList::whereHas("companies", function($query){
+            return $query->where("companies.id", auth()->user()->company_id);
+        })->pluck("id");
+
+        $projectsStatus = ProjectStatus::withCount([
+            'projects as projects_count' => function($query) use ($projectCategoryList){
+                $query->whereHas('categories', function($q) use ($projectCategoryList){
+                    return $q->whereIn("project_category_list_id", $projectCategoryList);
+                });
+            }
+        ])->get();
+
         $total = 0;
 
         foreach($projectsStatus as $p){
@@ -526,6 +570,52 @@ class ProjectTaskService{
         
         $project = Project::select(DB::raw("YEAR(end_date) year, MONTH(end_date) month, count(*) total"))
         ->whereBetween("end_date",[$from, $to])->orderBy("year","asc")->orderBy("month","asc")->groupBy("year","month")->get();
+
+        foreach($project as $p){
+            $p->month_str = $this->globalService->getIndonesiaMonth($p->month);
+            $p->year_month_str = $this->globalService->getIndonesiaMonth($p->month)." ".$p->year;
+        }
+
+        return ["success" => true, "message" => "Data Berhasil Dibuat", "data" => $project, "status" => 200];
+        
+    }
+
+    public function getClientProjectsDeadline(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "from" => "date_format:Y-m",
+            "to" => "date_format:Y-m",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        
+
+        $current_date = date('Y-m');
+        $from = $request->from ? $request->from."-01" : date('Y-m-01', strtotime('-1 month', strtotime($current_date))); 
+        $to = $request->to ? date('Y-m-t',strtotime($request->to)) : date('Y-m-t');
+        
+        $date1 = new DateTime($from);
+        $date2 = new DateTime($to);
+        $interval = $date1->diff($date2);
+        $monthsDiff = $interval->format('%m');
+        if($date1 > $date2) return ["success" => false, "message" => "Waktu akhir harus lebih besar dari waktu awal", "status" => 400];
+        if($monthsDiff < 1) return ["success" => false, "message" => "Perbedaan waktu minimal 1 bulan.", "status" => 400];
+        
+        $projectCategoryList = ProjectCategoryList::whereHas("companies", function($query){
+            return $query->where("companies.id", auth()->user()->company_id);
+        })->pluck("id");
+        
+        //$projects = Project::with(["proposed_bys","status","categories"]);
+        $project = Project::select(DB::raw("YEAR(end_date) year, MONTH(end_date) month, count(*) total"))
+        ->whereBetween("end_date",[$from, $to])->orderBy("year","asc")->orderBy("month","asc")->groupBy("year","month")
+        ->whereHas('categories', function($q) use ($projectCategoryList){
+            return $q->whereIn("project_category_list_id", $projectCategoryList);
+        })->get();
 
         foreach($project as $p){
             $p->month_str = $this->globalService->getIndonesiaMonth($p->month);
