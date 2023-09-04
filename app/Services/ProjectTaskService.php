@@ -206,9 +206,13 @@ class ProjectTaskService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
         
-        $user_ids = DB::table('users')->where('company_id', auth()->user()->company_id)->pluck('id');
-        $project_proposes = DB::table('projects_proposes')->whereIn('user_id', $user_ids)->pluck('project_id');
-        $projects = Project::with(["proposed_bys","status","categories"])->whereIn('id', $project_proposes);
+        $projectCategoryList = ProjectCategoryList::whereHas("companies", function($query){
+            return $query->where("companies.id", auth()->user()->company_id);
+        })->pluck("id");
+        
+        $projects = Project::with(["proposed_bys","status","categories"])->whereHas('categories', function($q) use ($projectCategoryList){
+            return $q->whereIn("project_category_list_id", $projectCategoryList);
+        });
         
         $rows = $request->rows ?? 5;
         $keyword = $request->keyword;
@@ -218,6 +222,14 @@ class ProjectTaskService{
         $sort_type = $request->sort_type ?? 'asc';
         $status_ids = $request->status_ids ? explode(",",$request->status_ids) : NULL;
         $category_ids = $request->category_ids ? explode(",",$request->category_ids) : NULL;
+        $by_company = $request->sort_by ?? NULL;
+
+        if($by_company){
+            $user_ids = DB::table('users')->where('company_id', auth()->user()->company_id)->pluck('id');
+            $project_proposes = DB::table('projects_proposes')->whereIn('user_id', $user_ids)->pluck('project_id');
+            $projects = Project::with(["proposed_bys","status","categories"])->whereIn('id', $project_proposes);
+        }
+        
 
         if($keyword) $projects = $projects->where("name","LIKE","%$keyword%")
         ->orWhereHas("proposed_bys", function($q) use ($keyword){
@@ -244,7 +256,11 @@ class ProjectTaskService{
         if($sort_by == "status") $projects = $projects->orderBy(ProjectStatus::select("display_order")
         ->whereColumn("project_statuses.id","projects.status_id"),$sort_type);
 
+        try{
         $projects = $projects->paginate($rows);
+    } catch(Exception $err){
+        return ["success" => false, "message" => $err, "status" => 400];
+    }
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projects, "status" => 200];
     }
 
