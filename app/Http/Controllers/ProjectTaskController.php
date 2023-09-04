@@ -85,11 +85,27 @@ class ProjectTaskController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getClientProjectsCount(Request $request)
+    {
+        $route_name = "PROJECT_COUNT_CLIENT_GET";
+
+        $response = $this->projectTaskService->getClientProjectsCount($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getProjectsDeadline(Request $request)
     {
         $route_name = "PROJECT_DEADLINE_GET";
 
         $response = $this->projectTaskService->getProjectsDeadline($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getClientProjectsDeadline(Request $request)
+    {
+        $route_name = "PROJECTS_DEADLINE_CLIENT_GET";
+
+        $response = $this->projectTaskService->getClientProjectsDeadline($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
