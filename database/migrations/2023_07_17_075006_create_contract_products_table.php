@@ -17,6 +17,7 @@ class CreateContractProductsTable extends Migration
             $table->id();
             $table->unsignedBigInteger('product_id');
             $table->unsignedBigInteger('contract_id');
+            $table->unsignedBigInteger('contract_history_id');
             $table->integer("pax");
             $table->integer("price");
             $table->string("unit");

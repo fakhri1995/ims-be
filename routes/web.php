@@ -43,7 +43,7 @@ $router->post('/resetPassword', 'LoginController@resetPassword');
 $router->group(['middleware' => 'auth'], function($router){
     //Android Routes
     $router->get('/getMainAndroid', 'AndroidController@getMainAndroid');
-    
+
     //Log Routes
     $router->get('/getActivityInventoryLogs', 'ActivityLogController@getActivityInventoryLogs');
     $router->get('/getClientTicketLog', 'ActivityLogController@getClientTicketLog');
@@ -63,14 +63,14 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteMessage', 'CompanyProfileController@deleteMessage');
 
     //formsolution routes
-    
+
     $router->get('/getFormSolution', 'CompanyProfileController@getFormSolution');
     $router->get('/getFormSolutionDetail', 'CompanyProfileController@getFormSolutionDetail');
 
     //blog routes
     $router->post('/addArticle', 'CompanyProfileController@addArticle');
     $router->post('/uploadFile', 'CompanyProfileController@uploadFile');
-    
+
     $router->delete('/deleteArticle', 'CompanyProfileController@deleteArticle');
     $router->post('/updateArticle', 'CompanyProfileController@updateArticle');
     //product routes
@@ -114,7 +114,7 @@ $router->group(['middleware' => 'auth'], function($router){
 
     $router->get('/getFilterGroups', 'GroupController@getFilterGroups');
     $router->get('/getFilterGroupsWithUsers', 'GroupController@getFilterGroupsWithUsers');
-    
+
     //Agent Group Routes
     $router->get('/getAgentGroups', 'GroupController@getAgentGroups');
     $router->get('/getAgentGroup', 'GroupController@getAgentGroup');
@@ -168,7 +168,7 @@ $router->group(['middleware' => 'auth'], function($router){
     // Tree Company List
     $router->get('/getBranchCompanyList', 'CompanyController@getBranchCompanyList');
     $router->get('/getClientCompanyList', 'CompanyController@getClientCompanyList');
-    
+
     //Main Bank Account Routes
     $router->get('/getMainBanks', 'BankController@getMainBanks');
     $router->post('/addMainBank', 'BankController@addMainBank');
@@ -183,9 +183,9 @@ $router->group(['middleware' => 'auth'], function($router){
 
     //Access Feature Routes
     $router->get('/getFeatures', 'AccessFeatureController@getFeatures');
-    // $router->post('/addFeature', 'AccessFeatureController@addFeature'); 
-    // $router->put('/updateFeature', 'AccessFeatureController@updateFeature'); 
-    // $router->delete('/deleteFeature', 'AccessFeatureController@deleteFeature'); 
+    // $router->post('/addFeature', 'AccessFeatureController@addFeature');
+    // $router->put('/updateFeature', 'AccessFeatureController@updateFeature');
+    // $router->delete('/deleteFeature', 'AccessFeatureController@deleteFeature');
 
     //Module Routes
     $router->get('/getModules', 'AccessFeatureController@getModules');
@@ -238,7 +238,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/changeStatusCondition', 'AssetController@changeStatusCondition');
     $router->delete('/removeInventoryPart', 'AssetController@removeInventoryPart');
     $router->delete('/deleteInventory', 'AssetController@deleteInventory');
-        
+
     //Manufacturer Routes
     $router->get('/getManufacturers', 'AssetController@getManufacturers');
     $router->post('/addManufacturer', 'AssetController@addManufacturer');
@@ -261,7 +261,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getRelationshipInventory', 'AssetController@getRelationshipInventory');
     $router->get('/getRelationshipInventoryRelation', 'AssetController@getRelationshipInventoryRelation');
     $router->get('/getRelationshipInventoryDetailList', 'AssetController@getRelationshipInventoryDetailList');
-    $router->post('/addRelationshipInventories', 'AssetController@addRelationshipInventories'); 
+    $router->post('/addRelationshipInventories', 'AssetController@addRelationshipInventories');
     $router->put('/updateRelationshipInventory', 'AssetController@updateRelationshipInventory');
     $router->delete('/deleteRelationshipInventory', 'AssetController@deleteRelationshipInventory');
 
@@ -294,15 +294,15 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/clientUpdateNoteTicket', 'TicketController@clientUpdateNoteTicket');
     $router->put('/setDeadline', 'TicketController@setDeadline');
     $router->delete('/deleteNoteTicket', 'TicketController@deleteNoteTicket');
-    $router->delete('/clientDeleteNoteTicket', 'TicketController@clientDeleteNoteTicket');  
-    $router->delete('/deleteFileTicket', 'TicketController@deleteFileTicket'); 
-     
+    $router->delete('/clientDeleteNoteTicket', 'TicketController@clientDeleteNoteTicket');
+    $router->delete('/deleteFileTicket', 'TicketController@deleteFileTicket');
+
     $router->get('/getTicketDetailTypes', 'TicketController@getTicketDetailTypes');
     $router->post('/addTicketDetailType', 'TicketController@addTicketDetailType');
     $router->put('/updateTicketDetailType', 'TicketController@updateTicketDetailType');
     $router->delete('/deleteTicketDetailType', 'TicketController@deleteTicketDetailType');
-    
-    
+
+
     //Task Routes
     $router->get('/getStatusTaskList', 'TaskController@getStatusTaskList');
     $router->get('/getDeadlineTasks', 'TaskController@getDeadlineTasks');
@@ -318,8 +318,8 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getTask', 'TaskController@getTask');
     $router->post('/addTask', 'TaskController@addTask');
     $router->post('/sendInventoriesTask', 'TaskController@sendInventoriesTask');
-    // $router->post('/sendInInventoryTask', 'TaskController@sendInInventoryTask'); 
-    // $router->post('/sendOutInventoryTask', 'TaskController@sendOutInventoryTask'); 
+    // $router->post('/sendInInventoryTask', 'TaskController@sendInInventoryTask');
+    // $router->post('/sendOutInventoryTask', 'TaskController@sendOutInventoryTask');
     $router->put('/updateTask', 'TaskController@updateTask');
     $router->post('/saveFilesTask', 'TaskController@saveFilesTask');
     $router->put('/changeStatusToggle', 'TaskController@changeStatusToggle');
@@ -366,7 +366,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->put('/rejectPurchaseOrder', 'WarehouseController@rejectPurchaseOrder');
     $router->put('/sendPurchaseOrder', 'WarehouseController@sendPurchaseOrder');
     $router->put('/receivePurchaseOrder', 'WarehouseController@receivePurchaseOrder');
-    
+
     //Detail Purchase Order
     $router->get('/getDetailPurchaseOrders', 'WarehouseController@getDetailPurchaseOrders');
     $router->post('/addDetailPurchaseOrder', 'WarehouseController@addDetailPurchaseOrder');
@@ -417,14 +417,14 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/exportAttendanceActivityUser', 'AttendanceController@exportAttendanceActivityUser');
     $router->get('/exportAttendanceActivityUsers', 'AttendanceController@exportAttendanceActivityUsers');
     $router->post('/setAttendanceToggle', 'AttendanceController@setAttendanceToggle');
-    
-    
+
+
     //Attendance Project Routes
     $router->get('/getAttendanceProjects', 'AttendanceController@getAttendanceProjects');
     $router->post('/addAttendanceProject', 'AttendanceController@addAttendanceProject');
     $router->put('/updateAttendanceProject', 'AttendanceController@updateAttendanceProject');
     $router->delete('/deleteAttendanceProject', 'AttendanceController@deleteAttendanceProject');
-    
+
     //Attendance Project Category Routes
     $router->get('/getAttendanceProjectCategories', 'AttendanceController@getAttendanceProjectCategories');
     $router->post('/addAttendanceProjectCategory', 'AttendanceController@addAttendanceProjectCategory');
@@ -448,8 +448,8 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getNotifications', 'NotificationController@getNotifications');
     $router->post('/readNotification', 'NotificationController@readNotification');
     $router->post('/readAllNotifications', 'NotificationController@readAllNotifications');
-   
-    
+
+
 
 
     //Career V2 Routes
@@ -459,7 +459,7 @@ $router->group(['middleware' => 'auth'], function($router){
         $router->post('/addCareer', 'CareerV2Controller@addCareer');
         $router->put('/updateCareer', 'CareerV2Controller@updateCareer');
         $router->delete('/deleteCareer', 'CareerV2Controller@deleteCareer');
-        
+
         $router->get('/getCountCareerApplicant', 'CareerV2Controller@getCountCareerApplicant');
         $router->get('/getCountCareersApplicant', 'CareerV2Controller@getCountCareersApplicant');
         $router->get('/getMostCareersApplicant', 'CareerV2Controller@getMostCareersApplicant');
@@ -523,7 +523,7 @@ $router->group(['middleware' => 'auth'], function($router){
 
     $router->post('/generateRecruitmentAccount', 'RecruitmentController@generateRecruitmentAccount');
     $router->get('/getRecruitmentAccountToken', 'RecruitmentController@getRecruitmentAccountToken');
-    
+
     // RECRUITMENT ROLE
     $router->get('/getRecruitmentRole', 'RecruitmentController@getRecruitmentRole');
     $router->get('/getRecruitmentRoles', 'RecruitmentController@getRecruitmentRoles');
@@ -564,7 +564,7 @@ $router->group(['middleware' => 'auth'], function($router){
 
 
     // Employee Module -- -- -- -- --
-    // Employee 
+    // Employee
     $router->get('/getEmployee', 'EmployeeController@getEmployee');
     $router->get('/getEmployees', 'EmployeeController@getEmployees');
     $router->post('/addEmployee', 'EmployeeController@addEmployee');
@@ -575,7 +575,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getEmployeeRolesCount', 'EmployeeController@getEmployeeRolesCount');
     $router->get('/getEmployeeStatusesCount', 'EmployeeController@getEmployeeStatusesCount');
     $router->get('/getEmployeesDraft', 'EmployeeController@getEmployeesDraft');
-    
+
 
     // Employee Contract
     $router->get('/getEmployeeContract', 'EmployeeController@getEmployeeContract');
@@ -661,7 +661,6 @@ $router->group(['middleware' => 'auth'], function($router){
 
     $router->get('/getBankLists', "BankListController@getBankLists");
 
-    
     //Contract Routes
     $router->get('/getContracts', 'ContractController@getContracts');
     $router->get('/getContract', 'ContractController@getContract');
@@ -683,7 +682,14 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addContractInvoice', 'ContractController@addContractInvoice');
     $router->put('/updateContractInvoice', 'ContractController@updateContractInvoice');
     $router->delete('/deleteContractInvoice', 'ContractController@deleteContractInvoice');
-    
+
+    // Contract Histories Routes
+    $router->get('/getContractHistories', 'ContractController@getContractHistories');
+    $router->get('/getContractHistory', 'ContractController@getContractHistory');
+    $router->post('/addContractHistory', 'ContractController@addContractHistory');
+    $router->post('/updateContractHistory', 'ContractController@updateContractHistory');
+    $router->delete('/deleteContractHistory', 'ContractController@deleteContractHistory');
+
 });
 
 // //Incident Routes

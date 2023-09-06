@@ -1,0 +1,47 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+
+class AddendumController extends Controller
+{
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+    */
+
+    public function __construct()
+    {
+        $this->contractService = new ContractService;
+    }
+
+    public function getContract(Request $request){
+        $route_name = "CONTRACT_GET";
+
+        $response = $this->contractService->getContract($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function addContract(Request $request){
+        $route_name = "CONTRACT_ADD";
+
+        $response = $this->contractService->addContract($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateContract(Request $request){
+        $route_name = "CONTRACT_UPDATE";
+
+        $response = $this->contractService->updateContract($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteContract(Request $request){
+        $route_name = "CONTRACT_DELETE";
+
+        $response = $this->contractService->deleteContract($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+}

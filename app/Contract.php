@@ -14,25 +14,43 @@ class Contract extends Model
 
     protected $casts = ['extras' => 'array'];
 
-
-    public function client(){
-        return $this->hasOne(Company::class,'id','client_id')->select('id','name');
-    } 
-
-    public function requester(){
-        return $this->hasOne(User::class,'id','requester_id')->select('id','name');;
+    public function history()
+    {
+        return $this->hasMany(ContractHistory::class, 'contract_id', 'id');
     }
 
-    public function services(){
-        return $this->hasMany(ContractProduct::class,'contract_id')->select()->addSelect(DB::raw('pax*price as subtotal'));
+    public function initial()
+    {
+        return $this->hasOne(ContractHistory::class, 'contract_id', 'id')->where('category', 'initial')->where('is_posted', 1);
     }
 
-    public function invoice_template(){
-        return $this->hasOne(ContractInvoiceTemplate::class,'contract_id');
+    public function addendum()
+    {
+        return $this->hasMany(ContractHistory::class, 'contract_id', 'id')->where('category', 'addendum')->where('is_posted', 1);
     }
 
-    public function service_template(){
-        return $this->hasOne(ContractProductTemplate::class,'contract_id');
+    public function client()
+    {
+        return $this->hasOne(Company::class, 'id', 'client_id')->select('id', 'name');
     }
 
+    public function requester()
+    {
+        return $this->hasOne(User::class, 'id', 'requester_id')->select('id', 'name');;
+    }
+
+    public function services()
+    {
+        return $this->hasMany(ContractProduct::class, 'contract_history_id', 'contract_history_id_active')->select()->addSelect(DB::raw('pax*price as subtotal'));
+    }
+
+    public function invoice_template()
+    {
+        return $this->hasOne(ContractInvoiceTemplate::class, 'contract_id');
+    }
+
+    public function service_template()
+    {
+        return $this->hasOne(ContractProductTemplate::class, 'contract_id');
+    }
 }
