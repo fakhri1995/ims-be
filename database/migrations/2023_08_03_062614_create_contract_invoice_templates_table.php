@@ -16,6 +16,7 @@ class CreateContractInvoiceTemplatesTable extends Migration
         Schema::create('contract_invoice_templates', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('contract_id');
+            $table->unsignedBigInteger('contract_history_id');
             $table->jsonb('details');
             $table->integer("invoice_period");
             $table->unsignedBigInteger('bank_id');

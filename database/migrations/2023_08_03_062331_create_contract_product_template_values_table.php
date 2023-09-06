@@ -16,7 +16,8 @@ class CreateContractProductTemplateValuesTable extends Migration
         Schema::create('contract_product_template_values', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('contract_id');
-            $table->unsignedBigInteger('contract_service_id');
+            $table->unsignedBigInteger('contract_product_id');
+            $table->unsignedBigInteger('contract_history_id');
             $table->jsonb('details');
             $table->unsignedBigInteger('updated_by');
             $table->dateTime('created_at');

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+
 use App\User;
 use App\Group;
 use App\Ticket;
@@ -35,7 +36,6 @@ class LogService
 {
     public function __construct()
     {
-
     }
 
     // Get Inventory Log
@@ -44,13 +44,13 @@ class LogService
     {
         $GlobalService = new GlobalService;
         $access = $GlobalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+        if ($access["success"] === false) return $access;
 
-        try{
+        try {
             $inventory_logs = $this->inventoryLogs($id);
             $clustered_logs = $this->clusteredLogs($inventory_logs);
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $clustered_logs, "status" => 200];
-        } catch(Exception $err){
+        } catch (Exception $err) {
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
@@ -65,13 +65,13 @@ class LogService
         $else_logs = [];
         $not_else = true;
         $current_timestamp_times = strtotime(date("Y-m-d H:i:s"));
-        foreach($logs as $log){
-            if($not_else){
+        foreach ($logs as $log) {
+            if ($not_else) {
                 $timestamp_check = $current_timestamp_times - strtotime($log->date);
-                if($timestamp_check < $day){
+                if ($timestamp_check < $day) {
                     array_push($day_logs, $log);
                     continue;
-                } else if($timestamp_check < $week){
+                } else if ($timestamp_check < $week) {
                     array_push($week_logs, $log);
                     continue;
                 } else {
@@ -89,43 +89,43 @@ class LogService
 
     public function inventoryLogs($id)
     {
-        try{
+        try {
             $logs = [];
-            if($id === null) return response()->json(["success" => false, "message" => "Silahkan Tambahkan Parameter Id"], 400);
-            
+            if ($id === null) return response()->json(["success" => false, "message" => "Silahkan Tambahkan Parameter Id"], 400);
+
             $inventory_pivot_logs = ActivityLogInventoryPivot::where('subject_id', $id)->get();
-            foreach($inventory_pivot_logs as $inventory_pivot_log){
+            foreach ($inventory_pivot_logs as $inventory_pivot_log) {
                 $properties = $inventory_pivot_log->properties;
-                if(isset($properties->attributes->list_parts)){
-                    $attribute_inventories = Inventory::with('modelInventory:id,name')->select('id','mig_id','model_id')->whereIn('id', $properties->attributes->list_parts)->get();
+                if (isset($properties->attributes->list_parts)) {
+                    $attribute_inventories = Inventory::with('modelInventory:id,name')->select('id', 'mig_id', 'model_id')->whereIn('id', $properties->attributes->list_parts)->get();
                     $properties->attributes->list_parts = $attribute_inventories;
-                } 
-                if(isset($properties->old->list_parts)){
-                    $attribute_inventories = Inventory::with('modelInventory:id,name')->select('id','mig_id','model_id')->whereIn('id', $properties->old->list_parts)->get();
+                }
+                if (isset($properties->old->list_parts)) {
+                    $attribute_inventories = Inventory::with('modelInventory:id,name')->select('id', 'mig_id', 'model_id')->whereIn('id', $properties->old->list_parts)->get();
                     $properties->old->list_parts = $attribute_inventories;
-                } 
-                if(isset($properties->attributes->parent_id)) $properties->attributes->parent_id = Inventory::with('modelInventory:id,name')->select('id','mig_id','model_id')->find($properties->attributes->parent_id);
-                if(isset($properties->old->parent_id)) $properties->old->parent_id = Inventory::with('modelInventory:id,name')->select('id','mig_id','model_id')->find($properties->old->parent_id);
-                if(isset($properties->attributes->child_id)) $properties->attributes->child_id = Inventory::with('modelInventory:id,name')->select('id','mig_id','model_id')->find($properties->attributes->child_id);
-                if(isset($properties->old->child_id)) $properties->old->child_id = Inventory::with('modelInventory:id,name')->select('id','mig_id','model_id')->find($properties->old->child_id);
+                }
+                if (isset($properties->attributes->parent_id)) $properties->attributes->parent_id = Inventory::with('modelInventory:id,name')->select('id', 'mig_id', 'model_id')->find($properties->attributes->parent_id);
+                if (isset($properties->old->parent_id)) $properties->old->parent_id = Inventory::with('modelInventory:id,name')->select('id', 'mig_id', 'model_id')->find($properties->old->parent_id);
+                if (isset($properties->attributes->child_id)) $properties->attributes->child_id = Inventory::with('modelInventory:id,name')->select('id', 'mig_id', 'model_id')->find($properties->attributes->child_id);
+                if (isset($properties->old->child_id)) $properties->old->child_id = Inventory::with('modelInventory:id,name')->select('id', 'mig_id', 'model_id')->find($properties->old->child_id);
                 $causer_name = $inventory_pivot_log->causer->name;
                 $temp = (object) [
                     'date' => $inventory_pivot_log->created_at,
-                    'description' => $inventory_pivot_log->log_name.' Inventory Pivot',
+                    'description' => $inventory_pivot_log->log_name . ' Inventory Pivot',
                     'properties' => $properties,
                     'causer_name' => $causer_name,
                     'notes' => $inventory_pivot_log->description ? $inventory_pivot_log->description : "-"
                 ];
                 array_push($logs, $temp);
-            } 
-            
+            }
+
             $inventory_logs = ActivityLogInventory::where('subject_id', $id)->get();
-            foreach($inventory_logs as $inventory_log){
-                if($inventory_log->log_name === 'Notes'){
+            foreach ($inventory_logs as $inventory_log) {
+                if ($inventory_log->log_name === 'Notes') {
                     $causer_name = $inventory_log->causer->name;
                     $temp = (object) [
                         'date' => $inventory_log->created_at,
-                        'description' => $inventory_log->log_name.' Inventory',
+                        'description' => $inventory_log->log_name . ' Inventory',
                         'causer_name' => $causer_name,
                         'notes' => $inventory_log->description ? $inventory_log->description : "-"
                     ];
@@ -133,133 +133,132 @@ class LogService
                     continue;
                 }
                 $properties = $inventory_log->properties;
-                if($inventory_log->log_name === 'Created'){
+                if ($inventory_log->log_name === 'Created') {
                     $model = ModelInventory::withTrashed()->find($properties->attributes->model_id);
-                    if($model) $properties->attributes->model_name = $model->name;
+                    if ($model) $properties->attributes->model_name = $model->name;
                     else $properties->attributes->model_name = "Model Tidak Ditemukan";
-                } 
-                if($inventory_log->log_name === 'Deleted'){
+                }
+                if ($inventory_log->log_name === 'Deleted') {
                     $model = ModelInventory::withTrashed()->find($properties->old->model_id);
-                    if($model) $properties->old->model_name = $model->name;
+                    if ($model) $properties->old->model_name = $model->name;
                     else $properties->old->model_name = "Model Tidak Ditemukan";
-                } 
+                }
 
-                if(isset($properties->attributes->status_usage)) $properties->attributes->status_usage_name = StatusUsageInventory::find($properties->attributes->status_usage)->name;
-                if(isset($properties->old->status_usage)) $properties->old->status_usage_name = StatusUsageInventory::find($properties->old->status_usage)->name;
+                if (isset($properties->attributes->status_usage)) $properties->attributes->status_usage_name = StatusUsageInventory::find($properties->attributes->status_usage)->name;
+                if (isset($properties->old->status_usage)) $properties->old->status_usage_name = StatusUsageInventory::find($properties->old->status_usage)->name;
 
-                if(isset($properties->attributes->status_condition)) $properties->attributes->status_condition_name = StatusConditionInventory::find($properties->attributes->status_condition)->name;
-                if(isset($properties->old->status_condition)) $properties->old->status_condition_name = StatusConditionInventory::find($properties->old->status_condition)->name;
+                if (isset($properties->attributes->status_condition)) $properties->attributes->status_condition_name = StatusConditionInventory::find($properties->attributes->status_condition)->name;
+                if (isset($properties->old->status_condition)) $properties->old->status_condition_name = StatusConditionInventory::find($properties->old->status_condition)->name;
 
-                if(isset($properties->attributes->vendor_id)){
+                if (isset($properties->attributes->vendor_id)) {
                     $vendor = Vendor::withTrashed()->find($properties->attributes->vendor_id);
-                    if($vendor) $properties->attributes->vendor_name = $vendor->name;
+                    if ($vendor) $properties->attributes->vendor_name = $vendor->name;
                     else $properties->attributes->vendor_name = "Vendor Tidak Ditemukan";
-                } 
-                if(isset($properties->old->vendor_id)){
+                }
+                if (isset($properties->old->vendor_id)) {
                     $vendor = Vendor::withTrashed()->find($properties->old->vendor_id);
-                    if($vendor) $properties->old->vendor_name = $vendor->name;
+                    if ($vendor) $properties->old->vendor_name = $vendor->name;
                     else $properties->old->vendor_name = "Vendor Tidak Ditemukan";
                 }
 
-                if(isset($properties->attributes->owned_by)){
+                if (isset($properties->attributes->owned_by)) {
                     $owner = Company::withTrashed()->find($properties->attributes->owned_by);
-                    if($owner) $properties->attributes->owner_name = $owner->name;
+                    if ($owner) $properties->attributes->owner_name = $owner->name;
                     else $properties->attributes->owner_name = "Company Tidak Ditemukan";
-                } 
-                if(isset($properties->old->owned_by)){
+                }
+                if (isset($properties->old->owned_by)) {
                     $owner = Company::withTrashed()->find($properties->old->owned_by);
-                    if($owner) $properties->old->owner_name = $owner->name;
+                    if ($owner) $properties->old->owner_name = $owner->name;
                     else $properties->old->owner_name = "Company Tidak Ditemukan";
                 }
 
-                if(isset($properties->attributes->manufacturer_id)){
+                if (isset($properties->attributes->manufacturer_id)) {
                     $manufacturer = Manufacturer::withTrashed()->find($properties->attributes->manufacturer_id);
-                    if($manufacturer) $properties->attributes->manufacturer_name = $manufacturer->name;
+                    if ($manufacturer) $properties->attributes->manufacturer_name = $manufacturer->name;
                     else $properties->attributes->manufacturer_name = "Manufacturer Tidak Ditemukan";
-                } 
-                if(isset($properties->old->manufacturer_id)){
+                }
+                if (isset($properties->old->manufacturer_id)) {
                     $manufacturer = Manufacturer::withTrashed()->find($properties->old->manufacturer_id);
-                    if($manufacturer) $properties->old->manufacturer_name = $manufacturer->name;
+                    if ($manufacturer) $properties->old->manufacturer_name = $manufacturer->name;
                     else $properties->old->manufacturer_name = "Manufacturer Tidak Ditemukan";
                 }
 
-                if(isset($properties->attributes->location)){
+                if (isset($properties->attributes->location)) {
                     $location = Company::withTrashed()->find($properties->attributes->location);
-                    if($location) $properties->attributes->location_name = $location->name;
+                    if ($location) $properties->attributes->location_name = $location->name;
                     else $properties->attributes->location_name = "Location Tidak Ditemukan";
-                } 
-                if(isset($properties->old->location)){
+                }
+                if (isset($properties->old->location)) {
                     $location = Company::withTrashed()->find($properties->old->location);
-                    if($location) $properties->old->location_name = $location->name;
+                    if ($location) $properties->old->location_name = $location->name;
                     else $properties->old->location_name = "Location Tidak Ditemukan";
                 }
                 $causer_name = $inventory_log->causer->name;
                 $temp = (object) [
                     'date' => $inventory_log->created_at,
-                    'description' => $inventory_log->log_name.' Inventory',
+                    'description' => $inventory_log->log_name . ' Inventory',
                     'properties' => $properties,
                     'causer_name' => $causer_name,
                     'notes' => $inventory_log->description ? $inventory_log->description : "-"
                 ];
                 array_push($logs, $temp);
-            }   
-            
+            }
+
             $inventory_relationship_logs = ActivityLogInventoryRelationship::where('subject_id', $id)->get();
-            foreach($inventory_relationship_logs as $inventory_relationship_log){
+            foreach ($inventory_relationship_logs as $inventory_relationship_log) {
                 $properties = $inventory_relationship_log->properties;
                 $causer_name = $inventory_relationship_log->causer->name;
 
-                if($inventory_relationship_log->log_name === 'Created Association'){
+                if ($inventory_relationship_log->log_name === 'Created Association') {
                     $ticket = Ticket::with('type')->find($properties->ticket_id);
                     $temp = (object) [
                         'date' => $inventory_relationship_log->created_at,
-                        'description' => $inventory_relationship_log->log_name.' Inventory',
-                        'properties' => 'Terhubung dengan Ticket '.$ticket->type->code .'-'. $ticket->ticketable_id,
+                        'description' => $inventory_relationship_log->log_name . ' Inventory',
+                        'properties' => 'Terhubung dengan Ticket ' . $ticket->type->code . '-' . $ticket->ticketable_id,
                         'causer_name' => $causer_name
                     ];
                     array_push($logs, $temp);
                     continue;
                 }
 
-                if($inventory_relationship_log->log_name === 'Deleted Association'){
+                if ($inventory_relationship_log->log_name === 'Deleted Association') {
                     $ticket = Ticket::with('type')->find($properties->ticket_id);
                     $temp = (object) [
                         'date' => $inventory_relationship_log->created_at,
-                        'description' => $inventory_relationship_log->log_name.' Inventory',
-                        'properties' => 'Terlepas dari Ticket '.$ticket->type->code .'-'. $ticket->ticketable_id,
+                        'description' => $inventory_relationship_log->log_name . ' Inventory',
+                        'properties' => 'Terlepas dari Ticket ' . $ticket->type->code . '-' . $ticket->ticketable_id,
                         'causer_name' => $causer_name
                     ];
                     array_push($logs, $temp);
                     continue;
                 }
 
-                if(isset($properties->attributes->relationship_id)){
+                if (isset($properties->attributes->relationship_id)) {
                     $relationship = Relationship::withTrashed()->find($properties->attributes->relationship_id);
                     $properties->attributes->relationship = $properties->attributes->is_inverse ? $relationship->inverse_relationship_type : $relationship->relationship_type;
                 }
 
-                if(isset($properties->old->relationship_id)){
+                if (isset($properties->old->relationship_id)) {
                     $relationship = Relationship::withTrashed()->find($properties->old->relationship_id);
                     $properties->old->relationship = $properties->old->is_inverse ? $relationship->inverse_relationship_type : $relationship->relationship_type;
                 }
 
                 $temp = (object) [
                     'date' => $inventory_relationship_log->created_at,
-                    'description' => $inventory_relationship_log->log_name.' Inventory Relationship',
+                    'description' => $inventory_relationship_log->log_name . ' Inventory Relationship',
                     'properties' => $properties,
                     'causer_name' => $causer_name,
                     'notes' => $inventory_relationship_log->description ? $inventory_relationship_log->description : "-"
                 ];
                 array_push($logs, $temp);
             }
-            
-            usort($logs, function($a, $b) {
+
+            usort($logs, function ($a, $b) {
                 return strtotime($b->date) - strtotime($a->date);
             });
 
             return $logs;
-        }
-        catch(Exception $err){
+        } catch (Exception $err) {
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
@@ -268,19 +267,19 @@ class LogService
 
     public function getTicketLogFunction($id)
     {
-        $special_logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', 'Note Khusus')->orderBy('created_at','desc')->get();
-        $logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', '<>', 'Note Khusus')->orderBy('created_at','desc')->get();
-        $statuses = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled', 'Rejected'];
+        $special_logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', 'Note Khusus')->orderBy('created_at', 'desc')->get();
+        $logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', '<>', 'Note Khusus')->orderBy('created_at', 'desc')->get();
+        $statuses = ['-', 'Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled', 'Rejected'];
         $normal_logs = [];
-        foreach($logs as $log){
-            if($log->description === 'Association Item'){
+        foreach ($logs as $log) {
+            if ($log->description === 'Association Item') {
                 $old_exist = false;
                 $new_exist = false;
                 $properties = json_decode($log->log_name, false);
-                if(isset($properties->old->inventory))$old_exist = true;
-                if(isset($properties->attributes->inventory))$new_exist = true;
-                if($old_exist){
-                    if($new_exist) {
+                if (isset($properties->old->inventory)) $old_exist = true;
+                if (isset($properties->attributes->inventory)) $new_exist = true;
+                if ($old_exist) {
+                    if ($new_exist) {
                         $inventory = Inventory::with('modelInventory:id,name')->find($properties->attributes->inventory);
                         $log_name = "Pengubahan Association menjadi ";
                     } else {
@@ -290,11 +289,11 @@ class LogService
                 } else {
                     $inventory = Inventory::with('modelInventory:id,name')->find($properties->attributes->inventory);
                     $log_name = "Penambahan Association ";
-                } 
-                if($inventory) $name = $inventory->modelInventory->name;
+                }
+                if ($inventory) $name = $inventory->modelInventory->name;
                 else $name = "Inventory Not Found";
-                $log->log_name = $log_name.$name;
-            } else if($log->description === 'Perubahan Status'){
+                $log->log_name = $log_name . $name;
+            } else if ($log->description === 'Perubahan Status') {
                 $properties = json_decode($log->log_name, false);
                 $old_status = $statuses[$properties->old_status];
                 $new_status = $statuses[$properties->new_status];
@@ -309,40 +308,40 @@ class LogService
         ];
         return $data;
     }
-    
+
     public function getTicketLog($id, $route_name)
     {
         $GlobalService = new GlobalService;
         $access = $GlobalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+        if ($access["success"] === false) return $access;
 
-        $data = $this->getTicketLogFunction($id);    
+        $data = $this->getTicketLogFunction($id);
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
     }
-    
+
     public function getClientTicketLog($id, $route_name)
     {
         $GlobalService = new GlobalService;
         $access = $GlobalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+        if ($access["success"] === false) return $access;
 
         $ticket = Ticket::with('creator')->find($id);
-        if($ticket === null) return ["success" => false, "message" => "Ticket Tidak Ditemukan", "status" => 400];
+        if ($ticket === null) return ["success" => false, "message" => "Ticket Tidak Ditemukan", "status" => 400];
         $user_company_id = auth()->user()->company_id;
-        if($ticket->creator->company_id !== $user_company_id) return ["success" => false, "message" => "Tidak Memiliki Access untuk Ticket Ini", "status" => 403];
-        $special_logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', 'Note Khusus')->orderBy('created_at','desc')->get();
-        $logs = ActivityLogTicket::where('subject_id', $id)->where('is_for_client', true)->where('log_name', '<>', 'Note Khusus')->orderBy('created_at','desc')->get();
-        $statuses = ['-','Dalam Proses', 'Menunggu Staff', 'Dalam Proses', 'Dalam Proses', 'Completed', 'Selesai', 'Dibatalkan'];
+        if ($ticket->creator->company_id !== $user_company_id) return ["success" => false, "message" => "Tidak Memiliki Access untuk Ticket Ini", "status" => 403];
+        $special_logs = ActivityLogTicket::where('subject_id', $id)->where('log_name', 'Note Khusus')->orderBy('created_at', 'desc')->get();
+        $logs = ActivityLogTicket::where('subject_id', $id)->where('is_for_client', true)->where('log_name', '<>', 'Note Khusus')->orderBy('created_at', 'desc')->get();
+        $statuses = ['-', 'Dalam Proses', 'Menunggu Staff', 'Dalam Proses', 'Dalam Proses', 'Completed', 'Selesai', 'Dibatalkan'];
         $normal_logs = [];
-        foreach($logs as $log){
-            if($log->description === 'Association Item'){
+        foreach ($logs as $log) {
+            if ($log->description === 'Association Item') {
                 $old_exist = false;
                 $new_exist = false;
                 $properties = json_decode($log->log_name, false);
-                if(isset($properties->old->inventory))$old_exist = true;
-                if(isset($properties->attributes->inventory))$new_exist = true;
-                if($old_exist){
-                    if($new_exist) {
+                if (isset($properties->old->inventory)) $old_exist = true;
+                if (isset($properties->attributes->inventory)) $new_exist = true;
+                if ($old_exist) {
+                    if ($new_exist) {
                         $inventory = Inventory::with('modelInventory:id,name')->find($properties->attributes->inventory);
                         $log_name = "Pengubahan Asosiasi Menjadi ";
                     } else {
@@ -352,13 +351,13 @@ class LogService
                 } else {
                     $inventory = Inventory::with('modelInventory:id,name')->find($properties->attributes->inventory);
                     $log_name = "Penambahan Asosiasi ";
-                } 
-                if($inventory) $name = $inventory->modelInventory->name;
+                }
+                if ($inventory) $name = $inventory->modelInventory->name;
                 else $name = "Inventory Not Found";
-                $log->log_name = $log_name.$name;
-            } else if($log->description === 'Perubahan Status'){
+                $log->log_name = $log_name . $name;
+            } else if ($log->description === 'Perubahan Status') {
                 $properties = json_decode($log->log_name, false);
-                if(in_array($properties->new_status, [1,4,5]) || $properties->old_status === 4) continue; 
+                if (in_array($properties->new_status, [1, 4, 5]) || $properties->old_status === 4) continue;
                 $new_status = $statuses[$properties->new_status];
                 $log->log_name = "Perubahan status menjadi $new_status";
                 $log->description = $properties->notes;
@@ -379,15 +378,15 @@ class LogService
     {
         $company_id = $request->get('id', null);
         $rows = $request->get('rows', 10);
-        if($rows < 1) $rows = 10;
-        if($rows > 100) $rows = 10;
-        if($company_id === null) return ["success" => false, "message" => "ID Company Kosong", "status" => 400];
+        if ($rows < 1) $rows = 10;
+        if ($rows > 100) $rows = 10;
+        if ($company_id === null) return ["success" => false, "message" => "ID Company Kosong", "status" => 400];
         $company_logs = ActivityLogCompany::where('company_id', $company_id)->orderBy('created_at', 'desc')->paginate($rows);
-        foreach($company_logs as $company_log){
-            if(str_contains($company_log->log_name, 'Sub')){
+        foreach ($company_logs as $company_log) {
+            if (str_contains($company_log->log_name, 'Sub')) {
                 $company = Company::with('parent')->find($company_log->subjectable_id);
                 $company_log->subjectable->parent_name = $company->parent->name;
-            } 
+            }
         }
         return ["success" => true, "data" => $company_logs, "status" => 200];
     }
@@ -567,8 +566,8 @@ class LogService
 
     public function associationLogInventory($subject_id, $causer_id, $old_inventory_id, $inventory_id)
     {
-        if($old_inventory_id !== null) $this->deleteLogInventoryAssociation($old_inventory_id, $causer_id, $subject_id);
-        if($inventory_id !== null) $this->createLogInventoryAssociation($inventory_id, $causer_id, $subject_id);
+        if ($old_inventory_id !== null) $this->deleteLogInventoryAssociation($old_inventory_id, $causer_id, $subject_id);
+        if ($inventory_id !== null) $this->createLogInventoryAssociation($inventory_id, $causer_id, $subject_id);
     }
 
     public function removeAssociationLogInventory($subject_id, $causer_id, $old_inventory_id)
@@ -594,14 +593,14 @@ class LogService
 
     public function updateIncidentLogTicket($subject_id, $incident_time)
     {
-        $log = ActivityLogTicket::where('subject_id', $subject_id)->where('log_name','Waktu Kejadian')->first();
+        $log = ActivityLogTicket::where('subject_id', $subject_id)->where('log_name', 'Waktu Kejadian')->first();
         $log->created_at = $incident_time;
         $log->save();
     }
-    
+
     public function updateRaisedAtLogTicket($subject_id, $created_at)
     {
-        $log = ActivityLogTicket::where('subject_id', $subject_id)->where('log_name','Raised Ticket')->first();
+        $log = ActivityLogTicket::where('subject_id', $subject_id)->where('log_name', 'Raised Ticket')->first();
         $log->created_at = $created_at;
         $log->save();
     }
@@ -611,7 +610,7 @@ class LogService
         $log_name = "Waktu Kejadian";
         $this->addLogTicket($subject_id, $causer_id, $log_name, $created_at, null, true);
     }
-    
+
     public function createLogTicket($subject_id, $causer_id)
     {
         $log_name = "Raised Ticket";
@@ -645,13 +644,13 @@ class LogService
 
     public function assignLogTicket($subject_id, $causer_id, $assignable_type, $assignable_id)
     {
-        if($assignable_type === 'App\User'){
+        if ($assignable_type === 'App\User') {
             $user = User::find($assignable_id);
-            if(!$user) $name = "User Tidak Ditemukan";
+            if (!$user) $name = "User Tidak Ditemukan";
             else $name = $user->name;
         } else {
             $group = Group::find($assignable_id);
-            if(!$group) $name = "Group Tidak Ditemukan";
+            if (!$group) $name = "Group Tidak Ditemukan";
             else $name = $group->name;
         }
         $log_name = "Assigned to $name";
@@ -674,41 +673,43 @@ class LogService
         return $log;
     }
 
-    public function updateNoteLogTicket($id, $causer_id, $notes, $log_id, $admin){
-        try{
+    public function updateNoteLogTicket($id, $causer_id, $notes, $log_id, $admin)
+    {
+        try {
             $log = ActivityLogTicket::find($log_id);
-            if($log === null) return ["success" => false, "message" => "Log Tidak Ditemukan", "status" => 400];
-            if($log->log_name !== "Note Khusus") return ["success" => false, "message" => "Log Tidak Ditemukan", "status" => 400];
-            if($log->subject_id !== $id && !$admin) return ["success" => false, "message" => "Log Bukan Milik Tiket Terhubung", "status" => 403];
-            if($log->causer_id !== $causer_id && !$admin) return ["success" => false, "message" => "Log Tidak Dibuat Oleh User Login!", "status" => 403];
+            if ($log === null) return ["success" => false, "message" => "Log Tidak Ditemukan", "status" => 400];
+            if ($log->log_name !== "Note Khusus") return ["success" => false, "message" => "Log Tidak Ditemukan", "status" => 400];
+            if ($log->subject_id !== $id && !$admin) return ["success" => false, "message" => "Log Bukan Milik Tiket Terhubung", "status" => 403];
+            if ($log->causer_id !== $causer_id && !$admin) return ["success" => false, "message" => "Log Tidak Dibuat Oleh User Login!", "status" => 403];
             $log->created_at = date("Y-m-d H:i:s");
             $log->description = $notes;
             $log->save();
-            
+
             return ["success" => true, "message" => "Catatan berhasil diperbarui", "status" => 200];
-        } catch(Exception $err){
+        } catch (Exception $err) {
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
 
-    public function deleteNoteLogTicket($id, $causer_id, $log_id, $admin){
-        try{
+    public function deleteNoteLogTicket($id, $causer_id, $log_id, $admin)
+    {
+        try {
             $log = ActivityLogTicket::find($log_id);
-            if($log === null) return ["success" => false, "message" => "Log Tidak Ditemukan", "status" => 400];
-            if($log->log_name !== "Note Khusus") return ["success" => false, "message" => "Log Tidak Ditemukan", "status" => 400];
-            if($log->subject_id !== $id && !$admin) return ["success" => false, "message" => "Log Bukan Milik Tiket Terhubung", "status" => 403];
-            if($log->causer_id !== $causer_id && !$admin) return ["success" => false, "message" => "Log Tidak Dibuat Oleh User Login!", "status" => 403];
+            if ($log === null) return ["success" => false, "message" => "Log Tidak Ditemukan", "status" => 400];
+            if ($log->log_name !== "Note Khusus") return ["success" => false, "message" => "Log Tidak Ditemukan", "status" => 400];
+            if ($log->subject_id !== $id && !$admin) return ["success" => false, "message" => "Log Bukan Milik Tiket Terhubung", "status" => 403];
+            if ($log->causer_id !== $causer_id && !$admin) return ["success" => false, "message" => "Log Tidak Dibuat Oleh User Login!", "status" => 403];
             $log->delete();
-            
+
             return ["success" => true, "message" => "Catatan berhasil dihapus", "status" => 200];
-        } catch(Exception $err){
+        } catch (Exception $err) {
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
 
     public function setItemLogTicket($subject_id, $causer_id, $old_inventory_id, $inventory_id)
     {
-        if($old_inventory_id !== null) $properties['old'] = ['inventory' => $old_inventory_id];
+        if ($old_inventory_id !== null) $properties['old'] = ['inventory' => $old_inventory_id];
         $properties['attributes'] = ['inventory' => $inventory_id];
         $created_at = date("Y-m-d H:i:s");
         $log_name = json_encode($properties);
@@ -739,7 +740,7 @@ class LogService
 
     public function createCompany($company_id, $subjectable_id, $is_sub = false)
     {
-        if($is_sub) $log_name = 'Created Sub';
+        if ($is_sub) $log_name = 'Created Sub';
         else $log_name = 'Created';
         $subjectable_type = 'App\Company';
         $this->addLogCompany($log_name, $company_id, $subjectable_type, $subjectable_id);
@@ -747,7 +748,7 @@ class LogService
 
     public function updateCompany($company_id, $subjectable_id, $is_sub = false)
     {
-        if($is_sub) $log_name = 'Updated Sub';
+        if ($is_sub) $log_name = 'Updated Sub';
         else $log_name = 'Updated';
         $subjectable_type = 'App\Company';
         $this->addLogCompany($log_name, $company_id, $subjectable_type, $subjectable_id);
@@ -755,7 +756,7 @@ class LogService
 
     public function deleteCompany($company_id, $subjectable_id, $is_sub = false)
     {
-        if($is_sub) $log_name = 'Deleted Sub';
+        if ($is_sub) $log_name = 'Deleted Sub';
         else  $log_name = 'Deleted';
         $subjectable_type = 'App\Company';
         $this->addLogCompany($log_name, $company_id, $subjectable_type, $subjectable_id);
@@ -850,7 +851,7 @@ class LogService
         $log->created_at = date("Y-m-d H:i:s");
         $log->save();
     }
-    
+
     public function addLogRecruitments($logs)
     {
         ActivityLogRecruitment::insert($logs);
@@ -860,18 +861,18 @@ class LogService
     {
         $GlobalService = new GlobalService;
         $access = $GlobalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+        if ($access["success"] === false) return $access;
 
 
-        $recruitmentStatus = RecruitmentStatus::select("id","name")->get();
+        $recruitmentStatus = RecruitmentStatus::select("id", "name")->get();
         $recruitmentStatusArray = [];
-        foreach($recruitmentStatus as $status){
+        foreach ($recruitmentStatus as $status) {
             $recruitmentStatusArray[$status->id] = $status->name;
         }
 
-        $recruitmentStage = RecruitmentStage::select("id","name")->get();
+        $recruitmentStage = RecruitmentStage::select("id", "name")->get();
         $recruitmentStageArray = array();
-        foreach($recruitmentStage as $stage){
+        foreach ($recruitmentStage as $stage) {
             $recruitmentStageArray[$stage->id] = $stage->name;
         }
 
@@ -886,18 +887,18 @@ class LogService
             ]
         ];
 
-        try{
-            
-            $logsRecruitment = ActivityLogRecruitment::where("subject_id",$id)->orderBy('created_at','desc')->get();
+        try {
+
+            $logsRecruitment = ActivityLogRecruitment::where("subject_id", $id)->orderBy('created_at', 'desc')->get();
             $normal_logs = [];
             // $special_logs = ActivityLogRecruitment::where(["subject_id" => $id, "log_name" => "Notes"])->orderBy('created_at','desc')->get();
-            foreach($logsRecruitment as $log){
+            foreach ($logsRecruitment as $log) {
                 $properties = $log->properties ?? NULL;
 
-                if($log->log_name == "Updated"){
+                if ($log->log_name == "Updated") {
                     $log_type_string = $typeArray[$properties->log_type]["string"];
-                    $old_str = "old_".$properties->log_type."_id"; //contoh : jika log_type = recruitment_stage, ini bakal menjadi old_recruitment_stage_id
-                    $new_str = "new_".$properties->log_type."_id"; //contoh : jika log_type = recruitment_stage, ini bakal menjadi new_recruitment_stage_id
+                    $old_str = "old_" . $properties->log_type . "_id"; //contoh : jika log_type = recruitment_stage, ini bakal menjadi old_recruitment_stage_id
+                    $new_str = "new_" . $properties->log_type . "_id"; //contoh : jika log_type = recruitment_stage, ini bakal menjadi new_recruitment_stage_id
                     $old = $typeArray[$properties->log_type]["data"][$properties->$old_str];
                     $new = $typeArray[$properties->log_type]["data"][$properties->$new_str];
                     $log->description = "Perubahan $log_type_string dari $old ke $new";
@@ -905,23 +906,21 @@ class LogService
                     continue;
                 }
 
-                if($log->log_name == "Notes"){
+                if ($log->log_name == "Notes") {
                     $log->description = "Notes berhasil ditambahkan";
                     $normal_logs[] = $log;
                     continue;
                 }
 
-                if($log->log_name == "Created"){
+                if ($log->log_name == "Created") {
                     $log->description = "Data berhasil dibuat!";
                     $normal_logs[] = $log;
                     continue;
                 }
-
-                
             }
             $data = $normal_logs;
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
-        } catch(Exception $err){
+        } catch (Exception $err) {
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
@@ -941,7 +940,7 @@ class LogService
     public function getLogTaskFunction($id)
     {
 
-        $logStatusArray = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled', 'Rejected'];
+        $logStatusArray = ['-', 'Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled', 'Rejected'];
 
         $typeArray = [
             "task_status" => [
@@ -950,46 +949,46 @@ class LogService
             ]
         ];
 
-        try{
-            $logsTask = ActivityLogTask::where("subject_id",$id)->orderBy('created_at','desc')->get();
+        try {
+            $logsTask = ActivityLogTask::where("subject_id", $id)->orderBy('created_at', 'desc')->get();
             $normal_logs = [];
-            foreach($logsTask as $log){
+            foreach ($logsTask as $log) {
                 $properties = $log->properties ?? NULL;
 
-                if($log->log_name == "Updated"){
+                if ($log->log_name == "Updated") {
                     $log_type_string = $typeArray[$properties->log_type]["string"];
-                    $old_str = "old_".$properties->log_type."_id"; //contoh : jika log_type = log_stage, ini bakal menjadi old_log_stage_id
-                    $new_str = "new_".$properties->log_type."_id"; //contoh : jika log_type = log_stage, ini bakal menjadi new_log_stage_id
+                    $old_str = "old_" . $properties->log_type . "_id"; //contoh : jika log_type = log_stage, ini bakal menjadi old_log_stage_id
+                    $new_str = "new_" . $properties->log_type . "_id"; //contoh : jika log_type = log_stage, ini bakal menjadi new_log_stage_id
                     $old = $typeArray[$properties->log_type]["data"][$properties->$old_str];
                     $new = $typeArray[$properties->log_type]["data"][$properties->$new_str];
                     $log->description = "Perubahan $log_type_string dari $old ke $new";
                     $normal_logs[] = $log;
                     continue;
                 }
-                
             }
             $data = $normal_logs;
             return $data;
-        } catch(Exception $err){
+        } catch (Exception $err) {
             return ["error" => $err];
         }
     }
 
-    public function addProjectLogFunction($project_id, $task_id, $causer_id, $log_name, $properties, $notes, $description){
-        try{
+    public function addProjectLogFunction($project_id, $task_id, $causer_id, $log_name, $properties, $notes, $description)
+    {
+        try {
             $log_name_option = [
                 "Created", "Updated", "Deleted", "Notes"
             ];
-    
+
             $log_type_option = [
                 "created_project", "updated_project", "deleted_project",
                 "created_task", "updated_task", "deleted_task",
             ];
-    
-            if(!in_array($log_name, $log_name_option)) throw new Exception('log_name invalid');
-            if($log_name != "Notes" && !in_array($properties['log_type'], $log_type_option)) throw new Exception('log_type invalid');
-            if($project_id == NULL && $task_id == NULL) throw new Exception('project_id and task_id can\'n be null at the same time');
-            
+
+            if (!in_array($log_name, $log_name_option)) throw new Exception('log_name invalid');
+            if ($log_name != "Notes" && !in_array($properties['log_type'], $log_type_option)) throw new Exception('log_type invalid');
+            if ($project_id == NULL && $task_id == NULL) throw new Exception('project_id and task_id can\'n be null at the same time');
+
             $log = new ActivityLogProjectTask();
             $log->project_id = $project_id;
             $log->task_id = $task_id;
@@ -1002,75 +1001,73 @@ class LogService
             $log->save();
 
             return true;
-        }catch(Exception $e){
+        } catch (Exception $e) {
             return false;
         }
-       
     }
 
     public function addLogProjectTask($project_id = NULL, $task_id = NULL, $causer_id, $log_name, $properties, $notes = null)
-    {   
+    {
         $type = $task_id == NULL ? "project" : "task";
         $description = "";
 
-        
-        if($log_name == "Created"){
-            $description = ucfirst($type)." ".$properties['new']['name']." dibuat.";
-        }
-        else if($log_name == "Updated"){
+
+        if ($log_name == "Created") {
+            $description = ucfirst($type) . " " . $properties['new']['name'] . " dibuat.";
+        } else if ($log_name == "Updated") {
             //project and task column var just for column without relation
             // ["status_id", "project_staffs", "proposed_bys"]; with relation
             $project_column = [
-                ["column" => "name", "string" => "nama"], 
-                ["column" => "start_date", "string" => "waktu mulai"], 
-                ["column" => "end_date", "string" => "waktu estimasi berakhir"], 
+                ["column" => "name", "string" => "nama"],
+                ["column" => "start_date", "string" => "waktu mulai"],
+                ["column" => "end_date", "string" => "waktu estimasi berakhir"],
                 ["column" => "description", "string" => "deskripsi"],
-            ]; 
+            ];
 
             // ["status_id", "task_staffs", "project_id"]; with relation
             $task_column = [
-                ["column" => "name", "string" => "nama"], 
-                ["column" => "start_date", "string" => "waktu mulai"], 
-                ["column" => "end_date", "string" => "waktu estimasi berakhir"], 
+                ["column" => "name", "string" => "nama"],
+                ["column" => "start_date", "string" => "waktu mulai"],
+                ["column" => "end_date", "string" => "waktu estimasi berakhir"],
                 ["column" => "description", "string" => "deskripsi"],
                 ["column" => "ticket_number", "string" => "nomor tiket"]
-            ]; 
+            ];
             $column = $type == "project" ? $project_column : $task_column;
 
-            $description = "Terjadi perubahan pada $type ".$properties['old']['name'].". ";
-            foreach($column as $c){
-                if($properties['old'][$c['column']] != $properties['new'][$c['column']]){
-                    $dari = $properties['old'][$c['column']] ? " dari ".$properties['old'][$c['column']] : "";
-                    $description .= ucfirst($c['string'])." $type"."$dari menjadi ".$properties['new'][$c['column']].". ";
+            $description = "Terjadi perubahan pada $type " . $properties['old']['name'] . ". ";
+            foreach ($column as $c) {
+                if ($properties['old'][$c['column']] != $properties['new'][$c['column']]) {
+                    $dari = $properties['old'][$c['column']] ? " dari " . $properties['old'][$c['column']] : "";
+                    $description .= ucfirst($c['string']) . " $type" . "$dari menjadi " . $properties['new'][$c['column']] . ". ";
                 }
             }
 
-            if($properties['old']['status_id'] != $properties['new']['status_id']){
-                $status_old = ProjectStatus::withTrashed()->select("id","name")->find($properties['old']['status_id']);
-                $status_new = ProjectStatus::withTrashed()->select("id","name")->find($properties['new']['status_id']);
-                
+            if ($properties['old']['status_id'] != $properties['new']['status_id']) {
+                $status_old = ProjectStatus::withTrashed()->select("id", "name")->find($properties['old']['status_id']);
+                $status_new = ProjectStatus::withTrashed()->select("id", "name")->find($properties['new']['status_id']);
+
                 $status_old_str = $status_old ? $status_old->name : "kosong";
                 $status_new_str = $status_new ? $status_new->name : "kosong";
-                
 
-                $description .= "Status $type dari ".$status_old_str." menjadi ".$status_new_str.". ";
+
+                $description .= "Status $type dari " . $status_old_str . " menjadi " . $status_new_str . ". ";
             }
 
-            if($type == "project"){
-                $project_staffs_removed = array_diff($properties['old']['project_staffs'],$properties['new']['project_staffs']);
-                $project_staffs_added = array_diff($properties['new']['project_staffs'],$properties['old']['project_staffs']);
+            if ($type == "project") {
+                $project_staffs_removed = array_diff($properties['old']['project_staffs'], $properties['new']['project_staffs']);
+                $project_staffs_added = array_diff($properties['new']['project_staffs'], $properties['old']['project_staffs']);
                 $project_staffs_diff = array_merge($project_staffs_removed, $project_staffs_added);
 
-                $proposed_bys_removed = array_diff($properties['old']['proposed_bys'],$properties['new']['proposed_bys']);
-                $proposed_bys_added = array_diff($properties['new']['proposed_bys'],$properties['old']['proposed_bys']);
+                $proposed_bys_removed = array_diff($properties['old']['proposed_bys'], $properties['new']['proposed_bys']);
+                $proposed_bys_added = array_diff($properties['new']['proposed_bys'], $properties['old']['proposed_bys']);
                 $proposed_bys_diff = array_merge($proposed_bys_removed, $proposed_bys_added);
 
                 $users_merge = array_merge($project_staffs_diff, $proposed_bys_diff);
                 sort($users_merge);
                 $users_diff = array_unique($users_merge);
 
-                if(count($users_diff)){
-                    $users = User::withTrashed()->whereIn("id",$users_diff)->get()->toArray();
+                if (count($users_diff)) {
+                    $users = User::withTrashed()->whereIn("id", $users_diff)->get()->toArray();
                     $usersArray = array_column($users, "name", "id");
                 }
 
@@ -1078,73 +1075,72 @@ class LogService
                 $proposed_bys_added_name = "";
                 $project_staffs_removed_name = "";
                 $proposed_bys_removed_name = "";
-                foreach($project_staffs_added as $i){
-                    $project_staffs_added_name .= $usersArray[$i].", ";
+                foreach ($project_staffs_added as $i) {
+                    $project_staffs_added_name .= $usersArray[$i] . ", ";
                 }
 
-                foreach($proposed_bys_added as $i){
-                    $proposed_bys_added_name .= $usersArray[$i].", ";
+                foreach ($proposed_bys_added as $i) {
+                    $proposed_bys_added_name .= $usersArray[$i] . ", ";
                 }
 
-                foreach($project_staffs_removed as $i){
-                    $project_staffs_removed_name .= $usersArray[$i].", ";
+                foreach ($project_staffs_removed as $i) {
+                    $project_staffs_removed_name .= $usersArray[$i] . ", ";
                 }
 
-                foreach($proposed_bys_removed as $i){
-                    $proposed_bys_removed_name .= $usersArray[$i].", ";
+                foreach ($proposed_bys_removed as $i) {
+                    $proposed_bys_removed_name .= $usersArray[$i] . ", ";
                 }
 
-                if($project_staffs_removed_name) $description .= $project_staffs_removed_name."dihapus dari project staff. ";
-                if($project_staffs_added_name) $description .= $project_staffs_added_name."ditambah ke project staff. ";
-                if($proposed_bys_removed_name) $description .= $proposed_bys_removed_name."dihapus dari pengaju project. ";
-                if($proposed_bys_added_name) $description .= $proposed_bys_added_name."ditambah ke pengaju project. ";
-
-            }else if($type == "task"){
-                $task_staffs_removed = array_diff($properties['old']['task_staffs'],$properties['new']['task_staffs']);
-                $task_staffs_added = array_diff($properties['new']['task_staffs'],$properties['old']['task_staffs']);
+                if ($project_staffs_removed_name) $description .= $project_staffs_removed_name . "dihapus dari project staff. ";
+                if ($project_staffs_added_name) $description .= $project_staffs_added_name . "ditambah ke project staff. ";
+                if ($proposed_bys_removed_name) $description .= $proposed_bys_removed_name . "dihapus dari pengaju project. ";
+                if ($proposed_bys_added_name) $description .= $proposed_bys_added_name . "ditambah ke pengaju project. ";
+            } else if ($type == "task") {
+                $task_staffs_removed = array_diff($properties['old']['task_staffs'], $properties['new']['task_staffs']);
+                $task_staffs_added = array_diff($properties['new']['task_staffs'], $properties['old']['task_staffs']);
                 $task_staffs_diff = array_merge($task_staffs_removed, $task_staffs_added);
 
                 sort($task_staffs_diff);
                 $users_diff = array_unique($task_staffs_diff);
 
-                if(count($users_diff)){
-                    $users = User::withTrashed()->whereIn("id",$users_diff)->get()->toArray();
+                if (count($users_diff)) {
+                    $users = User::withTrashed()->whereIn("id", $users_diff)->get()->toArray();
                     $usersArray = array_column($users, "name", "id");
                 }
 
                 $task_staffs_added_name = "";
                 $task_staffs_removed_name = "";
-                foreach($task_staffs_added as $i){
-                    $task_staffs_added_name .= $usersArray[$i].", ";
+                foreach ($task_staffs_added as $i) {
+                    $task_staffs_added_name .= $usersArray[$i] . ", ";
                 }
 
-                foreach($task_staffs_removed as $i){
-                    $task_staffs_removed_name .= $usersArray[$i].", ";
+                foreach ($task_staffs_removed as $i) {
+                    $task_staffs_removed_name .= $usersArray[$i] . ", ";
                 }
 
-                if($task_staffs_removed_name) $description .= $task_staffs_removed_name."dihapus dari task staff. ";
-                if($task_staffs_added_name) $description .= $task_staffs_added_name."ditambah ke task staff. ";
+                if ($task_staffs_removed_name) $description .= $task_staffs_removed_name . "dihapus dari task staff. ";
+                if ($task_staffs_added_name) $description .= $task_staffs_added_name . "ditambah ke task staff. ";
             }
-
-        }else if($log_name == "Deleted"){
-            $description = ucfirst($type)." ".$properties['old']['name']." dihapus.";
+        } else if ($log_name == "Deleted") {
+            $description = ucfirst($type) . " " . $properties['old']['name'] . " dihapus.";
         }
 
         $this->addProjectLogFunction($project_id, $task_id, $causer_id, $log_name, $properties, $notes, $description);
     }
 
-    public function getProjectLogs($request, $route_name){
+    public function getProjectLogs($request, $route_name)
+    {
         $globalService = new GlobalService;
         $access = $globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+        if ($access["success"] === false) return $access;
 
         $validator = Validator::make($request->all(), [
             "project_id" => "required|numeric",
             "rows" => "numeric",
-            "page" => "numeric" 
+            "page" => "numeric"
         ]);
-        
-        if($validator->fails()){
+
+        if ($validator->fails()) {
             $errors = $validator->errors()->all();
             return ["success" => false, "message" => $errors, "status" => 400];
         }
@@ -1155,24 +1151,25 @@ class LogService
         $projectLog = ActivityLogProjectTask::where("project_id", $project_id)
             ->where("log_name", "!=", "Notes")
             ->where("description", "LIKE", "%$keyword%")
-            ->orderBy("id","desc");
+            ->orderBy("id", "desc");
         $projectLog = $projectLog->paginate($rows);
 
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projectLog, "status" => 200];
     }
 
-    public function getProjectLogNotes($request, $route_name){
+    public function getProjectLogNotes($request, $route_name)
+    {
         $globalService = new GlobalService;
         $access = $globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+        if ($access["success"] === false) return $access;
 
         $validator = Validator::make($request->all(), [
             "project_id" => "required|numeric",
             "rows" => "numeric",
-            "page" => "numeric" 
+            "page" => "numeric"
         ]);
-        
-        if($validator->fails()){
+
+        if ($validator->fails()) {
             $errors = $validator->errors()->all();
             return ["success" => false, "message" => $errors, "status" => 400];
         }
@@ -1183,75 +1180,123 @@ class LogService
         $projectLog = ActivityLogProjectTask::where("project_id", $project_id)
             ->where("log_name", "Notes")
             ->where("notes", "LIKE", "%$keyword%")
-            ->orderBy("id","desc");
+            ->orderBy("id", "desc");
         $projectLog = $projectLog->paginate($rows);
 
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projectLog, "status" => 200];
     }
 
-    public function deleteProjectLogNotes(int $id){
-       
-        $projectLog = ActivityLogProjectTask::where("log_name","Notes")->find($id);
-        if(!$projectLog) return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
+    public function deleteProjectLogNotes(int $id)
+    {
+
+        $projectLog = ActivityLogProjectTask::where("log_name", "Notes")->find($id);
+        if (!$projectLog) return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400];
         $projectLog->delete();
-        return ["success" => true, "message" => "Data berhasil dihapus", "status" => 200]; 
+        return ["success" => true, "message" => "Data berhasil dihapus", "status" => 200];
     }
 
-    public function addLogContractFunction($contract_id, $causer_id, $log_name, $properties, $notes, $description){
-        
-            $log_name_option = [
-                "Created", "Updated", "Deleted", "Notes"
-            ];
-    
-            $log_type_option = [
-                "created_contract", "updated_contract", "deleted_contract",
-            ];
-    
-            if(!in_array($log_name, $log_name_option)) throw new Exception('log_name invalid');
-            if($log_name != "Notes" && !in_array($properties['log_type'], $log_type_option)) throw new Exception('log_type invalid');
-            if($contract_id == NULL) throw new Exception('contract_id is required.');
-            
-            $log = new ActivityLogContract();
-            $log->contract_id = $contract_id;
-            $log->causer_id = $causer_id;
-            $log->log_name = $log_name;
-            $log->properties = $properties;
-            $log->notes = $notes;
-            $log->description = $description;
-            $log->created_at = date("Y-m-d H:i:s");
-            $log->save();
-        try{
+    public function addLogContractFunction($contract_id, $causer_id, $log_name, $properties, $notes, $description)
+    {
+
+        $log_name_option = [
+            "Created", "Updated", "Deleted", "Notes"
+        ];
+
+        $log_type_option = [
+            "created_contract", "updated_contract", "deleted_contract",
+        ];
+
+        if (!in_array($log_name, $log_name_option)) throw new Exception('log_name invalid');
+        if ($log_name != "Notes" && !in_array($properties['log_type'], $log_type_option)) throw new Exception('log_type invalid');
+        if ($contract_id == NULL) throw new Exception('contract_id is required.');
+
+        $log = new ActivityLogContract();
+        $log->contract_id = $contract_id;
+        $log->causer_id = $causer_id;
+        $log->log_name = $log_name;
+        $log->properties = $properties;
+        $log->notes = $notes;
+        $log->description = $description;
+        $log->created_at = date("Y-m-d H:i:s");
+        $log->save();
+        try {
             return true;
-        }catch(Exception $e){
+        } catch (Exception $e) {
             return false;
         }
-       
     }
 
-    public function addLogContract($contract_id, $causer_id, $log_name, $properties, $notes = null){
+    public function addLogContract($contract_id, $causer_id, $log_name, $properties, $notes = null)
+    {
         $description = "";
-        if($log_name == "Created"){
+        if ($log_name == "Created") {
             $description = "Kontrak dibuat.";
-        }else if($log_name == "Updated"){
+        } else if ($log_name == "Updated") {
             $description = "Terjadi perubahan pada kontrak.";
-        }else if($log_name == "Deleted"){
+        } else if ($log_name == "Deleted") {
             $description = "Kontrak telah dihapus.";
         }
         $this->addLogContractFunction($contract_id, $causer_id, $log_name, $properties, $notes, $description);
     }
 
-    public function getContractLogs($request, $route_name){
+    public function addLogContractHistoryFunction($contract_history_id, $causer_id, $log_name, $properties, $notes, $description)
+    {
+
+        $log_name_option = [
+            "Created", "Updated", "Deleted", "Notes"
+        ];
+
+        $log_type_option = [
+            "created_contract_history", "updated_contract_history", "deleted_contract_history",
+        ];
+
+        if (!in_array($log_name, $log_name_option)) throw new Exception('log_name invalid');
+        if ($log_name != "Notes" && !in_array($properties['log_type'], $log_type_option)) throw new Exception('log_type invalid');
+        if ($contract_history_id == NULL) throw new Exception('contract_history_id is required.');
+
+        $log = new ActivityLogContract();
+        $log->contract_history_id = $contract_history_id;
+        $log->causer_id = $causer_id;
+        $log->log_name = $log_name;
+        $log->properties = $properties;
+        $log->notes = $notes;
+        $log->description = $description;
+        $log->created_at = date("Y-m-d H:i:s");
+        $log->save();
+        try {
+            return true;
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    public function addLogContractHistory($contract_id, $causer_id, $log_name, $properties, $notes = null)
+    {
+        $description = "";
+        if ($log_name == "Created") {
+            $description = "Addendum dibuat.";
+        } else if ($log_name == "Updated") {
+            $description = "Terjadi perubahan pada addendum.";
+        } else if ($log_name == "Deleted") {
+            $description = "Addendum telah dihapus.";
+        }
+        $this->addLogContractHistoryFunction($contract_id, $causer_id, $log_name, $properties, $notes, $description);
+    }
+
+
+    public function getContractLogs($request, $route_name)
+    {
         $globalService = new GlobalService;
         $access = $globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+        if ($access["success"] === false) return $access;
 
         $validator = Validator::make($request->all(), [
             "contract_id" => "required|numeric",
             "rows" => "numeric",
-            "page" => "numeric" 
+            "page" => "numeric"
         ]);
-        
-        if($validator->fails()){
+
+        if ($validator->fails()) {
             $errors = $validator->errors()->all();
             return ["success" => false, "message" => $errors, "status" => 400];
         }
@@ -1262,24 +1307,25 @@ class LogService
         $contractLog = ActivityLogContract::where("contract_id", $contract_id)
             ->where("log_name", "!=", "Notes")
             ->where("description", "LIKE", "%$keyword%")
-            ->orderBy("id","desc");
+            ->orderBy("id", "desc");
         $contractLog = $contractLog->paginate($rows);
 
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $contractLog, "status" => 200];
     }
 
-    public function getContractLogNotes($request, $route_name){
+    public function getContractLogNotes($request, $route_name)
+    {
         $globalService = new GlobalService;
         $access = $globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+        if ($access["success"] === false) return $access;
 
         $validator = Validator::make($request->all(), [
             "contract_id" => "required|numeric",
             "rows" => "numeric",
-            "page" => "numeric" 
+            "page" => "numeric"
         ]);
-        
-        if($validator->fails()){
+
+        if ($validator->fails()) {
             $errors = $validator->errors()->all();
             return ["success" => false, "message" => $errors, "status" => 400];
         }
@@ -1290,20 +1336,18 @@ class LogService
         $contractLog = ActivityLogContract::where("contract_id", $contract_id)
             ->where("log_name", "Notes")
             ->where("notes", "LIKE", "%$keyword%")
-            ->orderBy("id","desc");
+            ->orderBy("id", "desc");
         $contractLog = $contractLog->paginate($rows);
 
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $contractLog, "status" => 200];
     }
 
-    public function deleteContractLogNotes(int $id){
-       
-        $contractLog = ActivityLogContract::where("log_name","Notes")->find($id);
-        if(!$contractLog) return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400]; 
-        $contractLog->delete();
-        return ["success" => true, "message" => "Data berhasil dihapus", "status" => 200]; 
-    }
+    public function deleteContractLogNotes(int $id)
+    {
 
-    
-    
+        $contractLog = ActivityLogContract::where("log_name", "Notes")->find($id);
+        if (!$contractLog) return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400];
+        $contractLog->delete();
+        return ["success" => true, "message" => "Data berhasil dihapus", "status" => 200];
+    }
 }
