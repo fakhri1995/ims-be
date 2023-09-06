@@ -1327,6 +1327,20 @@ class ContractService extends BaseService
             };
             $history->save();
 
+            $contract->code_number = $history->code_number;
+            $contract->title = $history->title;
+            $contract->client_id = (int)$history->client_id;
+            $contract->requester_id = (int)$history->requester_id;
+            $contract->initial_date = $history->initial_date;
+            $contract->start_date = $history->start_date;
+            $contract->end_date = $history->end_date;
+            $contract->extras = $history->extras;
+            $contract->is_posted = $history->is_posted;
+            $contract->contract_history_id_active = $history->id;
+            $current_time = date('Y-m-d H:i:s');
+            $contract->updated_at = $current_time;
+            $contract->save();
+
             $services = ContractProduct::insert($serviceData);
             $history->services();
 
