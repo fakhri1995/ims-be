@@ -17,6 +17,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use PhpParser\ErrorHandler\Throwing;
+use Throwable;
 
 class ContractService extends BaseService
 {
@@ -1328,6 +1330,8 @@ class ContractService extends BaseService
             $services = ContractProduct::insert($serviceData);
             $history->services();
 
+            $contract->contract_history_id_active = $history->id;
+
             $logDataNew = clone $history;
 
             $logProperties = [
@@ -1367,10 +1371,30 @@ class ContractService extends BaseService
                 return ["success" => false, "message" => $errors, "status" => 400];
             }
 
+            DB::beginTransaction();
             $id = $request->id;
             $history = ContractHistory::find($id);
+            if (!$history)  return ["success" => false, "message" => "Data addendum tidak ditemukan.", "status" => 400];
+            $contract = Contract::find($history->contract_id);
+            if (!$contract)  return ["success" => false, "message" => "Data tidak ditemukan.", "status" => 400];
             $logDataOld = clone $history;
-            if (!$history)  return ["success" => false, "message" => "Data tidak ditemukan.", "status" => 400];
+            $checkLastAddendum = ContractHistory::query()->where('contract_id', $contract->id)
+                ->orderBy('id', 'DESC')->limit(2)->get();
+            if (($checkLastAddendum[0]->id == $history->id) && (count($checkLastAddendum) == 2)) {
+                $contract->code_number = $checkLastAddendum[1]->code_number;
+                $contract->title = $checkLastAddendum[1]->title;
+                $contract->client_id = (int)$checkLastAddendum[1]->client_id;
+                $contract->requester_id = (int)$checkLastAddendum[1]->requester_id;
+                $contract->initial_date = $checkLastAddendum[1]->initial_date;
+                $contract->start_date = $checkLastAddendum[1]->start_date;
+                $contract->end_date = $checkLastAddendum[1]->end_date;
+                $contract->extras = $checkLastAddendum[1]->extras;
+                $contract->is_posted = $checkLastAddendum[1]->is_posted;
+                $contract->contract_history_id_active = $checkLastAddendum[1]->id;
+                $current_time = date('Y-m-d H:i:s');
+                $contract->updated_at = $current_time;
+                $contract->save();
+            }
             $history->delete();
             $logProperties = [
                 "log_type" => "deleted_contract_history",
@@ -1379,6 +1403,7 @@ class ContractService extends BaseService
             ];
 
             $this->logService->addLogContractHistory($history->id, auth()->user()->id, "Deleted", $logProperties, null);
+            DB::commit();
             return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $history, "status" => 200];
         } catch (Exception $err) {
             return ["success" => false, "message" => $err, "status" => 400];
