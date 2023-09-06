@@ -25,6 +25,13 @@ class ProjectTaskService{
         $this->logService = new LogService;
     }
 
+    private function addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users)
+    {
+        $notification_service = new NotificationService;
+        $created_by = auth()->user()->id;
+        $notification_service->addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users, $created_by);
+    }
+
 
     // PROJECT SECTION
     public function addProject(Request $request, $route_name){
@@ -525,7 +532,16 @@ class ProjectTaskService{
         ];
 
         $this->logService->addLogProjectTask($project_id, $projectTask->id, auth()->user()->id, "Created", $logProperties, null);
-
+        
+        $description = "Task Baru Telah Terbuat"; 
+        $link = env('APP_URL_WEB')."/projects?showtaskid=$projectTask";
+        $image_type = "task"; 
+        $color_type = "green"; 
+        $need_push_notification = false;
+        $notificationable_id = $projectTask->id;
+        $notificationable_type = 'App\ProjectTask';
+        $users = $task_staffs;
+        $this->addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users);
         return ["success" => true, "message" => "Data Berhasil Dibuat", "data" => ["id" => $projectTask->id], "status" => 200];
     }
 
@@ -709,6 +725,17 @@ class ProjectTaskService{
             $this->logService->addLogProjectTask($project_id, $id, auth()->user()->id, "Updated", $logProperties, null);
         }
 
+        $assign_ids = array_diff($logDataNew->task_staffs,$logDataOld->task_staffs);
+        $description = "Task Baru Telah Terbuat"; 
+        $link = env('APP_URL_WEB')."/projects?showtaskid=$projectTask";
+        $image_type = "task"; 
+        $color_type = "green"; 
+        $need_push_notification = false;
+        $notificationable_id = $projectTask->id;
+        $notificationable_type = 'App\ProjectTask';
+        $users = $assign_ids;
+        $this->addNotification($description, $link, $image_type, $color_type, $need_push_notification, $notificationable_id, $notificationable_type, $users);
+        
         return ["success" => true, "message" => "Data Berhasil Diubah", "status" => 200];
 
     }
