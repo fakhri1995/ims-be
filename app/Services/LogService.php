@@ -14,6 +14,7 @@ use App\ModelInventory;
 use App\ActivityLogTicket;
 use App\ActivityLogCompany;
 use App\ActivityLogContract;
+use App\ActivityLogContractHistory;
 use App\ActivityLogInventory;
 use App\StatusUsageInventory;
 use App\Services\GlobalService;
@@ -1254,7 +1255,7 @@ class LogService
         if ($log_name != "Notes" && !in_array($properties['log_type'], $log_type_option)) throw new Exception('log_type invalid');
         if ($contract_history_id == NULL) throw new Exception('contract_history_id is required.');
 
-        $log = new ActivityLogContract();
+        $log = new ActivityLogContractHistory();
         $log->contract_history_id = $contract_history_id;
         $log->causer_id = $causer_id;
         $log->log_name = $log_name;
