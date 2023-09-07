@@ -1053,6 +1053,16 @@ class ContractService extends BaseService
         $access = $this->globalService->checkRoute($route_name);
         if ($access["success"] === false) return $access;
 
+        $contract = Contract::with("services")->find($request->contract_id);
+        if (!$contract) return ["success" => false, "message" => "Kontrak tidak ditemukan.", "status" => 400];
+        $old_extras = $contract->extras ?? [];
+        $old_extras_remap = [];
+        $old_extra_key_array = [];
+        foreach ($old_extras as $oe) {
+            $old_extra_key_array[] = $oe['key'];
+            $old_extras_remap[$oe['key']] = $oe;
+        }
+
         $is_posted_rules = !$request->is_posted ? "" : "required|";
 
         $requestData = $request->all();
@@ -1066,24 +1076,46 @@ class ContractService extends BaseService
             "start_date" => $is_posted_rules . "date|nullable",
             "end_date" => $is_posted_rules . "date|nullable",
             "extras" => "array|nullable",
-            "extras.*.type" => "in:1,2,3|required_with:extras",
+            "extras.*.key" => "nullable|in:" . implode(",", $old_extra_key_array),
+            "extras.*.type" => [
+                "in:1,2,3",
+                "required_with:extras",
+                function ($attribute, $value, $fail) use ($requestData, $old_extras_remap) {
+                    $index = explode(".", $attribute)[1];
+                    $key = isset($requestData["extras"][$index]["key"]) ? $requestData["extras"][$index]["key"] : NULL;
+                    $issetInOld = isset($old_extras_remap[$key]);
+                    if ($issetInOld && ($value != $old_extras_remap[$key]['type'])) {
+                        $fail("The " . $attribute . " can be change.");
+                    }
+                }
+            ],
             "extras.*.name" => "required_with:extras",
             "extras.*.value" => [
-                "required_with:extras",
+                "required_without:extras.*.key",
                 function ($attribute, $value, $fail) use ($requestData) {
                     $index = explode(".", $attribute)[1];
                     $type = $requestData["extras"][$index]["type"];
+                    $key = isset($requestData["extras"][$index]["key"]) ? $requestData["extras"][$index]["key"] : NULL;
+                    $issetInOld = isset($old_extras_remap[$key]);
                     if ($type == 1 && !is_string($value)) {
                         $fail("The " . $attribute . " must be an string if type is 1.");
                     }
                     if ($type == 2 && !is_array($value)) {
                         $fail("The " . $attribute . " must be an array if type is 2.");
                     }
-                    if ($type == 3 && (!is_a($value, "Illuminate\Http\UploadedFile") || !$value->isValid())) {
-                        $fail("The " . $attribute . " must be a valid file if type is 3.");
+                    if ($type == 3) {
+                        if (($key == NULL && !$issetInOld) && (!is_a($value, "Illuminate\Http\UploadedFile") || !$value->isValid())) {
+                            $fail("The " . $attribute . " must be a valid file if type is 3 and key not exist in old data.");
+                        }
                     }
                 }
             ],
+            "extras.*.is_deleted" => "boolean|nullable",
+            "services" => "array|nullable",
+            "services.*.product_id" => "required_with:services|numeric",
+            "services.*.pax" => "required_with:services",
+            "services.*.price" => "required_with:services",
+            "services.*.unit" => "required_with:services:in:jam,hari,bulan,tahun"
         ]);
 
         if ($validator->fails()) {
@@ -1091,59 +1123,144 @@ class ContractService extends BaseService
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        $history = new ContractHistory();
-        $history->category = 'addendum';
-        $history->contract_id = $request->contract_id;
-        $history->code_number = $request->code_number ?? NULL;
-        $history->title = $request->title ?? NULL;
-        $history->client_id = $request->client_id ?? NULL;
-        $history->requester_id = $request->requester_id ?? NULL;
-        $history->initial_date = $request->initial_date ?? NULL;
-        $history->start_date = $request->start_date ?? NULL;
-        $history->end_date = $request->end_date ?? NULL;
-        $history->is_posted = (int)$request->is_posted ?? NULL;
-        $current_time = date('Y-m-d H:i:s');
-        $history->created_at = $current_time;
-        $history->created_by = auth()->user()->id;
-        $history->updated_at = $current_time;
-        $history->extras = $request->extras ?? [];
-        $history->save();
-
-        $extras_arr = $request->extras ?? [];
-        $extras = [];
-        $fileService = new FileService;
-        foreach ($extras_arr as $e) {
-            $extra = [];
-            $extra["key"] = Str::uuid()->toString();
-            $extra["type"] = $e['type'];
-            $extra["name"] = $e['name'];
-            if ($e['type'] == 3) {
-                $file = $e['value'];
-                $add_file_response = $fileService->addFile($history->id, $file, 'App\Contract', 'contract_history_extra_file', 'Contract', false);
-                if ($add_file_response["success"]) {
-                    $extra['value'] = $add_file_response["new_data"];
-                }
-            } else {
-                $extra["value"] = $e['value'];
-            }
-            $extras[] = $extra;
-        }
-
-        $history->extras = $extras;
-        $history->save();
-
-        $logDataNew = clone $history;
-        $logDataNew->services();
-
-        $logProperties = [
-            "log_type" => "created_contract_history",
-            "old" => null,
-            "new" => $logDataNew
-        ];
-        $this->logService->addLogContractHistory($history->id, auth()->user()->id, "Created", $logProperties, null);
         try {
+            DB::beginTransaction();
+            $history = new ContractHistory();
+            $history->category = 'addendum';
+            $history->contract_id = $request->contract_id;
+            $history->code_number = $request->code_number ?? NULL;
+            $history->title = $request->title ?? NULL;
+            $history->client_id = $request->client_id ?? NULL;
+            $history->requester_id = $request->requester_id ?? NULL;
+            $history->initial_date = $request->initial_date ?? NULL;
+            $history->start_date = $request->start_date ?? NULL;
+            $history->end_date = $request->end_date ?? NULL;
+            $history->is_posted = 1;
+            $current_time = date('Y-m-d H:i:s');
+            $history->created_at = $current_time;
+            $history->created_by = auth()->user()->id;
+            $history->updated_at = $current_time;
+
+            // Extra Section
+            $fileService = new FileService;
+            $extras_arr = $request->extras ?? [];
+            $extras = [];
+            $extra_key_array = [];
+            foreach ($extras_arr as $k => $e) {
+                $extra = [];
+                // $extra["key"] = Str::uuid()->toString();
+                $isset_key = isset($e["key"]);
+                $is_deleted = isset($e["is_deleted"]) ? $e["is_deleted"] : false;
+                $extra["key"] = $key = $isset_key ? $e["key"] : Str::uuid()->toString();
+                $extra_key_array[] = $key;
+                $extra["type"] = $e['type'];
+                $extra["name"] = $e['name'];
+
+                if ($isset_key) {
+                    if ($is_deleted) { // for_delete
+                        if ($e["type"] == 3) {
+                            $fileService->deleteForceFile($old_extras_remap[$key]["value"]["id"]);
+                        }
+                        unset($old_extras_remap[$key]);
+                        unset($extras_arr[$k]);
+                        continue;
+                    } else {
+                        if ($e["type"] == 3) { //for_update
+                            if (is_a($e["value"], "Illuminate\Http\UploadedFile")) {
+                                try {
+                                    $fileService->deleteForceFile($old_extras_remap[$key]["value"]['id']);
+                                } catch (Exception $err) {
+                                    echo $err;
+                                }
+                                $file = $e["value"];
+                                $add_file_response = $fileService->addFile($history->id, $file, 'App\ContractHistory', 'contract_history_extra_file', 'ContractHistory', false);
+                                if ($add_file_response["success"]) {
+                                    $extra["value"] = $add_file_response["new_data"];
+                                }
+                            } else {
+                                try {
+                                    $extra["value"] = $old_extras_remap[$key]["value"];
+                                } catch (Exception $err) {
+                                    echo $err;
+                                }
+                            }
+                        } else {
+                            $extra["value"] = $e["value"];
+                        }
+                    }
+                } else {
+                    // skip if new but is_deleted true
+                    if ($is_deleted) continue;
+                    // new data
+                    if ($e['type'] == 3) {
+                        $file = $e['value'];
+                        $add_file_response = $fileService->addFile($history->id, $file, 'App\ContractHistory', 'contract_history_extra_file', 'ContractHistory', false);
+                        if ($add_file_response["success"]) {
+                            $extra['value'] = $add_file_response["new_data"];
+                        }
+                    } else {
+                        $extra["value"] = $e['value'];
+                    }
+                }
+                $extras[] = $extra;
+            }
+
+            $diff_extra = array_diff($old_extra_key_array, $extra_key_array);
+            $old_extras = [];
+            foreach ($diff_extra as $d) {
+                $old_extras[] = $old_extras_remap[$d];
+            }
+
+            $extras = array_merge($old_extras, $extras);
+            $history->extras = $extras;
+
+             // SERVICES
+            // ContractProduct::where("contract_id", $contract->id)->delete();
+            $services = $request->services ?? [];
+            $serviceData = [];
+            foreach ($services as $s) {
+                $s = (object)$s;
+                $serviceData[] = [
+                    "product_id" => $s->product_id,
+                    "contract_id" => $history->contract_id,
+                    "contract_history_id" => $history->id,
+                    "pax" => $s->pax,
+                    "price" => $s->price,
+                    "unit" => $s->unit,
+                    "created_at" => $current_time,
+                    "updated_at" => $current_time,
+                ];
+            };
+            $history->save();
+
+            $contract->code_number = $history->code_number;
+            $contract->title = $history->title;
+            $contract->client_id = (int)$history->client_id;
+            $contract->requester_id = (int)$history->requester_id;
+            $contract->initial_date = $history->initial_date;
+            $contract->start_date = $history->start_date;
+            $contract->end_date = $history->end_date;
+            $contract->extras = $history->extras;
+            $contract->is_posted = $history->is_posted;
+            $contract->contract_history_id_active = $history->id;
+            $contract->updated_at = $current_time;
+            $contract->save();
+
+            $services = ContractProduct::insert($serviceData);
+            $history->services();
+
+            $logDataNew = clone $history;
+
+            $logProperties = [
+                "log_type" => "created_contract_history",
+                "old" => null,
+                "new" => $logDataNew
+            ];
+            $this->logService->addLogContractHistory($history->id, auth()->user()->id, "Created", $logProperties, null);
+            DB::commit();
             return ["success" => true, "message" => "Data Berhasil Ditambahkan", "data" => $history, "status" => 200];
         } catch (Exception $err) {
+            DB::rollBack();
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
@@ -1342,14 +1459,11 @@ class ContractService extends BaseService
             $contract->extras = $history->extras;
             $contract->is_posted = $history->is_posted;
             $contract->contract_history_id_active = $history->id;
-            $current_time = date('Y-m-d H:i:s');
             $contract->updated_at = $current_time;
             $contract->save();
 
             $services = ContractProduct::insert($serviceData);
             $history->services();
-
-            $contract->contract_history_id_active = $history->id;
 
             $logDataNew = clone $history;
 
