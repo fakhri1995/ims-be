@@ -789,7 +789,7 @@ class ContractService extends BaseService
         $contractInvoice = ContractInvoice::with("service_attribute_values", "service_attribute_values.product", "bank")->find($id);
         if (!$contractInvoice) return ["success" => false, "message" => "Data tidak ditemukan.", "status" => 400];
         $history = ContractHistory::select()->addSelect(DB::raw(
-            "DATEDIFF(contracts.end_date, CURDATE()) as duration"
+            "DATEDIFF(contract_histories.end_date, CURDATE()) as duration"
         ))->with("client", "requester")->find($contractInvoice->contract_history_id);
 
         // $history->contract_invoice = $contractInvoice;
