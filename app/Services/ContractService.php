@@ -192,7 +192,9 @@ class ContractService extends BaseService
             $contract->is_posted = $request->is_posted ?? 0;
             $current_time = date('Y-m-d H:i:s');
             $contract->created_at = $current_time;
+            $contract->created_by = auth()->user()->id;
             $contract->updated_at = $current_time;
+            $contract->extras = $request->extras ?? [];
             $contract->save();
 
             $extras_arr = $request->extras ?? [];
@@ -232,6 +234,7 @@ class ContractService extends BaseService
             $history->extras = $contract->extras;
             $history->is_posted = 1;
             $history->created_at = $current_time;
+            $history->created_by = auth()->user()->id;
             $history->updated_at = $current_time;
             $history->save();
 
@@ -1101,7 +1104,9 @@ class ContractService extends BaseService
         $history->is_posted = (int)$request->is_posted ?? NULL;
         $current_time = date('Y-m-d H:i:s');
         $history->created_at = $current_time;
+        $history->created_by = auth()->user()->id;
         $history->updated_at = $current_time;
+        $history->extras = $request->extras ?? [];
         $history->save();
 
         $extras_arr = $request->extras ?? [];
