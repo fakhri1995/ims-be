@@ -234,9 +234,8 @@ class ContractService extends BaseService
             $history->extras = $contract->extras;
             $history->is_posted = 1;
             $history->created_at = $current_time;
-            $contract->created_by = auth()->user()->id;
-            $contract->updated_at = $current_time;
-            $contract->extras = $request->extras ?? [];
+            $history->created_by = auth()->user()->id;
+            $history->updated_at = $current_time;
             $history->save();
 
             $logDataNew = clone $contract;
