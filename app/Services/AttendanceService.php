@@ -1190,9 +1190,16 @@ class AttendanceService{
         $task_id = $request->get('task_id');
         $task = ProjectTask::find($task_id);
         if($task === null) return ["success" => false, "message" => "Task Tidak Ditemukan", "status" => 400];
+
+        $login_id = auth()->user()->id;
+        $today = date('Y-m-d');
+        $activity_exists = AttendanceTaskActivity::with('task')->where('user_id', $login_id)->whereDate('updated_at', '=', $today)
+        ->where('task_id', $task_id)->get();
+        if(count($activity_exists) != 0) return ["success" => false, "message" => "Task Sudah Ditambahkan Hari ini", "status" => 400];
+
         try{
             $task_activity = new AttendanceTaskActivity();
-            $task_activity->user_id = auth()->user()->id;
+            $task_activity->user_id = $login_id;
             $task_activity->task_id = $task_id;
             $task_activity->updated_at = date('Y-m-d H:i:s');
             $task_activity->activity = $task->name;
@@ -1213,8 +1220,13 @@ class AttendanceService{
             foreach($task_ids as $task_id){
                 $task = ProjectTask::find($task_id);
                 if($task === null) return ["success" => false, "message" => "Task Tidak Ditemukan", "status" => 400];
+                $login_id = auth()->user()->id;
+                $today = date('Y-m-d');
+                $activity_exists = AttendanceTaskActivity::with('task')->where('user_id', $login_id)->whereDate('updated_at', '=', $today)
+                ->where('task_id', $task_id)->get();
+                if(count($activity_exists) != 0) return ["success" => false, "message" => "Task Sudah Ditambahkan Hari ini", "status" => 400];
                 $task_activity = new AttendanceTaskActivity();
-                $task_activity->user_id = auth()->user()->id;
+                $task_activity->user_id = $login_id;
                 $task_activity->task_id = $task_id;
                 $task_activity->updated_at = date('Y-m-d H:i:s');
                 $task_activity->activity = $task->name;
