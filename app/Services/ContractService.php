@@ -1217,6 +1217,7 @@ class ContractService extends BaseService
 
             $extras = array_merge($old_extras, $extras);
             $history->extras = $extras;
+            $history->save();
 
             // SERVICES
             // ContractProduct::where("contract_id", $contract->id)->delete();
@@ -1235,7 +1236,9 @@ class ContractService extends BaseService
                     "updated_at" => $current_time,
                 ];
             };
-            $history->save();
+
+            $services = ContractProduct::insert($serviceData);
+            $history->services();
 
             $contract->code_number = $history->code_number;
             $contract->title = $history->title;
@@ -1249,9 +1252,6 @@ class ContractService extends BaseService
             $contract->contract_history_id_active = $history->id;
             $contract->updated_at = $current_time;
             $contract->save();
-
-            $services = ContractProduct::insert($serviceData);
-            $history->services();
 
             $logDataNew = clone $history;
 
