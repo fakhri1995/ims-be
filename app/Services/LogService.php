@@ -1240,6 +1240,35 @@ class LogService
         $this->addLogContractFunction($contract_id, $causer_id, $log_name, $properties, $notes, $description);
     }
 
+    public function getContractLogs($request, $route_name)
+    {
+        $globalService = new GlobalService;
+        $access = $globalService->checkRoute($route_name);
+        if ($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "contract_id" => "required|numeric",
+            "rows" => "numeric",
+            "page" => "numeric"
+        ]);
+
+        if ($validator->fails()) {
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $contract_id = $request->contract_id;
+        $keyword = $request->keyword ??  NULL;
+        $rows = $request->rows ?? NULL;
+        $contractLog = ActivityLogContract::where("contract_id", $contract_id)
+            ->where("log_name", "!=", "Notes")
+            ->where("description", "LIKE", "%$keyword%")
+            ->orderBy("id", "desc");
+        $contractLog = $contractLog->paginate($rows);
+
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $contractLog, "status" => 200];
+    }
+
     public function addLogContractHistoryFunction($contract_history_id, $causer_id, $log_name, $properties, $notes, $description)
     {
 
@@ -1284,8 +1313,7 @@ class LogService
         $this->addLogContractHistoryFunction($contract_id, $causer_id, $log_name, $properties, $notes, $description);
     }
 
-
-    public function getContractLogs($request, $route_name)
+    public function getContractHistoryLogs($request, $route_name)
     {
         $globalService = new GlobalService;
         $access = $globalService->checkRoute($route_name);
@@ -1305,7 +1333,7 @@ class LogService
         $contract_id = $request->contract_id;
         $keyword = $request->keyword ??  NULL;
         $rows = $request->rows ?? NULL;
-        $contractLog = ActivityLogContract::where("contract_id", $contract_id)
+        $contractLog = ActivityLogContractHistory::where("contract_history_id", $contract_id)
             ->where("log_name", "!=", "Notes")
             ->where("description", "LIKE", "%$keyword%")
             ->orderBy("id", "desc");
