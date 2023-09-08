@@ -1330,10 +1330,10 @@ class LogService
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        $contract_id = $request->contract_id;
+        $contract_history_id = $request->contract_history_id;
         $keyword = $request->keyword ??  NULL;
         $rows = $request->rows ?? NULL;
-        $contractLog = ActivityLogContractHistory::where("contract_history_id", $contract_id)
+        $contractLog = ActivityLogContractHistory::where("contract_history_id", $contract_history_id)
             ->where("log_name", "!=", "Notes")
             ->where("description", "LIKE", "%$keyword%")
             ->orderBy("id", "desc");
