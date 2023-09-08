@@ -1320,7 +1320,7 @@ class LogService
         if ($access["success"] === false) return $access;
 
         $validator = Validator::make($request->all(), [
-            "contract_id" => "required|numeric",
+            "contract_history_id" => "required|numeric",
             "rows" => "numeric",
             "page" => "numeric"
         ]);
