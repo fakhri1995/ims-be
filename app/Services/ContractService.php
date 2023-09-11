@@ -1129,6 +1129,9 @@ class ContractService extends BaseService
 
         try {
             DB::beginTransaction();
+            $lastAddendum = ContractHistory::query()->where('contract_id', $contract->id)
+            ->orderBy('id', 'DESC')->first();
+
             $history = new ContractHistory();
             $history->category = 'addendum';
             $history->contract_id = $request->contract_id;
@@ -1254,10 +1257,11 @@ class ContractService extends BaseService
             $contract->save();
 
             $logDataNew = clone $history;
+            $logDataOld = clone $lastAddendum;
 
             $logProperties = [
                 "log_type" => "created_contract_history",
-                "old" => null,
+                "old" => $logDataOld,
                 "new" => $logDataNew
             ];
             $this->logService->addLogContractHistory($history->id, auth()->user()->id, "Created", $logProperties, null);
