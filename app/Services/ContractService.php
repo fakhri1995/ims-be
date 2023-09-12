@@ -1256,8 +1256,8 @@ class ContractService extends BaseService
             $contract->updated_at = $current_time;
             $contract->save();
 
-            $logDataNew = clone $history;
-            $logDataOld = clone $lastAddendum;
+            $logDataNew = ContractHistory::query()->with('services')->find($history->id);
+            $logDataOld = ContractHistory::query()->with('services')->find($lastAddendum->id);
 
             $logProperties = [
                 "log_type" => "created_contract_history",
@@ -1474,7 +1474,7 @@ class ContractService extends BaseService
             $contract->updated_at = $current_time;
             $contract->save();
 
-            $logDataNew = clone $history;
+            $logDataNew = ContractHistory::query()->with('services')->find($history->id);
 
             $logProperties = [
                 "log_type" => "updated_contract_history",
