@@ -28,11 +28,11 @@ class ContractHistory extends Model
 
     public function invoice_template()
     {
-        return $this->hasOne(ContractInvoiceTemplate::class, 'contract_id', 'contract_id');
+        return $this->hasOne(ContractInvoiceTemplate::class, 'contract_history_id', 'id');
     }
 
     public function service_template()
     {
-        return $this->hasOne(ContractProductTemplate::class, 'contract_id', 'contract_id');
+        return $this->hasOne(ContractProductTemplate::class, 'contract_history_id', 'id');
     }
 }
