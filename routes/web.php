@@ -690,6 +690,8 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/addContractHistory', 'ContractController@addContractHistory');
     $router->post('/updateContractHistory', 'ContractController@updateContractHistory');
     $router->delete('/deleteContractHistory', 'ContractController@deleteContractHistory');
+    // Contract Histories Routes - Log
+    $router->get('/getContractHistoryLogs', 'ActivityLogController@getContractHistoryLogs');
 
 });
 

@@ -21,7 +21,7 @@ class ActivityLogContractHistory extends Model
         ])->select('id', 'name')->with('roles:name');
     }
 
-    public function contract()
+    public function contract_history()
     {
         return $this->belongsTo(ContractHistory::class, 'contract_history_id');
     }

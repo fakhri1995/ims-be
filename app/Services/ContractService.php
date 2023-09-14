@@ -238,6 +238,9 @@ class ContractService extends BaseService
             $history->updated_at = $current_time;
             $history->save();
 
+            $contract->contract_history_id_active = $history->id;
+            $contract->save();
+
             $logDataNew = clone $contract;
             $logDataNew->services();
 
@@ -263,7 +266,7 @@ class ContractService extends BaseService
         $id = $request->id;
         $contract = Contract::with("services")->find($id);
         if (!$contract) return ["success" => false, "message" => "Data tidak ditemukan.", "status" => 400];
-        $history = ContractHistory::query()->where('contract_id', $id)->with('services')->first();
+        $history = ContractHistory::query()->where('contract_id', $id)->where('category', 'initial')->with('services')->first();
         if (!$history) return ["success" => false, "message" => "Data Initial tidak ditemukan.", "status" => 400];
         $logDataOld = clone $contract;
         $old_extras = $contract->extras;
@@ -342,7 +345,7 @@ class ContractService extends BaseService
             $contract->initial_date = $request->initial_date ?? NULL;
             $contract->start_date = $request->start_date ?? NULL;
             $contract->end_date = $request->end_date ?? NULL;
-            $contract->extras = $request->extras ?? NULL;
+            $contract->extras = $request->extras ?? [];
             $contract->is_posted = (int)$request->is_posted ?? NULL;
             $current_time = date('Y-m-d H:i:s');
             $contract->updated_at = $current_time;
@@ -421,7 +424,8 @@ class ContractService extends BaseService
             $contract->extras = $extras;
 
             // SERVICES
-            // ContractProduct::where("contract_id", $contract->id)->delete();
+            ContractProduct::where("contract_id", $contract->id)
+                ->where('contract_history_id', $history->id)->delete();
             $services = $request->services ?? [];
             $serviceData = [];
             foreach ($services as $s) {
@@ -446,7 +450,7 @@ class ContractService extends BaseService
             $history->initial_date = $request->initial_date ?? NULL;
             $history->start_date = $request->start_date ?? NULL;
             $history->end_date = $request->end_date ?? NULL;
-            $history->extras = $request->extras ?? NULL;
+            $history->extras = $extras;
             $history->is_posted = 1;
             $history->updated_at = $current_time;
             $history->save();
@@ -472,7 +476,7 @@ class ContractService extends BaseService
 
             DB::commit();
             return ["success" => true, "message" => "Data Berhasil Diubah", "data" => $contract, "status" => 200];
-        } catch (Exception $err) {
+        } catch (Throwable $err) {
             DB::rollBack();
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -1125,6 +1129,9 @@ class ContractService extends BaseService
 
         try {
             DB::beginTransaction();
+            $lastAddendum = ContractHistory::query()->where('contract_id', $contract->id)
+            ->orderBy('id', 'DESC')->first();
+
             $history = new ContractHistory();
             $history->category = 'addendum';
             $history->contract_id = $request->contract_id;
@@ -1173,7 +1180,7 @@ class ContractService extends BaseService
                                     echo $err;
                                 }
                                 $file = $e["value"];
-                                $add_file_response = $fileService->addFile($history->id, $file, 'App\ContractHistory', 'contract_history_extra_file', 'ContractHistory', false);
+                                $add_file_response = $fileService->addFile($contract->id, $file, 'App\Contract', 'contract_extra_file', 'Contract', false);
                                 if ($add_file_response["success"]) {
                                     $extra["value"] = $add_file_response["new_data"];
                                 }
@@ -1194,7 +1201,7 @@ class ContractService extends BaseService
                     // new data
                     if ($e['type'] == 3) {
                         $file = $e['value'];
-                        $add_file_response = $fileService->addFile($history->id, $file, 'App\ContractHistory', 'contract_history_extra_file', 'ContractHistory', false);
+                        $add_file_response = $fileService->addFile($contract->id, $file, 'App\Contract', 'contract_extra_file', 'Contract', false);
                         if ($add_file_response["success"]) {
                             $extra['value'] = $add_file_response["new_data"];
                         }
@@ -1213,8 +1220,9 @@ class ContractService extends BaseService
 
             $extras = array_merge($old_extras, $extras);
             $history->extras = $extras;
+            $history->save();
 
-             // SERVICES
+            // SERVICES
             // ContractProduct::where("contract_id", $contract->id)->delete();
             $services = $request->services ?? [];
             $serviceData = [];
@@ -1231,7 +1239,9 @@ class ContractService extends BaseService
                     "updated_at" => $current_time,
                 ];
             };
-            $history->save();
+
+            $services = ContractProduct::insert($serviceData);
+            $history->services();
 
             $contract->code_number = $history->code_number;
             $contract->title = $history->title;
@@ -1240,20 +1250,18 @@ class ContractService extends BaseService
             $contract->initial_date = $history->initial_date;
             $contract->start_date = $history->start_date;
             $contract->end_date = $history->end_date;
-            $contract->extras = $history->extras;
+            $contract->extras = $extras;
             $contract->is_posted = $history->is_posted;
             $contract->contract_history_id_active = $history->id;
             $contract->updated_at = $current_time;
             $contract->save();
 
-            $services = ContractProduct::insert($serviceData);
-            $history->services();
-
-            $logDataNew = clone $history;
+            $logDataNew = ContractHistory::query()->with('services')->find($history->id);
+            $logDataOld = ContractHistory::query()->with('services')->find($lastAddendum->id);
 
             $logProperties = [
                 "log_type" => "created_contract_history",
-                "old" => null,
+                "old" => $logDataOld,
                 "new" => $logDataNew
             ];
             $this->logService->addLogContractHistory($history->id, auth()->user()->id, "Created", $logProperties, null);
@@ -1431,7 +1439,8 @@ class ContractService extends BaseService
             $history->extras = $extras;
 
             // SERVICES
-            // ContractProduct::where("contract_id", $contract->id)->delete();
+            ContractProduct::where("contract_id", $contract->id)
+                ->where('contact_history_id', $history->id)->delete();
             $services = $request->services ?? [];
             $serviceData = [];
             foreach ($services as $s) {
@@ -1449,6 +1458,9 @@ class ContractService extends BaseService
             };
             $history->save();
 
+            $services = ContractProduct::insert($serviceData);
+            $history->services();
+
             $contract->code_number = $history->code_number;
             $contract->title = $history->title;
             $contract->client_id = (int)$history->client_id;
@@ -1462,10 +1474,7 @@ class ContractService extends BaseService
             $contract->updated_at = $current_time;
             $contract->save();
 
-            $services = ContractProduct::insert($serviceData);
-            $history->services();
-
-            $logDataNew = clone $history;
+            $logDataNew = ContractHistory::query()->with('services')->find($history->id);
 
             $logProperties = [
                 "log_type" => "updated_contract_history",
