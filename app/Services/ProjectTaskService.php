@@ -5,6 +5,7 @@ namespace App\Services;
 use App\ActivityLogProjectTask;
 use App\Helpers\MockApiHelper;
 use App\Company;
+use App\Exports\ProjectsExport;
 use App\Project;
 use App\ProjectCategory;
 use App\ProjectCategoryList;
@@ -17,6 +18,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProjectTaskService{
     
@@ -732,7 +734,7 @@ class ProjectTaskService{
         }
 
         $id = $request->id;
-        $projectTask = ProjectTask::with("project","task_staffs","task_staffs.profileImage")->find($id);
+        $projectTask = ProjectTask::with("project","task_staffs","task_staffs.profileImage", "categories")->find($id);
         if(!$projectTask) return ["success" => false, "message" => "Data tidak ditemukan", "status" => "400"];
 
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projectTask, "status" => 200];
@@ -764,7 +766,7 @@ class ProjectTaskService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        $projectTasks = ProjectTask::with('task_staffs',"task_staffs.profileImage",'status', 'project');
+        $projectTasks = ProjectTask::with('task_staffs',"task_staffs.profileImage",'status', 'project', 'categories');
 
         $rows = $request->rows ?? 5;
         $user_id = $request->user_id;
@@ -813,7 +815,9 @@ class ProjectTaskService{
             "task_staffs" => "array",
             "task_staffs.*" => "numeric",
             "status_id" => "numeric|nullable",
-            "description" => "string"
+            "description" => "string",
+            "categories" => "array",
+            "categories.*" => "string"
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -877,6 +881,25 @@ class ProjectTaskService{
             $task_staffs_arr = User::select("id")->whereIn("id",$task_staffs)->pluck("id")->toArray();
             $task_staffs_diff = array_diff($task_staffs,$task_staffs_arr);
             if(count($task_staffs_diff)) return ["success" => false, "message" => "Task Staff Id : [".implode(", ",$task_staffs_diff)."] tidak ditemukan", "status" => 400];
+        }
+
+        $current_time = date("Y-m-d H:i:s");
+        $categories = $request->categories ?? [];
+        if($categories){
+            $categories_list = ProjectCategoryList::whereIn("name",$categories)->get();
+            $categories_list_name = $categories_list->pluck("name")->toArray();
+            $categories_list_ids = $categories_list->pluck("id")->toArray();
+            $categories_name_diff = array_udiff($categories, $categories_list_name, 'strcasecmp');
+            foreach($categories_name_diff as $cnf){
+                $category = new ProjectCategoryList;
+                $category->name = ucfirst($cnf);
+                $category->created_at = $current_time;
+                $category->updated_at = $current_time;
+                $category->save();
+                $categories_list_ids[] = $category->id;
+            }
+
+            $projectTask->categories()->sync($categories_list_ids);
         }
 
         $projectTask->save();
@@ -1106,6 +1129,24 @@ class ProjectTaskService{
         $projectTasks = $projectTasks->paginate($rows);
         
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projectTasks, "status" => 200];
+    }
+
+    private function projectExport($from, $to)
+    {
+        ob_end_clean(); // this
+        ob_start(); // and this
+        return Excel::download(new ProjectsExport($from, $to), 'ProjectsReport.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+    }
+
+    public function exportProjects($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+    
+        $from = $request->get('from', null);
+        $to = $request->get('to', null);
+        $excel = $this->projectExport($from, $to);
+        return ["success" => true, "message" => "Berhasil Export Attendance Activity", "data" => $excel, "status" => 200];
     }
 
     public function getProjectTasksDeadline($request, $route_name)
