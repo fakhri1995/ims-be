@@ -632,6 +632,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getClientProjectsCount', 'ProjectTaskController@getClientProjectsCount');
     $router->get('/getProjectsDeadline', 'ProjectTaskController@getProjectsDeadline');
     $router->get('/getClientProjectsDeadline', 'ProjectTaskController@getClientProjectsDeadline');
+    $router->get('/exportProjects', 'ProjectTaskController@exportProjects');
     // Project & Task Management - Task
     $router->get('/getProjectTask', 'ProjectTaskController@getProjectTask');
     $router->get('/getProjectTasks', 'ProjectTaskController@getProjectTasks');
