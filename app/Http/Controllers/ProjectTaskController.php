@@ -269,4 +269,13 @@ class ProjectTaskController extends Controller
         $response = $this->projectTaskService->updateProjectCategoryListClient($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    public function exportProjects(Request $request)
+    {
+        $route_name = "PROJECTS_EXPORT";
+
+        $response = $this->projectTaskService->exportProjects($request, $route_name);
+        if(!$response['success']) return response()->json($response, $response['status']);
+        return $response['data'];
+    }
 }
