@@ -1557,7 +1557,7 @@ class ContractService extends BaseService
             $contractNew = Contract::find($history->contract_id);
 
             $logPropertiesContract = [
-                "log_type" => "created_addendum",
+                "log_type" => "deleted_addendum",
                 "old" => $contractOld,
                 "new" => $contractNew
             ];
