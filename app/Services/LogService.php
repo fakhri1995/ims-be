@@ -1200,11 +1200,11 @@ class LogService
     {
 
         $log_name_option = [
-            "Created", "Updated", "Deleted", "Notes"
+            "Created", "Updated", "Deleted", "Notes", "Created Addendum", "Deleted Addendum"
         ];
 
         $log_type_option = [
-            "created_contract", "updated_contract", "deleted_contract",
+            "created_contract", "updated_contract", "deleted_contract", "created_addendum", "deleted_addendum"
         ];
 
         if (!in_array($log_name, $log_name_option)) throw new Exception('log_name invalid');
