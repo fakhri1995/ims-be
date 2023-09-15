@@ -1273,7 +1273,7 @@ class ContractService extends BaseService
                 "new" => $contractNew
             ];
             $this->logService->addLogContractHistory($history->id, auth()->user()->id, "Created", $logPropertiesAddendum, null);
-            $this->logService->addLogContract($history->id, auth()->user()->id, "Created Addendum", $logPropertiesContract, null);
+            $this->logService->addLogContract($contract->id, auth()->user()->id, "Created Addendum", $logPropertiesContract, null);
             DB::commit();
             return ["success" => true, "message" => "Data Berhasil Ditambahkan", "data" => $history, "status" => 200];
         } catch (Exception $err) {
@@ -1563,7 +1563,7 @@ class ContractService extends BaseService
             ];
 
             $this->logService->addLogContractHistory($history->id, auth()->user()->id, "Deleted", $logProperties, null);
-            $this->logService->addLogContract($history->id, auth()->user()->id, "Deleted Addendum", $logPropertiesContract, null);
+            $this->logService->addLogContract($contract->id, auth()->user()->id, "Deleted Addendum", $logPropertiesContract, null);
             DB::commit();
             return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $history, "status" => 200];
         } catch (Exception $err) {
