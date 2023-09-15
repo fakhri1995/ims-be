@@ -1237,6 +1237,12 @@ class LogService
         } else if ($log_name == "Deleted") {
             $description = "Kontrak telah dihapus.";
         }
+        else if ($log_name == "Created Addendum") {
+            $description = "Ditambahkannya addendum.";
+        }
+        else if ($log_name == "Deleted Addendum") {
+            $description = "Dihapuskannya addendum.";
+        }
         $this->addLogContractFunction($contract_id, $causer_id, $log_name, $properties, $notes, $description);
     }
 

@@ -1131,6 +1131,8 @@ class ContractService extends BaseService
             DB::beginTransaction();
             $lastAddendum = ContractHistory::query()->where('contract_id', $contract->id)
             ->orderBy('id', 'DESC')->first();
+            $logDataOld = ContractHistory::query()->with('services')->find($lastAddendum->id);
+            $contractOld = clone $contract;
 
             $history = new ContractHistory();
             $history->category = 'addendum';
@@ -1257,14 +1259,21 @@ class ContractService extends BaseService
             $contract->save();
 
             $logDataNew = ContractHistory::query()->with('services')->find($history->id);
-            $logDataOld = ContractHistory::query()->with('services')->find($lastAddendum->id);
+            $contractNew = Contract::with("services")->find($request->contract_id);
 
-            $logProperties = [
+            $logPropertiesAddendum = [
                 "log_type" => "created_contract_history",
                 "old" => $logDataOld,
                 "new" => $logDataNew
             ];
-            $this->logService->addLogContractHistory($history->id, auth()->user()->id, "Created", $logProperties, null);
+
+            $logPropertiesContract = [
+                "log_type" => "created_addendum",
+                "old" => $contractOld,
+                "new" => $contractNew
+            ];
+            $this->logService->addLogContractHistory($history->id, auth()->user()->id, "Created", $logPropertiesAddendum, null);
+            $this->logService->addLogContract($history->id, auth()->user()->id, "Created Addendum", $logPropertiesContract, null);
             DB::commit();
             return ["success" => true, "message" => "Data Berhasil Ditambahkan", "data" => $history, "status" => 200];
         } catch (Exception $err) {
@@ -1518,6 +1527,7 @@ class ContractService extends BaseService
             $history = ContractHistory::find($id);
             if (!$history)  return ["success" => false, "message" => "Data addendum tidak ditemukan.", "status" => 400];
             $contract = Contract::find($history->contract_id);
+            $contractOld = clone $contract;
             if (!$contract)  return ["success" => false, "message" => "Data tidak ditemukan.", "status" => 400];
             $logDataOld = clone $history;
             $checkLastAddendum = ContractHistory::query()->where('contract_id', $contract->id)
@@ -1544,7 +1554,16 @@ class ContractService extends BaseService
                 "new" => null
             ];
 
+            $contractNew = Contract::find($history->contract_id);
+
+            $logPropertiesContract = [
+                "log_type" => "created_addendum",
+                "old" => $contractOld,
+                "new" => $contractNew
+            ];
+
             $this->logService->addLogContractHistory($history->id, auth()->user()->id, "Deleted", $logProperties, null);
+            $this->logService->addLogContract($history->id, auth()->user()->id, "Deleted Addendum", $logPropertiesContract, null);
             DB::commit();
             return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $history, "status" => 200];
         } catch (Exception $err) {
