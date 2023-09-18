@@ -12,7 +12,13 @@ class ProjectTasksExport implements FromView, WithTitle
 
     public function __construct($from, $to)
     {
-      $this->tasks = ProjectTask::with('project', 'status', 'task_staffs', 'categories')->whereBetween('end_date', [$from, $to])->whereNotNull("project_id")->orderBy("project_id")->get();
+      $tasks = ProjectTask::with('project', 'status', 'task_staffs', 'categories')->whereBetween('end_date', [$from, $to])->whereNotNull("project_id")->orderBy("project_id")->get();
+      $this->tasks = [];
+      foreach($tasks as $task){
+        $temp_task = $task;
+        $temp_task->description = strip_tags(strval($task->description));
+        $this->tasks[] = $temp_task;
+      }
     }
 
     public function view(): View

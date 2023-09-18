@@ -1195,7 +1195,7 @@ class AttendanceService{
         $today = date('Y-m-d');
         $activity_exists = AttendanceTaskActivity::with('task')->where('user_id', $login_id)->whereDate('updated_at', '=', $today)
         ->where('task_id', $task_id)->get();
-        if(count($activity_exists) != 0) return ["success" => false, "message" => "Task Sudah Ditambahkan Hari ini", "status" => 400];
+        if(count($activity_exists) != 0) return ["success" => false, "message" => "Task sudah berada di list aktivitas hari ini", "status" => 400];
 
         try{
             $task_activity = new AttendanceTaskActivity();

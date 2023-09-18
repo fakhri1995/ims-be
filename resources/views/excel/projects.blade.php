@@ -3,14 +3,14 @@
 <table>
     <thead>
     <tr>
-        <th>ID Proyek</th>
-        <th>Nama Proyek</th>
-        <th>Status Proyek</th>
-        <th>Tag Proyek</th>
-        <th>Staff Proyek</th>
-        <th>Tanggal Dimulai</th>
-        <th>Tanggal Estimasi Selesai</th>
-        <th>Jumlah Tugas</th>
+        <th width="10" style="background-color: #ffff00;">ID Proyek</th>
+        <th width="20" style="background-color: #ffff00;">Nama Proyek</th>
+        <th width="20" style="background-color: #ffff00;">Status Proyek</th>
+        <th width="20" style="background-color: #ffff00;">Tag Proyek</th>
+        <th width="20" style="background-color: #ffff00;">Staff Proyek</th>
+        <th width="20" style="background-color: #ffff00;">Tanggal Dimulai</th>
+        <th width="20" style="background-color: #ffff00;">Tanggal Estimasi Selesai</th>
+        <th width="15" style="background-color: #ffff00;">Jumlah Tugas</th>
     </tr>
     </thead>
     <tbody>
