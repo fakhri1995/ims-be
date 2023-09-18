@@ -778,16 +778,21 @@ class ProjectTaskService{
         $is_active = $request->is_active ?? NULL;
         $has_project = $request->has_project ?? NULL;
 
+        if($is_active) $projectTasks = $projectTasks->where(function ($query) {
+            $query->whereNull("end_date")
+            ->orWhereDate("end_date", ">=", date("Y-m-d"));
+        });
         if($project_id) $projectTasks = $projectTasks->where("project_id", $project_id);
         if($user_id) $projectTasks = $projectTasks->whereHas("task_staffs", function($q) use ($user_id){
             $q->where("users.id", $user_id);
         });
         if($keyword) {
             $project_ids = Project::where("name", "LIKE", "%$keyword%")->pluck("id");
-            $projectTasks = $projectTasks->where("name","LIKE","%$keyword%")->orWhereIn("project_id", $project_ids);
+            $projectTasks = $projectTasks->where(function($query) use ($keyword, $project_ids) {
+                $query->where("name","LIKE","%$keyword%")->orWhereIn("project_id", $project_ids);
+            });
         }
         if($status_ids) $projectTasks = $projectTasks->whereIn("status_id", $status_ids);
-        if($is_active) $projectTasks = $projectTasks->whereNull("end_date")->orWhereDate("end_date", ">=", date("Y-m-d"));
         if($has_project == 1) $projectTasks = $projectTasks->whereNotNull("project_id");
         else if($has_project == 0 && $has_project !== NULL) $projectTasks = $projectTasks->whereNull("project_id");
        

@@ -3,14 +3,14 @@
 <table>
     <thead>
     <tr>
-        <th>ID Tugas</th>
-        <th>Nama Tugas</th>
-        <th>Status Tugas</th>
-        <th>Staf Tugas</th>
-        <th>Tag Tugas</th>
-        <th>Tanggal Dimulai</th>
-        <th>Tanggal Selesai</th>
-        <th>Deskripsi Tugas</th>
+        <th width="10" style="background-color: #ffff00;">ID Tugas</th>
+        <th width="20" style="background-color: #ffff00;">Nama Tugas</th>
+        <th width="20" style="background-color: #ffff00;">Status Tugas</th>
+        <th width="20" style="background-color: #ffff00;">Staf Tugas</th>
+        <th width="20" style="background-color: #ffff00;">Tag Tugas</th>
+        <th width="20" style="background-color: #ffff00;">Tanggal Dimulai</th>
+        <th width="20" style="background-color: #ffff00;">Tanggal Selesai</th>
+        <th width="20" style="background-color: #ffff00;">Deskripsi Tugas</th>
     </tr>
     </thead>
     <tbody>
