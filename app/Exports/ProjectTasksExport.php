@@ -10,9 +10,9 @@ use Illuminate\Contracts\View\View;
 class ProjectTasksExport implements FromView, WithTitle
 {
 
-    public function __construct($from, $to)
+    public function __construct()
     {
-      $tasks = ProjectTask::with('project', 'status', 'task_staffs', 'categories')->whereBetween('end_date', [$from, $to])->whereNotNull("project_id")->orderBy("project_id")->get();
+      $tasks = ProjectTask::with('project', 'status', 'task_staffs', 'categories')->whereNotNull("project_id")->orderBy("project_id")->get();
       $this->tasks = [];
       foreach($tasks as $task){
         $temp_task = $task;

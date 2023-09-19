@@ -1136,11 +1136,11 @@ class ProjectTaskService{
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $projectTasks, "status" => 200];
     }
 
-    private function projectExport($from, $to)
+    private function projectExport()
     {
         ob_end_clean(); // this
         ob_start(); // and this
-        return Excel::download(new ProjectsExport($from, $to), 'ProjectsReport.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        return Excel::download(new ProjectsExport(), 'ProjectsReport.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
     public function exportProjects($request, $route_name)
@@ -1148,9 +1148,7 @@ class ProjectTaskService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
     
-        $from = $request->get('from', null);
-        $to = $request->get('to', null);
-        $excel = $this->projectExport($from, $to);
+        $excel = $this->projectExport();
         return ["success" => true, "message" => "Berhasil Export Attendance Activity", "data" => $excel, "status" => 200];
     }
 
