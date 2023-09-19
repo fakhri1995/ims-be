@@ -9,9 +9,9 @@ use Illuminate\Contracts\View\View;
 class ProjectsDetailExport implements FromView, WithTitle
 {
 
-    public function __construct($from, $to)
+    public function __construct()
     {
-      $this->projects = Project::with('status','categories', 'project_staffs')->withCount('tasks')->whereBetween('end_date', [$from, $to])->get();
+      $this->projects = Project::with('status','categories', 'project_staffs')->withCount('tasks')->get();
     }
 
     public function view(): View
