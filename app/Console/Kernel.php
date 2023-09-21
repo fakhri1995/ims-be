@@ -8,6 +8,7 @@ use App\Console\Commands\SetOverdueTasks;
 use App\Console\Commands\SearchGeoLocation;
 use App\Console\Commands\AutoCheckOutAttendance;
 use App\Console\Commands\Exclusive\SetContractHistory;
+use App\Console\Commands\Exclusive\SetDisplayOrderResume;
 use App\Console\Commands\GenerateDailyTask;
 use App\Console\Commands\GenerateWeeklyTask;
 use App\Console\Commands\GenerateMonthlyTask;
@@ -46,6 +47,7 @@ class Kernel extends ConsoleKernel
         GenerateOneHourLeftTaskNotification::class,
         RaiseLastPeriodPayslip::class,
         SetContractHistory::class,
+        SetDisplayOrderResume::class,
     ];
 
     /**

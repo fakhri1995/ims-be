@@ -23,11 +23,11 @@ class Resume extends Model
     }
 
     public function experiences(){
-        return $this->hasMany(ResumeExperience::class,'resume_id');
+        return $this->hasMany(ResumeExperience::class,'resume_id')->orderBy("display_order","asc");
     }
 
     public function projects(){
-        return $this->hasMany(ResumeProject::class,'resume_id');
+        return $this->hasMany(ResumeProject::class,'resume_id')->orderBy("display_order","asc");
     }
 
     public function skills(){
