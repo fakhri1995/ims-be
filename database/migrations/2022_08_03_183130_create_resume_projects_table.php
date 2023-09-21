@@ -19,6 +19,7 @@ class CreateResumeProjectsTable extends Migration
             $table->date("year");
             $table->text("description");
             $table->unsignedBigInteger("resume_id");
+            $table->unsignedInteger('display_order');
 
         });
     }

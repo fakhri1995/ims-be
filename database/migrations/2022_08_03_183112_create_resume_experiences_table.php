@@ -21,6 +21,7 @@ class CreateResumeExperiencesTable extends Migration
             $table->date('end_date')->nullable();
             $table->text('description');
             $table->unsignedBigInteger("resume_id");
+            $table->unsignedInteger('display_order');
 
         });
     }
