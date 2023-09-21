@@ -433,7 +433,7 @@ class ResumeService{
             $experience = $resume->experiences()->find($id);
             if(!$experience) return ["success" => false, "message" => "Experience ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
 
-            $after_id = $request->after_id ?? NULL;
+            $after_id = $requestExperience->after_id ?? NULL;
             if($after_id != NULL){
                 $experienceAfter = $resume->experiences()->find($after_id);
                 if(!$experienceAfter) return ["success" => false, "message" => "After id tidak ditemukan", "status" => 400];
@@ -485,7 +485,7 @@ class ResumeService{
                 $project = $resume->projects()->find($id);
                 if(!$project) return ["success" => false, "message" => "Project ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
 
-                $after_id = $request->after_id ?? NULL;
+                $after_id = $requestProject->after_id ?? NULL;
                 if($after_id != NULL){
                     $projectAfter = $resume->projects()->find($after_id);
                     if(!$projectAfter) return ["success" => false, "message" => "After id tidak ditemukan", "status" => 400];
