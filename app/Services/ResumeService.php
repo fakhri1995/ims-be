@@ -230,24 +230,74 @@ class ResumeService{
             return ["success" => true, "message" => "Data Education Berhasil Ditambah",  "status" => 200];
         }
         else if($request->experience){
-            $requestExperience = (object)$request->experience;
-            $experience = new ResumeExperience();
-            $experience->role = $requestExperience->role;
-            $experience->company = $requestExperience->company;
-            $experience->start_date = $requestExperience->start_date;
-            $experience->end_date = $requestExperience->end_date;
-            $experience->description = $requestExperience->description;
-            if(!$resume->experiences()->save($experience)) return ["success" => false, "message" => "Gagal Mengubah Experience Resume", "status" => 400];
-            return ["success" => true, "message" => "Data Experience Berhasil Ditambah", "status" => 200];
+            try {
+                DB::beginTransaction();
+                $requestExperience = (object)$request->experience;
+
+                $after_id = $requestExperience->after_id ?? NULL;
+                if($after_id != NULL){
+                    $experienceAfter = ResumeExperience::find($after_id);
+                    if(!$experienceAfter) return ["success" => true, "message" => "After id tidak ditemukan", "status" => 200];
+                }
+
+                $experience = new ResumeExperience();
+                $experience->role = $requestExperience->role;
+                $experience->company = $requestExperience->company;
+                $experience->start_date = $requestExperience->start_date;
+                $experience->end_date = $requestExperience->end_date;
+                $experience->description = $requestExperience->description;
+
+                $experiences = new ResumeExperience();
+                if($after_id == NULL){
+                    $experiences->increment("display_order");
+                    $experience->display_order = 1;
+                }else{
+                    $experiences->where("display_order",">",$experienceAfter->display_order)->increment("display_order");
+                    $experience->display_order = $experienceAfter->display_order + 1;
+                }
+
+                $resume->experiences()->save($experience);
+                DB::commit();
+                return ["success" => true, "message" => "Data Experience Berhasil Ditambah", "status" => 200];
+            } catch (\Throwable $th) {
+                //throw $th;
+                DB::rollBack();
+                return ["success" => false, "message" => "Gagal Mengubah Experience Resume", "status" => 400];
+            }
         }
         else if($request->project){
-            $requestProject = (object)$request->project;
-            $project = new ResumeProject();
-            $project->name = $requestProject->name;
-            $project->year = !$requestProject->year ? null : $requestProject->year;
-            $project->description = $requestProject->description ?? "";
-            if(!$resume->projects()->save($project)) return ["success" => false, "message" => "Gagal Mengubah Project Resume", "status" => 400];
-            return ["success" => true, "message" => "Data Project Berhasil Ditambah", "status" => 200];
+            try {
+                DB::beginTransaction();
+                $requestProject = (object)$request->project;
+
+                $after_id = $requestProject->after_id ?? NULL;
+                if($after_id != NULL){
+                    $projectAfter = ResumeProject::find($after_id);
+                    if(!$projectAfter) return ["success" => true, "message" => "After id tidak ditemukan", "status" => 200];
+                }
+
+                $project = new ResumeProject();
+                $project->name = $requestProject->name;
+                $project->year = !$requestProject->year ? null : $requestProject->year;
+                $project->description = $requestProject->description ?? "";
+
+                $projects = new ResumeProject();
+                if($after_id == NULL){
+                    $projects->increment("display_order");
+                    $project->display_order = 1;
+                }else{
+                    $projects->where("display_order",">",$projectAfter->display_order)->increment("display_order");
+                    $project->display_order = $projectAfter->display_order + 1;
+                }
+
+                $resume->projects()->save($project);
+                DB::commit();
+                return ["success" => true, "message" => "Data Project Berhasil Ditambah", "status" => 200];
+            } catch (\Throwable $th) {
+                //throw $th;
+                DB::rollBack();
+                return ["success" => false, "message" => "Gagal Mengubah Project Resume", "status" => 400];
+            }
         }
         else if($request->skill){
             $requestSkill = (object)$request->skill;
