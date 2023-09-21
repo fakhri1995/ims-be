@@ -454,10 +454,10 @@ class ResumeService{
             }else{
                 if($experienceAfter->display_order < $experience->display_order){
                     $experiences
-                    ->where("display_order",">=",$experienceAfter->display_order)
+                    ->where("display_order",">",$experienceAfter->display_order)
                     ->where("display_order","<",$experience->display_order)
                     ->increment("display_order");
-                    $experience->display_order = $experienceAfter->display_order;
+                    $experience->display_order = $experienceAfter->display_order + 1;
                 }else{
                     $experiences
                     ->where("display_order",">",$experience->display_order)
@@ -504,10 +504,10 @@ class ResumeService{
                 }else{
                     if($projectAfter->display_order < $project->display_order){
                         $projects
-                        ->where("display_order",">=",$projectAfter->display_order)
+                        ->where("display_order",">",$projectAfter->display_order)
                         ->where("display_order","<",$project->display_order)
                         ->increment("display_order");
-                        $project->display_order = $projectAfter->display_order;
+                        $project->display_order = $projectAfter->display_order + 1;
                     }else{
                         $projects
                         ->where("display_order",">",$project->display_order)
