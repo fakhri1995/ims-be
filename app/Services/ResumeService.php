@@ -449,17 +449,17 @@ class ResumeService{
 
             $experiences = new ResumeExperience();
             if($after_id == NULL){
-                $experiences->withTrashed()->where("display_order","<",$experience->display_order)->increment("display_order");
+                $experiences->where("display_order","<",$experience->display_order)->increment("display_order");
                 $experience->display_order = 1;
             }else{
                 if($experienceAfter->display_order < $experience->display_order){
-                    $experiences->withTrashed()
-                    ->where("display_order",">",$experienceAfter->display_order)
+                    $experiences
+                    ->where("display_order",">=",$experienceAfter->display_order)
                     ->where("display_order","<",$experience->display_order)
                     ->increment("display_order");
-                    $experience->display_order = $experienceAfter->display_order + 1;
+                    $experience->display_order = $experienceAfter->display_order;
                 }else{
-                    $experiences->withTrashed()
+                    $experiences
                     ->where("display_order",">",$experience->display_order)
                     ->where("display_order","<=",$experienceAfter->display_order)
                     ->decrement("display_order");
@@ -472,7 +472,7 @@ class ResumeService{
             DB::commit();
                 return ["success" => true, "message" => "Data Experience Berhasil Diubah", "status" => 200];
             } catch (\Throwable $th) {
-                //throw $th;
+                throw $th;
                 DB::rollBack();
                 return ["success" => false, "message" => "Gagal Mengubah Experience Resume", "status" => 400];
             }
@@ -499,17 +499,17 @@ class ResumeService{
 
                 $projects = new ResumeExperience();
                 if($after_id == NULL){
-                    $projects->withTrashed()->where("display_order","<",$project->display_order)->increment("display_order");
+                    $projects->where("display_order","<",$project->display_order)->increment("display_order");
                     $project->display_order = 1;
                 }else{
                     if($projectAfter->display_order < $project->display_order){
-                        $projects->withTrashed()
-                        ->where("display_order",">",$projectAfter->display_order)
+                        $projects
+                        ->where("display_order",">=",$projectAfter->display_order)
                         ->where("display_order","<",$project->display_order)
                         ->increment("display_order");
-                        $project->display_order = $projectAfter->display_order + 1;
+                        $project->display_order = $projectAfter->display_order;
                     }else{
-                        $projects->withTrashed()
+                        $projects
                         ->where("display_order",">",$project->display_order)
                         ->where("display_order","<=",$projectAfter->display_order)
                         ->decrement("display_order");
