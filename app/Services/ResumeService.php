@@ -547,7 +547,7 @@ class ResumeService{
                 $project->year = !$requestProject->year ? null : $requestProject->year;
                 $project->description = $requestProject->description ?? "";
 
-                $projects = new ResumeExperience();
+                $projects = new ResumeProject();
                 if($after_id == NULL){
                     $projects->where("display_order","<",$project->display_order)->increment("display_order");
                     $project->display_order = 1;
