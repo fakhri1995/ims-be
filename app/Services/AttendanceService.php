@@ -543,7 +543,7 @@ class AttendanceService{
         if($access["success"] === false) return $access;
 
         $validator = Validator::make($request->all(), [
-            "is_hadir" => "boolean|required",
+            "is_hadir" => "boolean",
             "is_late" => "boolean",
             "sort_by" => "in:name",
             "sort_type" => "in:asc,desc"
