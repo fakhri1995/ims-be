@@ -3,8 +3,12 @@
 namespace App\Console\Commands\Exclusive;
 
 use App\Resume;
+use App\ResumeAchievement;
+use App\ResumeCertificate;
+use App\ResumeEducation;
 use App\ResumeExperience;
 use App\ResumeProject;
+use App\ResumeTraining;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -69,11 +73,51 @@ class SetDisplayOrderResume extends Command
                     }
                 }
 
+                // check udah pernah di set belum achievementnya, kalau belum harusnya display order ada yang null
+                $checkAchievement = ResumeAchievement::query()->where('resume_id', $list->id)->whereNull('display_order')->first();
+                if ($checkAchievement) {
+                    $achievements = ResumeAchievement::query()->where('resume_id', $list->id)->orderBy('id', 'DESC')->get();
+                    foreach ($achievements as $i => $item) {
+                        $item->display_order = $i + 1;
+                        $item->save();
+                    }
+                }
+
+                // check udah pernah di set belum educationnya, kalau belum harusnya display order ada yang null
+                $checkEducation = ResumeEducation::query()->where('resume_id', $list->id)->whereNull('display_order')->first();
+                if ($checkEducation) {
+                    $educations = ResumeEducation::query()->where('resume_id', $list->id)->orderBy('id', 'DESC')->get();
+                    foreach ($educations as $i => $item) {
+                        $item->display_order = $i + 1;
+                        $item->save();
+                    }
+                }
+
+                // check udah pernah di set belum certificatenya, kalau belum harusnya display order ada yang null
+                $checkCertificate = ResumeCertificate::query()->where('resume_id', $list->id)->whereNull('display_order')->first();
+                if ($checkCertificate) {
+                    $certificates = ResumeCertificate::query()->where('resume_id', $list->id)->orderBy('id', 'DESC')->get();
+                    foreach ($certificates as $i => $item) {
+                        $item->display_order = $i + 1;
+                        $item->save();
+                    }
+                }
+
+                // check udah pernah di set belum trainingnya, kalau belum harusnya display order ada yang null
+                $checkTraining = ResumeTraining::query()->where('resume_id', $list->id)->whereNull('display_order')->first();
+                if ($checkTraining) {
+                    $trainings = ResumeTraining::query()->where('resume_id', $list->id)->orderBy('id', 'DESC')->get();
+                    foreach ($trainings as $i => $item) {
+                        $item->display_order = $i + 1;
+                        $item->save();
+                    }
+                }
+
                 DB::commit();
-                if ($checkExperience || $checkProject) {
+                if ($checkExperience || $checkProject || $checkAchievement || $checkEducation || $checkCertificate || $checkTraining) {
                     dump('berhasil set resume id => ' . $list->id);
                 } else {
-                    dump('resume id => ' . $list->id . ' sudah di set sebelumnya atau tidak ada experience / project');
+                    dump('resume id => ' . $list->id . ' sudah di set sebelumnya atau tidak ada yang harus di set');
                 }
             } catch (\Throwable $th) {
                 DB::rollBack();
