@@ -512,7 +512,10 @@ class AttendanceService{
                 $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
             })->whereHas('user', function($q){
                 $q->where('role', 1)->where('company_id', auth()->user()->company_id);
-            })->with('user:id,name')->whereDate('check_in', '=', date("Y-m-d"))->get();
+            })->with('user:id,name')->whereDate('check_in', '=', date("Y-m-d"));
+            $late_attendances = count($users_attendances->where('is_late', 1)->get());
+            $on_time_attendances = count($users_attendances->where('is_late', 0)->get());
+            $users_attendances = $users_attendances->get();
             foreach($users_attendances as $user_attendance){
                 $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
                 $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
@@ -520,10 +523,13 @@ class AttendanceService{
             $attendance_user_ids = $users_attendances->pluck('user_id')->unique()->values();
             $absent_users = User::select('id','name', 'position')->with('attendanceForms:id,name', 'profileImage')->where('role', 1)->where('company_id', auth()->user()->company_id)->whereNotIn('id', $attendance_user_ids)->whereNull('deleted_at')->where('is_enabled', true)->get();
             $data = (object)[
+                'total_users' => count($users_attendances) + count($absent_users),
                 'users_attendances_count' => count($users_attendances),
                 'absent_users_count' => count($absent_users),
                 'users_attendances' => $users_attendances,
                 'absent_users' => $absent_users,
+                'late_count' => $late_attendances,
+                'on_time_count' => $on_time_attendances
             ];
             return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $data, "status" => 200];
         } catch(Exception $err){
@@ -549,7 +555,13 @@ class AttendanceService{
         }
 
         $is_hadir = $request->is_hadir;
+
         $is_late = $request->is_late ?? NULL;
+        $is_on_time = $request->is_on_time ?? NULL;
+        
+        $is_wfh = $request->is_wfh ?? NULL;
+        $is_wfo = $request->is_wfo ?? NULL;
+
         $keyword = $request->keyword ?? NULL;
         $rows = $request->rows ?? NULL;
         $sort_by = $request->sort_by ?? NULL;
@@ -557,7 +569,7 @@ class AttendanceService{
         $company_ids = $request->company_ids ? explode(",",$request->company_ids) : NULL;
         // try{
             $current_time = date('Y-m-d');
-            $users_attendances = User::select("id","name", "company_id")->with(["attendance_user" => function($q) use($current_time, $is_late){
+            $users_attendances = User::select("id","name", "company_id", "position")->with(["attendance_user" => function($q) use($current_time, $is_late){
                 $q->select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
                 ->whereDate("check_in","=",$current_time)
                 ->join('long_lat_lists AS check_in_list', function ($join) {
@@ -565,15 +577,21 @@ class AttendanceService{
                 })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
                     $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
                 });
-            }, "profileImage", "company"]);
+            }, "profileImage", "company"])->withCount("project_tasks");
 
             //filter
             if($keyword) $users_attendances = $users_attendances->where("name","LIKE","%$keyword%");
             
 
 
-            if($is_hadir) $users_attendances = $users_attendances->whereHas("attendance_user", function($q) use($current_time, $is_late){
-                if($is_late != NULL) $q->where("is_late",$is_late);
+            if($is_hadir) $users_attendances = $users_attendances->whereHas("attendance_user", function($q) use($current_time, $is_late, $is_on_time, $is_wfh, $is_wfo){
+                if($is_late && $is_on_time) ;
+                elseif($is_late != NULL) $q->where("is_late",$is_late);
+                elseif($is_on_time) $q->where("is_late",0);
+
+                if($is_wfh && $is_wfo);
+                elseif($is_wfh) $q->where("is_wfo", 0);
+                elseif($is_wfo)$q->where("is_wfo", 1);
                 $q->whereDate("check_in","=",$current_time);
                 return $q;
             });
