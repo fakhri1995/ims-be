@@ -92,7 +92,7 @@ class ResumeService{
         }
 
         $id = $request->id;
-        $resume = resume::with(['educations', 'experiences', 'projects', 'skills', 'trainings', 'certificates', 'achievements', 'assessment', 'assessmentResults', 'summaries'])->find($id);
+        $resume = Resume::with(['educations', 'experiences', 'projects', 'skills', 'trainings', 'certificates', 'achievements', 'assessment', 'assessmentResults', 'summaries'])->find($id);
         if(!$resume) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         if(auth()->user()->role == $this->globalService->guest_role_id && $resume->owner_id != auth()->user()->id){
             return ["success" => false, "message" => "Anda tidak memiliki akses ke resume ini", "status" => 400];
@@ -220,14 +220,39 @@ class ResumeService{
         }
 
         if($request->education){
+           try {
+            DB::beginTransaction();
             $requestEducation = (object)$request->education;
+
+            $after_id = $requestEducation->after_id ?? NULL;
+            if($after_id != NULL){
+                $educationAfter = ResumeEducation::find($after_id);
+                if(!$educationAfter) return ["success" => true, "message" => "After id tidak ditemukan", "status" => 200];
+            }
+
             $education = new ResumeEducation();
             $education->university = $requestEducation->university;
             $education->major = $requestEducation->major;
             $education->gpa = !$requestEducation->gpa ? NULL : $requestEducation->gpa;
             $education->graduation_year = $requestEducation->graduation_year;
-            if(!$resume->educations()->save($education)) return ["success" => false, "message" => "Gagal Mengubah Education Resume", "status" => 400];
+
+            $educations = new ResumeEducation();
+            if($after_id == NULL){
+                $educations->increment("display_order");
+                $education->display_order = 1;
+            }else{
+                $educations->where("display_order",">",$educationAfter->display_order)->increment("display_order");
+                $education->display_order = $educationAfter->display_order + 1;
+            }
+
+            $resume->educations()->save($education);
+            DB::commit();
             return ["success" => true, "message" => "Data Education Berhasil Ditambah",  "status" => 200];
+           } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollBack();
+            return ["success" => false, "message" => "Gagal Mengubah Education Resume", "status" => 400];
+           }
         }
         else if($request->experience){
             try {
@@ -308,31 +333,106 @@ class ResumeService{
             return ["success" => true, "message" => "Data Skill Berhasil Ditambah", "status" => 200];
         }
         else if($request->training){
+           try {
+            DB::beginTransaction();
             $requestTraining = (object)$request->training;
+
+            $after_id = $requestTraining->after_id ?? NULL;
+            if($after_id != NULL){
+                $trainingAfter = ResumeTraining::find($after_id);
+                if(!$trainingAfter) return ["success" => true, "message" => "After id tidak ditemukan", "status" => 200];
+            }
+
             $training = new ResumeTraining();
             $training->name = $requestTraining->name;
             $training->organizer = $requestTraining->organizer ?? "";
             $training->year = !$requestTraining->year ? null : $requestTraining->year;
-            if(!$resume->trainings()->save($training)) return ["success" => false, "message" => "Gagal Mengubah Training Resume", "status" => 400];
+
+            $trainings = new ResumeTraining();
+            if($after_id == NULL){
+                $trainings->increment("display_order");
+                $training->display_order = 1;
+            }else{
+                $trainings->where("display_order",">",$trainingAfter->display_order)->increment("display_order");
+                $training->display_order = $trainingAfter->display_order + 1;
+            }
+
+            $resume->trainings()->save($training);
+            DB::commit();
             return ["success" => true, "message" => "Data Training Berhasil Ditambah", "status" => 200];
+           } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollBack();
+            return ["success" => false, "message" => "Gagal Mengubah Training Resume", "status" => 400];
+           }
         }
         else if($request->certificate){
-            $requestCertificates = (object)$request->certificate;
-            $certificate = new ResumeCertificate();
-            $certificate->name = $requestCertificates->name;
-            $certificate->organizer = $requestCertificates->organizer ?? "";
-            $certificate->year = !$requestCertificates->year ? null : $requestCertificates->year;
-            if(!$resume->certificates()->save($certificate)) return ["success" => false, "message" => "Gagal Mengubah Certificate Resume", "status" => 400];
-            return ["success" => true, "message" => "Data Certificate Berhasil Ditambah", "status" => 200];
+            try {
+                DB::beginTransaction();
+                $requestCertificates = (object)$request->certificate;
+
+                $after_id = $requestCertificates->after_id ?? NULL;
+                if($after_id != NULL){
+                    $certificateAfter = ResumeCertificate::find($after_id);
+                    if(!$certificateAfter) return ["success" => true, "message" => "After id tidak ditemukan", "status" => 200];
+                }
+
+                $certificate = new ResumeCertificate();
+                $certificate->name = $requestCertificates->name;
+                $certificate->organizer = $requestCertificates->organizer ?? "";
+                $certificate->year = !$requestCertificates->year ? null : $requestCertificates->year;
+
+                $certificates = new ResumeCertificate();
+                if($after_id == NULL){
+                    $certificates->increment("display_order");
+                    $certificate->display_order = 1;
+                }else{
+                    $certificates->where("display_order",">",$certificateAfter->display_order)->increment("display_order");
+                    $certificate->display_order = $certificateAfter->display_order + 1;
+                }
+
+                $resume->certificates()->save($certificate);
+                DB::commit();
+                return ["success" => true, "message" => "Data Certificate Berhasil Ditambah", "status" => 200];
+            } catch (\Throwable $th) {
+                //throw $th;
+                DB::rollBack();
+                return ["success" => false, "message" => "Gagal Mengubah Certificate Resume", "status" => 400];
+            }
         }
         else if($request->achievement){
+           try {
+            DB::beginTransaction();
             $requestAchievement = (object)$request->achievement;
+
+            $after_id = $requestAchievement->after_id ?? NULL;
+            if($after_id != NULL){
+                $achievementAfter = ResumeAchievement::find($after_id);
+                if(!$achievementAfter) return ["success" => true, "message" => "After id tidak ditemukan", "status" => 200];
+            }
+
             $achievement = new ResumeAchievement();
             $achievement->name = $requestAchievement->name;
             $achievement->organizer = $requestAchievement->organizer ?? "";
             $achievement->year = !$requestAchievement->year ? null : $requestAchievement->year;
-            if(!$resume->achievements()->save($achievement)) return ["success" => false, "message" => "Gagal Mengubah Achievement Resume", "status" => 400];
+
+            $achievements = new ResumeAchievement();
+            if($after_id == NULL){
+                $achievements->increment("display_order");
+                $achievement->display_order = 1;
+            }else{
+                $achievements->where("display_order",">",$achievementAfter->display_order)->increment("display_order");
+                $achievement->display_order = $achievementAfter->display_order + 1;
+            }
+
+            $resume->achievements()->save($achievement);
+            DB::commit();
             return ["success" => true, "message" => "Data Achievement Berhasil Ditambah", "status" => 200];
+           } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollBack();
+            return ["success" => false, "message" => "Gagal Mengubah Achievement Resume", "status" => 400];
+           }
         }
 
         else if($request->summary){
@@ -463,16 +563,54 @@ class ResumeService{
             return ["success" => true, "message" => "Data Berhasil Diubah", "status" => 200];
         }
         else if($request->education){
-            $requestEducation = (object)$request->education;
-            $id = $requestEducation->id;
-            $education = $resume->educations()->find($id);
-            if(!$education) return ["success" => false, "message" => "Education ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
-            $education->university = $requestEducation->university;
-            $education->major = $requestEducation->major;
-            $education->gpa = !$requestEducation->gpa ? NULL : $requestEducation->gpa;
-            $education->graduation_year = $requestEducation->graduation_year;
-            if(!$education->save()) return ["success" => false, "message" => "Gagal Mengubah Education Resume", "status" => 400];
-            return ["success" => true, "message" => "Data Education Berhasil Diubah", "id" => $resume->id, "status" => 200];
+            try {
+                DB::beginTransaction();
+                $requestEducation = (object)$request->education;
+                $id = $requestEducation->id;
+                $education = $resume->educations()->find($id);
+                if(!$education) return ["success" => false, "message" => "Education ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
+
+                $after_id = $requestEducation->after_id ?? NULL;
+                if($after_id != NULL){
+                    $educationAfter = $resume->educations()->find($after_id);
+                    if(!$educationAfter) return ["success" => false, "message" => "After id tidak ditemukan", "status" => 400];
+                }
+
+                if($id == $after_id) return ["success" => false, "message" => "id dan after id tidak boleh sama", "status" => 400];
+
+                $education->university = $requestEducation->university;
+                $education->major = $requestEducation->major;
+                $education->gpa = !$requestEducation->gpa ? NULL : $requestEducation->gpa;
+                $education->graduation_year = $requestEducation->graduation_year;
+
+                $educations = new ResumeEducation();
+                if($after_id == NULL){
+                    $educations->where("display_order","<",$education->display_order)->increment("display_order");
+                    $education->display_order = 1;
+                }else{
+                    if($educationAfter->display_order < $education->display_order){
+                        $educations
+                        ->where("display_order",">",$educationAfter->display_order)
+                        ->where("display_order","<",$education->display_order)
+                        ->increment("display_order");
+                        $education->display_order = $educationAfter->display_order + 1;
+                    }else{
+                        $educations
+                        ->where("display_order",">",$education->display_order)
+                        ->where("display_order","<=",$educationAfter->display_order)
+                        ->decrement("display_order");
+                        $education->display_order = $educationAfter->display_order;
+                    }
+                }
+
+                $education->save();
+                DB::commit();
+                return ["success" => true, "message" => "Data Education Berhasil Diubah", "id" => $resume->id, "status" => 200];
+            } catch (\Throwable $th) {
+                //throw $th;
+                DB::rollBack();
+                return ["success" => false, "message" => "Gagal Mengubah Education Resume", "status" => 400];
+            }
         }
         else if($request->experience){
             try {
@@ -587,37 +725,151 @@ class ResumeService{
             return ["success" => true, "message" => "Data Skill Berhasil Diubah", "status" => 200];
         }
         else if($request->training){
-            $requestTraining = (object)$request->training;
-            $id = $requestTraining->id;
-            $training = $resume->trainings()->find($id);
-            if(!$training) return ["success" => false, "message" => "Training ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
-            $training->name = $requestTraining->name;
-            $training->organizer = $requestTraining->organizer ?? "";
-            $training->year = !$requestTraining->year ? null : $requestTraining->year;
-            if(!$training->save()) return ["success" => false, "message" => "Gagal Mengubah Training Resume", "status" => 400];
-            return ["success" => true, "message" => "Data Training Berhasil Diubah", "status" => 200];
+            try {
+                DB::beginTransaction();
+                $requestTraining = (object)$request->training;
+                $id = $requestTraining->id;
+                $training = $resume->trainings()->find($id);
+                if(!$training) return ["success" => false, "message" => "Training ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
+
+                $after_id = $requestTraining->after_id ?? NULL;
+                if($after_id != NULL){
+                    $trainingAfter = $resume->trainings()->find($after_id);
+                    if(!$trainingAfter) return ["success" => false, "message" => "After id tidak ditemukan", "status" => 400];
+                }
+
+                if($id == $after_id) return ["success" => false, "message" => "id dan after id tidak boleh sama", "status" => 400];
+
+                $training->name = $requestTraining->name;
+                $training->organizer = $requestTraining->organizer ?? "";
+                $training->year = !$requestTraining->year ? null : $requestTraining->year;
+
+                $trainings = new ResumeTraining();
+                if($after_id == NULL){
+                    $trainings->where("display_order","<",$training->display_order)->increment("display_order");
+                    $training->display_order = 1;
+                }else{
+                    if($trainingAfter->display_order < $training->display_order){
+                        $trainings
+                        ->where("display_order",">",$trainingAfter->display_order)
+                        ->where("display_order","<",$training->display_order)
+                        ->increment("display_order");
+                        $training->display_order = $trainingAfter->display_order + 1;
+                    }else{
+                        $trainings
+                        ->where("display_order",">",$training->display_order)
+                        ->where("display_order","<=",$trainingAfter->display_order)
+                        ->decrement("display_order");
+                        $training->display_order = $trainingAfter->display_order;
+                    }
+                }
+
+                $training->save();
+                DB::commit();
+                return ["success" => true, "message" => "Data Training Berhasil Diubah", "status" => 200];
+            } catch (\Throwable $th) {
+                //throw $th;
+                DB::rollBack();
+                return ["success" => false, "message" => "Gagal Mengubah Training Resume", "status" => 400];
+            }
         }
         else if($request->certificate){
-            $requestCertificates = (object)$request->certificate;
-            $id = $requestCertificates->id;
-            $certificate = $resume->certificates()->find($id);
-            if(!$certificate) return ["success" => false, "message" => "Certificate ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
-            $certificate->name = $requestCertificates->name;
-            $certificate->organizer = $requestCertificates->organizer ?? "";
-            $certificate->year = !$requestCertificates->year ? null : $requestCertificates->year;
-            if(!$certificate->save()) return ["success" => false, "message" => "Gagal Mengubah Certificate Resume", "status" => 400];
-            return ["success" => true, "message" => "Data Certificate Berhasil Diubah", "status" => 200];
+            try {
+                DB::beginTransaction();
+                $requestCertificates = (object)$request->certificate;
+                $id = $requestCertificates->id;
+                $certificate = $resume->certificates()->find($id);
+                if(!$certificate) return ["success" => false, "message" => "Certificate ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
+
+                $after_id = $requestCertificates->after_id ?? NULL;
+                if($after_id != NULL){
+                    $certificateAfter = $resume->certificates()->find($after_id);
+                    if(!$certificateAfter) return ["success" => false, "message" => "After id tidak ditemukan", "status" => 400];
+                }
+
+                if($id == $after_id) return ["success" => false, "message" => "id dan after id tidak boleh sama", "status" => 400];
+
+                $certificate->name = $requestCertificates->name;
+                $certificate->organizer = $requestCertificates->organizer ?? "";
+                $certificate->year = !$requestCertificates->year ? null : $requestCertificates->year;
+
+                $certificates = new ResumeCertificate();
+                if($after_id == NULL){
+                    $certificates->where("display_order","<",$certificate->display_order)->increment("display_order");
+                    $certificate->display_order = 1;
+                }else{
+                    if($certificateAfter->display_order < $certificate->display_order){
+                        $certificates
+                        ->where("display_order",">",$certificateAfter->display_order)
+                        ->where("display_order","<",$certificate->display_order)
+                        ->increment("display_order");
+                        $certificate->display_order = $certificateAfter->display_order + 1;
+                    }else{
+                        $certificates
+                        ->where("display_order",">",$certificate->display_order)
+                        ->where("display_order","<=",$certificateAfter->display_order)
+                        ->decrement("display_order");
+                        $certificate->display_order = $certificateAfter->display_order;
+                    }
+                }
+
+                $certificate->save();
+                DB::commit();
+                return ["success" => true, "message" => "Data Certificate Berhasil Diubah", "status" => 200];
+            } catch (\Throwable $th) {
+                //throw $th;
+                DB::rollBack();
+                return ["success" => false, "message" => "Gagal Mengubah Certificate Resume", "status" => 400];
+            }
         }
         else if($request->achievement){
+           try {
+            DB::beginTransaction();
             $requestAchievement = (object)$request->achievement;
             $id = $requestAchievement->id;
             $achievement = $resume->achievements()->find($id);
             if(!$achievement) return ["success" => false, "message" => "Achievement ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
+
+            $after_id = $requestAchievement->after_id ?? NULL;
+            if($after_id != NULL){
+                $achievementAfter = $resume->achievements()->find($after_id);
+                if(!$achievementAfter) return ["success" => false, "message" => "After id tidak ditemukan", "status" => 400];
+            }
+
+            if($id == $after_id) return ["success" => false, "message" => "id dan after id tidak boleh sama", "status" => 400];
+
             $achievement->name = $requestAchievement->name;
             $achievement->organizer = $requestAchievement->organizer ?? "";
             $achievement->year = !$requestAchievement->year ? null : $requestAchievement->year;
-            if(!$achievement->save()) return ["success" => false, "message" => "Gagal Mengubah Achievement Resume", "status" => 400];
+
+            $achievements = new ResumeAchievement();
+            if($after_id == NULL){
+                $achievements->where("display_order","<",$achievement->display_order)->increment("display_order");
+                $achievement->display_order = 1;
+            }else{
+                if($achievementAfter->display_order < $achievement->display_order){
+                    $achievements
+                    ->where("display_order",">",$achievementAfter->display_order)
+                    ->where("display_order","<",$achievement->display_order)
+                    ->increment("display_order");
+                    $achievement->display_order = $achievementAfter->display_order + 1;
+                }else{
+                    $achievements
+                    ->where("display_order",">",$achievement->display_order)
+                    ->where("display_order","<=",$achievementAfter->display_order)
+                    ->decrement("display_order");
+                    $achievement->display_order = $achievementAfter->display_order;
+                }
+            }
+
+            $achievement->save();
+            DB::commit();
             return ["success" => true, "message" => "Data Achievement Berhasil Diubah", "status" => 200];
+           } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollBack();
+            return ["success" => false, "message" => "Gagal Mengubah Achievement Resume", "status" => 400];
+           }
         }
         else if($request->summary){
             $requestSummary = (object)$request->summary;
