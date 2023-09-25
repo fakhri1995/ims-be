@@ -19,6 +19,7 @@ class CreateResumeTrainingsTable extends Migration
             $table->string("organizer");
             $table->date("year");
             $table->unsignedBigInteger("resume_id");
+            $table->unsignedInteger('display_order');
         });
     }
 
