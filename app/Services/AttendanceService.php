@@ -543,7 +543,7 @@ class AttendanceService{
         if($access["success"] === false) return $access;
 
         $validator = Validator::make($request->all(), [
-            "is_hadir" => "boolean|required",
+            "is_hadir" => "boolean",
             "is_late" => "boolean",
             "sort_by" => "in:name",
             "sort_type" => "in:asc,desc"
@@ -584,21 +584,31 @@ class AttendanceService{
             
 
 
-            if($is_hadir) $users_attendances = $users_attendances->whereHas("attendance_user", function($q) use($current_time, $is_late, $is_on_time, $is_wfh, $is_wfo){
-                if($is_late && $is_on_time) ;
-                elseif($is_late != NULL) $q->where("is_late",$is_late);
-                elseif($is_on_time) $q->where("is_late",0);
-
-                if($is_wfh && $is_wfo);
-                elseif($is_wfh) $q->where("is_wfo", 0);
-                elseif($is_wfo)$q->where("is_wfo", 1);
-                $q->whereDate("check_in","=",$current_time);
+            $users_attendances = $users_attendances->where(function($q) use($current_time, $is_late, $is_on_time, $is_wfh, $is_wfo, $is_hadir){
+                if($is_late || $is_on_time || $is_wfh || $is_wfo || $is_hadir == 1){
+                    $q->whereHas("attendance_user", function($q) use($current_time, $is_late, $is_on_time, $is_wfh, $is_wfo){
+                        if($is_late && $is_on_time) ;
+                        elseif($is_late != NULL) $q->where("is_late",$is_late);
+                        elseif($is_on_time != NULL) $q->where("is_late",0);
+    
+                        if($is_wfh && $is_wfo);
+                        elseif($is_wfh) $q->where("is_wfo", 0);
+                        elseif($is_wfo)$q->where("is_wfo", 1);
+                        $q->whereDate("check_in","=",$current_time);
+                    });
+                }
+                elseif(!$is_hadir && $is_hadir !== NULL){
+                    $q->orWhereDoesntHave("attendance_user", function($q) use($current_time){
+                        $q->whereDate("check_in","=",$current_time);
+                        return $q;
+                    });
+                }
                 return $q;
             });
-            else $users_attendances = $users_attendances->whereDoesntHave("attendance_user", function($q) use($current_time){
-                $q->whereDate("check_in","=",$current_time);
-                return $q;
-            });
+            // else $users_attendances = $users_attendances->whereDoesntHave("attendance_user", function($q) use($current_time){
+            //     $q->whereDate("check_in","=",$current_time);
+            //     return $q;
+            // });
 
             
             
