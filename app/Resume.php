@@ -11,15 +11,15 @@ class Resume extends Model
     public $timestamps = false;
 
     public function educations(){
-        return $this->hasMany(ResumeEducation::class,'resume_id');
+        return $this->hasMany(ResumeEducation::class,'resume_id')->orderBy("display_order","asc");
     }
 
     public function achievements(){
-        return $this->hasMany(ResumeAchievement::class,'resume_id');
+        return $this->hasMany(ResumeAchievement::class,'resume_id')->orderBy("display_order","asc");
     }
 
     public function certificates(){
-        return $this->hasMany(ResumeCertificate::class,'resume_id');
+        return $this->hasMany(ResumeCertificate::class,'resume_id')->orderBy("display_order","asc");
     }
 
     public function experiences(){
@@ -35,7 +35,7 @@ class Resume extends Model
     }
 
     public function trainings(){
-        return $this->hasMany(ResumeTraining::class,'resume_id');
+        return $this->hasMany(ResumeTraining::class,'resume_id')->orderBy("display_order","asc");
     }
 
     public function assessment(){
