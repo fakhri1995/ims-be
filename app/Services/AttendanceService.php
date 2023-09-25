@@ -585,7 +585,7 @@ class AttendanceService{
 
 
             $users_attendances = $users_attendances->where(function($q) use($current_time, $is_late, $is_on_time, $is_wfh, $is_wfo, $is_hadir){
-                if($is_late || $is_on_time || $is_wfh || $is_wfo){
+                if($is_late || $is_on_time || $is_wfh || $is_wfo || $is_hadir == 1){
                     $q->whereHas("attendance_user", function($q) use($current_time, $is_late, $is_on_time, $is_wfh, $is_wfo){
                         if($is_late && $is_on_time) ;
                         elseif($is_late != NULL) $q->where("is_late",$is_late);
@@ -597,7 +597,7 @@ class AttendanceService{
                         $q->whereDate("check_in","=",$current_time);
                     });
                 }
-                elseif($is_hadir !== NULL){
+                elseif(!$is_hadir && $is_hadir !== NULL){
                     $q->orWhereDoesntHave("attendance_user", function($q) use($current_time){
                         $q->whereDate("check_in","=",$current_time);
                         return $q;
