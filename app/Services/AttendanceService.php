@@ -513,9 +513,12 @@ class AttendanceService{
             })->whereHas('user', function($q){
                 $q->where('role', 1)->where('company_id', auth()->user()->company_id);
             })->with('user:id,name')->whereDate('check_in', '=', date("Y-m-d"));
-            $late_attendances = count($users_attendances->where('is_late', 1)->get());
-            $on_time_attendances = count($users_attendances->where('is_late', 0)->get());
+            
             $users_attendances = $users_attendances->get();
+
+            $on_time_attendances = count($users_attendances->where('is_late', 0));
+            $late_attendances = count($users_attendances->where('is_late', 1));
+
             foreach($users_attendances as $user_attendance){
                 $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
                 $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
