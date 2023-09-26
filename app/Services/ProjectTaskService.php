@@ -1074,6 +1074,42 @@ class ProjectTaskService{
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
     }
 
+    public function getProjectTasksCountClient(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $projectCategoryList = ProjectCategoryList::whereHas("companies", function($query){
+            return $query->where("companies.id", auth()->user()->company_id);
+        })->pluck("id");
+        $projects = Project::with(["proposed_bys","status","categories"])->whereHas('categories', function($q) use ($projectCategoryList){
+            return $q->whereIn("project_category_list_id", $projectCategoryList);
+        })->pluck("id");
+
+        $projectTasksStatus = new ProjectStatus;
+        $projectTasksStatus = $projectTasksStatus->withCount(['project_tasks' => function ($q) use ($projects){
+            $q->whereIn("project_id", $projects);
+            return $q;
+        }])->get();
+
+        $projectTasksStatusArray = [];
+        
+        $total = 0;
+
+        foreach($projectTasksStatus as $p){
+            $projectTasksStatusArray[] = $p;
+            $total += $p->project_tasks_count;
+        }
+
+
+        $data = [
+            "status" => $projectTasksStatusArray,
+            "total" => $total
+        ];
+        
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
+    }
+
     public function getProjectTasksAdmin($request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
