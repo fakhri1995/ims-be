@@ -563,6 +563,7 @@ class AttendanceService{
         $is_wfo = $request->is_wfo ?? NULL;
 
         $keyword = $request->keyword ?? NULL;
+        $keyword_role = $request->keyword_role ?? NULL;
         $rows = $request->rows ?? NULL;
         $sort_by = $request->sort_by ?? NULL;
         $sort_type = $request->sort_type ?? NULL;
@@ -581,6 +582,7 @@ class AttendanceService{
 
             //filter
             if($keyword) $users_attendances = $users_attendances->where("name","LIKE","%$keyword%");
+            if($keyword_role) $users_attendances = $users_attendances->where("position","LIKE","%$keyword_role%");
             
 
 
