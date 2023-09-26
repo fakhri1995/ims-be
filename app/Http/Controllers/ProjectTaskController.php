@@ -278,4 +278,12 @@ class ProjectTaskController extends Controller
         if(!$response['success']) return response()->json($response, $response['status']);
         return $response['data'];
     }
+    public function getProjectTasksCountClient(Request $request)
+    {
+        $route_name = "PROJECT_TASKS_COUNT_CLIENT_GET";
+
+        $response = $this->projectTaskService->getProjectTasksCountClient($request, $route_name);
+        if(!$response['success']) return response()->json($response, $response['status']);
+        return $response['data'];
+    }
 }

@@ -641,6 +641,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteProjectTask', 'ProjectTaskController@deleteProjectTask');
     $router->put('/updateProjectTask_status', 'ProjectTaskController@updateProjectTask_status');
     $router->get('/getProjectTasksCount', 'ProjectTaskController@getProjectTasksCount');
+    $router->get('/getProjectTasksCountClient', 'ProjectTaskController@getProjectTasksCountClient');
     $router->get('/getProjectTasksDeadline', 'ProjectTaskController@getProjectTasksDeadline');
     $router->get('/getProjectTasksAdmin', 'ProjectTaskController@getProjectTasksAdmin');
     $router->get('/getProjectTaskStaffCount', 'ProjectTaskController@getProjectTaskStaffCount');
