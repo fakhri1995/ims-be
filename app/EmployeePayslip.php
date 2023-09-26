@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Casts\DBEncryption;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
