@@ -6,22 +6,15 @@ use App\Casts\DBEncryption;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Employee extends Model
+/**
+ * This Model for Employee Without Encrypiton
+ *! Depreciated
+ */
+
+class EmployeeOld extends Model
 {
     public $timestamps = false;
     use SoftDeletes;
-
-    protected $casts = [
-        'domicile' => DBEncryption::class,
-        'phone_number' => DBEncryption::class,
-        'acc_name_another' => DBEncryption::class,
-        'nik' => DBEncryption::class,
-        'npwp' => DBEncryption::class,
-        'acc_number_bukopin' => DBEncryption::class,
-        'bpjs_ketenagakerjaan' => DBEncryption::class,
-        'bpjs_kesehatan' => DBEncryption::class,
-        'acc_number_another' => DBEncryption::class,
-    ];
 
     public function contract()
     {
@@ -44,7 +37,7 @@ class Employee extends Model
     }
 
     public function payslips(){
-        return $this->hasMany(EmployeePayslip::class, "employee_id", "id");
+        return $this->hasMany(EmployeePayslipOld::class, "employee_id", "id");
     }
 
     public function user(){
