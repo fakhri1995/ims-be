@@ -48,10 +48,10 @@ class SetEncryptionEmployee extends Command
         $data = EmployeeOld::query()->orderBy('id', 'desc')->get();
 
         dump(count($data) . ' data akan diproses');
-        dump('memulai proses');
         foreach ($data as $list) {
             try {
                 DB::beginTransaction();
+                dump('memulai proses id =>'. $list->id);
 
                 // encrypt contract
                 $contracts = EmployeeContractOld::query()->where('employee_id', $list->id)->orderBy('id', 'desc')->get();
@@ -65,6 +65,7 @@ class SetEncryptionEmployee extends Command
                     $contract->bpjs_tk_jp = $item->bpjs_tk_jp;
                     $contract->pph21 = $item->pph21;
                     $contract->save();
+                    dump('contract di enkripsi');
                 }
 
                 // encrypt slip gaji
@@ -82,6 +83,7 @@ class SetEncryptionEmployee extends Command
                     $payslip->total_gross_pengurangan = $item->total_gross_pengurangan;
                     $payslip->take_home_pay = $item->take_home_pay;
                     $payslip->save();
+                    dump('payslip di enkripsi');
                 }
 
                 // encrypt main data
@@ -96,6 +98,8 @@ class SetEncryptionEmployee extends Command
                 $employee->bpjs_kesehatan = $list->bpjs_kesehatan;
                 $employee->acc_number_another = $list->acc_number_another;
                 $employee->save();
+                dump('data utama di enkripsi');
+
 
                 DB::commit();
                 dump('data id => ' . $list->id . ' telah dienkripsi');
