@@ -3,6 +3,8 @@
 namespace App\Console\Commands\Exclusive;
 
 use App\Employee;
+use App\EmployeeContract;
+use App\EmployeeContractOld;
 use App\EmployeeOld;
 use App\EmployeePayslip;
 use App\EmployeePayslipOld;
@@ -51,6 +53,20 @@ class SetEncryptionEmployee extends Command
             try {
                 DB::beginTransaction();
 
+                // encrypt contract
+                $contracts = EmployeeContractOld::query()->where('employee_id', $list->id)->orderBy('id', 'desc')->get();
+                foreach ($contracts as $item) {
+                    $contract = EmployeeContract::query()->find($item->id);
+                    $contract->gaji_pokok = $item->gaji_pokok;
+                    $contract->bpjs_ks = $item->bpjs_ks;
+                    $contract->bpjs_tk_jht = $item->bpjs_tk_jht;
+                    $contract->bpjs_tk_jkk = $item->bpjs_tk_jkk;
+                    $contract->bpjs_tk_jkm = $item->bpjs_tk_jkm;
+                    $contract->bpjs_tk_jp = $item->bpjs_tk_jp;
+                    $contract->pph21 = $item->pph21;
+                    $contract->save();
+                }
+
                 // encrypt slip gaji
                 $payslips = EmployeePayslipOld::query()->where('employee_id', $list->id)->orderBy('id', 'desc')->get();
                 foreach ($payslips as $item) {
@@ -82,11 +98,11 @@ class SetEncryptionEmployee extends Command
                 $employee->save();
 
                 DB::commit();
-                dump('data id => '. $list->id. ' telah dienkripsi');
+                dump('data id => ' . $list->id . ' telah dienkripsi');
             } catch (\Throwable $th) {
                 DB::rollBack();
-                //throw $th;
-                dump('gagal untuk mengenkripsi data id =>'. $list->id);
+                // throw $th;
+                dump('gagal untuk mengenkripsi data id =>' . $list->id);
             }
         }
     }
