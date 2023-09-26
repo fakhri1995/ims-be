@@ -9,6 +9,7 @@ use App\Console\Commands\SearchGeoLocation;
 use App\Console\Commands\AutoCheckOutAttendance;
 use App\Console\Commands\Exclusive\SetContractHistory;
 use App\Console\Commands\Exclusive\SetDisplayOrderResume;
+use App\Console\Commands\Exclusive\SetEncryptionEmployee;
 use App\Console\Commands\GenerateDailyTask;
 use App\Console\Commands\GenerateWeeklyTask;
 use App\Console\Commands\GenerateMonthlyTask;
@@ -48,6 +49,7 @@ class Kernel extends ConsoleKernel
         RaiseLastPeriodPayslip::class,
         SetContractHistory::class,
         SetDisplayOrderResume::class,
+        SetEncryptionEmployee::class,
     ];
 
     /**

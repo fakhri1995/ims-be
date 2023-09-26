@@ -67,6 +67,7 @@ $app->configure('auth');
 $app->configure('service');
 $app->configure('dompdf');
 $app->configure('mail');
+$app->configure('encrypt');
 
 $app->alias('mail.manager', Illuminate\Contracts\Mail\Factory::class);
 

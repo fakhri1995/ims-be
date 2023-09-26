@@ -27,13 +27,13 @@ class CreateEmployeeContractsTable extends Migration
             $table->string("new_office")->nullable();
             $table->date("resign_at")->nullable();
             $table->integer("annual_leave")->nullable();
-            $table->integer("gaji_pokok")->nullable();
-            $table->integer("bpjs_ks")->nullable();
-            $table->integer("bpjs_tk_jht")->nullable();
-            $table->integer("bpjs_tk_jkk")->nullable();
-            $table->integer("bpjs_tk_jkm")->nullable();
-            $table->integer("bpjs_tk_jp")->nullable();
-            $table->integer("pph21")->nullable();
+            $table->string("gaji_pokok")->nullable();
+            $table->string("bpjs_ks")->nullable();
+            $table->string("bpjs_tk_jht")->nullable();
+            $table->string("bpjs_tk_jkk")->nullable();
+            $table->string("bpjs_tk_jkm")->nullable();
+            $table->string("bpjs_tk_jp")->nullable();
+            $table->string("pph21")->nullable();
             $table->boolean("show_all_benefit")->default(0);
             $table->unsignedBigInteger('employee_id'); //refernece employee.id
             $table->dateTime('created_at');

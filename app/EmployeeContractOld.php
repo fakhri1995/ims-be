@@ -6,20 +6,10 @@ use App\Casts\DBEncryption;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class EmployeeContract extends Model
+class EmployeeContractOld extends Model
 {
     public $timestamps = false;
     use SoftDeletes;
-
-    protected $casts = [
-        'gaji_pokok' => DBEncryption::class,
-        'bpjs_ks' => DBEncryption::class,
-        'bpjs_tk_jht' => DBEncryption::class,
-        'bpjs_tk_jkk' => DBEncryption::class,
-        'bpjs_tk_jkm' => DBEncryption::class,
-        'bpjs_tk_jp' => DBEncryption::class,
-        'pph21' => DBEncryption::class,
-    ];
 
     public function employee()
     {
