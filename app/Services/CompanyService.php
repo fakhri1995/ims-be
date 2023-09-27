@@ -387,14 +387,14 @@ class CompanyService
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $validator = Validator::make($request->all(), [
-            "check_in_time" => "date_format:H:i:s"
-        ]);
+        // $validator = Validator::make($request->all(), [
+        //     "check_in_time" => "date_format:H:i:s"
+        // ]);
 
-        if($validator->fails()){
-            $errors = $validator->errors()->all();
-            return ["success" => false, "message" => $errors, "status" => 400];
-        }
+        // if($validator->fails()){
+        //     $errors = $validator->errors()->all();
+        //     return ["success" => false, "message" => $errors, "status" => 400];
+        // }
 
         if($main) $company = Company::find(auth()->user()->company_id);
         else {
