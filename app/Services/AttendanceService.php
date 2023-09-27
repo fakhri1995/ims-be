@@ -840,7 +840,7 @@ class AttendanceService{
 
         if($today_user_attendance) return $today_user_attendance->is_late;
         else {
-            if($check_in_time == null) return false;
+            if($check_in_time == null || $check_in_time == '00:00:00') return false;
             else if($date_time_split[1] > $check_in_time) return true;
             else return false;
         }
