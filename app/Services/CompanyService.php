@@ -79,9 +79,9 @@ class CompanyService
                 $child = $this->childrenAttributeConvert($child, $children, $count, $children_count);
             }
             $company->children = $company->$children;
-        } 
+        }
         unset($company[$children]);
-        
+
         return $company;
     }
 
@@ -89,27 +89,27 @@ class CompanyService
         $type_children = $type.'ren';
         if($withCount){
             $company = Company::select('id', 'name as title', 'id as key', 'id as value', 'parent_id')->withCount($type)->with($type_children)->find($id);
-            
-            // Change Camel Case 
+
+            // Change Camel Case
             $count_attribute = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $type));
             $count_attribute = $count_attribute.'_count';
             $company = $this->childrenAttributeConvert($company, $type_children, true, $count_attribute);
         } else {
             $company = Company::select('id', 'name as title', 'id as key', 'id as value', 'parent_id')->with($type_children)->find($id);
-            
-            // Change Camel Case 
+
+            // Change Camel Case
             $count_attribute = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $type));
             $count_attribute = $count_attribute.'_count';
             $company = $this->childrenAttributeConvert($company, $type_children, false, $count_attribute);
         }
-        
+
         return $company;
     }
 
     public function getSubLocations($request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('company_id');
         if($id === null) $id = auth()->user()->company_id;
         if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 403];
@@ -120,13 +120,13 @@ class CompanyService
     public function getLocations($request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('company_id');
         if($id === null) $id = auth()->user()->company_id;
         if(!$this->checkPermission($id, auth()->user()->company_id)) return ["success" => false, "message" => "Anda Tidak Memiliki Akses Untuk Company Ini", "status" => 403];
         $company =  $this->getLocationTrees($id, 'noSubChild', true);
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $company, "status" => 200];
-        
+
     }
 
     public function getMainLocations($route_name){
@@ -164,7 +164,7 @@ class CompanyService
     public function getClientCompanyList($route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $companies = $this->getCompanyTreeSelect(1, 'clientChild');
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $companies, "status" => 200];
     }
@@ -178,8 +178,8 @@ class CompanyService
         else $companies = Company::with('companyLogo')->select('id','name','address','phone_number','role','parent_id', 'is_enabled')->where('parent_id', 1)->where('role', 2)->get();
         $companies->makeHidden('parent_id');
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $companies, "status" => 200];
-    }    
-    
+    }
+
     public function getCompanyDetail($request, $route_name){
         try{
             $access = $this->globalService->checkRoute($route_name);
@@ -261,7 +261,7 @@ class CompanyService
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
-    
+
     public function getSubCompanyProfile($request, $route_name){
         try{
             $access = $this->globalService->checkRoute($route_name);
@@ -297,7 +297,7 @@ class CompanyService
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
-    
+
     public function addCompany($request, $role_id, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
@@ -313,12 +313,12 @@ class CompanyService
 
         if($role_id === 4) $parent_id = $request->get('parent_id', null);
         else $parent_id = $request->get('parent_id', auth()->user()->company->parent_id);
-        
+
         if($parent_id === null) return ["success" => false, "message" => "Parent Id Tidak Boleh Null", "status" => 400];
         try{
             $parent_company = Company::find($parent_id);
             if($parent_company === null) return ["success" => false, "message" => "Parent Company Tidak Ditemukan", "status" => 400];
-            
+
             $company = new Company;
             if($role_id === 4){
                 if($parent_company->role !== 4) $top_parent_id = $parent_id;
@@ -327,9 +327,9 @@ class CompanyService
                 if($address_same) $company->address = $parent_company->address;
                 else $company->address = $request->get('address',null);
             } else{
-                $top_parent_id = $parent_company->getTopParent()->id ?? null;  
+                $top_parent_id = $parent_company->getTopParent()->id ?? null;
                 $company->address = $request->get('address',null);
-            } 
+            }
 
             $company->name = $request->get('name',null);
             $company->parent_id = $request->get('parent_id',null);
@@ -338,7 +338,7 @@ class CompanyService
             $company->role = $role_id;
             $company->created_time = date("Y-m-d H:i:s");
             $company->is_enabled = false;
-            
+
             $company->singkatan = $request->get('singkatan', '-');
             $company->tanggal_pkp = $request->get('tanggal_pkp', null);
             $company->penanggung_jawab = $request->get('penanggung_jawab', '-');
@@ -347,6 +347,7 @@ class CompanyService
             $company->email = $request->get('email', '-');
             $company->website = $request->get('website', '-');
             $company->check_in_time = $request->get('check_in_time','08:00:00');
+            $company->autocheckout = $request->get('autocheckout',false);
             $company->save();
 
             if($request->hasFile('company_logo')) {
@@ -403,11 +404,11 @@ class CompanyService
         }
         if($company === null) return ["success" => false, "message" => "Id Company Tidak Ditemukan", "status" => 400];
         try{
-            
+
             $company->name = $request->get('name');
             $company->address = $request->get('address');
             $company->phone_number = $request->get('phone_number');
-            
+
             $company->singkatan = $request->get('singkatan', '-');
             $company->tanggal_pkp = $request->get('tanggal_pkp', null);
             $company->penanggung_jawab = $request->get('penanggung_jawab', '-');
@@ -416,6 +417,7 @@ class CompanyService
             $company->email = $request->get('email', '-');
             $company->website = $request->get('website', '-');
             $company->check_in_time = $request->get('check_in_time', '08:00:00');
+            $company->autocheckout = $request->get('autocheckout', false);
             $company->save();
 
             if($request->hasFile('company_logo')) {
@@ -492,7 +494,7 @@ class CompanyService
             $list_company = $this->checkSubCompanyList($company);
             if($company->role !== 4){
                 if($company->no_sub_child_count > 0) return ["success" => false, "message" => "Masih Teradapat Lokasi Pada Perusahaan Ini, Proses Delete Perusahaan Tidak Dapat Dilakukan", "status" => 400];
-                
+
                 if($new_parent !== null){
                     if($this->checkPermission($new_parent, $id)) return ["success" => false, "message" => "New Parent Tidak Bisa Dari Lokasi Bawahannya", "status" => 400];
                     $companies = Company::with('child')->where('parent_id', $id)->where('role', 4)->get();
