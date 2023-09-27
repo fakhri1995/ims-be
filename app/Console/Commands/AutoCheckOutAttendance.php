@@ -39,6 +39,10 @@ class AutoCheckOutAttendance extends Command
     public function handle()
     {
         $current_timestamp = date("Y-m-d H:i:s");
-        $user_attendance = AttendanceUser::whereNull('check_out')->update(['checked_out_by_system' => true, 'check_out' => $current_timestamp]); 
+        $user_attendance = AttendanceUser::whereNull('check_out')
+            ->whereHas('user.company', function ($q) {
+                $q->whereNotNull('autocheckout')->where('autocheckout', true);
+            })
+            ->update(['checked_out_by_system' => true, 'check_out' => $current_timestamp]);
     }
 }
