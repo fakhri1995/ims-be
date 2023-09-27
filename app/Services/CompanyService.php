@@ -416,9 +416,10 @@ class CompanyService
             $company->fax = $request->get('fax', '-');
             $company->email = $request->get('email', '-');
             $company->website = $request->get('website', '-');
-            $company->check_in_time = $request->get('check_in_time', null);
+            $company->check_in_time = $request->check_in_time ?? null;
             $company->autocheckout = $request->get('autocheckout', false);
             $company->save();
+
 
             if($request->hasFile('company_logo')) {
                 $fileService = new FileService;
