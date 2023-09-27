@@ -789,10 +789,14 @@ class AttendanceService{
             $user_attendance->name = $name;
             $attendance_activities = AttendanceActivity::with('attendanceForm:id,name,details')->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
             $attendance_task_activities = AttendanceTaskActivity::with('task')->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
+            $attendance_activities_count = count($attendance_activities);
+            $attendance_task_activities_count = count($attendance_task_activities);
+            $activities_count = $attendance_task_activities_count + $attendance_activities_count;
             $data = (object)[
                 "user_attendance" => $user_attendance,
                 "attendance_activities" => $attendance_activities,
-                "attendance_task_activities" => $attendance_task_activities
+                "attendance_task_activities" => $attendance_task_activities,
+                "activities_count" => $activities_count
             ];
             return ["success" => true, "message" => "Berhasil Mengambil Data Attendance", "data" => $data, "status" => 200];
         } catch(Exception $err){
