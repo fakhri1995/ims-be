@@ -346,7 +346,7 @@ class CompanyService
             $company->fax = $request->get('fax', '-');
             $company->email = $request->get('email', '-');
             $company->website = $request->get('website', '-');
-            $company->check_in_time = $request->get('check_in_time','08:00:00');
+            $company->check_in_time = $request->get('check_in_time',null);
             $company->autocheckout = $request->get('autocheckout',false);
             $company->save();
 
@@ -416,7 +416,7 @@ class CompanyService
             $company->fax = $request->get('fax', '-');
             $company->email = $request->get('email', '-');
             $company->website = $request->get('website', '-');
-            $company->check_in_time = $request->get('check_in_time', '08:00:00');
+            $company->check_in_time = $request->get('check_in_time', null);
             $company->autocheckout = $request->get('autocheckout', false);
             $company->save();
 
