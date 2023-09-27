@@ -30,7 +30,8 @@ class CreateCompaniesTable extends Migration
             $table->string('fax');
             $table->string('email');
             $table->string('website');
-            $table->time('check_in_time')->nullable();	
+            $table->time('check_in_time')->nullable();
+            $table->tinyInteger('autocheckout')->default(0);
             $table->softDeletes();
             $table->index('parent_id');
         });

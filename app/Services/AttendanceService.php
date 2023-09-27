@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Services;
 use Maatwebsite\Excel\Facades\Excel;
@@ -48,7 +48,7 @@ class AttendanceService{
             if($keyword) $params = "$params&keyword=$keyword";
             if($sort_by) $params = "$params&sort_by=$sort_by";
             if($sort_type) $params = "$params&sort_type=$sort_type";
-            
+
             if($keyword) $attendance_forms = $attendance_forms->where('name', 'like', "%".$keyword."%")->orWhere('description', 'like', "%".$keyword."%");
             if($sort_by){
                 if($sort_type === null) $sort_type = 'desc';
@@ -59,7 +59,7 @@ class AttendanceService{
             } else {
                 $attendance_forms = $attendance_forms->orderBy('users_count', 'desc');
             }
-            
+
             $attendance_forms = $attendance_forms->paginate($rows);
             $attendance_forms->withPath(env('APP_URL').'/getAttendanceForms'.$params);
             if($attendance_forms->isEmpty()) return ["success" => true, "message" => "Attendance Forms Masih Kosong", "data" => $attendance_forms, "status" => 200];
@@ -116,7 +116,7 @@ class AttendanceService{
                     }
                     $detail['key'] = Str::uuid()->toString();
                     $i++;
-                } 
+                }
             }
             $attendance_form->details = $details;
             $attendance_form->save();
@@ -153,7 +153,7 @@ class AttendanceService{
         $id = $request->get('id');
         $attendance_form = AttendanceForm::find($id);
         if($attendance_form === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-        
+
         try{
             $attendance_form->delete();
             return ["success" => true, "message" => "Attendance Form berhasil dihapus", "status" => 200];
@@ -172,7 +172,7 @@ class AttendanceService{
         $attendance_form = AttendanceForm::with('users')->find($id);
         if($attendance_form === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
         if(!count($user_ids)) return ["success" => false, "message" => "user_ids masih kosong", "status" => 400];
-        
+
         try{
             $users = User::with('attendanceForms:id,name')->whereIn('id', $user_ids)->get();
             foreach($users as $user) $user->attendanceForms()->detach();
@@ -192,7 +192,7 @@ class AttendanceService{
         $user_ids = $request->get('user_ids', []);
         $attendance_form = AttendanceForm::with('users')->find($id);
         if($attendance_form === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-        
+
         try{
             $attendance_form->users()->detach($user_ids);
             return ["success" => true, "message" => "User Attendance Form Berhasil Dikeluarkan", "status" => 200];
@@ -200,7 +200,7 @@ class AttendanceService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
-    
+
     // Attendance Activity
     public function getAttendanceActivities($request, $route_name)
     {
@@ -287,7 +287,7 @@ class AttendanceService{
                     $activity_details[$search]['value'] = true;
                 }
                 else $activity_details[$search]['value'] = NULL;
-                
+
                 $fileArray[$search] = [
                     "key" => $form_detail['key'],
                     "file" => $file
@@ -371,7 +371,7 @@ class AttendanceService{
                     "key" => $form_detail['key'],
                     "file" => $file
                 ];
-                
+
             }
             // if(!isset($activity_details[$search]['value']) || ($form_detail['required'] && $activity_details[$search]['value'] === "")) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
             if(!isset($activity_details[$search]['value']) && $form_detail['required']) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
@@ -387,7 +387,7 @@ class AttendanceService{
         try{
 
             $id = $attendance_activity->id;
-            
+
             foreach($fileArray as $index => $value){
                 if($activity_details[$index]['value'] === true){
                     $old_activity_details[$index]['value'];
@@ -420,7 +420,7 @@ class AttendanceService{
         if($attendance_activity === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
         if($attendance_activity->user_id !== auth()->user()->id) return ["success" => false, "message" => "Aktivitas bukan milik user login", "status" => 400];
         if(date('Y-m-d', strtotime($attendance_activity->updated_at)) !== date('Y-m-d')) return ["success" => false, "message" => "Aktivitas selain hari ini tidak dapat dihapus", "status" => 400];
-        
+
         try{
             $attendance_activity->delete();
             return ["success" => true, "message" => "Attendance Activity berhasil dihapus", "status" => 200];
@@ -441,7 +441,7 @@ class AttendanceService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-    
+
         $from = $request->get('from', null);
         $to = $request->get('to', null);
         $attendance_forms = auth()->user()->attendanceForms;
@@ -454,18 +454,18 @@ class AttendanceService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-    
+
         $from = $request->get('from', null);
         $to = $request->get('to', null);
         $attendance_form = AttendanceForm::find($request->get('attendance_form_id'));
-        
+
         $user_ids = json_decode($request->get('user_ids', "[]"));
         if(!$attendance_form) return ["success" => false, "message" => "Attendance Form Tidak Ditemukan", "status" => 400];
         $excel = $this->activityExport($from, $to, $attendance_form, $request->get('attendance_form_id'), true, $user_ids);
-        
+
         return ["success" => true, "message" => "Berhasil Export Attendance Activity", "data" => $excel, "status" => 200];
     }
-    
+
     // Attendance User
     public function getAttendancesUsers($request, $route_name)
     {
@@ -513,7 +513,7 @@ class AttendanceService{
             })->whereHas('user', function($q){
                 $q->where('role', 1)->where('company_id', auth()->user()->company_id);
             })->with('user:id,name')->whereDate('check_in', '=', date("Y-m-d"));
-            
+
             $users_attendances = $users_attendances->get();
 
             $on_time_attendances = count($users_attendances->where('is_late', 0));
@@ -561,7 +561,7 @@ class AttendanceService{
 
         $is_late = $request->is_late ?? NULL;
         $is_on_time = $request->is_on_time ?? NULL;
-        
+
         $is_wfh = $request->is_wfh ?? NULL;
         $is_wfo = $request->is_wfo ?? NULL;
 
@@ -586,7 +586,7 @@ class AttendanceService{
             //filter
             if($keyword) $users_attendances = $users_attendances->where("name","LIKE","%$keyword%");
             if($keyword_role) $users_attendances = $users_attendances->where("position","LIKE","%$keyword_role%");
-            
+
 
 
             $users_attendances = $users_attendances->where(function($q) use($current_time, $is_late, $is_on_time, $is_wfh, $is_wfo, $is_hadir){
@@ -595,7 +595,7 @@ class AttendanceService{
                         if($is_late && $is_on_time) ;
                         elseif($is_late != NULL) $q->where("is_late",$is_late);
                         elseif($is_on_time != NULL) $q->where("is_late",0);
-    
+
                         if($is_wfh && $is_wfo);
                         elseif($is_wfh) $q->where("is_wfo", 0);
                         elseif($is_wfo)$q->where("is_wfo", 1);
@@ -615,8 +615,8 @@ class AttendanceService{
             //     return $q;
             // });
 
-            
-            
+
+
             if($company_ids) $users_attendances = $users_attendances->whereIn("company_id", $company_ids);
 
             //sort
@@ -624,7 +624,7 @@ class AttendanceService{
 
             // dd($users_attendances->get());
             $users_attendances = $users_attendances->paginate($rows);
-            
+
             foreach($users_attendances as $user_attendance){
                 if($user_attendance->attendance_user != NULL){
                     $user_attendance->attendance_user->geo_loc_check_in = json_decode($user_attendance->attendance_user->geo_loc_check_in);
@@ -651,7 +651,7 @@ class AttendanceService{
             $sort_type = $request->get('sort_type', 0);
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
-            
+
             // $user_attendances = AttendanceUser::where('user_id', $login_id)->whereDate('check_in', '>', date("Y-m-d", strtotime("-1 months")))->orderBy('check_in', 'asc')->get();
             $user_attendances = AttendanceUser::with('evidence:link,description,fileable_id,fileable_type')->select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
             ->join('long_lat_lists AS check_in_list', function ($join) {
@@ -668,12 +668,12 @@ class AttendanceService{
                 if($is_wfo) $params = "$params&is_wfo=$is_wfo";
                 if($is_late) $params = "$params&is_late=$is_late";
                 if($sort_type) $params = "$params&sort_type=$sort_type";
-    
+
                 if($is_wfo !== null) $user_attendances = $user_attendances->where('is_wfo', $is_wfo);
                 if($is_late !== null) $user_attendances = $user_attendances->where('is_late', $is_late);
                 if($sort_type) $user_attendances = $user_attendances->orderBy('check_in', 'asc');
                 else $user_attendances = $user_attendances->orderBy('check_in', 'desc');
-    
+
                 $user_attendances = $user_attendances->paginate($rows);
                 $user_attendances->withPath(env('APP_URL').'/getAttendancesUser'.$params);
             }
@@ -687,8 +687,8 @@ class AttendanceService{
                     "user_attendances" => $user_attendances
                 ];
                 return ["success" => true, "message" => "Data Attendances Masih Kosong", "data" => $data, "status" => 200];
-            } 
-            
+            }
+
             $is_late_days = [];
             foreach($user_attendances as $user_attendance){
                 $attendance_day = date('m-d', strtotime($user_attendance->check_in));
@@ -701,7 +701,7 @@ class AttendanceService{
                 if($is_late_day) $is_late_count++;
                 else $on_time_count++;
             }
-            
+
             $data = (object)[
                 "late_count" => $is_late_count,
                 "on_time_count" => $on_time_count,
@@ -728,7 +728,7 @@ class AttendanceService{
 
         try{
             $id = $request->get('id');
-            
+
             $user_attendances = AttendanceUser::where('user_id', $id)->whereDate('check_in', '>', date("Y-m-d", strtotime("-1 months")))->get();
 
             $is_late_count = 0;
@@ -739,8 +739,8 @@ class AttendanceService{
                     "on_time_count" => $on_time_count,
                 ];
                 return ["success" => true, "message" => "Data Attendances Masih Kosong", "data" => $data, "status" => 200];
-            } 
-            
+            }
+
             $is_late_days = [];
             foreach($user_attendances as $user_attendance){
                 $attendance_day = date('m-d', strtotime($user_attendance->check_in));
@@ -753,7 +753,7 @@ class AttendanceService{
                 if($is_late_day) $is_late_count++;
                 else $on_time_count++;
             }
-            
+
             $data = (object)[
                 "late_count" => $is_late_count,
                 "on_time_count" => $on_time_count
@@ -771,7 +771,7 @@ class AttendanceService{
 
         try{
             $login_id = auth()->user()->id;
-            
+
             $id = $request->get('id');
             $data_user = AttendanceUser::join('users', 'users.id', '=', 'attendance_users.user_id')->where('attendance_users.id',$request->get('id'))->select('users.name','users.position')->first();
             $name = $data_user->name;
@@ -783,7 +783,7 @@ class AttendanceService{
             })->find($id);
             if(!$user_attendance) return ["success" => false, "message" => "User Attendance Tidak Ditemukan" , "status" => 400];
             if($user_attendance->user_id !== $login_id && !$admin) return ["success" => false, "message" => "User Attendance Bukan Milik User Login" , "status" => 400];
-            
+
             $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
             $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
             $user_attendance->name = $name;
@@ -827,6 +827,7 @@ class AttendanceService{
         $user_company_id = auth()->user()->company_id;
         $company = Company::find($user_company_id);
 
+        //* get check in time
         if($company->id == 1) $check_in_time = $company->check_in_time;
         else if($company->role == 3) {
             $top_parent_company = Company::find(1);
@@ -840,9 +841,11 @@ class AttendanceService{
                 $check_in_time = $top_parent_company->check_in_time;
             }
         }
+
         if($today_user_attendance) return $today_user_attendance->is_late;
         else {
-            if($date_time_split[1] > $check_in_time) return true;
+            if($check_in_time == null) return false;
+            else if($date_time_split[1] > $check_in_time) return true;
             else return false;
         }
     }
@@ -862,7 +865,7 @@ class AttendanceService{
             $user_attendance = AttendanceUser::where('user_id', $login_id)->orderBy('check_in', 'desc')->first();
             $lat = number_format($lat, 4);
             $long = number_format($long, 4);
-            
+
             $long_lat = LongLatList::where('longitude', $long)->where('latitude', $lat)->first();
             if(!$long_lat) $long_lat = LongLatList::create(['longitude' => $long, 'latitude' => $lat, 'attempts' => 0]);
 
@@ -1245,7 +1248,7 @@ class AttendanceService{
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
-        
+
     }
 
     public function addAttendanceTaskActivities($request, $route_name){
@@ -1273,7 +1276,7 @@ class AttendanceService{
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
-        
+
     }
 
     public function updateAttendanceTaskActivity($request, $route_name){
