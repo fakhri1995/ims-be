@@ -1528,9 +1528,9 @@ class ProjectTaskService{
 
         try{
             $name = $request->name ?? NULL;
-            $company = auth()->user()->company_id;
-            $projectCategoryList = ProjectCategoryList::whereHas("companies", function($query){
-                return $query->where("companies.id", auth()->user()->company_id);
+            $company_id = $request->id;
+            $projectCategoryList = ProjectCategoryList::whereHas("companies", function($query) use($company_id){
+                return $query->where("companies.id", $company_id);
             });
             if($name) $projectCategoryList->select("name")->where("name","LIKE","%$name%");
             $projectCategoryList = $projectCategoryList->get();
@@ -1544,15 +1544,15 @@ class ProjectTaskService{
         try{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-
+            $company_id = $request->id;
             $categories_list_ids = $request->categories_list_ids ? explode(",",$request->categories_list_ids) : [];
-            $company = Company::with("projectCategories")->find(auth()->user()->company_id);
-            foreach($categories_list_ids as $id){
+            $company = Company::with("projectCategories")->find($company_id);
+            foreach($categories_list_ids as $id){ 
                 $projectCategoryList = ProjectCategoryList::find($id);
                 if(!$projectCategoryList) return ["success" => false, "message" => "Project category tidak ditemukan", "status" => 400];
             }
             $company->projectCategories()->sync($categories_list_ids);
-            $company = Company::with("projectCategories")->find(auth()->user()->company_id);
+            $company = Company::with("projectCategories")->find($company_id);
             
             return ["success" => true, "message" => "Data Berhasil Diubah", "data" => $company, "status" => 200];
         }catch(Exception $err){
