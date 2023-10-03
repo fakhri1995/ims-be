@@ -519,6 +519,9 @@ class AttendanceService{
             $on_time_attendances = count($users_attendances->where('is_late', 0));
             $late_attendances = count($users_attendances->where('is_late', 1));
 
+            $wfo_count = count($users_attendances->where('is_wfo', 1));
+            $wfh_count = count($users_attendances->where('is_wfo', 0));
+
             foreach($users_attendances as $user_attendance){
                 $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
                 $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
@@ -532,7 +535,9 @@ class AttendanceService{
                 'users_attendances' => $users_attendances,
                 'absent_users' => $absent_users,
                 'late_count' => $late_attendances,
-                'on_time_count' => $on_time_attendances
+                'on_time_count' => $on_time_attendances,
+                'wfo_count' => $wfo_count,
+                'wfh_count' => $wfh_count
             ];
             return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $data, "status" => 200];
         } catch(Exception $err){
