@@ -29,7 +29,7 @@ class TaskService{
     {
         $this->globalService = new GlobalService;
     }
-    
+
         // Single Textbox
         // Paragraf
         // Checkbox
@@ -77,14 +77,14 @@ class TaskService{
                         $component = (object)["name" => $work->name, "description" => $work->description, "type" => $work->type, "lists" => $lists];
                     } else if($work->type === 6){
                         $component = (object)["name" => $work->name, "description" => $work->description, "type" => $work->type, "dropdown_name" => $work->details->dropdown_name, "lists" => $work->details->lists, "values" => '-'];
-                    } 
+                    }
                 } else {
                     $component = (object)["name" => $work->name, "description" => $work->description, "type" => $work->type, 'values' => '-'];
                 }
                 $new_works[] = new TaskDetail([
                     "component" => $component
                 ]);
-            } 
+            }
         }
         return $new_works;
     }
@@ -110,12 +110,12 @@ class TaskService{
                     return $query->status == $i;
                 });
                 if($search !== false){
-                    $temp_list = $status_tasks[$search]; 
+                    $temp_list = $status_tasks[$search];
                     $temp_list->status_name = $status_list_name[$i];
                     $temp_list->percentage = $sum_task !== 0 ? round(($status_tasks[$search]->status_count / $sum_task * 100), 2) : 0;
                     $list[] = $temp_list;
                 } else {
-                    $list[] = (object)["status" => $i, "status_count" => 0, "status_name" => $status_list_name[$i], "percentage" => 0]; 
+                    $list[] = (object)["status" => $i, "status_count" => 0, "status_name" => $status_list_name[$i], "percentage" => 0];
                 }
             }
             return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $list, "status" => 200];
@@ -124,7 +124,7 @@ class TaskService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
-    
+
     public function getTaskTypeCounts($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
@@ -162,18 +162,18 @@ class TaskService{
             $total = $check / 86400;
             $range = $total / 3;
             $mod = $total % 3;
-            
+
             if($mod === 2) $second_addition = 1;
             else if($mod === 1) $second_addition = 0;
             else $second_addition = 0;
-            
+
             $each = floor($range);
             $first_interval = $each;
             $second_interval = $each * 2 + $second_addition;
-            
+
             $today = date('Y-m-d');
             $tomorrow = date("Y-m-d", strtotime('+1 day'));
-            
+
             $first_start_date = $from;
             $first_end_date = date("Y-m-d", $from_strtotime + $first_interval * 86400);
             $second_start_date = date("Y-m-d", $from_strtotime + ($first_interval + 1) * 86400);
@@ -194,7 +194,7 @@ class TaskService{
                 $second_range_deadline = Task::whereBetween('deadline', [$second_start_date, $third_start_date])->count();
                 $third_range_deadline = Task::whereBetween('deadline', [$third_start_date, $third_end_date])->count();
             }
-            
+
             $data = (object)[
                 "deadline" => (object)[
                     "today_deadline" => $today_deadline,
@@ -282,7 +282,7 @@ class TaskService{
                         ->orWhere('model_inventories.name', 'like', "%$keyword%")
                         ->orWhere('assets.name', 'like', "%$keyword%");
                     });
-                } 
+                }
 
                 $task_inventory_in = Task::with(['inventories.modelInventory.asset', 'inventories' => function ($query) {
                     $query->wherePivot('is_in', true);
@@ -300,13 +300,13 @@ class TaskService{
                 ];
                 return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $data, "status" => 200];
             }
-            
+
 
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
-    
+
     public function getTasks($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
@@ -324,7 +324,7 @@ class TaskService{
 
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
-            
+
             $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role', 'users' => function($join){
                 $join->addSelect("check_in_list.geo_location as geo_loc_check_in", "check_out_list.geo_location as geo_loc_check_out")
                 ->leftjoin('long_lat_lists AS check_in_list', function ($join) {
@@ -341,7 +341,7 @@ class TaskService{
                 $companyService = new CompanyService;
                 $company_list = $companyService->checkSubCompanyList($company);
                 $tasks = $tasks->whereIn('location_id', $company_list);
-            } 
+            }
             if(count($status)) $tasks = $tasks->whereIn('status', $status);
             if($from && $to) $tasks = $tasks->whereBetween('deadline', [$from, $to]);
             if($keyword){
@@ -350,16 +350,16 @@ class TaskService{
                         $query->where('name', 'like', "%".$keyword."%")->orWhere('id', $keyword);
                     });
                 } else $tasks = $tasks->where('name', 'like', "%".$keyword."%");
-            } 
+            }
             if($task_type > 0) $tasks = $tasks->where('task_type_id', $task_type);
-            
+
             if($sort_by){
                 if($sort_by === 'name') $tasks = $tasks->orderBy('name', $sort_type);
                 else if($sort_by === 'deadline') $tasks = $tasks->orderBy('deadline', $sort_type);
                 else if($sort_by === 'id') $tasks = $tasks->orderBy('id', $sort_type);
                 else if($sort_by === 'status') $tasks = $tasks->orderBy('status', $sort_type);
             }
-            
+
             $tasks = $tasks->where('is_visible', true)->paginate($rows);
             foreach($tasks as $task){
                 $task->location->full_location = $task->location->fullSubNameWParentTopParent();
@@ -369,7 +369,7 @@ class TaskService{
                     $user->geo_loc_check_in = json_decode($user->geo_loc_check_in);
                     $user->geo_loc_check_out = json_decode($user->geo_loc_check_out);
                 }
-                
+
                 $task->deadline_message = "";
                 $date_now = date_create(date('Y-m-d'));
                 $date_deadline = date_create(explode(" ",$task->deadline)[0]);
@@ -387,7 +387,7 @@ class TaskService{
                         }
                     }else{
                         $task->deadline_message = $deadline_detail->days." hari yang lalu";
-                       
+
                     }
                 }
 
@@ -395,7 +395,7 @@ class TaskService{
                     $task->reference->ticketable->location->full_location = $task->reference->ticketable->location->fullNameWParentTopParent();
                     $task->reference->ticketable->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
                 }catch(Exception $err){
-                    
+
                 }
             }
 
@@ -436,7 +436,7 @@ class TaskService{
                         $limit = $deadline_time - $start_time;
                         $task->time_limit_percentage = !$limit ? 100 : ($progress / $limit * 100);
                     }
-                } 
+                }
             }
             return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $tasks, "status" => 200];
 
@@ -465,7 +465,7 @@ class TaskService{
 
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
-            
+
             $task_ids = DB::table('task_user')->where('user_id', $login_id)->pluck('task_id');
             $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role', 'users', 'reference:id,ticketable_type,ticketable_id', 'reference.type:id,code,table_name']);
             if($assigned_only){
@@ -476,7 +476,7 @@ class TaskService{
                     ->orWhereIn('id', $task_ids);
                 });
             }
-            
+
 
 
             if($location > 0){
@@ -485,7 +485,7 @@ class TaskService{
                 $companyService = new CompanyService;
                 $company_list = $companyService->checkSubCompanyList($company);
                 $tasks = $tasks->whereIn('location_id', $company_list);
-            } 
+            }
             if(count($status)) $tasks = $tasks->whereIn('status', $status);
             if($from && $to) $tasks = $tasks->whereBetween('deadline', [$from, $to]);
             if($keyword){
@@ -494,16 +494,16 @@ class TaskService{
                         $query->where('name', 'like', "%".$keyword."%")->orWhere('id', $keyword);
                     });
                 } else $tasks = $tasks->where('name', 'like', "%".$keyword."%");
-            } 
+            }
             if($task_type > 0) $tasks = $tasks->where('task_type_id', $task_type);
-            
+
             if($sort_by){
                 if($sort_by === 'name') $tasks = $tasks->orderBy('name', $sort_type);
                 else if($sort_by === 'deadline') $tasks = $tasks->orderBy('deadline', $sort_type);
                 else if($sort_by === 'id') $tasks = $tasks->orderBy('id', $sort_type);
                 else if($sort_by === 'status') $tasks = $tasks->orderBy('status', $sort_type);
             }
-            
+
             $tasks = $tasks->paginate($rows);
             foreach($tasks as $task){
                 $task->location->full_location = $task->location->fullSubNameWParentTopParent();
@@ -526,7 +526,7 @@ class TaskService{
                         }
                     }else{
                         $task->deadline_message = $deadline_detail->days." hari yang lalu";
-                       
+
                     }
                 }
             }
@@ -561,18 +561,18 @@ class TaskService{
         $user_tasks = $user_tasks->groupBy('users.id','tasks.status')->get()->groupBy('id');
         $status_list_name = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled', 'Rejected'];
         foreach($users as $user){
-            $status_list = $user_tasks[$user->id] ?? collect([(object)["id" => $user->id, "status" => 1, "status_count" => 0]]); 
+            $status_list = $user_tasks[$user->id] ?? collect([(object)["id" => $user->id, "status" => 1, "status_count" => 0]]);
             $list = new Collection();
             for($i = 1; $i < 7; $i++){
                 $search = $status_list->search(function($query) use($i){
                     return $query->status == $i;
                 });
                 if($search !== false){
-                    $temp_list = $status_list[$search]; 
+                    $temp_list = $status_list[$search];
                     $temp_list->status_name = $status_list_name[$i];
                     $list->push($temp_list);
                 } else {
-                    $list->push((object)["id" => $user->id, "status" => $i, "status_count" => 0, "status_name" => $status_list_name[$i]]); 
+                    $list->push((object)["id" => $user->id, "status" => $i, "status_count" => 0, "status_name" => $status_list_name[$i]]);
                 }
             }
             $user->status_list = $list;
@@ -587,23 +587,23 @@ class TaskService{
         $to = $request->get('to', null);
         $assigned_only = $request->get('assigned_only', null);
         $location = $request->get('location', null);
-            
+
         $login_id = auth()->user()->id;
         $task_ids = DB::table('task_user')->where('user_id', $login_id)->pluck('task_id');
-        
+
         if($assigned_only) $status_list = DB::table('tasks')->whereIn('id', $task_ids);
         else {
             $status_list = DB::table('tasks')->where(function($query) use ($login_id, $task_ids) {
                 $query->where('created_by', $login_id)->orWhereIn('id', $task_ids);
             });
-        } 
-        
+        }
+
         if($location) $status_list = $status_list->where('location_id', $location);
         if($from && $to) $status_list = $status_list->whereBetween('deadline', [$from, $to]);
-        
+
         $status_list = $status_list->select(DB::raw('status, count(*) as status_count'))->groupBy('status')->get();
         $status_list_name = ['-','Overdue', 'Open', 'On progress', 'On hold', 'Completed', 'Closed', 'Canceled', 'Rejected'];
-        
+
         $list = new Collection();
         $active_task = 0;
         $sum_task = $status_list->sum('status_count');
@@ -613,13 +613,13 @@ class TaskService{
             });
 
             if($search !== false){
-                $temp_list = $status_list[$search]; 
+                $temp_list = $status_list[$search];
                 $temp_list->status_name = $status_list_name[$i];
                 $temp_list->percentage = $sum_task !== 0 ? round(($status_list[$search]->status_count / $sum_task * 100), 2) : 0;
                 $list->push($temp_list);
                 if($i < 5) $active_task += $temp_list->status_count;
             } else {
-                $list->push((object)["status" => $i, "status_count" => 0, "status_name" => $status_list_name[$i], "percentage" => 0]); 
+                $list->push((object)["status" => $i, "status_count" => 0, "status_name" => $status_list_name[$i], "percentage" => 0]);
             }
 
         }
@@ -630,7 +630,7 @@ class TaskService{
             "sum_task" => $sum_task,
             "active_task" => $active_task,
         ];
-        
+
         return ["success" => true, "data" => $data, "status" => 200];
     }
 
@@ -683,23 +683,23 @@ class TaskService{
             $to = $request->get('to', null);
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
-            
+
             $tasks = Task::with(['taskType:id,name,deleted_at', 'location:id,name,parent_id,top_parent_id,role'])->where('status', 2)->doesntHave('users');
-            
+
             if($location > 0){
                 $company = Company::find($location);
                 if(!$company) return ["success" => false, "message" => "Lokasi Tidak Ditemukan", "status" => 400];
                 $companyService = new CompanyService;
                 $company_list = $companyService->checkSubCompanyList($company);
                 $tasks = $tasks->whereIn('location_id', $company_list);
-            } 
+            }
             if($from && $to) $tasks = $tasks->whereBetween('deadline', [$from, $to]);
             if($keyword){
                 if(is_numeric($keyword)) $tasks = $tasks->where('name', 'like', "%".$keyword."%")->orWhere('id', $keyword);
                 else $tasks = $tasks->where('name', 'like', "%".$keyword."%");
-            } 
+            }
             if($task_type > 0) $tasks = $tasks->where('task_type_id', $task_type);
-            
+
             if($sort_by){
                 if($sort_by === 'name') $tasks = $tasks->orderBy('name', $sort_type);
                 else if($sort_by === 'deadline') $tasks = $tasks->orderBy('deadline', $sort_type);
@@ -734,12 +734,12 @@ class TaskService{
                 })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
                     $join->on('task_user.long_check_out', '=', 'check_out_list.longitude')->on('task_user.lat_check_out', '=', 'check_out_list.latitude');
                 });
-            } , 'group:id,name', 'inventories:id,model_id,mig_id','inventories.modelInventory.asset', 'taskDetails', 
-            'reference', 'reference.creator:id,name,company_id', 'reference.creator.company:id,name,top_parent_id', 
-            'reference.type', 'reference.ticketable', 'reference.ticketable.location', 'reference.ticketable.assetType', 
+            } , 'group:id,name', 'inventories:id,model_id,mig_id','inventories.modelInventory.asset', 'taskDetails',
+            'reference', 'reference.creator:id,name,company_id', 'reference.creator.company:id,name,top_parent_id',
+            'reference.type', 'reference.ticketable', 'reference.ticketable.location', 'reference.ticketable.assetType',
             'reference.ticketable.inventory'])->find($id);
-            
-            
+
+
             if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
             $task->location->full_location = $task->location->fullSubNameWParentTopParent();
             $task->location->makeHidden(['parent', 'parent_id', 'role']);
@@ -783,12 +783,12 @@ class TaskService{
                 }
                 $task->reference->name = $task->reference->type->code.'-'.sprintf('%03d', $task->reference->ticketable_id);
                 $task->reference->logs = $logService->getTicketLogFunction($task->reference->id);
-            } 
+            }
             $task->logs = $logService->getLogTaskFunction($id);
-            
-            if($task->status === 4) $task->time_left = date_diff(date_create($task->deadline), date_create($task->on_hold_at)); 
-            else $task->time_left = date_diff(date_create($task->deadline), date_create(date("Y-m-d H:i:s"))); 
-            
+
+            if($task->status === 4) $task->time_left = date_diff(date_create($task->deadline), date_create($task->on_hold_at));
+            else $task->time_left = date_diff(date_create($task->deadline), date_create(date("Y-m-d H:i:s")));
+
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $task, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -815,7 +815,7 @@ class TaskService{
             $list[] = $inventory->id;
             return $list;
         }
-        $list[] = $inventory->id; 
+        $list[] = $inventory->id;
         return $list;
     }
 
@@ -837,7 +837,7 @@ class TaskService{
                     $failed_inventory_id = $inventory->id;
                     $failed_parent_inventory_id = $parent_inventory_id_comparation[0];
                     return ["success" => false, "message" => "ID Inventory $failed_inventory_id adalah part dari Inventory dengan id $failed_parent_inventory_id", "status" => 400];
-                } 
+                }
             }
         }
         return ["success" => true];
@@ -847,7 +847,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $is_group = $request->get('is_group', true);
         $assign_ids = $request->get('assign_ids', []);
         $inventory_ids = $request->get('inventory_ids', []);
@@ -856,7 +856,7 @@ class TaskService{
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'task_type_id' => 'required|numeric',
-            'location_id' => 'required|numeric',
+            'location_id' => 'numeric',
             'reference_id' => 'nullable|numeric',
             'created_at' => 'required|date',
             'deadline' => 'nullable|date',
@@ -876,14 +876,14 @@ class TaskService{
             if($task_type === null) return ["success" => false, "message" => "Id Tipe Task Tidak Ditemukan", "status" => 400];
             $check_inventory_ids_neccesity = $this->checkInventoryIdsNeccesity($inventory_ids);
             if(!$check_inventory_ids_neccesity["success"]) return $check_inventory_ids_neccesity;
-            
+
             $task = new Task;
             if($is_group){
                 if(count($assign_ids)){
                     $task->group_id = $assign_ids[0];
                     $group = Group::with('users')->find($assign_ids[0]);
                     if($group === null) return ["success" => false, "message" => "Id Group Tidak Ditemukan", "status" => 400];
-                } 
+                }
                 else $task->group_id = null;
             }
             $created_by = auth()->user()->id;
@@ -903,10 +903,10 @@ class TaskService{
             $task->is_from_ticket = false;
             $task->is_visible = true;
             $task->status = 2;
-            
-            
+
+
             $task->save();
-            
+
             if(count($task_type->works)){
                 $new_works = $this->clusteringNewTaskWorks($task_type->works, $inventory_ids);
                 $task->taskDetails()->saveMany($new_works);
@@ -920,15 +920,15 @@ class TaskService{
                             $taskDetail->users()->attach($assign_ids);
                         }
                     }
-                } 
+                }
                 $task->users()->attach($assign_ids);
             }
 
             $assign_ids[] = $created_by;
-            $description = "Task Baru Telah Terbuat"; 
+            $description = "Task Baru Telah Terbuat";
             $link = env('APP_URL_WEB')."/task/".$task->id;
-            $image_type = "task"; 
-            $color_type = "green"; 
+            $image_type = "task";
+            $color_type = "green";
             $need_push_notification = false;
             $notificationable_id = $task->id;
             $notificationable_type = 'App\Task';
@@ -958,7 +958,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('id', null);
         $assign_ids = $request->get('assign_ids', []);
         $deadline = $request->get('deadline');
@@ -988,7 +988,7 @@ class TaskService{
         if(count($task->inventories)) $old_inventory_ids = $task->inventories->pluck('id')->toArray();
         $is_group = $request->get('is_group', null);
         if($is_group === null) return ["success" => false, "message" => "Kolom Is Group Belum Diisi", "status" => 400];
-        
+
         $login_id = auth()->user()->id;
         if($task->created_by !== $login_id) return ["success" => false, "message" => "Anda Bukan Pembuat Task, Izin Update Tidak Dimiliki", "status" => 403];
         $inventory_ids = $request->get('inventory_ids', []);
@@ -1002,9 +1002,9 @@ class TaskService{
                     $task->group_id = $assign_ids[0];
                     $group = Group::with('users')->find($assign_ids[0]);
                     if($group === null) return ["success" => false, "message" => "Id Group Tidak Ditemukan", "status" => 400];
-                } 
+                }
             } else $task->group_id = null;
-            
+
             $task->name = $request->get('name');
             $task->description = $request->get('description');
             $task->location_id = $request->get('location_id');
@@ -1031,7 +1031,7 @@ class TaskService{
             }
 
             $task->save();
-            
+
             $assign_id_count = count($assign_ids);
             if($assign_id_count){
                 if($is_group){
@@ -1043,7 +1043,7 @@ class TaskService{
                             $taskDetail->users()->sync($assign_ids);
                         }
                     }
-                } 
+                }
                 $task->users()->sync($assign_ids);
             }
 
@@ -1063,7 +1063,7 @@ class TaskService{
                 } else {
                     if($task->status === 5) $this->rollBackSubmitStatus($task);
                 }
-            } 
+            }
 
             $assign_ids[] = $task->created_by;
             $notificationable_id = $task->id;
@@ -1082,7 +1082,7 @@ class TaskService{
                     if($task_detail->component->type === 4 && !$task_detail->component->is_general){
                         $for_news = array_values(array_diff($inventory_ids, $old_inventory_ids));
                         $for_deletes = array_values(array_diff($old_inventory_ids, $inventory_ids));
-                        
+
                         $rows = $task_detail->component->rows;
                         $values = $task_detail->component->values;
                         $for_delete_indexes = [];
@@ -1092,15 +1092,15 @@ class TaskService{
                             if($search !== false){
                                 $for_delete_indexes[] = $search;
                                 unset($rows[$search]);
-                            } 
-                        } 
+                            }
+                        }
                         $rows = array_values($rows);
                         if(count($for_delete_indexes)){
                             foreach($for_delete_indexes as $for_delete_index){
                                 foreach ($values as &$value){
                                     unset($value[$for_delete_index]);
                                 }
-                            } 
+                            }
                             foreach ($values as &$value) $value = array_values($value);
                         }
                         if(count($for_news)){
@@ -1134,7 +1134,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('id', null);
         $task = Task::find($id);
         if($task === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
@@ -1161,7 +1161,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         try{
             $task_id = $request->get('task_id', null);
             $id = $request->get('id', null);
@@ -1184,7 +1184,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('id', null);
         $task = Task::find($id);
         if($task === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
@@ -1205,7 +1205,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('id', null);
         $notes = $request->get('notes', null);
         $task = Task::with('users')->find($id);
@@ -1222,7 +1222,7 @@ class TaskService{
                 if($task->status < 4){
                     $task->status = 4;
                     $task->on_hold_at = date('Y-m-d H:i:s');
-                } 
+                }
                 else if($task->status === 4){
                     $new_deadline_times = strtotime($task->deadline) + strtotime(date('Y-m-d H:i:s')) - strtotime($task->on_hold_at);
                     $task->deadline = date("Y-m-d H:i:s", $new_deadline_times);
@@ -1243,7 +1243,7 @@ class TaskService{
                 }
                 $task->notes = $notes;
                 $task->save();
-                
+
                 $logService = new LogService;
                 if($task->is_from_ticket){
                     $logService->updateStatusLogTicket($task->reference_id, $login_id, $old_status, $task->status, $notes);
@@ -1258,7 +1258,7 @@ class TaskService{
                 $logNotes = $task->status == 4 ? $request->notes : NULL;
                 $logService->addLogTask($task->id, $login_id, "Updated", $logProperties, $logNotes);
 
-                
+
                 return ["success" => true, "message" => "Berhasil Merubah Status Task", "status" => 200];
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Task Ini.", "status" => 400];
         } catch(Exception $err){
@@ -1270,7 +1270,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('id', null);
         $notes = $request->get('notes', null);
         $task = Task::with('users')->find($id);
@@ -1287,7 +1287,7 @@ class TaskService{
                 $task->on_hold_at = date('Y-m-d H:i:s');
                 $task->notes = $notes;
                 $task->save();
-                
+
                 $logService = new LogService;
                 if($task->is_from_ticket){
                     $logService->updateStatusLogTicket($task->reference_id, $login_id, $old_status, $task->status, $notes);
@@ -1302,7 +1302,7 @@ class TaskService{
                 $logNotes = $task->status == 4 ? $request->notes : NULL;
                 $logService->addLogTask($task->id, $login_id, "Updated", $logProperties, $logNotes);
 
-                
+
                 return ["success" => true, "message" => "Berhasil Menolak Task", "status" => 200];
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Task Ini.", "status" => 400];
         } catch(Exception $err){
@@ -1313,7 +1313,7 @@ class TaskService{
     private function addingLatLongList($latitude, $longitude){
         $lat = number_format($latitude, 4);
         $long = number_format($longitude, 4);
-        
+
         $long_lat = LongLatList::where('longitude', $long)->where('latitude', $lat)->first();
         if(!$long_lat) $long_lat = LongLatList::create(['longitude' => $long, 'latitude' => $lat, 'attempts' => 0]);
     }
@@ -1322,13 +1322,13 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('id', null);
         $lat = $request->get('lat', null);
         $long = $request->get('long', null);
         $task = Task::with('users')->find($id);
-        
-        
+
+
         if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
         try{
             $login_id = auth()->user()->id;
@@ -1343,7 +1343,7 @@ class TaskService{
                     $task->users()->updateExistingPivot($login_id, ['check_in' => date("Y-m-d H:i:s"), 'lat_check_in' => $lat, 'long_check_in' => $long]);
                     $long_lat = LongLatList::where('longitude', $long)->where('latitude', $lat)->first();
                     if(!$long_lat) $long_lat = LongLatList::create(['longitude' => $long, 'latitude' => $lat, 'attempts' => 0]);
-                    
+
                     if($task->status === 2){
                         $task->status = 3;
                         $task->save();
@@ -1354,7 +1354,7 @@ class TaskService{
                     }
                     $this->addingLatLongList($lat, $long);
                     return ["success" => true, "message" => "Berhasil Melakukan Check In", "status" => 200];
-                } 
+                }
                 return ["success" => false, "message" => "Anda Sudah Melakukan Check In", "status" => 400];
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Task Ini.", "status" => 400];
         } catch(Exception $err){
@@ -1391,12 +1391,12 @@ class TaskService{
         // } else $task->status = 5;
         $task->status = 5;
         $task->save();
-        
+
         $assign_ids = [$task->created_by];
-        $description = "Task Telah Disubmit"; 
+        $description = "Task Telah Disubmit";
         $link = env('APP_URL_WEB')."/task/".$task->id;
-        $image_type = "task"; 
-        $color_type = "green"; 
+        $image_type = "task";
+        $color_type = "green";
         $need_push_notification = false;
         $notificationable_id = $task->id;
         $notificationable_type = 'App\Task';
@@ -1408,7 +1408,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('id', null);
         $lat = $request->get('lat', null);
         $long = $request->get('long', null);
@@ -1425,7 +1425,7 @@ class TaskService{
             if($search !== false){
                 if(!array_intersect([$task->status], [1,3])) return ["success" => false, "message" => "Status Bukan On Progress, Tidak Dapat Melakukan Submit", "status" => 400];
                 else if($task->users[$search]->check_out !== null) return ["success" => false, "message" => "Anda Sudah Melakukan Submit", "status" => 400];
-                else { 
+                else {
                     $task->users()->updateExistingPivot($login_id, ['check_out' => date("Y-m-d H:i:s"), 'lat_check_out' => $lat, 'long_check_out' => $long]);
                     $task->load('users');
                     $all_check_out = true;
@@ -1452,7 +1452,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('id', null);
         $notes = $request->get('notes', null);
         $task = Task::with('users')->find($id);
@@ -1464,17 +1464,17 @@ class TaskService{
                 if($task->status !== 5) return ["success" => false, "message" => "Status Bukan Completed, Tidak Dapat Dilakukan Penolakan", "status" => 400];
                 else {
                     foreach($task->users as $user) $task->users()->updateExistingPivot($user->id, ['check_out' => null, 'lat_check_out' => null, 'long_check_out' => null]);
-                    
+
                     $task->status = 3;
                     $task->notes = $notes;
                     $task->save();
-                } 
+                }
 
                 $assign_ids = $task->users->pluck('id');
-                $description = "Task Ditolak"; 
+                $description = "Task Ditolak";
                 $link = env('APP_URL_WEB')."/task/".$task->id;
-                $image_type = "task"; 
-                $color_type = "red"; 
+                $image_type = "task";
+                $color_type = "red";
                 $need_push_notification = false;
                 $notificationable_id = $task->id;
                 $notificationable_type = 'App\Task';
@@ -1516,23 +1516,23 @@ class TaskService{
             $old_inventory_parent_list = $parent_inventory->inventoryPart->pluck('id');
             $parent_inventory->inventoryPart()->attach($inventory_id);
         }
-        
+
         $inventory = Inventory::with('inventoryParent', 'inventoryPart')->find($inventory_id);
         if($inventory === null) return ["success" => false, "message" => "Id Inventory Tidak Terdaftar", "status" => 400];
-        
+
         $old_inventory = [];
         foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
         $inventory->status_condition = 1;
         $inventory->status_usage = 1;
         $inventory->location = $location;
         $inventory->save();
-        
+
         $logService = new LogService;
         $properties = $this->checkUpdateProperties($old_inventory, $inventory);
         if($properties){
             $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
         }
-        
+
         $check_parent_inventory_part = $inventory->inventoryParent;
         $properties = [];
         if(count($check_parent_inventory_part)){
@@ -1542,7 +1542,7 @@ class TaskService{
             $parent_inventory_part->load('inventoryPart');
             $properties['attributes']['list_parts'] = $parent_inventory_part->inventoryPart->pluck('id');
             $logService->updateLogInventoryPivotParts($parent_inventory_part->id, $causer_id, $properties, "Digunakan Untuk Proses Masuk Suku Cadang Lain");
-            
+
             $properties = [];
             $properties['old'] = ['parent_id' => $parent_inventory_part->id];
             if($parent_id !== 0) $properties['attributes'] = ['parent_id' => $parent_id];
@@ -1566,7 +1566,7 @@ class TaskService{
         if($parent_id !== 0){
             $parent_inventory = Inventory::with('inventoryPart')->select('id')->find($parent_id);
             $inventory_parent_list = $parent_inventory->inventoryPart->pluck('id');
-            
+
             $properties = [];
             $properties['old']['list_parts'] = $old_inventory_parent_list;
             $properties['attributes']['list_parts'] = $inventory_parent_list;
@@ -1590,7 +1590,7 @@ class TaskService{
             else $notes = "Removed as Parts with Its Parent";
             $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
         }
-        
+
         if(count($inventory->inventoryPart)){
             foreach($inventory->inventoryPart as $temp_inventory){
                 $this->removeChildInventoryPart($temp_inventory, $causer_id, $location, $status);
@@ -1600,16 +1600,16 @@ class TaskService{
 
     private function removeInventoryPart($inventory_id, $causer_id, $location)
     {
-        $notes = "Keluar Suku Cadang";        
+        $notes = "Keluar Suku Cadang";
         $inventory = Inventory::with('inventoryPart', 'inventoryParent')->find($inventory_id);
         $old_inventory = [];
         foreach($inventory->getAttributes() as $key => $value) $old_inventory[$key] = $value;
-        
+
         $inventory->status_condition = 2;
         $inventory->status_usage = 3;
         $inventory->location = $location;
         $inventory->save();
-        
+
         $logService = new LogService;
         if(count($inventory->inventoryParent)){
             $parent_id = $inventory->inventoryParent[0]->id;
@@ -1622,35 +1622,35 @@ class TaskService{
             ];
             $logService->deleteLogInventoryPivot($inventory_id, $causer_id, $properties, $notes);
         }
-        
+
         $properties = $this->checkUpdateProperties($old_inventory, $inventory);
         if($properties){
             $logService->updateLogInventory($inventory->id, $causer_id, $properties, $notes);
         }
-        
+
         if(count($inventory->inventoryPart)){
             foreach($inventory->inventoryPart as $temp_inventory){
                 $this->removeChildInventoryPart($temp_inventory, $causer_id, $location);
             }
         }
-        
+
         if(count($inventory->inventoryParent)){
             $parent_inventory = Inventory::with('inventoryPart')->select('id')->find($parent_id);
             $inventory_parent_list = $parent_inventory->inventoryPart->pluck('id');
-            
+
             $properties = [];
             $properties['old']['list_parts'] = $old_inventory_parent_list;
             $properties['attributes']['list_parts'] = $inventory_parent_list;
             $logService->updateLogInventoryPivotParts($parent_id, $causer_id, $properties, $notes);
         }
-        
+
     }
 
     public function approveTask($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('id', null);
         $task = Task::with(['inventories' => function ($query) {
                 $query->wherePivot('is_from_task', false);
@@ -1673,13 +1673,13 @@ class TaskService{
                     }
                     $task->notes = null;
                     $task->save();
-                } 
+                }
 
                 $assign_ids = $task->users->pluck('id');
-                $description = "Task Telah Disetujui"; 
+                $description = "Task Telah Disetujui";
                 $link = env('APP_URL_WEB')."/task/".$task->id;
-                $image_type = "task"; 
-                $color_type = "green"; 
+                $image_type = "task";
+                $color_type = "green";
                 $need_push_notification = false;
                 $notificationable_id = $task->id;
                 $notificationable_type = 'App\Task';
@@ -1689,7 +1689,7 @@ class TaskService{
                 // Turn off one hour left deadline notification
                 $task->need_one_hour_notification = false;
                 $task->save();
-                
+
                 return ["success" => true, "message" => "Berhasil Melakukan Persetujuan Pada Task", "status" => 200];
             } else return ["success" => false, "message" => "Anda Tidak Memiliki Izin Pada Task Ini", "status" => 400];
         } catch(Exception $err){
@@ -1701,7 +1701,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $login_id = auth()->user()->id;
         $id = $request->get('id', null);
         $task = Task::with('users', 'taskDetails')->find($id);
@@ -1747,7 +1747,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $login_id = auth()->user()->id;
         $id = $request->get('id', null);
         $add_in_inventories = $request->get('add_in_inventories', []);
@@ -1768,7 +1768,7 @@ class TaskService{
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
 
             if(!array_intersect([$task->status], [1,3])) return ["success" => false, "message" => "Status Bukan On Progress", "status" => 400];
-            
+
             $inventory_from_task_ids = [];
             $inventory_not_from_task_in_ids = [];
             $inventory_not_from_task_out_ids = [];
@@ -1781,16 +1781,16 @@ class TaskService{
                             $inventory_not_from_task_in_ids[] = $inventory_task->id;
                             $inventory_not_from_task_ins[] = $inventory_task;
                         } else $inventory_not_from_task_out_ids[] = $inventory_task->id;
-                    } 
-                    
+                    }
+
                     $inventory_task->is_from_task = $inventory_task->pivot->is_from_task;
                     $inventory_task->is_in = $inventory_task->pivot->is_in;
-                } 
+                }
             }
-            
+
             $companyService = new CompanyService;
             $company_list = $companyService->checkSubCompanyList(auth()->user()->company);
-            
+
             if(count($add_in_inventories)){
                 $company_list = $company_list->toArray();
                 foreach($add_in_inventories as $add_in_inventory){
@@ -1813,7 +1813,7 @@ class TaskService{
                             }
                             if(!$check_connect_id){
                                 return ["success" => false, "message" => "Connect Id (Parent Id) Dengan Item Id $inventory_id Bukan Merupakan Part Dari Item Yang Terhubung Dengan Task", "status" => 400];
-                            } 
+                            }
                         }
                     }
                     // Check whether add_in_inventory's parent is same with inventory or inventory part with add_out_inventory_id id
@@ -1827,7 +1827,7 @@ class TaskService{
                         }
                         if($check_connect_id){
                             return ["success" => false, "message" => "Connect Id (Parent Id) Dengan Item Id $inventory_id Sama Dengan Part Item Yang Akan Dikeluarkan Dengan Id $add_out_inventory_id", "status" => 400];
-                        } 
+                        }
                     }
                 }
             }
@@ -1844,7 +1844,7 @@ class TaskService{
                     }
                     if(!$check_add_out_inventory_id){
                         return ["success" => false, "message" => "Item Dengan Id $add_out_inventory_id Bukan Merupakan Part Dari Item Yang Terhubung Dengan Task", "status" => 400];
-                    } 
+                    }
                 }
             }
 
@@ -1860,7 +1860,7 @@ class TaskService{
                     if($task->inventories[$search]->is_in === false) return ["success" => false, "message" => "Item Dengan Id $remove_in_inventory_id Termasuk Suku Cadang Keluar", "status" => 400];
                 }
             }
-            
+
             if(count($remove_out_inventory_ids)){
                 foreach($remove_out_inventory_ids as $remove_out_inventory_id){
                     $check_in_task = array_intersect([$remove_out_inventory_id], $inventory_from_task_ids);
@@ -1873,18 +1873,18 @@ class TaskService{
                     if($task->inventories[$search]->is_in === true) return ["success" => false, "message" => "Item Dengan Id $remove_out_inventory_id Termasuk Suku Cadang Masuk", "status" => 400];
                 }
             }
-            
+
             foreach($remove_out_inventory_ids as $remove_out_inventory_id){
                 $check_in_task = array_intersect([$remove_out_inventory_id], $inventory_from_task_ids);
                 $task->inventories()->detach($remove_out_inventory_id);
                 if(count($check_in_task)){
                     $task->inventories()->attach($remove_out_inventory_id, ['is_from_task' => true, 'is_in' => null]);
-                } 
+                }
             }
             foreach($remove_in_inventory_ids as $remove_in_inventory_id) $task->inventories()->detach($remove_in_inventory_id);
             foreach($add_out_inventory_ids as $add_out_inventory_id){
                 $task->inventories()->attach($add_out_inventory_id, ['is_from_task' => false, 'is_in' => false, 'user_id' => $login_id]);
-                // Check if add_out_inventory_ids are parent from inventory_not_from_task_ins 
+                // Check if add_out_inventory_ids are parent from inventory_not_from_task_ins
                 // if yes, delete task inventory which have add_out_inventory_ids as their parent
                 if(count($inventory_not_from_task_ins)){
                     foreach($inventory_not_from_task_ins as $inventory_not_from_task_in){
@@ -1897,10 +1897,10 @@ class TaskService{
                     }
                     if($check_remove) $task->inventories()->detach($inventory_not_from_task_in->id);
                 }
-            } 
+            }
             foreach($add_in_inventories as $add_in_inventory){
                 $task->inventories()->syncWithoutDetaching([$add_in_inventory['inventory_id'] => ['is_from_task' => false, 'is_in' => true, 'user_id' => $login_id, 'connect_id' => $add_in_inventory['connect_id']]]);
-                // Check if add_in_inventories's parent are from inventory_not_from_task_out_ids 
+                // Check if add_in_inventories's parent are from inventory_not_from_task_out_ids
                 // if yes, delete task inventory which have add_out_inventory_ids as their children
                 if(count($inventory_not_from_task_out_ids)){
                     foreach($inventory_not_from_task_out_ids as $inventory_not_from_task_out_id){
@@ -1916,10 +1916,10 @@ class TaskService{
                         $task->inventories()->detach($inventory_not_from_task_out_id);
                         if(count($check_in_task)){
                             $task->inventories()->attach($inventory_not_from_task_out_id, ['is_from_task' => true, 'is_in' => null]);
-                        } 
-                    } 
+                        }
+                    }
                 }
-            } 
+            }
 
             return ["success" => true, "message" => "Berhasil Memperbarui Suku Cadang Task", "status" => 200];
         } catch(Exception $err){
@@ -1931,7 +1931,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $login_id = auth()->user()->id;
         $id = $request->get('id', null);
         $inventory_id = $request->get('inventory_id', null);
@@ -1943,17 +1943,17 @@ class TaskService{
             }])->find($id);
             if($task === null) return ["success" => false, "message" => "Id Task Tidak Ditemukan", "status" => 400];
             if(!count($task->users)) return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
-            
+
             $search = $task->users->search(function ($item) use ($login_id) {
                 return $item->id === $login_id;
             });
-            
+
             if($search !== false){
                 if($task->users[$search]->check_in === null) return ["success" => false, "message" => "Anda Perlu Melakukan Check In Terlebih Dahulu ", "status" => 400];
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
-            
+
             if(!array_intersect([$task->status], [1,3])) return ["success" => false, "message" => "Status Bukan On Progress", "status" => 400];
-            
+
             $inventory = Inventory::find($inventory_id);
             if($inventory === null) return ["success" => false, "message" => "Id Inventori Tidak Ditemukan", "status" => 400];
             $inventory_from_task_ids = $task->inventories->pluck('id');
@@ -1969,7 +1969,7 @@ class TaskService{
                     }
                     if(!$check_connect_id){
                         return ["success" => false, "message" => "Connect Id (Parent Id) Bukan Merupakan Part Dari Item Yang Terhubung Dengan Task", "status" => 400];
-                    } 
+                    }
                 }
             }
 
@@ -1982,7 +1982,7 @@ class TaskService{
             $company_list = $companyService->checkSubCompanyList(auth()->user()->company);
             $check_inventory_location = array_intersect([$inventory->location], $company_list->toArray());
             if(!count($check_inventory_location)) return ["success" => false, "message" => "Lokasi Item Tidak Di Perusahaan Anda", "status" => 400];
-            
+
             $task->inventories()->syncWithoutDetaching([$inventory_id => ['is_from_task' => false, 'is_in' => true, 'user_id' => auth()->user()->id, 'connect_id' => $connect_id]]);
             return ["success" => true, "message" => "Berhasil Menambah Item Pada Task", "status" => 200];
         } catch(Exception $err){
@@ -1994,7 +1994,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $login_id = auth()->user()->id;
         $id = $request->get('id', null);
         $inventory_id = $request->get('inventory_id', null);
@@ -2029,7 +2029,7 @@ class TaskService{
                 $check_parent = $this->checkParent($inventory_id, $inventory_from_task_id);
                 if($check_parent) break;
             }
-            
+
             if(!$check_parent) return ["success" => false, "message" => "Item Bukan Merupakan Part Dari Item Yang Terhubung Dengan Task", "status" => 400];
             $task->inventories()->attach($inventory_id, ['is_from_task' => false, 'is_in' => false, 'user_id' => auth()->user()->id]);
             return ["success" => true, "message" => "Berhasil Mengeluarkan Item Dari Task", "status" => 200];
@@ -2070,8 +2070,8 @@ class TaskService{
                         $inventory_task->is_from_task = $inventory_task->pivot->is_from_task;
                         $inventory_task->is_in = $inventory_task->pivot->is_in;
                         $inventory_target_in_task = $inventory_task;
-                    } 
-                } 
+                    }
+                }
             }
 
             $check_in_task = array_intersect([$inventory_id], $inventory_from_task_ids);
@@ -2086,7 +2086,7 @@ class TaskService{
                 $task->inventories()->detach($inventory_id);
                 if(count($check_in_task)){
                     $task->inventories()->attach($inventory_id, ['is_from_task' => true, 'is_in' => null]);
-                } 
+                }
             } else {
                 if(count($check_in_task)) return ["success" => false, "message" => "Item Merupakan Item Utama Pada Task dan Tidak Dapat Didelete", "status" => 400];
                 $check_not_in_task = array_intersect([$inventory_id], $inventory_not_from_task_ids);
@@ -2107,18 +2107,18 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('id', null);
         $inventory_id = $request->get('inventory_id', null);
         $notes = "Diubah Melalui Ganti Suku Cadang Cancel Masuk Task";
         return $this->cancelSendInventoryTask($id, $inventory_id, "IN", $notes);
     }
-    
+
     public function cancelSendOutInventoryTask($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('id', null);
         $inventory_id = $request->get('inventory_id', null);
         $notes = "Diubah Melalui Ganti Suku Cadang Cancel Keluar Task";
@@ -2197,15 +2197,15 @@ class TaskService{
             } else {
                 $component = (object)["name" => $work['name'], "description" => $work['description'] ?? null, "type" => $work['type'], 'values' => '-'];
             }
-        }  
+        }
         return ['success' => true, 'component' => $component];
     }
-    
+
     public function addTaskDetail($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         try{
             $task_id = $request->get('task_id');
             $work = $request->get('work', []);
@@ -2228,7 +2228,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('id', null);
         $task_id = $request->get('task_id', null);
         $work = $request->get('work', []);
@@ -2238,7 +2238,7 @@ class TaskService{
         if($task_detail->task_id !== $task_id) return ["success" => false, "message" => "Task Detail Bukan Milik Task", "status" => 400];
         if(!isset($work['name'])) return ["success" => false, "message" => "Nama Pekerjaan Masih Kosong", "status" => 400];
         if(!isset($work['type'])) return ["success" => false, "message" => "Tipe Pekerjaan Masih Kosong", "status" => 400];
-        
+
         try{
             if($task_detail->component->type !== $work['type']){
                 $check = $this->checkAddTaskDetail($work, $task_id);
@@ -2262,8 +2262,8 @@ class TaskService{
                         foreach($work['delete_rows'] as $row){
                             unset($lists[$row]);
                             unset($values[$row]);
-                        } 
-                    } 
+                        }
+                    }
                     $component->lists = array_values($lists);
                     $component->values = array_values($values);
                 } else if($work['type'] === 4){
@@ -2278,7 +2278,7 @@ class TaskService{
                             if(count($work['update_rows'])){
                                 foreach($work['update_rows'] as $row){
                                     $rows[$row['number']] = $row['values'];
-                                } 
+                                }
                             }
                             if(count($work['delete_rows'])){
                                 foreach($work['delete_rows'] as $row){
@@ -2291,7 +2291,7 @@ class TaskService{
                                         $values[$i] = array_values($values[$i]);
                                     }
                                     unset($rows[$row]);
-                                } 
+                                }
                                 $rows = array_values($rows);
                             }
                             if(count($work['add_rows'])){
@@ -2329,17 +2329,17 @@ class TaskService{
                         for($i = 0; $i < $count_columns; $i++){
                             $values[] = $row_values;
                         }
-                    } 
+                    }
                     if(count($work['update_columns'])){
                         foreach($work['update_columns'] as $column){
                             $columns[$column['number']] = $column['values'];
-                        } 
+                        }
                     }
                     if(count($work['delete_columns'])){
                         foreach($work['delete_columns'] as $column){
                             unset($columns[$column]);
                             unset($values[$column]);
-                        } 
+                        }
                         $columns = array_values($columns);
                         $values = array_values($values);
                     }
@@ -2349,7 +2349,7 @@ class TaskService{
                             $columns[] = $column;
                             $values[] = $column_values;
                         }
-                    } 
+                    }
                     $component->rows = $rows;
                     $component->columns = $columns;
                     $component->values = $values;
@@ -2377,7 +2377,7 @@ class TaskService{
                     }
                     if(count($work['delete_rows'])){
                         foreach($work['delete_rows'] as $row) unset($lists[$row]);
-                    } 
+                    }
                     $component->lists = array_values($lists);
                 } else if($work['type'] === 6) {
                     if(!isset($work['dropdown_name'])) return ["success" => false, "message" => "Pekerjaan Belum Memiliki Nama Dropdown", "status" => 400];
@@ -2391,7 +2391,7 @@ class TaskService{
                     }
                     if(count($work['delete_rows'])){
                         foreach($work['delete_rows'] as $row) unset($lists[$row]);
-                    } 
+                    }
                     $component->lists = array_values($lists);
                 }
                 $component->name = $work['name'];
@@ -2409,7 +2409,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('id', null);
         $task_id = $request->get('task_id', null);
         $task_detail = TaskDetail::with('task')->find($id);
@@ -2429,7 +2429,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('id', null);
         $assign_ids = $request->get('assign_ids', []);
         $task_detail = TaskDetail::with('task')->find($id);
@@ -2447,7 +2447,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('id', null);
         $values = $request->get('values', null);
         if($values === null) return ["success" => false, "message" => "Values Tidak Boleh Kosong!", "status" => 400];
@@ -2462,9 +2462,9 @@ class TaskService{
             if($search_task !== false){
                 if($task_detail->task->users[$search_task]->check_in === null) return ["success" => false, "message" => "Anda Perlu Melakukan Check In Terlebih Dahulu", "status" => 400];
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
-            
+
             if(!in_array($task_detail->task->status, [1,3])) return ["success" => false, "message" => "Status Task Bukan On Progress", "status" => 400];
-            
+
             if(!count($task_detail->users)) return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Pekerjaan Ini", "status" => 400];
             $search_task_detail = $task_detail->users->search(function ($item) use ($login_id) {
                 return $item->id === $login_id;
@@ -2516,7 +2516,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
 
         $validator = Validator::make($request->all(), [
             "fills" => "required|array",
@@ -2532,20 +2532,20 @@ class TaskService{
         $fills = $request->fills;
         $ids = [];
         $values = [];
-        
+
         foreach($fills as $fill){
             $ids[] = $fill["id"];
             $values[] = $fill["values"];
         }
-        
-        array_multisort($ids, $values);  
+
+        array_multisort($ids, $values);
         $taskDetailsArr = [];
         try{
             $login_id = auth()->user()->id;
             $task_details = TaskDetail::with(['users', 'task.users'  => function($query) use ($login_id){
                 $query->where('users.id',$login_id);
             }])->findMany($ids);
-            
+
             $ids_task_detail = [];
             foreach($task_details as $task_detail){
                 $ids_task_detail[] = $task_detail->id;
@@ -2562,14 +2562,14 @@ class TaskService{
                 if($search_task !== false){
                     if($task_detail->task->users[$search_task]->check_in === null) return ["success" => false, "message" => "Anda Perlu Melakukan Check In Terlebih Dahulu", "status" => 400];
                 } else return ["success" => false, "message" => "ID : [$task_detail->id], Anda Tidak Ditugaskan Pada Tugas Ini", "status" => 400];
-                
+
                 if(!in_array($task_detail->task->status, [1,3])) return ["success" => false, "message" => "ID : [$task_detail->id], Status Task Bukan On Progress", "status" => 400];
-                
+
                 if(!count($task_detail->users)) return ["success" => false, "message" => "ID : [$task_detail->id], Anda Tidak Ditugaskan Pada Pekerjaan Ini", "status" => 400];
                 $search_task_detail = $task_detail->users->search(function ($item) use ($login_id) {
                     return $item->id === $login_id;
                 });
-                
+
                 if($search_task_detail !== false){
                     $type = $task_detail->component->type;
                     $component  = $task_detail->component;
@@ -2596,7 +2596,7 @@ class TaskService{
                         }
                         $component->values = $values[$i];
                     } else {
-                        
+
                         if(!is_array($values[$i])) return ["success" => false, "message" => "ID : [$task_detail->id], Values Harus Bertipe Data Array of String", "status" => 400];
                         $count_list = count($component->lists);
                         if($count_list !== count($values[$i])) return ["success" => false, "message" => "ID : [$task_detail->id], Jumlah List Numeral dan Values Numeral Harus Sama", "status" => 400];
@@ -2611,7 +2611,7 @@ class TaskService{
             }
 
             $batchTaskDetailUpdate = DB::transaction(function () use ($taskDetailsArr) {
-                try{    
+                try{
                     foreach($taskDetailsArr as $td){
                         $td->save();
                     }
@@ -2633,7 +2633,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         try{
             $name = $request->get('name', null);
             $task_types = TaskType::select('id','name');
@@ -2658,7 +2658,7 @@ class TaskService{
 
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
-            
+
             $tasks = TaskType::select('id', 'name', 'description')->withCount('tasks');
 
             if($name) $tasks = $tasks->where('name', 'like', "%".$name."%");
@@ -2666,11 +2666,11 @@ class TaskService{
                 if($sort_by === 'name') $tasks = $tasks->orderBy('name', $sort_type);
                 else if($sort_by === 'count') $tasks = $tasks->orderBy('tasks_count', $sort_type);
             }
-            
+
             $tasks = $tasks->paginate($rows);
             if($tasks->isEmpty()) return ["success" => true, "message" => "Tipe Task Masih Kosong", "data" => $tasks, "status" => 200];
             return ["success" => true, "message" => "Tipe Task Berhasil Diambil", "data" => $tasks, "status" => 200];
-            
+
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -2686,7 +2686,7 @@ class TaskService{
             $task = TaskType::with('works')->find($id);
             if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
             return ["success" => true, "message" => "Tipe Task Berhasil Diambil", "data" => $task, "status" => 200];
-            
+
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -2741,7 +2741,7 @@ class TaskService{
             else $lists = [];
             if(!count($lists)) return ["success" => false, "message" => "$pekerjaan Belum Memiliki List Dropdown", "status" => 400];
             $details = (object)["lists" => $lists, "dropdown_name" => $work['dropdown_name']];
-        } 
+        }
         return ['success' => true, 'type' => $type, 'details' => $details];
     }
 
@@ -2749,7 +2749,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $task = new TaskType;
         $name = $request->get('name');
         $check_task_type = TaskType::where('name', $name)->first();
@@ -2758,7 +2758,7 @@ class TaskService{
         $task->description = $request->get('description');
         $works = $request->get('works', []);
         if(!count($works)) return ["success" => false, "message" => "Pekerjaan Belum Diisi", "status" => 400];
-        
+
         $index = 1;
         $new_works = [];
         foreach($works as $work){
@@ -2786,23 +2786,23 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('id', null);
         $task = TaskType::find($id);
         if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];$task->name = $request->get('name');
         $name = $request->get('name');
         $check_task_type = TaskType::where('name', $name)->first();
         if($check_task_type && $check_task_type->id !== $id) return ["success" => false, "message" => "Nama Task Type Sudah Digunakan", "status" => 400];
-        
+
         $task->name = $name;
         $task->description = $request->get('description');
         $add_works = $request->get('add_works', []);
         $update_works = $request->get('update_works', []);
         $delete_works = $request->get('delete_works', []);
-        
+
         $index = 1;
         $new_works = [];
-        if(count($add_works)){       
+        if(count($add_works)){
             foreach($add_works as $work){
                 $result = $this->checkTypes($work, $index, 'Update_Add');
                 if(!$result['success']) return $result;
@@ -2817,7 +2817,7 @@ class TaskService{
         }
 
         $new_update_works = [];
-        if(count($update_works)){       
+        if(count($update_works)){
             foreach($update_works as $work){
                 $temp_id = $work['id'];
                 $temp_work = TaskTypeWork::find($temp_id);
@@ -2829,18 +2829,18 @@ class TaskService{
                 $temp_work->description = $work['description'];
                 $temp_work->type = $result['type'];
                 $temp_work->details = $result['details'];
-                
+
                 $new_update_works[] = $temp_work;
             }
         }
 
         $new_delete_works = [];
-        if(count($delete_works)){       
+        if(count($delete_works)){
             foreach($delete_works as $work){
                 $temp_work = TaskTypeWork::find($work);
                 if($temp_work === null) return ["success" => false, "message" => "Delete Dengan Id $work Tidak Ditemukan", "status" => 400];
                 if($temp_work->task_type_id !== $id) return ["success" => false, "message" => "Delete Dengan Id $work Bukan Milik Tipe Task", "status" => 400];
-                
+
                 $new_delete_works[] = $temp_work;
             }
         }
@@ -2862,7 +2862,7 @@ class TaskService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('id', null);
         $task = TaskType::find($id);
         if($task === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
@@ -2879,7 +2879,7 @@ class TaskService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-    try{   
+    try{
 
             $task_id = $request->task_id;
             $task = Task::find($task_id);
@@ -2894,7 +2894,7 @@ class TaskService{
             $taskReport->created_at = $current_time;
             $taskReport->updated_at = $current_time;
             $taskReport->save();
-            
+
 
             return ["success" => true, "message" => "Task Report Berhasil Dibuat", "status" => 200];
         } catch(Exception $err){
@@ -2920,7 +2920,7 @@ class TaskService{
 
         $rows = $request->rows ?? 5;
 
-        try{   
+        try{
 
             $taskReports = TaskReport::with('task')->paginate();
 
@@ -2935,7 +2935,7 @@ class TaskService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        try{   
+        try{
 
             $id = $request->id;
             $taskReport = TaskReport::with('task')->find($id);
@@ -2953,7 +2953,7 @@ class TaskService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        try{   
+        try{
 
             $id = $request->id;
             $taskReport = TaskReport::find($id);
