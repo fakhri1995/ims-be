@@ -362,8 +362,10 @@ class TaskService{
 
             $tasks = $tasks->where('is_visible', true)->paginate($rows);
             foreach($tasks as $task){
-                $task->location->full_location = $task->location->fullSubNameWParentTopParent();
-                $task->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
+                if($task->location){
+                    $task->location->full_location = $task->location->fullSubNameWParentTopParent();
+                    $task->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
+                }
 
                 foreach($task->users as $user){
                     $user->geo_loc_check_in = json_decode($user->geo_loc_check_in);
@@ -741,8 +743,10 @@ class TaskService{
 
 
             if($task === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-            $task->location->full_location = $task->location->fullSubNameWParentTopParent();
-            $task->location->makeHidden(['parent', 'parent_id', 'role']);
+            if($task->location){
+                $task->location->full_location = $task->location->fullSubNameWParentTopParent();
+                $task->location->makeHidden(['parent', 'parent_id', 'role']);
+            }
 
             foreach($task->users as $user){
                 $user->geo_loc_check_in = json_decode($user->geo_loc_check_in);
@@ -970,7 +974,7 @@ class TaskService{
         $validator = Validator::make($request->all(), [
             'id' => 'required|numeric',
             'name' => 'required',
-            'location_id' => 'required|numeric',
+            'location_id' => 'nullable|numeric',
             'reference_id' => 'nullable|numeric',
             'created_at' => 'required|date',
             'deadline' => 'nullable|date',
