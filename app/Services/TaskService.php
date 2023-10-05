@@ -856,7 +856,7 @@ class TaskService{
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'task_type_id' => 'required|numeric',
-            'location_id' => 'numeric',
+            'location_id' => 'nullable|numeric',
             'reference_id' => 'nullable|numeric',
             'created_at' => 'required|date',
             'deadline' => 'nullable|date',
