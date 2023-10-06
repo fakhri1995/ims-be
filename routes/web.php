@@ -410,6 +410,7 @@ $router->group(['middleware' => 'auth'], function($router){
     //Attendance User
     $router->get('/getAttendancesUsers', 'AttendanceController@getAttendancesUsers');
     $router->get('/getAttendancesClient', 'AttendanceController@getAttendancesClient');
+    $router->get('/getAttendancesUserMonthly', 'AttendanceController@getAttendancesUserMonthly');
     $router->get('/getAttendancesUsersPaginate', 'AttendanceController@getAttendancesUsersPaginate');
     $router->get('/getAttendancesUser', 'AttendanceController@getAttendancesUser');
     $router->get('/getAttendanceUser', 'AttendanceController@getAttendanceUser');
