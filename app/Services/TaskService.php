@@ -508,8 +508,10 @@ class TaskService{
 
             $tasks = $tasks->paginate($rows);
             foreach($tasks as $task){
-                $task->location->full_location = $task->location->fullSubNameWParentTopParent();
-                $task->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
+                if($task->location){
+                    $task->location->full_location = $task->location->fullSubNameWParentTopParent();
+                    $task->location->makeHidden(['parent', 'parent_id', 'role', 'topParent']);
+                }
 
                 $task->deadline_message = "";
                 $date_now = date_create(date('Y-m-d'));
@@ -711,8 +713,10 @@ class TaskService{
 
             $tasks = $tasks->paginate($rows);
             foreach($tasks as $task){
-                $task->location->full_location = $task->location->fullSubNameWParentTopParent();
-                $task->location->makeHidden(['parent', 'parent_id', 'role']);
+                if($task->location){
+                    $task->location->full_location = $task->location->fullSubNameWParentTopParent();
+                    $task->location->makeHidden(['parent', 'parent_id', 'role']);
+                }
             }
             if($tasks->isEmpty()) return ["success" => true, "message" => "Task Masih Kosong", "data" => $tasks, "status" => 200];
             return ["success" => true, "message" => "Task Berhasil Diambil", "data" => $tasks, "status" => 200];
