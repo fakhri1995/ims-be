@@ -133,6 +133,14 @@ class AttendanceController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getAttendancesUserMonthly(Request $request)
+    {
+        $route_name = "ATTENDANCES_USER_MONTHLY_GET";
+
+        $response = $this->attendanceService->getAttendancesUserMonthly($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getAttendancesUsersPaginate(Request $request)
     {
         $route_name = "ATTENDANCE_USERS_PAGINATE_GET";
