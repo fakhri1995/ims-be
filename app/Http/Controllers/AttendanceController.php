@@ -135,7 +135,7 @@ class AttendanceController extends Controller
 
     public function getAttendancesUserMonthly(Request $request)
     {
-        $route_name = "ATTENDANCES_USER__MONTHLY_GET";
+        $route_name = "ATTENDANCES_USER_MONTHLY_GET";
 
         $response = $this->attendanceService->getAttendancesUserMonthly($request, $route_name);
         return response()->json($response, $response['status']);
