@@ -906,7 +906,8 @@ class AttendanceService{
                 return ["success" => true, "message" => "Berhasil Check In", "status" => 200];
             } else {
                 $today_attendance_activities = AttendanceActivity::where('user_id', $login_id)->whereDate('updated_at', '=', date("Y-m-d"))->get();
-                if(!count($today_attendance_activities)) return ["success" => false, "message" => "Tidak Bisa Melakukan Check Out Saat Aktivitas Belum Terisi" , "status" => 400];
+                $today_attendance_task = AttendanceTaskActivity::where('user_id', $login_id)->whereDate('updated_at', '=', date("Y-m-d"))->get();
+                if(!count($today_attendance_activities) && !count($today_attendance_task)) return ["success" => false, "message" => "Tidak Bisa Melakukan Check Out Saat Aktivitas Belum Terisi" , "status" => 400];
                 $user_attendance->check_out = $current_timestamp;
                 $user_attendance->long_check_out = $long;
                 $user_attendance->lat_check_out = $lat;
