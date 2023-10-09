@@ -20,6 +20,8 @@ use App\Company;
 use App\Exports\AttendanceActivitiesExport;
 use App\File;
 use App\ProjectTask;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Validator;
 
@@ -553,11 +555,22 @@ class AttendanceService{
         $month = $request->month;
         $year = $request->year;
 
-        $user_attendances = AttendanceUser::select('attendance_users.id', 'user_id', 'check_in','is_wfo', 'is_late')
-            ->where('user_id', $user_id)
-            ->whereMonth('check_in', $month)->whereYear('check_in', $year)->orderBy('check_in', 'asc')->get();
-
-            return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $user_attendances, "status" => 200];
+        $date_month = $year . '-' . $month;
+        $startDate = Carbon::parse($date_month)->startOfMonth();
+        $endDate = Carbon::parse($date_month)->endOfMonth();
+        $period = CarbonPeriod::create($startDate, $endDate);
+        
+        foreach($period as $date){
+            $day = $date->format('w');
+            $date_formatted = $date->format('Y-m-d');
+            $attendances[]= [
+                "day" => $day,
+                "date" => $date_formatted,
+                "attendance" => AttendanceUser::select('attendance_users.id', 'user_id', 'check_in','is_wfo', 'is_late')
+                ->where('user_id', $user_id)->whereDate('check_in', $date)->first()
+            ];
+        }
+        return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $attendances, "status" => 200];
     }
 
     public function getAttendancesUsersPaginate($request, $route_name)
