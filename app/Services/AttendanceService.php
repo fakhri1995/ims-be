@@ -545,6 +545,21 @@ class AttendanceService{
         }
     }
 
+    public function getAttendancesUserMonthly($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $user_id = $request->user_id;
+        $month = $request->month;
+        $year = $request->year;
+
+        $user_attendances = AttendanceUser::select('attendance_users.id', 'user_id', 'check_in','is_wfo', 'is_late')
+            ->where('user_id', $user_id)
+            ->whereMonth('check_in', $month)->whereYear('check_in', $year)->orderBy('check_in', 'asc')->get();
+
+            return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $user_attendances, "status" => 200];
+    }
+
     public function getAttendancesUsersPaginate($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
