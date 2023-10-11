@@ -498,7 +498,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getTalentPools', 'TalentPoolController@getTalentPools');
     $router->get('/getTalentPoolCandidates', 'TalentPoolController@getTalentPoolCandidates');
     $router->get('/getTalentPoolCategories', 'TalentPoolController@getTalentPoolCategories');
-    $router->get('/addTalentPoolCategory', 'TalentPoolController@addTalentPoolCategory');
+    $router->post('/addTalentPoolCategory', 'TalentPoolController@addTalentPoolCategory');
     $router->get('/getTalentPoolFilters', 'TalentPoolController@getTalentPoolFilters');
 
     // RECRUITMENT
