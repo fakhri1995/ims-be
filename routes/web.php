@@ -450,9 +450,6 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/readNotification', 'NotificationController@readNotification');
     $router->post('/readAllNotifications', 'NotificationController@readAllNotifications');
 
-
-
-
     //Career V2 Routes
     $router->group(['prefix' => 'v2'] , function () use ($router) {
         $router->get('/getCareer', 'CareerV2Controller@getCareer');
@@ -475,15 +472,7 @@ $router->group(['middleware' => 'auth'], function($router){
         $router->delete('/deleteCareerApply', 'CareerV2Controller@deleteCareerApply');
     });
 
-
-    // $router->group(['prefix' => 'recruitment'] , function () use ($router) {
-    //     $router->get('/getResumes', 'ResumeController@getResumes');
-    //     $router->get('/getResume', 'ResumeController@getResume');
-    //     $router->post('/addResume', 'ResumeController@addResume');
-    //     $router->put('/updateResume', 'ResumeController@updateResume');
-    //     $router->delete('/deleteResume', 'ResumeController@deleteResume');
-    // });
-
+    // RESUME
     $router->get('/getResumes', 'ResumeController@getResumes');
     $router->get('/getResume', 'ResumeController@getResume');
     $router->post('/addResume', 'ResumeController@addResume');
@@ -504,6 +493,13 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteAssessment', 'ResumeController@deleteAssessment');
     $router->get('/getAssessmentList', 'ResumeController@getAssessmentList');
     $router->get('/getSkillLists', 'ResumeController@getSkillLists');
+
+    // TALENT POOL
+    $router->get('/getTalentPools', 'TalentPoolController@getTalentPools');
+    $router->get('/getTalentPoolCandidates', 'TalentPoolController@getTalentPoolCandidates');
+    $router->get('/getTalentPoolCategories', 'TalentPoolController@getTalentPoolCategories');
+    $router->get('/addTalentPoolCategory', 'TalentPoolController@addTalentPoolCategory');
+    $router->get('/getTalentPoolFilters', 'TalentPoolController@getTalentPoolFilters');
 
     // RECRUITMENT
     $router->get('/getRecruitmentExcelTemplate', 'RecruitmentController@getRecruitmentExcelTemplate');
