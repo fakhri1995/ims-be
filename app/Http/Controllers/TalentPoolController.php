@@ -26,6 +26,13 @@ class TalentPoolController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function addTalentPool(Request $request){
+        $route_name = "TALENT_POOLS_ADD";
+
+        $response = $this->talentPoolService->addTalentPool($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getTalentPoolCandidates(Request $request){
         $route_name = "TALENT_POOLS_ADD";
 
@@ -45,6 +52,13 @@ class TalentPoolController extends Controller
         $route_name = "TALENT_POOL_CATEGORY_ADD";
 
         $response = $this->talentPoolService->addTalentPoolCategory($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteTalentPoolCategory(Request $request){
+        $route_name = "TALENT_POOLS_DELETE";
+
+        $response = $this->talentPoolService->deleteTalentPoolCategory($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
