@@ -41,33 +41,142 @@ class TalentPoolService
         }
 
         try {
-            $skills = $request->skills ? explode(",", $request->skills) : NULL;
+            $skill = $request->skills ? explode(",", $request->skills) : NULL;
+            $role = $request->roles ? explode(",", $request->roles) : NULL;
+            $year = $request->years ? explode(",", $request->years) : NULL;
+            $education = $request->educations ? explode(",", $request->educations) : NULL;
             $keyword = $request->keyword ?? NULL;
+            $status = $request->status ? explode(",", $request->status) : NULL;
+            DB::enableQueryLog();
             $talentPools = TalentPool::query()
-                ->with(["resume" => function ($q1) {
+                ->with(["resume" => function ($q1) use ($skill, $role, $year, $education) {
                     $q1
-                        ->with(["lastEducation" => function ($q2) {
+                        ->with(["lastEducation" => function ($q2) use ($education) {
                             $q2->select('resume_educations.resume_id', 'resume_educations.university');
+                            if ($education) {
+                                $q2->whereIn('university', $education);
+                            }
                         }])
-                        ->with(["lastAssessment" => function ($q2) {
+                        ->with(["lastAssessment" => function ($q2) use ($role) {
                             $q2->select('resume_assessments.id', 'resume_assessments.name');
+                            if ($role) {
+                                $q2->whereIn('name', $role);
+                            }
                         }])
-                        ->with(['skills' => function ($q2) {
-                            // $q2->where('name', 'PHP');
+                        ->with(["skills" => function ($q2) use ($skill) {
+                            if ($skill) {
+                                $q2->whereIn('name', $skill);
+                            }
                         }]);
-                }])
-                ->whereHas('category', function (Builder $q1) {
-                    $q1->where('company_id', auth()->user()->company_id);
-                })
-                ->has('resume.lastEducation')
-                ->has('resume.lastAssessment')
+                    if ($year) {
+                        $q1->whereHas('lastExperience', function (Builder $q2) use ($year) {
+                            $q2->select(DB::raw('CASE
+                            WHEN end_date IS NOT NULL THEN YEAR(end_date)
+                            ELSE YEAR(start_date)
+                            END AS year'));
+                            $q2->having('year', '=', $year);
+                        });
+                    };
+                }]);
+            if (!$keyword) {
+                $talentPools = $talentPools->whereHas("resume", function ($q1) use ($skill, $role, $year, $education) {
+                    $q1
+                        ->whereHas("lastEducation", function ($q2) use ($education) {
+                            $q2->select('resume_educations.resume_id', 'resume_educations.university');
+                            if ($education) {
+                                $q2->whereIn('university', $education);
+                            }
+                        })
+                        ->whereHas("lastAssessment", function ($q2) use ($role) {
+                            $q2->select('resume_assessments.id', 'resume_assessments.name');
+                            if ($role) {
+                                $q2->whereIn('name', $role);
+                            }
+                        })
+                        ->whereHas("skills", function ($q2) use ($skill) {
+                            if ($skill) {
+                                $q2->whereIn('name', $skill);
+                            }
+                        });
+                    if ($year) {
+                        $q1->whereHas('lastExperience', function (Builder $q2) use ($year) {
+                            $q2->select(DB::raw('CASE
+                            WHEN end_date IS NOT NULL THEN YEAR(end_date)
+                            ELSE YEAR(start_date)
+                            END AS year'));
+                            $q2->having('year', '=', $year);
+                        });
+                    };
+                });
+            } else {
+                $talentPools = $talentPools->whereHas("resume", function ($q1) use ($skill, $role, $year, $education, $keyword) {
+                    $q1
+                        ->orWhereHas("lastEducation", function ($q2) use ($keyword, $education) {
+                            $q2->select('resume_educations.resume_id', 'resume_educations.university');
+                            if ($education) $q2->whereIn('university', $education);
+                            if ($keyword) $q2->where('university', 'like', '%' . $keyword . '%');
+                        })
+                        ->orWhereHas("lastAssessment", function ($q2) use ($keyword, $role) {
+                            $q2->select('resume_assessments.id', 'resume_assessments.name');
+                            if ($role) $q2->whereIn('name', $role);
+                            if ($keyword) $q2->where('name', 'like', '%' . $keyword . '%');
+                        })
+                        ->orWhereHas("skills", function ($q2) use ($keyword, $skill) {
+                            if ($skill) $q2->whereIn('name', $skill);
+                            if ($keyword) $q2->where('name', 'like', '%' . $keyword . '%');
+                        });
+                    if ($keyword) $q1->orWhere('name', 'like', '%' . $keyword . '%');
+                    if ($year) {
+                        $q1->orWhereHas('lastExperience', function (Builder $q2) use ($year) {
+                            $q2->select(DB::raw('CASE
+                            WHEN end_date IS NOT NULL THEN YEAR(end_date)
+                            ELSE YEAR(start_date)
+                            END AS year'));
+                            $q2->having('year', '=', $year);
+                        });
+                    };
+                });
+            }
+            $talentPools = $talentPools->whereHas('category', function (Builder $q1) {
+                $q1->where('company_id', auth()->user()->company_id);
+            })
                 ->where('talent_pool_category_id', $request->category_id);
-            if ($skills) $talentPools->has('resume.skills');
+            if ($status) $talentPools = $talentPools->whereIn('status', $status);
             $rows = $request->rows ?? 10;
-
             $talentPools = $talentPools->paginate($rows);
+            // dd(DB::getQueryLog());
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $talentPools, "status" => 200];
+        } catch (\Exception $err) {
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    function addTalentPool($request, $route_name): array
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if ($access["success"] === false) return $access;
+        $rules = [
+            'resume_ids' => 'required|array',
+            'resume_ids.*' => 'numeric',
+            'category_id' => 'required|numeric'
+        ];
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        try {
+            DB::beginTransaction();
+            foreach ($request->resume_ids as $item) {
+                $talent = new TalentPool;
+                $talent->talent_pool_category_id = $request->category_id;
+                $talent->resume_id = $item;
+                $talent->save();
+            }
+            DB::commit();
+            return ["success" => true, "message" => "Data Berhasil Ditambah", "status" => 200];
         } catch (Exception $err) {
+            DB::rollBack();
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
@@ -87,9 +196,13 @@ class TalentPoolService
             return ["success" => false, "message" => $errors, "status" => 400];
         }
         try {
+            $search = $request->search;
             $cadidates = Resume::query()
-                ->whereDoesntHave('talentPool.category', function (Builder $q) use ($request) {
-                    $q->where('company_id', $request->category_id);
+                ->whereDoesntHave('talentPool', function (Builder $q1) use ($request) {
+                    $q1->where('talent_pool_category_id', $request->category_id);
+                    $q1->whereDoesntHave('category', function (Builder $q2) {
+                        $q2->where('company_id', auth()->user()->company_id);
+                    });
                 })
                 ->with(["lastEducation" => function ($q) {
                     $q->select('resume_educations.resume_id', 'resume_educations.university');
@@ -101,6 +214,10 @@ class TalentPoolService
                 ->with(['lastExperience' => function ($q) {
                     $q->select('resume_experiences.id', 'resume_experiences.role');
                 }]);
+
+            if ($search) {
+                $cadidates = $cadidates->where('name',  $search);
+            }
 
             $rows = $request->rows ?? 5;
 
@@ -144,6 +261,22 @@ class TalentPoolService
             $category->company_id = auth()->user()->company_id;
             $category->save();
             return ["success" => true, "message" => "Data Berhasil Ditambah", "data" => $category, "status" => 200];
+        } catch (Exception $err) {
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    function deleteTalentPoolCategory($request, $route_name): array
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if ($access["success"] === false) return $access;
+
+        try {
+            $id = $request->id;
+            $category = TalentPoolCategoryList::find($id);
+            if (!$category) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+            if (!$category->delete()) return ["success" => false, "message" => "Gagal Menghapus Kategori", "status" => 400];
+            return ["success" => true, "message" => "Data Berhasil Dihapus", "id" => $category->id, "status" => 200];
         } catch (Exception $err) {
             return ["success" => false, "message" => $err, "status" => 400];
         }

@@ -496,10 +496,14 @@ $router->group(['middleware' => 'auth'], function($router){
 
     // TALENT POOL
     $router->get('/getTalentPools', 'TalentPoolController@getTalentPools');
+    $router->post('/addTalentPool', 'TalentPoolController@addTalentPool');
     $router->get('/getTalentPoolCandidates', 'TalentPoolController@getTalentPoolCandidates');
+    $router->get('/getTalentPoolFilters', 'TalentPoolController@getTalentPoolFilters');
+
+    // TALENT POOL CATOGORIES
     $router->get('/getTalentPoolCategories', 'TalentPoolController@getTalentPoolCategories');
     $router->post('/addTalentPoolCategory', 'TalentPoolController@addTalentPoolCategory');
-    $router->get('/getTalentPoolFilters', 'TalentPoolController@getTalentPoolFilters');
+    $router->delete('/deleteTalentPoolCategory', 'TalentPoolController@deleteTalentPoolCategory');
 
     // RECRUITMENT
     $router->get('/getRecruitmentExcelTemplate', 'RecruitmentController@getRecruitmentExcelTemplate');
