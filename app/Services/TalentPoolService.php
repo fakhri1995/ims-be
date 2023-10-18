@@ -196,7 +196,7 @@ class TalentPoolService
             return ["success" => false, "message" => $errors, "status" => 400];
         }
         try {
-            $search = $request->search;
+            $keyword = $request->keyword;
             $cadidates = Resume::query()
                 ->whereDoesntHave('talentPool', function (Builder $q1) use ($request) {
                     $q1->where('talent_pool_category_id', $request->category_id);
@@ -215,8 +215,8 @@ class TalentPoolService
                     $q->select('resume_experiences.id', 'resume_experiences.role');
                 }]);
 
-            if ($search) {
-                $cadidates = $cadidates->where('name',  $search);
+            if ($keyword) {
+                $cadidates = $cadidates->where('name', 'like',  '%' . $keyword . '%');
             }
 
             $rows = $request->rows ?? 5;
