@@ -61,6 +61,10 @@ class Resume extends Model
         return $this->hasOne(ResumeSummary::class, 'resume_id');
     }
 
+    function recruitment() : HasOne {
+        return $this->hasOne(Recruitment::class, 'owner_id', 'owner_id');
+    }
+
     function talentPool(): HasOne
     {
         return $this->hasOne(TalentPool::class, 'resume_id', 'id');
