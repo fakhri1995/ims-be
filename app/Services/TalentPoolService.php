@@ -46,6 +46,7 @@ class TalentPoolService
             $year = $request->years ? explode(",", $request->years) : NULL;
             $education = $request->educations ? explode(",", $request->educations) : NULL;
             $keyword = $request->keyword ?? NULL;
+            // dd($keyword);
             $status = $request->status ? explode(",", $request->status) : NULL;
             $talentPools = TalentPool::query()
                 ->with(["resume" => function ($q1) use ($skill, $role, $year, $education) {
@@ -112,31 +113,36 @@ class TalentPoolService
                 });
             } else {
                 $talentPools = $talentPools->whereHas("resume", function ($q1) use ($skill, $role, $year, $education, $keyword) {
-                    $q1
-                        ->orWhereHas("lastEducation", function ($q2) use ($keyword, $education) {
-                            $q2->select('resume_educations.resume_id', 'resume_educations.university');
-                            if ($education) $q2->whereIn('university', $education);
-                            if ($keyword) $q2->where('university', 'like', '%' . $keyword . '%');
-                        })
-                        ->orWhereHas("lastAssessment", function ($q2) use ($keyword, $role) {
-                            $q2->select('resume_assessments.id', 'resume_assessments.name');
-                            if ($role) $q2->whereIn('name', $role);
-                            if ($keyword) $q2->where('name', 'like', '%' . $keyword . '%');
-                        })
-                        ->orWhereHas("skills", function ($q2) use ($keyword, $skill) {
-                            if ($skill) $q2->whereIn('name', $skill);
-                            if ($keyword) $q2->where('name', 'like', '%' . $keyword . '%');
+                    if ($skill || $role || $year || $education || $keyword) {
+                        $q1->where(function ($q2) use ($skill, $role, $education, $keyword) {
+                            $q2->orWhereHas("lastEducation", function ($q3) use ($keyword, $education) {
+                                $q3->select('resume_educations.resume_id', 'resume_educations.university');
+                                if ($education) $q3->whereIn('university', $education);
+                                if ($keyword) $q3->where('university', 'like', '%' . $keyword . '%');
+                            })
+                                ->orWhereHas("lastAssessment", function ($q3) use ($keyword, $role) {
+                                    $q3->select('resume_assessments.id', 'resume_assessments.name');
+                                    if ($role) $q3->whereIn('name', $role);
+                                    if ($keyword) $q3->where('name', 'like', '%' . $keyword . '%');
+                                })
+                                ->orWhereHas("skills", function ($q3) use ($keyword, $skill) {
+                                    if ($skill) $q3->whereIn('name', $skill);
+                                    if ($keyword) $q3->where('name', 'like', '%' . $keyword . '%');
+                                });
                         });
-                    if ($keyword) $q1->orWhere('name', 'like', '%' . $keyword . '%');
-                    if ($year) {
-                        $q1->orWhereHas('lastExperience', function (Builder $q2) use ($year) {
-                            $q2->select(DB::raw('CASE
+                        if ($keyword) {
+                            $q1->orWhere('name', 'like', '%' . $keyword . '%');
+                        }
+                        if ($year) {
+                            $q1->orWhereHas('lastExperience', function (Builder $q3) use ($year) {
+                                $q3->select(DB::raw('CASE
                             WHEN end_date IS NOT NULL THEN YEAR(end_date)
                             ELSE YEAR(start_date)
                             END AS year'));
-                            $q2->having('year', '=', $year);
-                        });
-                    };
+                                $q3->having('year', '=', $year);
+                            });
+                        };
+                    }
                 });
             }
             $talentPools = $talentPools->whereHas('category', function (Builder $q1) {
