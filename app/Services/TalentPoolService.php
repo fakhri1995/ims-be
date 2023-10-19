@@ -201,10 +201,16 @@ class TalentPoolService
         try {
             DB::beginTransaction();
             foreach ($request->resume_ids as $item) {
-                $talent = new TalentPool;
-                $talent->talent_pool_category_id = $request->category_id;
-                $talent->resume_id = $item;
-                $talent->save();
+                $check = TalentPool::query()
+                    ->where('talent_pool_category_id', $request->category_id)
+                    ->where('resume_id', $item)
+                    ->first();
+                if (!$check) {
+                    $talent = new TalentPool;
+                    $talent->talent_pool_category_id = $request->category_id;
+                    $talent->resume_id = $item;
+                    $talent->save();
+                }
             }
             DB::commit();
             return ["success" => true, "message" => "Data Berhasil Ditambah", "status" => 200];
