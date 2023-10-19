@@ -26,6 +26,13 @@ class TalentPoolController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getTalentPool(Request $request){
+        $route_name = "TALENT_POOL_GET";
+
+        $response = $this->talentPoolService->getTalentPool($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function addTalentPool(Request $request){
         $route_name = "TALENT_POOLS_ADD";
 

@@ -47,7 +47,6 @@ class TalentPoolService
             $education = $request->educations ? explode(",", $request->educations) : NULL;
             $keyword = $request->keyword ?? NULL;
             $status = $request->status ? explode(",", $request->status) : NULL;
-            DB::enableQueryLog();
             $talentPools = TalentPool::query()
                 ->with(["resume" => function ($q1) use ($skill, $role, $year, $education) {
                     $q1
@@ -80,20 +79,23 @@ class TalentPoolService
                 }]);
             if (!$keyword) {
                 $talentPools = $talentPools->whereHas("resume", function ($q1) use ($skill, $role, $year, $education) {
-                    $q1
-                        ->whereHas("lastEducation", function ($q2) use ($education) {
-                            $q2->select('resume_educations.resume_id', 'resume_educations.university');
-                            if ($education) {
-                                $q2->whereIn('university', $education);
-                            }
-                        })
-                        ->whereHas("lastAssessment", function ($q2) use ($role) {
+                    if ($education)
+                        $q1
+                            ->whereHas("lastEducation", function ($q2) use ($education) {
+                                $q2->select('resume_educations.resume_id', 'resume_educations.university');
+                                if ($education) {
+                                    $q2->whereIn('university', $education);
+                                }
+                            });
+                    if ($role)
+                        $q1->whereHas("lastAssessment", function ($q2) use ($role) {
                             $q2->select('resume_assessments.id', 'resume_assessments.name');
                             if ($role) {
                                 $q2->whereIn('name', $role);
                             }
-                        })
-                        ->whereHas("skills", function ($q2) use ($skill) {
+                        });
+                    if ($skill)
+                        $q1->whreHas("skills", function ($q2) use ($skill) {
                             if ($skill) {
                                 $q2->whereIn('name', $skill);
                             }
@@ -151,6 +153,37 @@ class TalentPoolService
         }
     }
 
+    function getTalentPool($request, $route_name): array
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if ($access["success"] === false) return $access;
+
+        try {
+            $talentPool = TalentPool::query()
+                ->with(["resume" => function ($q1) {
+                    $q1
+                        ->with(["lastEducation" => function ($q2) {
+                            $q2->select('resume_educations.resume_id', 'resume_educations.university');
+                        }])
+                        ->with(["lastAssessment" => function ($q2) {
+                            $q2->select('resume_assessments.id', 'resume_assessments.name');
+                        }])
+                        ->with(["skills" => function ($q2) {
+                        }])
+                        ->with('recruitment');
+                }]);
+            $talentPool = $talentPool->whereHas('category', function (Builder $q1) {
+                $q1->where('company_id', auth()->user()->company_id);
+            })
+                ->where('talent_pool_category_id', $request->category_id);
+            $talentPool = $talentPool->first();
+            if (!$talentPool) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $talentPool, "status" => 200];
+        } catch (\Exception $err) {
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     function addTalentPool($request, $route_name): array
     {
         $access = $this->globalService->checkRoute($route_name);
@@ -200,7 +233,7 @@ class TalentPoolService
             $cadidates = Resume::query()
                 ->whereDoesntHave('talentPool', function (Builder $q1) use ($request) {
                     $q1->where('talent_pool_category_id', $request->category_id);
-                    $q1->whereDoesntHave('category', function (Builder $q2) {
+                    $q1->whereHas('category', function (Builder $q2) {
                         $q2->where('company_id', auth()->user()->company_id);
                     });
                 })
