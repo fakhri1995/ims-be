@@ -498,6 +498,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getTalentPools', 'TalentPoolController@getTalentPools');
     $router->get('/getTalentPool', 'TalentPoolController@getTalentPool');
     $router->post('/addTalentPool', 'TalentPoolController@addTalentPool');
+    $router->delete('/deleteTalentPool', 'TalentPoolController@deleteTalentPool');
     $router->get('/getTalentPoolCandidates', 'TalentPoolController@getTalentPoolCandidates');
     $router->get('/getTalentPoolFilters', 'TalentPoolController@getTalentPoolFilters');
 

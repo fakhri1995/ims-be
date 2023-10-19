@@ -220,6 +220,22 @@ class TalentPoolService
         }
     }
 
+    function deleteTalentPool($request, $route_name): array
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if ($access["success"] === false) return $access;
+
+        try {
+            $id = $request->id;
+            $talent = TalentPool::find($id);
+            if (!$talent) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+            if (!$talent->delete()) return ["success" => false, "message" => "Gagal Menghapus Kategori", "status" => 400];
+            return ["success" => true, "message" => "Data Berhasil Dihapus", "id" => $talent->id, "status" => 200];
+        } catch (Exception $err) {
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     function getTalentPoolCandidates($request, $route_name): array
     {
         $access = $this->globalService->checkRoute($route_name);
