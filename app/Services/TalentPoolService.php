@@ -46,7 +46,6 @@ class TalentPoolService
             $year = $request->years ? explode(",", $request->years) : NULL;
             $education = $request->educations ? explode(",", $request->educations) : NULL;
             $keyword = $request->keyword ?? NULL;
-            // dd($keyword);
             $status = $request->status ? explode(",", $request->status) : NULL;
             $talentPools = TalentPool::query()
                 ->with(["resume" => function ($q1) use ($skill, $role, $year, $education) {
@@ -152,7 +151,6 @@ class TalentPoolService
             if ($status) $talentPools = $talentPools->whereIn('status', $status);
             $rows = $request->rows ?? 10;
             $talentPools = $talentPools->paginate($rows);
-            // dd(DB::getQueryLog());
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $talentPools, "status" => 200];
         } catch (\Exception $err) {
             return ["success" => false, "message" => $err, "status" => 400];
@@ -164,6 +162,17 @@ class TalentPoolService
         $access = $this->globalService->checkRoute($route_name);
         if ($access["success"] === false) return $access;
 
+        $rules = [
+            "id" => "numeric|required",
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        DB::enableQueryLog();
         try {
             $talentPool = TalentPool::query()
                 ->with(["resume" => function ($q1) {
@@ -176,13 +185,10 @@ class TalentPoolService
                         }])
                         ->with(["skills" => function ($q2) {
                         }])
-                        ->with('recruitment');
-                }]);
-            $talentPool = $talentPool->whereHas('category', function (Builder $q1) {
-                $q1->where('company_id', auth()->user()->company_id);
-            })
-                ->where('talent_pool_category_id', $request->category_id);
-            $talentPool = $talentPool->first();
+                        ->with(['recruitment' => function ($q2) {
+                            $q2->select('recruitments.owner_id', 'recruitments.created_at');
+                        }]);
+                }])->find($request->id);
             if (!$talentPool) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $talentPool, "status" => 200];
         } catch (\Exception $err) {
