@@ -402,6 +402,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getUserAttendanceTaskActivitiesAdmin', 'AttendanceController@getUserAttendanceTaskActivitiesAdmin');
     $router->get('/getAttendanceTaskActivitiesAdmin', 'AttendanceController@getAttendanceTaskActivitiesAdmin');
     $router->post('/addAttendanceTaskActivity', 'AttendanceController@addAttendanceTaskActivity');
+    $router->post('/addAttendanceTaskActivitySubmit', 'AttendanceController@addAttendanceTaskActivitySubmit');
     $router->post('/addAttendanceTaskActivities', 'AttendanceController@addAttendanceTaskActivities');
     $router->put('/updateAttendanceTaskActivity', 'AttendanceController@updateAttendanceTaskActivity');
     $router->delete('/deleteAttendanceTaskActivity', 'AttendanceController@deleteAttendanceTaskActivity');
