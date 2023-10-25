@@ -20,6 +20,7 @@ use App\Company;
 use App\Exports\AttendanceActivitiesExport;
 use App\File;
 use App\ProjectTask;
+use App\Task;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
@@ -1200,7 +1201,7 @@ class AttendanceService{
         if($access["success"] === false) return $access;
 
         $id = $request->get('id');
-        $task_activity = AttendanceTaskActivity::with('task')->find($id);
+        $task_activity = AttendanceTaskActivity::with(['task', 'taskExport'])->find($id);
         if($task_activity === null) return ["success" => false, "message" => "Task Activity Tidak Ditemukan", "status" => 400];
         try{
             return ["success" => true, "message" => $task_activity, "status" => 200];
@@ -1218,8 +1219,8 @@ class AttendanceService{
             $today = date('Y-m-d');
             $login_id = auth()->user()->id;
             if($admin && $id) $login_id = $id;
-            $today_attendance_activities = AttendanceTaskActivity::with('task')->where('user_id', $login_id)->whereDate('updated_at', '=', $today)->get();
-            $last_two_month_attendance_activities = AttendanceTaskActivity::with('task')->where('user_id', $login_id)->whereDate('updated_at', '>', $last_two_month)->whereDate('updated_at', '<>', $today)->get();
+            $today_attendance_activities = AttendanceTaskActivity::with(['task', 'taskExport'])->where('user_id', $login_id)->whereDate('updated_at', '=', $today)->get();
+            $last_two_month_attendance_activities = AttendanceTaskActivity::with(['task', 'taskExport'])->where('user_id', $login_id)->whereDate('updated_at', '>', $last_two_month)->whereDate('updated_at', '<>', $today)->get();
             $data = (object)[
                 "today_activities" => $today_attendance_activities,
                 "last_two_month_activities" => $last_two_month_attendance_activities
@@ -1247,7 +1248,7 @@ class AttendanceService{
             $id = $request->get('id');
             $user_attendance = AttendanceUser::find($id);
             if(!$user_attendance) return ["success" => false, "message" => "User Attendance Tidak Ditemukan" , "status" => 400];
-            $data = AttendanceTaskActivity::with('task')->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)));
+            $data = AttendanceTaskActivity::with(['task','taskExport'])->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)));
             if($rows) $data = $data->paginate($rows);
             else $data = $data->get();
             return ["success" => true, "message" => "Berhasil Mengambil Data Attendance", "data" => $data, "status" => 200];
@@ -1274,6 +1275,31 @@ class AttendanceService{
             $task_activity = new AttendanceTaskActivity();
             $task_activity->user_id = $login_id;
             $task_activity->task_id = $task_id;
+            $task_activity->updated_at = date('Y-m-d H:i:s');
+            $task_activity->activity = $task->name;
+            $task_activity->save();
+            return ["success" => true, "message" => "Task Activity berhasil di Import", "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+
+    }
+
+    public function addAttendanceTaskActivitySubmit($id){
+        $task_id = $id;
+        $task = Task::find($task_id);
+        if($task === null) return ["success" => false, "message" => "Task Tidak Ditemukan", "status" => 400];
+
+        $login_id = auth()->user()->id;
+        $today = date('Y-m-d');
+        $activity_exists = AttendanceTaskActivity::with('taskExport')->where('user_id', $login_id)->whereDate('updated_at', '=', $today)
+        ->where('task_export_id', $task_id)->get();
+        if(count($activity_exists) != 0) return ["success" => false, "message" => "Task sudah berada di list aktivitas hari ini", "status" => 400];
+
+        try{
+            $task_activity = new AttendanceTaskActivity();
+            $task_activity->user_id = $login_id;
+            $task_activity->task_export_id= $task_id;
             $task_activity->updated_at = date('Y-m-d H:i:s');
             $task_activity->activity = $task->name;
             $task_activity->save();

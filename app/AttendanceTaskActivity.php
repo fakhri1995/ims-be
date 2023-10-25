@@ -17,4 +17,9 @@ class AttendanceTaskActivity extends Model
     {
         return $this->belongsTo(ProjectTask::class)->with('project');
     }
+
+    public function taskExport()
+    {
+        return $this->belongsTo(Task::class, 'task_export_id')->select('id', 'name');
+    }
 }

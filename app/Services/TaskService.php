@@ -15,6 +15,7 @@ use App\Services\LogService;
 use App\Services\FileService;
 use App\Services\CompanyService;
 use App\Services\GlobalService;
+use App\Services\AttendanceService;
 use App\Services\NotificationService;
 use App\TaskReport;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +29,7 @@ class TaskService{
     public function __construct()
     {
         $this->globalService = new GlobalService;
+        $this->attendanceService = new AttendanceService;
     }
 
         // Single Textbox
@@ -1449,6 +1451,7 @@ class TaskService{
                     }
                 }
                 $this->addingLatLongList($lat, $long);
+                $this->attendanceService->addAttendanceTaskActivitySubmit($id);
                 return ["success" => true, "message" => "Berhasil Melakukan Submit Pada Task", "status" => 200];
             } else return ["success" => false, "message" => "Anda Tidak Ditugaskan Pada Task Ini.", "status" => 400];
         } catch(Exception $err){

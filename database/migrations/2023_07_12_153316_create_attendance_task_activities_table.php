@@ -16,8 +16,9 @@ class CreateAttendanceTaskActivitiesTable extends Migration
         Schema::create('attendance_task_activities', function (Blueprint $table) {
             $table->id();
             $table->unsignedInteger('user_id');
-            $table->unsignedInteger('task_id');
-            
+            $table->unsignedInteger('task_id')->nullable();
+            $table->unsignedInteger('task_export_id')->nullable();
+
             $table->dateTime('updated_at');
             $table->string('activity');
 
