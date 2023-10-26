@@ -822,7 +822,7 @@ class AttendanceService{
             $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
             $user_attendance->name = $name;
             $attendance_activities = AttendanceActivity::with('attendanceForm:id,name,details')->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
-            $attendance_task_activities = AttendanceTaskActivity::with('task')->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
+            $attendance_task_activities = AttendanceTaskActivity::with(['task', 'taskExport'])->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
             $attendance_activities_count = count($attendance_activities);
             $attendance_task_activities_count = count($attendance_task_activities);
             $activities_count = $attendance_task_activities_count + $attendance_activities_count;
