@@ -1723,14 +1723,7 @@ class EmployeeService{
             "penerimaan" => [
                 [ "name" => "Gaji Pokok", "value" => number_format($employeePayslip->gaji_pokok) ]
             ],
-            "pengurangan" => [
-                [ "name" => "Pph 21", "value" => number_format($employeePayslip->pph21) ],
-                [ "name" => "BPJS KS (5% Perusahaan)", "value" => number_format($employeePayslip->bpjs_ks) ],
-                [ "name" => "BPJS TK-JHT", "value" => number_format($employeePayslip->bpjs_tk_jht) ],
-                [ "name" => "BPJS TK-JKK (0,24% Perusahaan)", "value" => number_format($employeePayslip->bpjs_tk_jkk) ],
-                [ "name" => "BPJS TK-JKM (0,3% Perusahaan)", "value" => number_format($employeePayslip->bpjs_tk_jkm) ],
-                [ "name" => "BPJS TK-JP", "value" => number_format($employeePayslip->bpjs_tk_jp) ],
-            ],
+            "pengurangan" => [],
             "total_gross_penerimaan" => number_format($employeePayslip->total_gross_penerimaan),
             "total_gross_pengurangan" => number_format($employeePayslip->total_gross_pengurangan),
             "total_penerimaan" => number_format($employeePayslip->total_gross_penerimaan - $employeePayslip->total_gross_pengurangan),
@@ -1747,6 +1740,13 @@ class EmployeeService{
             if($employeePayslip->bpjs_tk_jkm) $salaries["penerimaan"][] = [ "name" => "BPJS TK-JKM (0,3% Perusahaan)", "value" => number_format($employeePayslip->bpjs_tk_jkm) ];
             if($employeePayslip->bpjs_tk_jp) $salaries["penerimaan"][] = [ "name" => "BPJS TK-JP", "value" => number_format($employeePayslip->bpjs_tk_jp) ];
         }
+
+        if($employeePayslip->pph21) $salaries["pengurangan"][] = [ "name" => "Pph 21", "value" => number_format($employeePayslip->pph21) ];
+        if($employeePayslip->bpjs_ks) $salaries["pengurangan"][] = [ "name" => "BPJS KS (5% Perusahaan)", "value" => number_format($employeePayslip->bpjs_ks) ];
+        if($employeePayslip->bpjs_tk_jht) $salaries["pengurangan"][] = [ "name" => "BPJS TK-JHT", "value" => number_format($employeePayslip->bpjs_tk_jht) ];
+        if($employeePayslip->bpjs_tk_jkk) $salaries["pengurangan"][] = [ "name" => "BPJS TK-JKK (0,24% Perusahaan)", "value" => number_format($employeePayslip->bpjs_tk_jkk) ];
+        if($employeePayslip->bpjs_tk_jkm) $salaries["pengurangan"][] = [ "name" => "BPJS TK-JKM (0,3% Perusahaan)", "value" => number_format($employeePayslip->bpjs_tk_jkm) ];
+        if($employeePayslip->bpjs_tk_jp) $salaries["pengurangan"][] = [ "name" => "BPJS TK-JP", "value" => number_format($employeePayslip->bpjs_tk_jp) ];
 
         foreach($employeePayslip->salaries as $s){
             if($s->column->type == 1){
