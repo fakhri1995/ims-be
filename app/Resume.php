@@ -61,7 +61,8 @@ class Resume extends Model
         return $this->hasOne(ResumeSummary::class, 'resume_id');
     }
 
-    function recruitment() : HasOne {
+    function recruitment(): HasOne
+    {
         return $this->hasOne(Recruitment::class, 'owner_id', 'owner_id');
     }
 
@@ -72,12 +73,12 @@ class Resume extends Model
 
     function lastEducation(): HasOne
     {
-        return $this->hasOne(ResumeEducation::class, 'resume_id')->orderBy("display_order", "asc")->latest('id');
+        return $this->hasOne(ResumeEducation::class, 'resume_id')->where('display_order', 1)->latest('id');
     }
 
     function lastExperience(): HasOne
     {
-        return $this->hasOne(ResumeExperience::class, 'resume_id')->orderBy("display_order", "asc")->latest('id');
+        return $this->hasOne(ResumeExperience::class, 'resume_id')->where('display_order', 1)->latest('id');
     }
 
     function lastAssessment(): HasOne
