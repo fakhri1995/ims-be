@@ -68,10 +68,10 @@ class TalentPoolService
                             }
                         }])
                         ->with(["lastExperience" => function ($q2) use ($year) {
-                            $q2->select(DB::raw('CASE
+                            $q2->select(DB::raw('role, resume_id, CASE
                             WHEN end_date IS NOT NULL THEN YEAR(end_date)
                             ELSE YEAR(start_date)
-                            END AS year, role'));
+                            END AS year'));
                             if ($year) {
                                 $q2->having('year', '=', $year);
                             }
@@ -80,13 +80,12 @@ class TalentPoolService
             if (!$keyword) {
                 $talentPools = $talentPools->whereHas("resume", function ($q1) use ($skill, $role, $year, $education) {
                     if ($education)
-                        $q1
-                            ->whereHas("lastEducation", function ($q2) use ($education) {
-                                $q2->select('resume_educations.resume_id', 'resume_educations.university');
-                                if ($education) {
-                                    $q2->whereIn('university', $education);
-                                }
-                            });
+                        $q1->whereHas("lastEducation", function ($q2) use ($education) {
+                            $q2->select('resume_educations.resume_id', 'resume_educations.university');
+                            if ($education) {
+                                $q2->whereIn('university', $education);
+                            }
+                        });
                     if ($role)
                         $q1->whereHas("lastAssessment", function ($q2) use ($role) {
                             $q2->select('resume_assessments.id', 'resume_assessments.name');
@@ -95,14 +94,14 @@ class TalentPoolService
                             }
                         });
                     if ($skill)
-                        $q1->whreHas("skills", function ($q2) use ($skill) {
+                        $q1->whereHas("skills", function ($q2) use ($skill) {
                             if ($skill) {
                                 $q2->whereIn('name', $skill);
                             }
                         });
                     if ($year) {
-                        $q1->whereHas('lastExperience', function (Builder $q2) use ($year) {
-                            $q2->select(DB::raw('CASE
+                        $q1->whereHas("lastExperience", function ($q2) use ($year) {
+                            $q2->select(DB::raw('resume_id, CASE
                             WHEN end_date IS NOT NULL THEN YEAR(end_date)
                             ELSE YEAR(start_date)
                             END AS year'));
@@ -113,7 +112,7 @@ class TalentPoolService
             } else {
                 $talentPools = $talentPools->whereHas("resume", function ($q1) use ($skill, $role, $year, $education, $keyword) {
                     if ($skill || $role || $year || $education || $keyword) {
-                        $q1->where(function ($q2) use ($skill, $role, $education, $keyword) {
+                        $q1->where(function ($q2) use ($skill, $role, $education, $keyword, $year) {
                             $q2->orWhereHas("lastEducation", function ($q3) use ($keyword, $education) {
                                 $q3->select('resume_educations.resume_id', 'resume_educations.university');
                                 if ($education) $q3->whereIn('university', $education);
@@ -127,27 +126,25 @@ class TalentPoolService
                                 ->orWhereHas("skills", function ($q3) use ($keyword, $skill) {
                                     if ($skill) $q3->whereIn('name', $skill);
                                     if ($keyword) $q3->where('name', 'like', '%' . $keyword . '%');
+                                })
+                                ->orWhereHas('lastExperience', function ($q3) use ($keyword, $year) {
+                                    $q3->select(DB::raw('resume_id, CASE
+                                WHEN end_date IS NOT NULL THEN YEAR(end_date)
+                                ELSE YEAR(start_date)
+                                END AS year'));
+                                    if ($year) $q3->having('year', '=', $year);
+                                    if ($keyword) $q3->where('year', 'like', '%' . $keyword . '%');
                                 });
                         });
                         if ($keyword) {
                             $q1->orWhere('name', 'like', '%' . $keyword . '%');
                         }
-                        if ($year) {
-                            $q1->orWhereHas('lastExperience', function (Builder $q3) use ($year) {
-                                $q3->select(DB::raw('CASE
-                            WHEN end_date IS NOT NULL THEN YEAR(end_date)
-                            ELSE YEAR(start_date)
-                            END AS year'));
-                                $q3->having('year', '=', $year);
-                            });
-                        };
                     }
                 });
             }
             $talentPools = $talentPools->whereHas('category', function (Builder $q1) {
                 $q1->where('company_id', auth()->user()->company_id);
-            })
-                ->where('talent_pool_category_id', $request->category_id);
+            })->where('talent_pool_category_id', $request->category_id);
             if ($status) $talentPools = $talentPools->whereIn('status', $status);
             $rows = $request->rows ?? 10;
             $talentPools = $talentPools->paginate($rows);
@@ -173,6 +170,7 @@ class TalentPoolService
         }
 
         try {
+            DB::enableQueryLog();
             $talentPool = TalentPool::query()
                 ->with(["resume" => function ($q1) {
                     $q1
@@ -184,14 +182,14 @@ class TalentPoolService
                         }])
                         ->with(["skills" => function ($q2) {
                         }])
-                        ->with(['recruitment' => function ($q2) {
-                            $q2->select('recruitments.owner_id', 'recruitments.created_at');
-                        }])
                         ->with(["lastExperience" => function ($q2) {
-                            $q2->select(DB::raw('CASE
+                            $q2->select(DB::raw('role, resume_id, CASE
                             WHEN end_date IS NOT NULL THEN YEAR(end_date)
                             ELSE YEAR(start_date)
-                            END AS year, role'));
+                            END AS year'));
+                        }])
+                        ->with(['recruitment' => function ($q2) {
+                            $q2->select('recruitments.owner_id', 'recruitments.created_at');
                         }]);
                 }])->find($request->id);
             if (!$talentPool) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
