@@ -66,16 +66,16 @@ class TalentPoolService
                             if ($skill) {
                                 $q2->whereIn('name', $skill);
                             }
-                        }]);
-                    if ($year) {
-                        $q1->whereHas('lastExperience', function (Builder $q2) use ($year) {
+                        }])
+                        ->with(["lastExperience" => function ($q2) use ($year) {
                             $q2->select(DB::raw('CASE
                             WHEN end_date IS NOT NULL THEN YEAR(end_date)
                             ELSE YEAR(start_date)
-                            END AS year'));
-                            $q2->having('year', '=', $year);
-                        });
-                    };
+                            END AS year, role'));
+                            if ($year) {
+                                $q2->having('year', '=', $year);
+                            }
+                        }]);
                 }]);
             if (!$keyword) {
                 $talentPools = $talentPools->whereHas("resume", function ($q1) use ($skill, $role, $year, $education) {
@@ -172,7 +172,6 @@ class TalentPoolService
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        DB::enableQueryLog();
         try {
             $talentPool = TalentPool::query()
                 ->with(["resume" => function ($q1) {
@@ -187,6 +186,12 @@ class TalentPoolService
                         }])
                         ->with(['recruitment' => function ($q2) {
                             $q2->select('recruitments.owner_id', 'recruitments.created_at');
+                        }])
+                        ->with(["lastExperience" => function ($q2) {
+                            $q2->select(DB::raw('CASE
+                            WHEN end_date IS NOT NULL THEN YEAR(end_date)
+                            ELSE YEAR(start_date)
+                            END AS year, role'));
                         }]);
                 }])->find($request->id);
             if (!$talentPool) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
