@@ -178,7 +178,7 @@ class TalentPoolService
                 ->with(["resume" => function ($q1) {
                     $q1
                         ->with(["lastEducation" => function ($q2) {
-                            // $q2->select('resume_id', 'university');
+                            $q2->select('resume_id', 'university');
                         }])
                         ->with(["lastAssessment" => function ($q2) {
                             $q2->select('id', 'name');
@@ -186,13 +186,13 @@ class TalentPoolService
                         ->with(["skills" => function ($q2) {
                         }])
                         ->with(["lastExperience" => function ($q2) {
-                            $q2->select(DB::raw('*, CASE
+                            $q2->select(DB::raw('role, resume_id, CASE
                             WHEN end_date IS NOT NULL THEN YEAR(end_date)
                             ELSE YEAR(start_date)
                             END AS year'));
                         }])
                         ->with(['recruitment' => function ($q2) {
-                            // $q2->select('owner_id', 'created_at');
+                            $q2->select('owner_id', 'created_at');
                         }]);
                 }])->find($request->id);
             if (!$talentPool) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
