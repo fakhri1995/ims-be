@@ -51,13 +51,13 @@ class TalentPoolService
                 ->with(["resume" => function ($q1) use ($skill, $role, $year, $education) {
                     $q1
                         ->with(["lastEducation" => function ($q2) use ($education) {
-                            $q2->select('resume_educations.resume_id', 'resume_educations.university');
+                            $q2->select('resume_id', 'university');
                             if ($education) {
                                 $q2->whereIn('university', $education);
                             }
                         }])
                         ->with(["lastAssessment" => function ($q2) use ($role) {
-                            $q2->select('resume_assessments.id', 'resume_assessments.name');
+                            $q2->select('id', 'name');
                             if ($role) {
                                 $q2->whereIn('name', $role);
                             }
@@ -77,7 +77,7 @@ class TalentPoolService
                             }
                         }])
                         ->with(['recruitment' => function ($q2) {
-                            $q2->select('recruitments.owner_id', 'recruitments.created_at');
+                            $q2->select('owner_id', 'created_at');
                         }]);
                 }]);
             if (!$keyword) {
@@ -178,10 +178,10 @@ class TalentPoolService
                 ->with(["resume" => function ($q1) {
                     $q1
                         ->with(["lastEducation" => function ($q2) {
-                            $q2->select('resume_educations.resume_id', 'resume_educations.university');
+                            $q2->select('resume_id', 'university');
                         }])
                         ->with(["lastAssessment" => function ($q2) {
-                            $q2->select('resume_assessments.id', 'resume_assessments.name');
+                            $q2->select('id', 'name');
                         }])
                         ->with(["skills" => function ($q2) {
                         }])
@@ -192,7 +192,7 @@ class TalentPoolService
                             END AS year'));
                         }])
                         ->with(['recruitment' => function ($q2) {
-                            $q2->select('recruitments.owner_id', 'recruitments.created_at');
+                            $q2->select('owner_id', 'created_at');
                         }]);
                 }])->find($request->id);
             if (!$talentPool) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
