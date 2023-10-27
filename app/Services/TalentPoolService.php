@@ -75,6 +75,9 @@ class TalentPoolService
                             if ($year) {
                                 $q2->having('year', '=', $year);
                             }
+                        }])
+                        ->with(['recruitment' => function ($q2) {
+                            $q2->select('recruitments.owner_id', 'recruitments.created_at');
                         }]);
                 }]);
             if (!$keyword) {
@@ -133,7 +136,7 @@ class TalentPoolService
                                 ELSE YEAR(start_date)
                                 END AS year'));
                                     if ($year) $q3->having('year', '=', $year);
-                                    if ($keyword) $q3->where('year', 'like', '%' . $keyword . '%');
+                                    if ($keyword) $q3->having('year', 'like', '%' . $keyword . '%');
                                 });
                         });
                         if ($keyword) {
