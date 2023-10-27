@@ -24,6 +24,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class ResumeService{
+
+    protected $globalService;
+
     public function __construct()
     {
         $this->globalService = new GlobalService;
@@ -947,19 +950,61 @@ class ResumeService{
             if($request->education_id){
                 $model = $resume->educations()->find($request->education_id);
                 if(!$model) return ["success" => false, "message" => "Data Education yang dihapus tidak valid", "status" => 400];
-                if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Education Resume", "status" => 400];
-                return ["success" => true, "message" => "Data Resume Education Dihapus", "status" => 200];
+                try {
+                    DB::beginTransaction();
+                    if($model->display_order === 1){
+                        $rotation = $resume->educations()->where('display_order', '!=', 1)->latest('display_order')->first();
+                        if($rotation){
+                            $rotation->display_order = 1;
+                            $rotation->save();
+                        }
+                    }
+                    $model->delete();
+                    DB::commit();
+                    return ["success" => true, "message" => "Data Resume Education Dihapus", "status" => 200];
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+                    return ["success" => false, "message" => "Gagal Menghapus Education Resume", "status" => 400];
+                }
             }else if($request->experience_id){
                 $model = $resume->experiences()->find($request->experience_id);
                 if(!$model) return ["success" => false, "message" => "Data Experience yang dihapus tidak valid", "status" => 400];
-                if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Experience Resume", "status" => 400];
-                return ["success" => true, "message" => "Data Resume Experience Dihapus", "status" => 200];
+                try {
+                    DB::beginTransaction();
+                    if($model->display_order === 1){
+                        $rotation = $resume->experiences()->where('display_order', '!=', 1)->latest('display_order')->first();
+                        if($rotation){
+                            $rotation->display_order = 1;
+                            $rotation->save();
+                        }
+                    }
+                    $model->delete();
+                    DB::commit();
+                    return ["success" => true, "message" => "Data Resume Experience Dihapus", "status" => 200];
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+                    return ["success" => false, "message" => "Gagal Menghapus Experience Resume", "status" => 400];
+                }
             }
             else if($request->project_id){
                 $model = $resume->projects()->find($request->project_id);
                 if(!$model) return ["success" => false, "message" => "Data Project yang dihapus tidak valid", "status" => 400];
-                if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Project Resume", "status" => 400];
-                return ["success" => true, "message" => "Data Resume Project Dihapus", "status" => 200];
+                try {
+                    DB::beginTransaction();
+                    if($model->display_order === 1){
+                        $rotation = $resume->projects()->where('display_order', '!=', 1)->latest('display_order')->first();
+                        if($rotation){
+                            $rotation->display_order = 1;
+                            $rotation->save();
+                        }
+                    }
+                    $model->delete();
+                    DB::commit();
+                    return ["success" => true, "message" => "Data Resume Project Dihapus", "status" => 200];
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+                    return ["success" => false, "message" => "Gagal Menghapus Project Resume", "status" => 400];
+                }
             }
             else if($request->skill_id){
                 $model = $resume->skills()->find($request->skill_id);
@@ -970,20 +1015,62 @@ class ResumeService{
             else if($request->training_id){
                 $model = $resume->trainings()->find($request->training_id);
                 if(!$model) return ["success" => false, "message" => "Data Training yang dihapus tidak valid", "status" => 400];
-                if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Training Resume", "status" => 400];
-                return ["success" => true, "message" => "Data Resume Training Dihapus", "status" => 200];
+                try {
+                    DB::beginTransaction();
+                    if($model->display_order === 1){
+                        $rotation = $resume->trainings()->where('display_order', '!=', 1)->latest('display_order')->first();
+                        if($rotation){
+                            $rotation->display_order = 1;
+                            $rotation->save();
+                        }
+                    }
+                    $model->delete();
+                    DB::commit();
+                    return ["success" => true, "message" => "Data Training Project Dihapus", "status" => 200];
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+                    return ["success" => false, "message" => "Gagal Menghapus Project Training", "status" => 400];
+                }
             }
             else if($request->certificate_id){
                 $model = $resume->certificates()->find($request->certificate_id);
                 if(!$model) return ["success" => false, "message" => "Data Certificate yang dihapus tidak valid", "status" => 400];
-                if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Certificate Resume", "status" => 400];
-                return ["success" => true, "message" => "Data Resume Certificate Dihapus", "status" => 200];
+                try {
+                    DB::beginTransaction();
+                    if($model->display_order === 1){
+                        $rotation = $resume->certificates()->where('display_order', '!=', 1)->latest('display_order')->first();
+                        if($rotation){
+                            $rotation->display_order = 1;
+                            $rotation->save();
+                        }
+                    }
+                    $model->delete();
+                    DB::commit();
+                    return ["success" => true, "message" => "Data Certificate Project Dihapus", "status" => 200];
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+                    return ["success" => false, "message" => "Gagal Menghapus Project Certificate", "status" => 400];
+                }
             }
             else if($request->achievement_id){
                 $model = $resume->achievements()->find($request->achievement_id);
                 if(!$model) return ["success" => false, "message" => "Data Achievement yang dihapus tidak valid", "status" => 400];
-                if(!$model->delete()) return ["success" => false, "message" => "Gagal Menghapus Achievement Resume", "status" => 400];
-                return ["success" => true, "message" => "Data Resume Achievement Dihapus", "status" => 200];
+                try {
+                    DB::beginTransaction();
+                    if($model->display_order === 1){
+                        $rotation = $resume->achievements()->where('display_order', '!=', 1)->latest('display_order')->first();
+                        if($rotation){
+                            $rotation->display_order = 1;
+                            $rotation->save();
+                        }
+                    }
+                    $model->delete();
+                    DB::commit();
+                    return ["success" => true, "message" => "Data Achievement Project Dihapus", "status" => 200];
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+                    return ["success" => false, "message" => "Gagal Menghapus Project Achievement", "status" => 400];
+                }
             }
             else if($request->summary_id){
                 $model = $resume->summaries()->find($request->summary_id);
