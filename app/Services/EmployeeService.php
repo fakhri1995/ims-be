@@ -1703,6 +1703,9 @@ class EmployeeService{
     public function downloadEmployeePayslip($request, $route_name)
     {   
         $access = $this->globalService->checkRoute($route_name);
+        $admin_access = $this->globalService->checkRoute("EMPLOYEE_PAYSLIP_DOWNLOAD_ADMIN");
+        $admin_access = $admin_access["success"];
+        
         if($access["success"] === false) return $access;
         $id = $request->id;
         $password = $request->password;
@@ -1711,8 +1714,8 @@ class EmployeeService{
         "employee.contract.contract_status","salaries","salaries.column")->find($id);
         if(!$employeePayslip) return ["success" => false, "message" => "Data tidak ditemukan", "status" => 400];
         $isUserSuperAdmin = $this->globalService->isUserSuperAdmin();
-        if(!$isUserSuperAdmin && $employeePayslip->employee->user_id != auth()->user()->id) return ["success" => false, "message" => "Payslip tidak sesuai dengan employee", "status" => 400];
-        if(!$isUserSuperAdmin && !Hash::check($password,auth()->user()->password)) return ["success" => false, "message" => "Validasi kata sandi salah", "status" => 400];
+        if(!$isUserSuperAdmin && $employeePayslip->employee->user_id != auth()->user()->id && !$admin_access) return ["success" => false, "message" => "Payslip tidak sesuai dengan employee", "status" => 400];
+        if(!$isUserSuperAdmin && !Hash::check($password,auth()->user()->password) && !$admin_access) return ["success" => false, "message" => "Validasi kata sandi salah", "status" => 400];
         // dd($employeePayslip);
         
 
