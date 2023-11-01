@@ -65,6 +65,14 @@
       margin: 16px 0px 10px;
     }
 
+    table {
+      border-collapse:collapse; table-layout:fixed;
+    }
+
+    table td {
+      word-wrap:break-word;
+    }
+
     .watermark {
       background-image: url('https://mig.id/image/allWatermark.png');
       background-size: cover;
@@ -90,7 +98,7 @@
     .textCaptionBold {
       font-size: 22px;
       font-weight: 700;
-      line-height: 6px;
+      line-height: 24px;
       color: #4D4D4D;
     }
 
@@ -150,7 +158,7 @@
         <td width="60%">
           <img src="https://mig.id/image/LogoMig2.png" alt="MIG Logo"
             style="width:198px; height:78px; margin-bottom: 20px;">
-          <h6 style="font-weight: 700; ">MITRAMAS INFOSYS GLOBAL</h6>
+          <h6 style="font-weight: 700; ">PT. MITRAMAS INFOSYS GLOBAL</h6>
           <p class="textCaptionSmallRegular">Tebet Raya No.42 South Jakarta, DKI Jakarta, 12820</p>
           <p class="textCaptionSmallRegular">+62-21-831-4522</p>
         </td>
@@ -168,7 +176,7 @@
     <table style="width: 100%; margin: 40px 0px 20px;" cellpadding="10">
       <tr class="textCaptionBold">
         <td width="20%" style="color: #808080; ">
-          Name
+          Nama
         </td>
         <td width="20%">
           {{ $payslip->employee->name }}
@@ -211,7 +219,15 @@
           Tanggal Mulai Kerja
         </td>
         <td width="20%">
-        {{ $payslip->employee->contract->contract_start_at }}
+          @php
+          $months = array("Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember");
+          $str_contract = $payslip->employee->contract->contract_start_at;
+          $contract_day = date('d', strtotime($str_contract));
+          $contract_month = $months[date('n', strtotime($str_contract)) - 1];
+          $contract_year = date('Y', strtotime($str_contract));
+          $date = sprintf("%s-%s-%s",$contract_day, $contract_month, $contract_year);
+          @endphp
+        {{ $date }}
         </td>
       </tr>
     </table>
