@@ -269,6 +269,8 @@
           <td class="text-bold border">Jumlah Diterima</td>
           <td class="text-bold text-right text-green border">{{ $salaries['total_penerimaan'] }}</td>
           <td></td>
+        </tr>
+        <tr>
           <td class="text-bold border">Terbilang</td>
           <td class="text-right text-green border" style="font-size: 20px;">{{ $salaries['terbilang'] }}</td>
         </tr>
