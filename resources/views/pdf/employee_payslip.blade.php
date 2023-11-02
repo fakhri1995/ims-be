@@ -158,7 +158,7 @@
         <td width="60%">
           <img src="https://mig.id/image/LogoMig2.png" alt="MIG Logo"
             style="width:198px; height:78px; margin-bottom: 20px;">
-          <h6 style="font-weight: 700; ">PT. MITRAMAS INFOSYS GLOBAL</h6>
+          <h6 style="font-weight: 700; ">PT MITRAMAS INFOSYS GLOBAL</h6>
           <p class="textCaptionSmallRegular">Tebet Raya No.42 South Jakarta, DKI Jakarta, 12820</p>
           <p class="textCaptionSmallRegular">+62-21-831-4522</p>
         </td>
@@ -287,13 +287,13 @@
         </td>
       </tr>
       <tr>
-        <td class="text-left" style="width: 70%;">
+        <td class="text-left" style="width: 64%;">
           <span class="pagenum">Halaman </span>
         </td>
         <td class="text-left" style="width: 20%; font-size: 22px; font-weight: 700; letter-spacing: 1px;">
           APPROVED BY:
         </td>
-        <td class="text-left" style="width: 10%;">
+        <td class="text-left" style="width: 16%;">
           <img style="width: 160px; height: 63.72px; vertical-align: middle;" src="https://mig.id/image/LogoMig2.png"
             alt="MIG Logo">
         </td>
