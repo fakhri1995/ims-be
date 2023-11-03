@@ -54,7 +54,7 @@ class TalentPoolController extends Controller
         return response()->json($response, $response['status']);
     }
 
-    // TALENT POOL CATEGORIES
+    //* TALENT POOL CATEGORIES
     public function getTalentPoolCategories(Request $request){
         $route_name = "TALENT_POOL_CATEGORIES_GET";
 
@@ -76,11 +76,69 @@ class TalentPoolController extends Controller
         return response()->json($response, $response['status']);
     }
 
-    // TALENT POOL FILTERS
+    //* TALENT POOL FILTERS
     public function getTalentPoolFilters(Request $request){
         $route_name = "TALENT_POOLS_GET";
 
         $response = $this->talentPoolService->getTalentPoolFilters($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    //* TALENT POOL SHARE
+    public function getTalentPoolShares(Request $request){
+        $route_name = "TALENT_POOL_SHARES_GET";
+
+        $response = $this->talentPoolService->getTalentPoolShares($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function addTalentPoolShare(Request $request){
+        $route_name = "TALENT_POOL_SHARE_ADD";
+
+        $response = $this->talentPoolService->addTalentPoolShare($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteTalentPoolShare(Request $request){
+        $route_name = "TALENT_POOL_SHARE_DELETE";
+
+        $response = $this->talentPoolService->deleteTalentPoolShare($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    //* TALENT POOL SHARE PUBLIC
+    public function getTalentPoolSharePublics(Request $request){
+        $route_name = "NONE";
+
+        $response = $this->talentPoolService->getTalentPoolSharePublics($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getTalentPoolSharePublic(Request $request){
+        $route_name = "NONE";
+
+        $response = $this->talentPoolService->getTalentPoolSharePublic($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function markTalentPoolSharePublic(Request $request){
+        $route_name = "NONE";
+
+        $response = $this->talentPoolService->markTalentPoolSharePublic($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function eliminateTalentPoolSharePublic(Request $request){
+        $route_name = "NONE";
+
+        $response = $this->talentPoolService->eliminateTalentPoolSharePublic($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function cancelTalentPoolSharePublic(Request $request){
+        $route_name = "NONE";
+
+        $response = $this->talentPoolService->cancelTalentPoolSharePublic($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
