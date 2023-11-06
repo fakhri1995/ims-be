@@ -528,15 +528,12 @@ class TalentPoolService
             $talentPools = TalentPool::query()
                 ->with(["resume" => function ($q1) {
                     $q1
-                        ->with(["lastEducation" => function ($q2) {
-                            $q2->select('resume_id', 'university');
-                        }])
-                        ->with(["lastAssessment" => function ($q2) {
-                            $q2->select('id', 'name');
-                        }])
-                        ->with(["skills"])
+                        ->with("lastEducation")
+                        ->with("lastAssessment")
+                        ->with("skills")
+                        ->with("summaries")
                         ->with(["lastExperience" => function ($q2) {
-                            $q2->select(DB::raw('role, resume_id, CASE
+                            $q2->select(DB::raw('*, CASE
                             WHEN end_date IS NOT NULL THEN YEAR(end_date)
                             ELSE YEAR(start_date)
                             END AS year'));
@@ -544,19 +541,18 @@ class TalentPoolService
                         ->with(['recruitment' => function ($q2) {
                             $q2->select('owner_id', 'created_at');
                         }]);
-                }]);
+                }])
+                ->with(['category']);
             if (!$keyword) {
                 $talentPools = $talentPools->whereHas("resume", function ($q1) use ($skill, $role, $year, $education) {
                     if ($education)
                         $q1->whereHas("lastEducation", function ($q2) use ($education) {
-                            $q2->select('resume_educations.resume_id', 'resume_educations.university');
                             if ($education) {
                                 $q2->whereIn('university', $education);
                             }
                         });
                     if ($role)
                         $q1->whereHas("lastAssessment", function ($q2) use ($role) {
-                            $q2->select('resume_assessments.id', 'resume_assessments.name');
                             if ($role) {
                                 $q2->whereIn('name', $role);
                             }
@@ -569,7 +565,7 @@ class TalentPoolService
                         });
                     if ($year) {
                         $q1->whereHas("lastExperience", function ($q2) use ($year) {
-                            $q2->select(DB::raw('resume_id, CASE
+                            $q2->select(DB::raw('*, CASE
                             WHEN end_date IS NOT NULL THEN YEAR(end_date)
                             ELSE YEAR(start_date)
                             END AS year'));
@@ -582,12 +578,10 @@ class TalentPoolService
                     if ($skill || $role || $year || $education || $keyword) {
                         $q1->where(function ($q2) use ($skill, $role, $education, $keyword, $year) {
                             $q2->orWhereHas("lastEducation", function ($q3) use ($keyword, $education) {
-                                $q3->select('resume_educations.resume_id', 'resume_educations.university');
                                 if ($education) $q3->whereIn('university', $education);
                                 if ($keyword) $q3->where('university', 'like', '%' . $keyword . '%');
                             })
                                 ->orWhereHas("lastAssessment", function ($q3) use ($keyword, $role) {
-                                    $q3->select('resume_assessments.id', 'resume_assessments.name');
                                     if ($role) $q3->whereIn('name', $role);
                                     if ($keyword) $q3->where('name', 'like', '%' . $keyword . '%');
                                 })
@@ -596,7 +590,7 @@ class TalentPoolService
                                     if ($keyword) $q3->where('name', 'like', '%' . $keyword . '%');
                                 })
                                 ->orWhereHas('lastExperience', function ($q3) use ($keyword, $year) {
-                                    $q3->select(DB::raw('resume_id, CASE
+                                    $q3->select(DB::raw('*, CASE
                                 WHEN end_date IS NOT NULL THEN YEAR(end_date)
                                 ELSE YEAR(start_date)
                                 END AS year'));
