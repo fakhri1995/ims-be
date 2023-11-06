@@ -435,7 +435,7 @@ class TalentPoolService
             return ["success" => false, "message" => $errors, "status" => 400];
         }
         try {
-            $shared = TalentPoolShare::query()->where('talent_pool_category_id', $request->category_id)->latest('id')->get();
+            $shared = TalentPoolShare::query()->where('talent_pool_category_id', $request->category_id)->with(['user'])->latest('id')->get();
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $shared, "status" => 200];
         } catch (Exception $err) {
             return ["success" => false, "message" => $err, "status" => 400];
