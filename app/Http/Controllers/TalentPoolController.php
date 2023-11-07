@@ -142,17 +142,17 @@ class TalentPoolController extends Controller
         return response()->json($response, $response['status']);
     }
 
-    public function eliminateTalentPoolSharePublic(Request $request){
+    public function addTalentPoolSharePublicCut(Request $request){
         $route_name = "NONE";
 
-        $response = $this->talentPoolService->eliminateTalentPoolSharePublic($request, $route_name);
+        $response = $this->talentPoolService->addTalentPoolSharePublicCut($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
-    public function cancelTalentPoolSharePublic(Request $request){
+    public function deleteTalentPoolSharePublicCut(Request $request){
         $route_name = "NONE";
 
-        $response = $this->talentPoolService->cancelTalentPoolSharePublic($request, $route_name);
+        $response = $this->talentPoolService->deleteTalentPoolSharePublicCut($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
