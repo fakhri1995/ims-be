@@ -710,11 +710,14 @@ $router->group(['middleware' => 'auth'], function ($router) {
 
 // TALENT POOL SHARE PUBLIC
 $router->group([],function ($router) {
+    $router->get('/authTalentPoolSharePublic', 'TalentPoolController@authTalentPoolSharePublic');
     $router->get('/getTalentPoolSharePublics', 'TalentPoolController@getTalentPoolSharePublics');
     $router->get('/getTalentPoolSharePublic', 'TalentPoolController@getTalentPoolSharePublic');
     $router->post('/markTalentPoolSharePublic', 'TalentPoolController@markTalentPoolSharePublic');
+    $router->get('/getTalentPoolSharePublicCuts', 'TalentPoolController@getTalentPoolSharePublicCuts');
     $router->post('/eliminateTalentPoolSharePublic', 'TalentPoolController@eliminateTalentPoolSharePublic');
     $router->post('/cancelTalentPoolSharePublic', 'TalentPoolController@cancelTalentPoolSharePublic');
+    $router->get('/getTalentPoolSharePublicFilters', 'TalentPoolController@getTalentPoolSharePublicFilters');
 });
 
 // //Incident Routes

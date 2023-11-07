@@ -499,10 +499,33 @@ class TalentPoolService
     }
 
     //* Talent Pool Share Public
+
+    function authTalentPoolSharePublic($request, $route_name): array
+    {
+        $validator = Validator::make($request->all(), [
+            "code" => "required"
+        ]);
+
+        if ($validator->fails()) {
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $code = $request->code;
+        $shared = TalentPoolShare::query()->where('code', $code)->with(['user', 'category'])->first();
+        if (!$shared) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+
+        try {
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $shared, "status" => 200];
+        } catch (Exception $err) {
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     function getTalentPoolSharePublics($request, $route_name): array
     {
         $rules = [
-            "code" => "required",
+            "share_id" => "required|numeric",
             "page" => "numeric",
             "rows" => "numeric|between:1,100",
         ];
@@ -511,7 +534,7 @@ class TalentPoolService
             $errors = $validator->errors()->all();
             return ["success" => false, "message" => $errors, "status" => 400];
         }
-        $talentShare = TalentPoolShare::query()->where('code', $request->code)->first();
+        $talentShare = TalentPoolShare::find($request->share_id);
         if (
             !$talentShare ||
             ($talentShare && $talentShare->expired != null
@@ -541,8 +564,7 @@ class TalentPoolService
                         ->with(['recruitment' => function ($q2) {
                             $q2->select('owner_id', 'created_at');
                         }]);
-                }])
-                ->with(['category']);
+                }]);
             if (!$keyword) {
                 $talentPools = $talentPools->whereHas("resume", function ($q1) use ($skill, $role, $year, $education) {
                     if ($education)
@@ -661,10 +683,29 @@ class TalentPoolService
         }
     }
 
+    function getTalentPoolSharePublicCuts($request, $route_name): array
+    {
+        $validator = Validator::make($request->all(), [
+            "share_id" => "required|numeric"
+        ]);
+
+        if ($validator->fails()) {
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $cut = TalentPoolShareCut::query()->where('talent_pool_share_id', $request->share_id)->with(['talent.resume'])->get();
+        try {
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $cut, "status" => 200];
+        } catch (Exception $err) {
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     function eliminateTalentPoolSharePublic($request, $route_name): array
     {
         $rules = [
-            'share_code' => 'required',
+            'share_id' => 'required|numeric',
             'talent_id' => 'required|numeric',
         ];
         $validator = Validator::make($request->all(), $rules);
@@ -672,7 +713,7 @@ class TalentPoolService
             $errors = $validator->errors()->all();
             return ["success" => false, "message" => $errors, "status" => 400];
         }
-        $share = TalentPoolShare::query()->where('code', $request->share_code)->first();
+        $share = TalentPoolShare::find($request->share_id);
         if (!$share) return ["success" => false, "message" => "Tautan tidak ditemukan", "status" => 404];
         $talent = TalentPool::find($request->talent_id);
         if (!$talent) return ["success" => false, "message" => "Talent tidak ditemukan", "status" => 404];
@@ -695,7 +736,7 @@ class TalentPoolService
     function cancelTalentPoolSharePublic($request, $route_name): array
     {
         $rules = [
-            'share_code' => 'required',
+            'share_id' => 'required|numeric',
             'talent_id' => 'required|numeric',
         ];
         $validator = Validator::make($request->all(), $rules);
@@ -703,7 +744,7 @@ class TalentPoolService
             $errors = $validator->errors()->all();
             return ["success" => false, "message" => $errors, "status" => 400];
         }
-        $share = TalentPoolShare::query()->where('code', $request->share_code)->first();
+        $share = TalentPoolShare::find($request->share_id);
         if (!$share) return ["success" => false, "message" => "Tautan tidak ditemukan", "status" => 404];
         $talent = TalentPool::find($request->talent_id);
         if (!$talent) return ["success" => false, "message" => "Talent tidak ditemukan", "status" => 404];
@@ -716,6 +757,66 @@ class TalentPoolService
             return ["success" => true, "message" => "Eliminasi Berhasil Dibatalkan", "data" => $cut, "status" => 200];
         } catch (Exception $err) {
             DB::rollBack();
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    function getTalentPoolSharePublicFilters($request, $route_name): array
+    {
+        $rules = [
+            "share_id" => "numeric|required",
+        ];
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        $talentShare = TalentPoolShare::find($request->share_id);
+        try {
+            $skill = ResumeSkill::query()
+                ->select('name', 'id')
+                ->whereHas('resume.talentPool.category', function (Builder $q) use ($talentShare) {
+                    $q->where('id', $talentShare->talent_pool_category_id);
+                })->latest('id')->groupBy('name')->get();
+
+            $univ = ResumeEducation::query()
+                ->select('university', 'id')
+                ->whereHas('resume.talentPool.category', function (Builder $q) use ($talentShare) {
+                    $q->where('id', $talentShare->talent_pool_category_id);
+                })->latest('id')->orderBy('display_order', 'asc')
+                ->groupBy('resume_id')->get();
+
+            $status = TalentPool::query()->select('id', 'status')
+                ->whereHas('category', function (Builder $q) use ($talentShare) {
+                    $q->where('id', $talentShare->talent_pool_category_id);
+                })
+                ->groupBy('status')->orderBy('status')->get();
+
+            $role = ResumeAssessment::query()
+                ->select('name', 'id')
+                ->whereHas('resumes.talentPool.category', function (Builder $q) use ($talentShare) {
+                    $q->where('id', $talentShare->talent_pool_category_id);
+                })
+                ->orderBy('name')->get();
+
+            $year = ResumeExperience::query()
+                ->select(DB::raw('
+                 CASE
+                 WHEN end_date IS NOT NULL THEN YEAR(end_date)
+                 ELSE YEAR(start_date)
+                 END AS year
+                 '))->whereHas('resume.talentPool.category', function (Builder $q) use ($talentShare) {
+                    $q->where('id', $talentShare->talent_pool_category_id);
+                })->groupBy('year')->orderBy('year')->get();
+
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => [
+                "role" => $role,
+                "skill" => $skill,
+                "year" => $year,
+                "university" => $univ,
+                "status" => $status,
+            ], "status" => 200];
+        } catch (Exception $err) {
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }

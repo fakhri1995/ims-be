@@ -14,4 +14,8 @@ class TalentPoolShare extends Model
     {
         return $this->hasOne(User::class, 'id', 'user_id');
     }
+
+    function category() : HasOne {
+        return $this->hasOne(TalentPoolCategoryList::class, 'id', 'talent_pool_category_id');
+    }
 }
