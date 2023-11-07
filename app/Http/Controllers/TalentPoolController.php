@@ -107,6 +107,13 @@ class TalentPoolController extends Controller
     }
 
     //* TALENT POOL SHARE PUBLIC
+    public function authTalentPoolSharePublic(Request $request){
+        $route_name = "NONE";
+
+        $response = $this->talentPoolService->authTalentPoolSharePublic($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getTalentPoolSharePublics(Request $request){
         $route_name = "NONE";
 
@@ -128,6 +135,13 @@ class TalentPoolController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getTalentPoolSharePublicCuts(Request $request){
+        $route_name = "NONE";
+
+        $response = $this->talentPoolService->getTalentPoolSharePublicCuts($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function eliminateTalentPoolSharePublic(Request $request){
         $route_name = "NONE";
 
@@ -139,6 +153,13 @@ class TalentPoolController extends Controller
         $route_name = "NONE";
 
         $response = $this->talentPoolService->cancelTalentPoolSharePublic($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getTalentPoolSharePublicFilters(Request $request){
+        $route_name = "NONE";
+
+        $response = $this->talentPoolService->getTalentPoolSharePublicFilters($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
