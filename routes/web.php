@@ -708,15 +708,19 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->get('/getContractHistoryLogs', 'ActivityLogController@getContractHistoryLogs');
 });
 
-// TALENT POOL SHARE PUBLIC
 $router->group([],function ($router) {
+    // TALENT POOL SHARE PUBLIC
     $router->get('/authTalentPoolSharePublic', 'TalentPoolController@authTalentPoolSharePublic');
     $router->get('/getTalentPoolSharePublics', 'TalentPoolController@getTalentPoolSharePublics');
     $router->get('/getTalentPoolSharePublic', 'TalentPoolController@getTalentPoolSharePublic');
     $router->post('/markTalentPoolSharePublic', 'TalentPoolController@markTalentPoolSharePublic');
+
+    // TALENT POOL SHARE PUBLIC CUT
     $router->get('/getTalentPoolSharePublicCuts', 'TalentPoolController@getTalentPoolSharePublicCuts');
-    $router->post('/eliminateTalentPoolSharePublic', 'TalentPoolController@eliminateTalentPoolSharePublic');
-    $router->post('/cancelTalentPoolSharePublic', 'TalentPoolController@cancelTalentPoolSharePublic');
+    $router->post('/addTalentPoolSharePublicCut', 'TalentPoolController@addTalentPoolSharePublicCut');
+    $router->delete('/deleteTalentPoolSharePublicCut', 'TalentPoolController@deleteTalentPoolSharePublicCut');
+
+    // TALENT POOL SHARE PUBLIC FILTER
     $router->get('/getTalentPoolSharePublicFilters', 'TalentPoolController@getTalentPoolSharePublicFilters');
 });
 

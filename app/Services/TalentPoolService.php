@@ -683,6 +683,7 @@ class TalentPoolService
         }
     }
 
+    //* Talent Pool Share Public Cut
     function getTalentPoolSharePublicCuts($request, $route_name): array
     {
         $validator = Validator::make($request->all(), [
@@ -702,7 +703,7 @@ class TalentPoolService
         }
     }
 
-    function eliminateTalentPoolSharePublic($request, $route_name): array
+    function addTalentPoolSharePublicCut($request, $route_name): array
     {
         $rules = [
             'share_id' => 'required|numeric',
@@ -733,7 +734,7 @@ class TalentPoolService
         }
     }
 
-    function cancelTalentPoolSharePublic($request, $route_name): array
+    function deleteTalentPoolSharePublicCut($request, $route_name): array
     {
         $rules = [
             'share_id' => 'required|numeric',
@@ -761,6 +762,7 @@ class TalentPoolService
         }
     }
 
+    //* Talent Pool Share Public Filter
     function getTalentPoolSharePublicFilters($request, $route_name): array
     {
         $rules = [
