@@ -626,7 +626,7 @@ class TalentPoolService
                     }
                 });
             }
-            $talentPools = $talentPools->where('talent_pool_category_id', $talentShare->talent_pool_category_id)->whereNotIn('id', $except)->latest('mark')->latest('updated_at');
+            $talentPools = $talentPools->where('talent_pool_category_id', $talentShare->talent_pool_category_id)->whereNotIn('id', $except)->latest('mark')->latest('id');
             if ($status) $talentPools = $talentPools->whereIn('status', $status);
             $rows = $request->rows ?? 10;
             $talentPools = $talentPools->paginate($rows);
@@ -674,9 +674,9 @@ class TalentPoolService
             DB::beginTransaction();
             $talent->mark = $talent->mark ? null : '1';
             $talent->save();
-            $message = $talent->mark ? 'ditandai' : 'dihapus tandanya';
+            $message = $talent->mark ? 'Berhasil Ditandai' : 'Batal Ditandai';
             DB::commit();
-            return ["success" => true, "message" => "Talent Berhasil " . $message, "status" => 200];
+            return ["success" => true, "message" => "Talent " . $message, "status" => 200];
         } catch (Exception $err) {
             DB::rollBack();
             return ["success" => false, "message" => $err, "status" => 400];
@@ -695,7 +695,16 @@ class TalentPoolService
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        $cut = TalentPoolShareCut::query()->where('talent_pool_share_id', $request->share_id)->with(['talent.resume'])->get();
+        $cut = TalentPoolShareCut::query()->where('talent_pool_share_id', $request->share_id)->with(['talent.resume' => function ($q) use ($request) {
+            $q->with(["lastEducation"])
+                ->with(["lastAssessment"])
+                ->with('skills')
+                ->with(['lastExperience']);
+        }])->whereHas('talent.resume', function ($q) use ($request) {
+            $q->when(isset($request->keyword), function ($q2) use ($request) {
+                $q2->where('name', 'like',  '%' . $request->keyword . '%');
+            });
+        })->get();
         try {
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $cut, "status" => 200];
         } catch (Exception $err) {
@@ -822,7 +831,6 @@ class TalentPoolService
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
-
 
     private function generateLink($length, $dashInterval): String
     {
