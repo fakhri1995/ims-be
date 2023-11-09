@@ -336,7 +336,7 @@ class TalentPoolService
         $access = $this->globalService->checkRoute($route_name);
         if ($access["success"] === false) return $access;
         $rules = [
-            "id" => "id|numeric",
+            "id" => "required|numeric",
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
