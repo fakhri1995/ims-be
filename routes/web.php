@@ -40,7 +40,7 @@ $router->post('/login', 'LoginController@login');
 $router->post('/mailForgetPassword', 'LoginController@mailForgetPassword');
 $router->post('/resetPassword', 'LoginController@resetPassword');
 
-$router->group(['middleware' => 'auth'], function($router){
+$router->group(['middleware' => 'auth'], function ($router) {
     //Android Routes
     $router->get('/getMainAndroid', 'AndroidController@getMainAndroid');
 
@@ -333,10 +333,10 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteFileTask', 'TaskController@deleteFileTask');
     $router->delete('/cancelSendOutInventoryTask', 'TaskController@cancelSendOutInventoryTask');
     $router->delete('/cancelSendInInventoryTask', 'TaskController@cancelSendInInventoryTask');
-    $router->post('/addTaskReport','TaskController@addTaskReport');
-    $router->get('/getTaskReports','TaskController@getTaskReports');
-    $router->get('/getTaskReport','TaskController@getTaskReport');
-    $router->delete('/deleteTaskReport','TaskController@deleteTaskReport');
+    $router->post('/addTaskReport', 'TaskController@addTaskReport');
+    $router->get('/getTaskReports', 'TaskController@getTaskReports');
+    $router->get('/getTaskReport', 'TaskController@getTaskReport');
+    $router->delete('/deleteTaskReport', 'TaskController@deleteTaskReport');
 
     //Task Detail Routes
     $router->post('/addTaskDetail', 'TaskController@addTaskDetail');
@@ -452,7 +452,7 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->post('/readAllNotifications', 'NotificationController@readAllNotifications');
 
     //Career V2 Routes
-    $router->group(['prefix' => 'v2'] , function () use ($router) {
+    $router->group(['prefix' => 'v2'], function () use ($router) {
         $router->get('/getCareer', 'CareerV2Controller@getCareer');
         $router->get('/getCareers', 'CareerV2Controller@getCareers');
         $router->post('/addCareer', 'CareerV2Controller@addCareer');
@@ -507,6 +507,15 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->get('/getTalentPoolCategories', 'TalentPoolController@getTalentPoolCategories');
     $router->post('/addTalentPoolCategory', 'TalentPoolController@addTalentPoolCategory');
     $router->delete('/deleteTalentPoolCategory', 'TalentPoolController@deleteTalentPoolCategory');
+
+    // TALENT POOL SHARE
+    $router->get('/getTalentPoolShares', 'TalentPoolController@getTalentPoolShares');
+    $router->post('/addTalentPoolShare', 'TalentPoolController@addTalentPoolShare');
+    $router->delete('/deleteTalentPoolShare', 'TalentPoolController@deleteTalentPoolShare');
+
+    $router->get('/getTalentPoolShares', 'TalentPoolController@getTalentPoolShares');
+    $router->post('/addTalentPoolShare', 'TalentPoolController@addTalentPoolShare');
+    $router->delete('/deleteTalentPoolShare', 'TalentPoolController@deleteTalentPoolShare');
 
     // RECRUITMENT
     $router->get('/getRecruitmentExcelTemplate', 'RecruitmentController@getRecruitmentExcelTemplate');
@@ -697,7 +706,22 @@ $router->group(['middleware' => 'auth'], function($router){
     $router->delete('/deleteContractHistory', 'ContractController@deleteContractHistory');
     // Contract Histories Routes - Log
     $router->get('/getContractHistoryLogs', 'ActivityLogController@getContractHistoryLogs');
+});
 
+$router->group([],function ($router) {
+    // TALENT POOL SHARE PUBLIC
+    $router->get('/authTalentPoolSharePublic', 'TalentPoolController@authTalentPoolSharePublic');
+    $router->get('/getTalentPoolSharePublics', 'TalentPoolController@getTalentPoolSharePublics');
+    $router->get('/getTalentPoolSharePublic', 'TalentPoolController@getTalentPoolSharePublic');
+    $router->post('/markTalentPoolSharePublic', 'TalentPoolController@markTalentPoolSharePublic');
+
+    // TALENT POOL SHARE PUBLIC CUT
+    $router->get('/getTalentPoolSharePublicCuts', 'TalentPoolController@getTalentPoolSharePublicCuts');
+    $router->post('/addTalentPoolSharePublicCut', 'TalentPoolController@addTalentPoolSharePublicCut');
+    $router->delete('/deleteTalentPoolSharePublicCut', 'TalentPoolController@deleteTalentPoolSharePublicCut');
+
+    // TALENT POOL SHARE PUBLIC FILTER
+    $router->get('/getTalentPoolSharePublicFilters', 'TalentPoolController@getTalentPoolSharePublicFilters');
 });
 
 // //Incident Routes
@@ -731,7 +755,7 @@ $router->delete('/deleteDepreciation', 'DepreciationController@deleteDepreciatio
 
 
 //Career V2 Routes
-$router->group(['prefix' => 'v2'] , function () use ($router) {
+$router->group(['prefix' => 'v2'], function () use ($router) {
 
     $router->post('/addCareerApply', 'CareerV2Controller@addCareerApply');
     $router->get('/getPostedCareer', 'CareerV2Controller@getPostedCareer');
