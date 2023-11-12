@@ -1785,7 +1785,7 @@ class EmployeeService{
         if($password != NULL){
             $pdf->getCanvas()
             ->get_cpdf()
-            ->setEncryption($password, $password, ['print', 'modify', 'copy', 'add']);
+            ->setEncryption($password, '', array());
         }
         $output = $pdf->output();
         $filename = $employeePayslip->employee->name." - Payslip ".$salaries['periode'];
