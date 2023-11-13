@@ -83,6 +83,6 @@ class Resume extends Model
 
     function lastAssessment(): HasOne
     {
-        return $this->hasOne(ResumeAssessment::class, 'id');
+        return $this->hasOne(ResumeAssessment::class, 'id', 'assessment_id');
     }
 }
