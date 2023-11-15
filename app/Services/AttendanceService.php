@@ -1196,6 +1196,20 @@ class AttendanceService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
+    
+    public function getAndroidActivities($request, $route_name){
+        $login_id = auth()->user()->id;
+        $today = date('Y-m-d');
+
+        $attendance_activities = AttendanceActivity::where('user_id', $login_id)->whereDate('updated_at', '=', $today)->get();
+        $attendance_task_activities = AttendanceTaskActivity::with(['task', 'taskExport'])->where('user_id', $login_id)->whereDate('updated_at', '=', $today)->get();
+
+        $data = (object)[
+            "attendance_activities" => $attendance_activities,
+            "attendance_task_activities" => $attendance_task_activities
+        ];
+        return ["success" => true, "message" => "Attendance Activities Berhasil Diambil", "data" => $data, "status" => 200];
+    }
 
     public function getAttendanceTaskActivity($request, $route_name){
         $access = $this->globalService->checkRoute($route_name);

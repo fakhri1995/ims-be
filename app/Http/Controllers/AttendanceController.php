@@ -354,6 +354,14 @@ class AttendanceController extends Controller
         $response = $this->attendanceService->deleteAttendanceProjectCategory($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    
+    public function getAndroidActivities(Request $request)
+    {
+        $route_name = "ANDROID_ACTIVITIES_GET";
+
+        $response = $this->attendanceService->getAndroidActivities($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 
     public function getAttendanceTaskActivity(Request $request)
     {
