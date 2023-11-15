@@ -54,9 +54,11 @@ class SetDisplayOrderResume extends Command
                 DB::beginTransaction();
 
                 // check udah pernah di set belum experiencenya, kalau belum harusnya display order ada yang null
-                $checkExperience = ResumeExperience::query()->where('resume_id', $list->id)->whereNull('display_order')->first();
+                // $checkExperience = ResumeExperience::query()->where('resume_id', $list->id)->whereNull('display_order')->first();
+                $checkExperience = ResumeExperience::query()->where('resume_id', $list->id)->first();
+                $updatedIfNull = ResumeExperience::whereNull('display_order')->update(['display_order' => '99']);
                 if ($checkExperience) {
-                    $experiences = ResumeExperience::query()->where('resume_id', $list->id)->orderBy('id', 'DESC')->get();
+                    $experiences = ResumeExperience::query()->where('resume_id', $list->id)->orderBy('display_order', 'ASC')->orderBy('id', 'DESC')->get();
                     foreach ($experiences as $i => $item) {
                         $item->display_order = $i + 1;
                         $item->save();
@@ -64,9 +66,11 @@ class SetDisplayOrderResume extends Command
                 }
 
                 // check udah pernah di set belum projectnya, kalau belum harusnya display order ada yang null
-                $checkProject = ResumeProject::query()->where('resume_id', $list->id)->whereNull('display_order')->first();
+                // $checkProject = ResumeProject::query()->where('resume_id', $list->id)->whereNull('display_order')->first();
+                $checkProject = ResumeProject::query()->where('resume_id', $list->id)->first();
+                $updatedIfNull = ResumeProject::whereNull('display_order')->update(['display_order' => '99']);
                 if ($checkProject) {
-                    $projects = ResumeProject::query()->where('resume_id', $list->id)->orderBy('id', 'DESC')->get();
+                    $projects = ResumeProject::query()->where('resume_id', $list->id)->orderBy('display_order', 'ASC')->orderBy('id', 'DESC')->get();
                     foreach ($projects as $i => $item) {
                         $item->display_order = $i + 1;
                         $item->save();
@@ -74,9 +78,11 @@ class SetDisplayOrderResume extends Command
                 }
 
                 // check udah pernah di set belum achievementnya, kalau belum harusnya display order ada yang null
-                $checkAchievement = ResumeAchievement::query()->where('resume_id', $list->id)->whereNull('display_order')->first();
+                // $checkAchievement = ResumeAchievement::query()->where('resume_id', $list->id)->whereNull('display_order')->first();
+                $checkAchievement = ResumeAchievement::query()->where('resume_id', $list->id)->first();
+                $updatedIfNull = ResumeAchievement::whereNull('display_order')->update(['display_order' => '99']);
                 if ($checkAchievement) {
-                    $achievements = ResumeAchievement::query()->where('resume_id', $list->id)->orderBy('id', 'DESC')->get();
+                    $achievements = ResumeAchievement::query()->where('resume_id', $list->id)->orderBy('display_order', 'ASC')->orderBy('id', 'DESC')->get();
                     foreach ($achievements as $i => $item) {
                         $item->display_order = $i + 1;
                         $item->save();
@@ -84,9 +90,11 @@ class SetDisplayOrderResume extends Command
                 }
 
                 // check udah pernah di set belum educationnya, kalau belum harusnya display order ada yang null
-                $checkEducation = ResumeEducation::query()->where('resume_id', $list->id)->whereNull('display_order')->first();
+                // $checkEducation = ResumeEducation::query()->where('resume_id', $list->id)->whereNull('display_order')->first();
+                $checkEducation = ResumeEducation::query()->where('resume_id', $list->id)->first();
+                $updatedIfNull = ResumeEducation::whereNull('display_order')->update(['display_order' => '99']);
                 if ($checkEducation) {
-                    $educations = ResumeEducation::query()->where('resume_id', $list->id)->orderBy('id', 'DESC')->get();
+                    $educations = ResumeEducation::query()->where('resume_id', $list->id)->orderBy('display_order', 'ASC')->orderBy('id', 'DESC')->get();
                     foreach ($educations as $i => $item) {
                         $item->display_order = $i + 1;
                         $item->save();
@@ -94,9 +102,11 @@ class SetDisplayOrderResume extends Command
                 }
 
                 // check udah pernah di set belum certificatenya, kalau belum harusnya display order ada yang null
-                $checkCertificate = ResumeCertificate::query()->where('resume_id', $list->id)->whereNull('display_order')->first();
+                // $checkCertificate = ResumeCertificate::query()->where('resume_id', $list->id)->whereNull('display_order')->first();
+                $checkCertificate = ResumeCertificate::query()->where('resume_id', $list->id)->first();
+                $updatedIfNull = ResumeCertificate::whereNull('display_order')->update(['display_order' => '99']);
                 if ($checkCertificate) {
-                    $certificates = ResumeCertificate::query()->where('resume_id', $list->id)->orderBy('id', 'DESC')->get();
+                    $certificates = ResumeCertificate::query()->where('resume_id', $list->id)->orderBy('display_order', 'ASC')->orderBy('id', 'DESC')->get();
                     foreach ($certificates as $i => $item) {
                         $item->display_order = $i + 1;
                         $item->save();
@@ -104,9 +114,11 @@ class SetDisplayOrderResume extends Command
                 }
 
                 // check udah pernah di set belum trainingnya, kalau belum harusnya display order ada yang null
-                $checkTraining = ResumeTraining::query()->where('resume_id', $list->id)->whereNull('display_order')->first();
+                // $checkTraining = ResumeTraining::query()->where('resume_id', $list->id)->whereNull('display_order')->first();
+                $checkTraining = ResumeTraining::query()->where('resume_id', $list->id)->first();
+                $updatedIfNull = ResumeTraining::whereNull('display_order')->update(['display_order' => '99']);
                 if ($checkTraining) {
-                    $trainings = ResumeTraining::query()->where('resume_id', $list->id)->orderBy('id', 'DESC')->get();
+                    $trainings = ResumeTraining::query()->where('resume_id', $list->id)->orderBy('display_order', 'ASC')->orderBy('id', 'DESC')->get();
                     foreach ($trainings as $i => $item) {
                         $item->display_order = $i + 1;
                         $item->save();
