@@ -11,6 +11,7 @@ use App\TalentPool;
 use App\TalentPoolCategoryList;
 use App\TalentPoolShare;
 use App\TalentPoolShareCut;
+use App\TalentPoolShareMark;
 use App\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -66,7 +67,9 @@ class TalentPoolService
                         ->with(['recruitment' => function ($q2) {
                             $q2->select('owner_id', 'created_at');
                         }]);
-                }]);
+                }])
+                ->with('mark.requester.company')
+                ->withCount('mark');
             if (!$keyword) {
                 $talentPools = $talentPools->whereHas("resume", function ($q1) use ($skill, $role, $year, $education) {
                     if ($education)
@@ -130,7 +133,7 @@ class TalentPoolService
             }
             $talentPools = $talentPools->whereHas('category', function (Builder $q1) {
                 $q1->where('company_id', auth()->user()->company_id);
-            })->where('talent_pool_category_id', $request->category_id)->latest('mark')->latest('id');
+            })->where('talent_pool_category_id', $request->category_id)->latest('mark_count')->latest('id');
             if ($status) $talentPools = $talentPools->whereIn('status', $status);
             $rows = $request->rows ?? 10;
             $talentPools = $talentPools->paginate($rows);
@@ -557,6 +560,9 @@ class TalentPoolService
                         ->with(['recruitment' => function ($q2) {
                             $q2->select('owner_id', 'created_at');
                         }]);
+                }])
+                ->withCount(['mark' => function($q) use($request){
+                    $q->where('talent_pool_share_id', $request->share_id);
                 }]);
             if (!$keyword) {
                 $talentPools = $talentPools->whereHas("resume", function ($q1) use ($skill, $role, $year, $education) {
@@ -619,7 +625,7 @@ class TalentPoolService
                     }
                 });
             }
-            $talentPools = $talentPools->where('talent_pool_category_id', $talentShare->talent_pool_category_id)->whereNotIn('id', $except)->latest('mark')->latest('id');
+            $talentPools = $talentPools->where('talent_pool_category_id', $talentShare->talent_pool_category_id)->whereNotIn('id', $except)->latest('mark_count')->latest('id');
             if ($status) $talentPools = $talentPools->whereIn('status', $status);
             $rows = $request->rows ?? 10;
             $talentPools = $talentPools->paginate($rows);
@@ -654,6 +660,7 @@ class TalentPoolService
     function markTalentPoolSharePublic($request, $route_name): array
     {
         $rules = [
+            'share_id' => 'required|numeric',
             'talent_id' => 'required|numeric',
         ];
         $validator = Validator::make($request->all(), $rules);
@@ -661,13 +668,25 @@ class TalentPoolService
             $errors = $validator->errors()->all();
             return ["success" => false, "message" => $errors, "status" => 400];
         }
+        $share = TalentPoolShare::find($request->share_id);
+        if (!$share) return ["success" => false, "message" => "Tautan tidak ditemukan", "status" => 404];
         $talent = TalentPool::find($request->talent_id);
         if (!$talent) return ["success" => false, "message" => "Talent tidak ditemukan", "status" => 404];
+        $check = TalentPoolShareMark::query()->where('talent_pool_share_id', $share->id)->where('talent_pool_id', $talent->id)->first();
         try {
             DB::beginTransaction();
-            $talent->mark = $talent->mark ? null : '1';
-            $talent->save();
-            $message = $talent->mark ? 'Berhasil Ditandai' : 'Batal Ditandai';
+            $message = '';
+            if (!$check) {
+                $mark = new TalentPoolShareMark;
+                $mark->talent_pool_share_id = $share->id;
+                $mark->talent_pool_id = $talent->id;
+                $mark->user_id = $share->user_id;
+                $mark->save();
+                $message = 'Berhasil Ditandai';
+            } else {
+                $check->delete();
+                $message = 'Batal Ditandai';
+            }
             DB::commit();
             return ["success" => true, "message" => "Talent " . $message, "status" => 200];
         } catch (Exception $err) {
