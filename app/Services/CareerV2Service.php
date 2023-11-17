@@ -243,6 +243,7 @@ class CareerV2Service{
         $career->overview = $request->overview;
         $career->description = $request->description;
         $career->is_posted = $request->is_posted;
+        $career->qualification = $request->qualification;
         $career->created_at = Date('Y-m-d H:i:s');
         $career->updated_at = Date('Y-m-d H:i:s');
         $career->created_by = auth()->user()->id;
@@ -275,7 +276,7 @@ class CareerV2Service{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        $fillable = ["name","career_role_type_id","career_experience_id","salary_min","salary_max", "overview","description","is_posted"];
+        $fillable = ["name","career_role_type_id","career_experience_id","salary_min","salary_max", "overview","description","is_posted","qualification"];
 
         $id = $request->id;
         $career = CareerV2::find($id);
