@@ -158,6 +158,8 @@ class AndroidService{
         }
 
         $attendance_activity_count = DB::table('attendance_activities')->where('user_id', $login_id)->whereDate('updated_at', date('Y-m-d'))->count();
+        $attendance_task_activity_count = DB::table('attendance_task_activities')->where('user_id', $login_id)->whereDate('updated_at', date('Y-m-d'))->count();
+        
         $data = (object)[
             "ticket" => $ticket_statuses,
             "last_three_tickets" => $last_three_tickets,
@@ -172,6 +174,7 @@ class AndroidService{
             ],
             "attendanceForm" => $attendance_forms,
             "attendance_activity_count" => $attendance_activity_count,
+            "attendance_task_activity_count" => $attendance_task_activity_count,
             "last_check_in" => $last_check_in
         ];
         
