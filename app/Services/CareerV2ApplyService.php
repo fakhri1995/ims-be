@@ -67,7 +67,8 @@ class CareerV2ApplyService{
             "from" => "date",
             "to" => "date",
             "sort_by" => "in:apply_date,apply_status",
-            "sort_type" => "in:asc,desc"
+            "sort_type" => "in:asc,desc",
+            "has_career" => "numeric|in:0,1|nullable"
         ];
 
         if($request->to && $request->from){
@@ -87,6 +88,7 @@ class CareerV2ApplyService{
         $to = $request->to ?? NULL;
         $limit = $request->limit ?? 5;
         $career_apply_status_id = isset($request->career_apply_status_id) ? $request->career_apply_status_id : NULL;
+        $has_career = $request->has_career ?? NULL;
         
         $careerApply = CareerV2Apply::with(["resume","role","role.experience","role.roleType","status"]);
         if($career_id) $careerApply = $careerApply->where('career_id',$career_id);
@@ -98,6 +100,13 @@ class CareerV2ApplyService{
             ->orWhere("phone","LIKE", "%$keyword%");
         });
         if($career_apply_status_id != NULL) $careerApply = $careerApply->where("career_apply_status_id", $career_apply_status_id);
+        if($has_career !== NULL){
+            if($has_career == 1){
+                $careerApply = $careerApply->whereNotNull('career_id');
+            } else {
+                $careerApply = $careerApply->whereNull('career_id');
+            }
+        }
 
         // sort_by
         $sort_type = $request->sort_type ?? 'asc';
