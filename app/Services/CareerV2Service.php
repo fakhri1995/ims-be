@@ -348,7 +348,7 @@ class CareerV2Service{
 
 
     public function getCareerApplyStatuses(Request $request, $route_name){
-        $careerApplyStatuses = CareerV2ApplyStatus::orderBy('display_order')->get();
+        $careerApplyStatuses = CareerV2ApplyStatus::withCount('applicants')->orderBy('display_order')->get();
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $careerApplyStatuses, "status" => 200];
         }catch(Exception $err){
