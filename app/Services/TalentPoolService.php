@@ -377,7 +377,7 @@ class TalentPoolService
                     $q->where('id', $request->category_id)
                         ->where('company_id', auth()->user()->company_id);
                 })->latest('id')->orderBy('display_order', 'asc')
-                ->groupBy('resume_id')->get();
+                ->groupBy('resume_id')->groupBy('university')->get();
 
             $status = TalentPool::query()->select('id', 'status')
                 ->whereHas('category', function (Builder $q) use ($request) {
@@ -561,7 +561,7 @@ class TalentPoolService
                             $q2->select('owner_id', 'created_at');
                         }]);
                 }])
-                ->withCount(['mark' => function($q) use($request){
+                ->withCount(['mark' => function ($q) use ($request) {
                     $q->where('talent_pool_share_id', $request->share_id);
                 }]);
             if (!$keyword) {
@@ -807,7 +807,7 @@ class TalentPoolService
                 ->whereHas('resume.talentPool.category', function (Builder $q) use ($talentShare) {
                     $q->where('id', $talentShare->talent_pool_category_id);
                 })->latest('id')->orderBy('display_order', 'asc')
-                ->groupBy('resume_id')->get();
+                ->groupBy('resume_id')->groupBy('university')->get();
 
             $status = TalentPool::query()->select('id', 'status')
                 ->whereHas('category', function (Builder $q) use ($talentShare) {
