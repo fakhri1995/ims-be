@@ -131,9 +131,12 @@ class SetDisplayOrderResume extends Command
                 } else {
                     dump('resume id => ' . $list->id . ' sudah di set sebelumnya atau tidak ada yang harus di set');
                 }
-            } catch (\Throwable $th) {
+            } catch (\Error $err) {
                 DB::rollBack();
                 dump('error di resume id => ' . $list->id);
+                dump('errornya :');
+                dump($err->getMessage());
+                dump('====================');
             }
         }
     }
