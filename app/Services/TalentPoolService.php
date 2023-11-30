@@ -54,6 +54,7 @@ class TalentPoolService
             $talentPools = TalentPool::query()
                 ->with(["resume" => function ($q1) {
                     $q1
+                        ->with('profileImage')
                         ->with("lastEducation")
                         ->with("lastAssessment")
                         ->with("skills")
@@ -159,10 +160,10 @@ class TalentPoolService
         }
 
         try {
-            DB::enableQueryLog();
             $talentPool = TalentPool::query()
                 ->with(["resume" => function ($q1) {
                     $q1
+                        ->with('profileImage')
                         ->with(["lastEducation" => function ($q2) {
                             $q2->select('resume_id', 'university');
                         }])
@@ -547,6 +548,7 @@ class TalentPoolService
             $talentPools = TalentPool::query()
                 ->with(["resume" => function ($q1) {
                     $q1
+                        ->with('profileImage')
                         ->with("lastEducation")
                         ->with("lastAssessment")
                         ->with("skills")
@@ -647,7 +649,7 @@ class TalentPoolService
         }
 
         $id = $request->id;
-        $resume = Resume::with(['educations', 'experiences', 'projects', 'skills', 'trainings', 'certificates', 'achievements', 'assessment', 'assessmentResults', 'summaries'])->find($id);
+        $resume = Resume::with(['educations', 'experiences', 'projects', 'skills', 'trainings', 'certificates', 'achievements', 'assessment', 'assessmentResults', 'summaries', 'profileImage'])->find($id);
         if (!$resume) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
         try {
