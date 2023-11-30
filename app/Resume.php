@@ -11,6 +11,15 @@ class Resume extends Model
     use SoftDeletes;
     public $timestamps = false;
 
+    public function profileImage()
+    {
+        return $this->morphOne(File::class, 'fileable')->select('id', 'link', 'description', 'fileable_id', 'fileable_type')->withDefault([
+            'id' => 0,
+            'link' => env('APP_ENV').'/Users/default_user.png',
+            'description' => "profile_image"
+        ]);
+    }
+
     public function educations()
     {
         return $this->hasMany(ResumeEducation::class, 'resume_id')->orderBy("display_order", "asc");
