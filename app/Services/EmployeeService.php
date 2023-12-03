@@ -20,10 +20,12 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use Symfony\Component\HttpFoundation\File\File as FileFile;
 
 class EmployeeService{
     public function __construct()
@@ -1775,13 +1777,45 @@ class EmployeeService{
         $options->set("isPhpEnabled", true);
         $options->set("isRemoteEnabled", true);
         $options->set("dpi", 150);
+        $options->set("pdfBackend", 'GD');
 
-        $pdf = new Dompdf($options);
+        $png = new Dompdf($options);
         
         $html = view('pdf.employee_payslip', ["payslip" => $employeePayslip, "salaries" => $salaries])->render();
+        $png->setPaper('A4', 'portrait');
+        $png->loadHtml($html);
+        $png->render();
+        
+        $png_output = $png->output();
+
+        //TODO: CLEAN THIS
+        $fileData = $png_output;
+        // save it to temporary dir first.
+        $tmpFilePath = sys_get_temp_dir() . '/' . random_int(1, 9999);
+        file_put_contents($tmpFilePath, $fileData);
+        $tmpFile = new FileFile($tmpFilePath);
+        $file = new UploadedFile(
+            $tmpFile->getPathname(),
+            $tmpFile->getFilename(),
+            $tmpFile->getMimeType(),
+            0,
+            true
+        );
+
+        $uploadFile = $this->addEmployeeFile($id, $file, 'payslip');
+        if($uploadFile['success']){
+            $link = $uploadFile['new_data']->link;
+        }
+
+        $options->set("pdfBackend", 'CPDF');
+        $pdf = new Dompdf($options);
+        $html_pdf = view('pdf.employee_payslip_pdf', ["link" => $link])->render();
         $pdf->setPaper('A4', 'portrait');
-        $pdf->loadHtml($html);
+        $pdf->loadHtml($html_pdf);
         $pdf->render();
+
+        //END TODO
+
         if($password != NULL){
             $pdf->getCanvas()
             ->get_cpdf()
@@ -1794,6 +1828,8 @@ class EmployeeService{
         }
         $output = $pdf->output();
         $filename = $employeePayslip->employee->name." - Payslip ".$salaries['periode'];
+
+        $this->deleteEmployeeFile($uploadFile['new_data']->id);
         $res = new Response ($output, 200, array(
             'Content-Type' => 'application/pdf',
             'Content-Disposition' =>  'attachment; filename="'.$filename.'.pdf"',
@@ -1801,6 +1837,20 @@ class EmployeeService{
         ));
         
         return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $res, "status" => 200];
+    }
+
+    private function addEmployeeFile($id, $file, $description)
+    {
+        $fileService = new FileService;
+        $add_file_response = $fileService->addFile($id, $file, 'App\Employee', $description, 'Employee', false);
+        return $add_file_response;
+    }
+
+    private function deleteEmployeeFile($id)
+    {
+        $fileService = new FileService;
+        $delete_file_response = $fileService->deleteForceFile($id);
+        return $delete_file_response;
     }
 
     public function raiseLastPeriodPayslipFunction(){
