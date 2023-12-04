@@ -1,6 +1,5 @@
 /public/storage
-/vendor/*
-!/vendor/dompdf/
+/vendor
 /.idea
 Homestead.json
 Homestead.yaml
