@@ -209,6 +209,20 @@ class CareerV2Service{
         }
     }
 
+    public function getTopFiveCareers(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $data = CareerV2::with(['apply' => function($q){
+            $q->groupBy('career_apply_status_id')->select(DB::raw('career_apply_status_id , COUNT(*) as count'), 'career_id')->get();
+        }])->select('id', 'name')
+        ->withCount('apply')->orderBy('apply_count', 'desc')->take(5)->get();
+
+        $data_apply = CareerV2Apply::groupBy('career_apply_status_id')
+        ->select(DB::raw('career_apply_status_id , COUNT(*) as count'))->get();
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
+    }
+
     public function addCareer(Request $request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;

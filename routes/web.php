@@ -456,6 +456,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->group(['prefix' => 'v2'], function () use ($router) {
         $router->get('/getCareer', 'CareerV2Controller@getCareer');
         $router->get('/getCareers', 'CareerV2Controller@getCareers');
+        $router->get('/getTopFiveCareers', 'CareerV2Controller@getTopFiveCareers');
         $router->post('/addCareer', 'CareerV2Controller@addCareer');
         $router->put('/updateCareer', 'CareerV2Controller@updateCareer');
         $router->delete('/deleteCareer', 'CareerV2Controller@deleteCareer');
