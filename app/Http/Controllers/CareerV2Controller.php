@@ -37,6 +37,13 @@ class CareerV2Controller extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getTopFiveCareers(Request $request){
+        $route_name = "CAREERS_V2_TOP_FIVE_GET";
+
+        $response = $this->careerV2Service->getTopFiveCareers($request,$route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getPostedCareer(Request $request){
         $route_name = "CAREER_V2_POSTED_GET";
 
