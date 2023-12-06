@@ -475,6 +475,7 @@ class ResumeService
             "basic_information.city" => "required_with:basic_information|filled",
             "basic_information.province" => "required_with:basic_information|filled",
             "basic_information.assessment_id" => "numeric|exists:App\ResumeAssessment,id|nullable",
+            'basic_information.profile_image' => 'nullable|file|mimes:png,jpg,jpeg|max:2048',
 
             "education" => "filled|array",
             "education.id" => "required_with:education|exists:App\ResumeEducation,id",
@@ -561,16 +562,16 @@ class ResumeService
                     $assessment_id = $resume->assessment_id;
                     if (!$resume->save()) return ["success" => false, "message" => "Gagal Mengubah Resume", "status" => 400];
 
-                    if (method_exists($request, 'hasFile') && $requestBasicInformation->profile_image) {
+                    if ($request->hasFile('basic_information.profile_image')) {
                         $fileService = new FileService;
-                        $file = $requestBasicInformation->profile_image;
+                        $file = $request->file('basic_information.profile_image');
                         $table = 'App\Resume';
                         $description = 'profile_image';
                         $folder_detail = 'Resumes';
                         if ($resume->profileImage->id) {
-                            $fileService->deleteForceFile($resume->profileImage->id);
+                            $del = $fileService->deleteForceFile($resume->profileImage->id);
                         }
-                        $fileService->addFile($resume->id, $file, $table, $description, $folder_detail);
+                        $add = $fileService->addFile($resume->id, $file, $table, $description, $folder_detail);
                     }
 
                     $assessment = ResumeAssessment::with("details")->find($assessment_id);
@@ -588,7 +589,7 @@ class ResumeService
                 }
                 DB::commit();
                 return ["success" => true, "message" => "Data Berhasil Diubah", "status" => 200];
-            } catch (\Exception $err) {
+            } catch (\Error $err) {
                 return ["success" => false, "message" => $err, "status" => 400];
                 DB::rollBack();
             }
