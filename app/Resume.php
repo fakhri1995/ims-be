@@ -13,7 +13,7 @@ class Resume extends Model
 
     public function profileImage()
     {
-        return $this->morphOne(File::class, 'fileable')->select('id', 'link', 'description', 'fileable_id', 'fileable_type')->withDefault([
+        return $this->morphOne(File::class, 'fileable')->select('id', 'link', 'description', 'fileable_id', 'fileable_type')->latest('id')->withDefault([
             'id' => 0,
             'link' => env('APP_ENV').'/Users/default_user.png',
             'description' => "profile_image"
