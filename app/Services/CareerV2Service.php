@@ -213,13 +213,19 @@ class CareerV2Service{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $data = CareerV2::with(['apply' => function($q){
-            $q->groupBy('career_apply_status_id')->select(DB::raw('career_apply_status_id , COUNT(*) as count'), 'career_id')->get();
-        }])->select('id', 'name')
-        ->withCount('apply')->orderBy('apply_count', 'desc')->take(5)->get();
+        $careers = CareerV2::select('id', 'name')->withCount('apply')->orderBy('apply_count', 'desc')->take(5)->get();
 
-        $data_apply = CareerV2Apply::groupBy('career_apply_status_id')
-        ->select(DB::raw('career_apply_status_id , COUNT(*) as count'))->get();
+        $career_ids = $careers->pluck('id');
+        $status_count = [];
+        foreach($career_ids as $id){
+            $status_count[] = CareerV2ApplyStatus::select('name')->withCount(['applicants as applicants_count' => function($q) use($id){
+                $q->where('career_id', $id);
+            }])->get();
+        }
+        $data = [
+            "careers" => $careers,
+            "status_count" => $status_count
+        ];
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
     }
 
