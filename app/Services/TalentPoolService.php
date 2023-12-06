@@ -265,16 +265,27 @@ class TalentPoolService
                         $q2->where('company_id', auth()->user()->company_id);
                     });
                 })
-                ->with(["lastEducation" => function ($q) {
-                    $q->select('resume_educations.resume_id', 'resume_educations.university');
-                }])
-                ->with(["lastAssessment" => function ($q) {
-                    $q->select('resume_assessments.id', 'resume_assessments.name');
-                }])
-                ->with('skills')
-                ->with(['lastExperience' => function ($q) {
-                    $q->select('resume_experiences.id', 'resume_experiences.role');
+                ->with('profileImage')
+                ->with("lastEducation")
+                ->with("lastAssessment")
+                ->with("skills")
+                ->with("summaries")
+                ->with(["lastExperience" => function ($q2) {
+                    $q2->select(DB::raw('*, CASE
+                WHEN end_date IS NOT NULL THEN YEAR(end_date)
+                ELSE YEAR(start_date)
+                END AS year'));
                 }]);
+                // ->with(["lastEducation" => function ($q) {
+                //     $q->select('resume_educations.resume_id', 'resume_educations.university');
+                // }])
+                // ->with(["lastAssessment" => function ($q) {
+                //     $q->select('resume_assessments.id', 'resume_assessments.name');
+                // }])
+                // ->with('skills')
+                // ->with(['lastExperience' => function ($q) {
+                //     $q->select('resume_experiences.id', 'resume_experiences.role');
+                // }]);
 
             if ($keyword) {
                 $cadidates = $cadidates->where('name', 'like',  '%' . $keyword . '%');
