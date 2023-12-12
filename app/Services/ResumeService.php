@@ -190,7 +190,8 @@ class ResumeService
             "education.university" => "required_with:education",
             "education.major" => "required_with:education",
             "education.gpa" => "numeric|between:0.00,4.00|nullable",
-            "education.graduation_year" => "required_with:education|date",
+            "education.start_date" => "required_with:education|date_format:Y-m",
+            "education.end_date" => "required_with:education|date_format:Y-m",
 
             "experience" => "filled|array",
             "experience.role" => "required_with:experience",
@@ -254,7 +255,8 @@ class ResumeService
                 $education->university = $requestEducation->university;
                 $education->major = $requestEducation->major;
                 $education->gpa = !$requestEducation->gpa ? NULL : $requestEducation->gpa;
-                $education->graduation_year = $requestEducation->graduation_year;
+                $education->start_date = date('Y-m-01', strtotime($requestEducation->start_date));
+                $education->end_date = date('Y-m-t', strtotime($requestEducation->end_date . '-01'));
 
                 $educations = new ResumeEducation();
                 if ($after_id == NULL) {
@@ -482,7 +484,8 @@ class ResumeService
             "education.university" => "required_with:education",
             "education.major" => "required_with:education",
             "education.gpa" => "numeric|between:0.00,4.00|nullable",
-            "education.graduation_year" => "required_with:education|date",
+            "education.start_date" => "required_with:education|date_format:Y-m",
+            "education.end_date" => "required_with:education|date_format:Y-m",
 
             "experience" => "filled|array",
             "experience.id" => "required_with:experienc|exists:App\ResumeExperience,id",
@@ -612,7 +615,8 @@ class ResumeService
                 $education->university = $requestEducation->university;
                 $education->major = $requestEducation->major;
                 $education->gpa = !$requestEducation->gpa ? NULL : $requestEducation->gpa;
-                $education->graduation_year = $requestEducation->graduation_year;
+                $education->start_date = date('Y-m-01', strtotime($requestEducation->start_date));
+                $education->end_date = date('Y-m-t', strtotime($requestEducation->end_date . '-01'));
 
                 $educations = new ResumeEducation();
                 if ($after_id == NULL) {
