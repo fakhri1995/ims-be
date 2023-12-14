@@ -10,6 +10,7 @@ use App\Console\Commands\AutoCheckOutAttendance;
 use App\Console\Commands\Exclusive\SetContractHistory;
 use App\Console\Commands\Exclusive\SetDisplayOrderResume;
 use App\Console\Commands\Exclusive\SetEncryptionEmployee;
+use App\Console\Commands\Exclusive\SetGetMostCommit;
 use App\Console\Commands\Exclusive\SetStartEndDateFromGraduationYear;
 use App\Console\Commands\GenerateDailyTask;
 use App\Console\Commands\GenerateWeeklyTask;
@@ -52,6 +53,7 @@ class Kernel extends ConsoleKernel
         SetDisplayOrderResume::class,
         SetEncryptionEmployee::class,
         SetStartEndDateFromGraduationYear::class,
+        SetGetMostCommit::class,
     ];
 
     /**
