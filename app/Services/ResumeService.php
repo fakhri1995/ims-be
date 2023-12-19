@@ -190,8 +190,8 @@ class ResumeService
             "education.university" => "required_with:education",
             "education.major" => "required_with:education",
             "education.gpa" => "numeric|between:0.00,4.00|nullable",
-            "education.start_date" => "required_with:education|date_format:Y-m|nullable",
-            "education.end_date" => "required_with:education|date_format:Y-m|nullable",
+            "education.start_date" => "date_format:Y-m|nullable",
+            "education.end_date" => "date_format:Y-m|nullable",
 
             "experience" => "filled|array",
             "experience.role" => "required_with:experience",
@@ -484,8 +484,8 @@ class ResumeService
             "education.university" => "required_with:education",
             "education.major" => "required_with:education",
             "education.gpa" => "numeric|between:0.00,4.00|nullable",
-            "education.start_date" => "required_with:education|date_format:Y-m|nullable",
-            "education.end_date" => "required_with:education|date_format:Y-m|nullable",
+            "education.start_date" => "date_format:Y-m|nullable",
+            "education.end_date" => "date_format:Y-m|nullable",
 
             "experience" => "filled|array",
             "experience.id" => "required_with:experienc|exists:App\ResumeExperience,id",
