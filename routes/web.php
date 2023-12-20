@@ -461,6 +461,8 @@ $router->group(['middleware' => 'auth'], function ($router) {
         $router->put('/updateCareer', 'CareerV2Controller@updateCareer');
         $router->delete('/deleteCareer', 'CareerV2Controller@deleteCareer');
 
+        $router->post('/addCareerQuestion', 'CareerV2Controller@addCareerQuestion');
+
         $router->get('/getCountCareerApplicant', 'CareerV2Controller@getCountCareerApplicant');
         $router->get('/getCountCareersApplicant', 'CareerV2Controller@getCountCareersApplicant');
         $router->get('/getMostCareersApplicant', 'CareerV2Controller@getMostCareersApplicant');
@@ -473,6 +475,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
         $router->get('/getCareerApplys', 'CareerV2Controller@getCareerApplys');
         $router->post('/updateCareerApply', 'CareerV2Controller@updateCareerApply');
         $router->delete('/deleteCareerApply', 'CareerV2Controller@deleteCareerApply');
+        $router->post('/addCareerApplyQuestion', 'CareerV2Controller@addCareerApplyQuestion');
     });
 
     // RESUME

@@ -78,6 +78,13 @@ class CareerV2Controller extends Controller
         $response = $this->careerV2Service->deleteCareer($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    
+    public function addCareerQuestion(Request $request){
+        $route_name = "CAREERS_V2_QUESTION_ADD";
+
+        $response = $this->careerV2Service->addCareerQuestion($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 
 
     // Career Apply Section
@@ -174,6 +181,13 @@ class CareerV2Controller extends Controller
         $response = $this->careerV2Service->getCareerRoleTypes($request, $route_name);
         if(!$response['success']) return response()->json($response, $response['status']);
         return ($response['data']);
+    }
+
+    public function addCareerApplyQuestion(Request $request){
+        $route_name = "CAREERS_V2_APPLY_QUESTION_ADD";
+
+        $response = $this->careerV2ApplyService->addCareerApplyQuestion($request, $route_name);
+        return response()->json($response, $response['status']);
     }
 
     public function recaptcha(Request $request)

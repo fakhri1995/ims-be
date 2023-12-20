@@ -21,6 +21,10 @@ class CareerV2 extends Model
             ->select('id','name');
     }
 
+    function question(){
+        return $this->hasOne(CareerV2Question::class, 'career_id');
+    }
+
     public function apply(){
         return $this->hasMany(CareerV2Apply::class, 'career_id');
     }

@@ -5,6 +5,7 @@ use App\CareerV2;
 use App\CareerV2Apply;
 use App\CareerV2ApplyStatus;
 use App\CareerV2Experience;
+use App\CareerV2Question;
 use App\CareerV2RoleType;
 use Exception;
 use App\Services\GlobalService;
@@ -35,8 +36,8 @@ class CareerV2Service{
         $id = $request->id ?? NULL;
         $slug = $request->slug ?? NULL;
         
-        if($id) $career = CareerV2::with(["roleType","experience"])->find($id);
-        else $career = CareerV2::with(["roleType","experience"])->where("slug",$slug)->first();
+        if($id) $career = CareerV2::with(["roleType","experience", "question"])->find($id);
+        else $career = CareerV2::with(["roleType","experience", "question"])->where("slug",$slug)->first();
         
         if(!$career) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         try{
@@ -78,7 +79,7 @@ class CareerV2Service{
         $is_posted = isset($request->is_posted) ? $request->is_posted : NULL;
         
         $rows = $request->rows ?? 5;
-        $career = CareerV2::with(["roleType" ,"experience"])->withCount("apply");
+        $career = CareerV2::with(["roleType" ,"experience", "question"])->withCount("apply");
         
         // filter
         if($keyword) $career = $career->where("name","LIKE", "%$keyword%");
@@ -390,6 +391,46 @@ class CareerV2Service{
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $careerRoleTypes, "status" => 200];
         }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addCareerQuestion($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $career_question = new CareerV2Question;
+        $career_question->career_id = $request->get('career_id');
+        $career_question->name = $request->get('name');
+        $career_question->description = $request->get('description');
+        $career_question->updated_at = date('Y-m-d H:i:s');
+        $career_question->created_by = auth()->user()->id;
+        $details = $request->get('details', []);
+        try{
+            $i = 1;
+            if(count($details)){
+                foreach($details as &$detail){
+                    if(!isset($detail['required'])) return ["success" => false, "message" => "Detail pertanyaan $i masih kosong pada required", "status" => 400];
+                    if(gettype($detail['required']) !== "boolean") return ["success" => false, "message" => "Detail pertanyaan $i pada required harus bertipe boolean", "status" => 400];
+                    if(!isset($detail['name'])) return ["success" => false, "message" => "Detail pertanyaan $i masih kosong pada name", "status" => 400];
+                    if(gettype($detail['name']) !== "string") return ["success" => false, "message" => "Detail pertanyaan $i pada name harus bertipe string", "status" => 400];
+                    if(!isset($detail['description'])) return ["success" => false, "message" => "Detail pertanyaan $i masih kosong pada description", "status" => 400];
+                    if(gettype($detail['description']) !== "string") return ["success" => false, "message" => "Detail pertanyaan $i pada description harus bertipe string", "status" => 400];
+                    if(!isset($detail['type'])) return ["success" => false, "message" => "Detail pertanyaan $i masih kosong pada type", "status" => 400];
+                    if(gettype($detail['type']) !== "integer") return ["success" => false, "message" => "Detail pertanyaan $i pada type harus bertipe integer", "status" => 400];
+                    if(in_array($detail['type'], [3,5])){
+                        if(!isset($detail['list'])) return ["success" => false, "message" => "Detail pertanyaan $i masih kosong pada list", "status" => 400];
+                        if(gettype($detail['list']) !== "array") return ["success" => false, "message" => "Detail pertanyaan $i pada list harus bertipe array", "status" => 400];
+                    }
+                    $detail['key'] = Str::uuid()->toString();
+                    $i++;
+                }
+            }
+            $career_question->details = $details;
+            $career_question->save();
+            return ["success" => true, "message" => "Attendance Form Berhasil Ditambahkan", "id" => $career_question->id, "status" => 200];
+        } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }

@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\CareerV2;
 use App\CareerV2Apply;
+use App\CareerV2ApplyQuestion;
 use App\CareerV2ApplyStatus;
+use App\CareerV2Question;
 use App\Exports\CareerApplicantsExport;
 use App\File;
 use App\Mail\CareerApplyMail;
@@ -47,7 +49,7 @@ class CareerV2ApplyService{
         }
         
         $id = $request->id;
-        $career = CareerV2Apply::with(["resume","role","role.experience","role.roleType","status"])->find($id);
+        $career = CareerV2Apply::with(["resume","role","role.experience","role.roleType","status","question"])->find($id);
         if(!$career) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];   
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $career, "status" => 200];
@@ -90,7 +92,7 @@ class CareerV2ApplyService{
         $career_apply_status_id = isset($request->career_apply_status_id) ? $request->career_apply_status_id : NULL;
         $has_career = $request->has_career ?? NULL;
         
-        $careerApply = CareerV2Apply::with(["resume","role","role.experience","role.roleType","status"]);
+        $careerApply = CareerV2Apply::with(["resume","role","role.experience","role.roleType","status","question"]);
         if($career_id) $careerApply = $careerApply->where('career_id',$career_id);
         if($from) $careerApply = $careerApply->where("created_at", ">=", $from);
         if($to) $careerApply = $careerApply->where("created_at", "<=", $to);
@@ -392,6 +394,73 @@ class CareerV2ApplyService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
 
+    }
+
+    public function addCareerApplyQuestion($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $career_apply_id = $request->get('career_apply_id');
+        $career_question_id = $request->get('career_question_id');
+        $career_question = CareerV2Question::find($career_question_id);
+        if($career_question === null) return ["success" => false, "message" => "Id Question Tidak Ditemukan", "status" => 400];
+        $question_details = $request->get('details', []);
+        ksort($question_details);
+        $fileArray = []; // index => [ "key" : value, "value" : value ]
+        foreach($career_question->details as $question_detail){
+            $search = array_search($question_detail['key'], array_column($question_details, 'key'));
+            if($search === false) return ["success" => false, "message" => "Pertanyaan career dengan nama ".$question_detail['name']." belum diisi" , "status" => 400];
+            if($question_detail['type'] === 6){
+                $file = $request->file("details.$search.value",NULL);
+                $isFile = is_file($file);
+                if($question_detail['required'] && !$isFile) return ["success" => false, "message" => "Value pada pertanyaan career dengan nama ".$question_detail['name']." harus bertipe file" , "status" => 400];
+                else if($isFile) {
+                    $question_details[$search]['value'] = true;
+                }
+                else $question_details[$search]['value'] = NULL;
+
+                $fileArray[$search] = [
+                    "key" => $question_detail['key'],
+                    "file" => $file
+                ];
+            }
+            if(!isset($question_details[$search]['value']) && $question_detail['required']) return ["success" => false, "message" => "pertanyaan career dengan nama ".$question_detail['name']." belum memiliki value" , "status" => 400];
+            if($question_detail['type'] === 3){
+                if(gettype($question_details[$search]['value']) !== "array") return ["success" => false, "message" => "Value pada pertanyaan career dengan nama ".$question_detail['name']." harus bertipe array", "status" => 400];
+            } else if($question_detail['type'] !== 6) {
+                if(gettype($question_details[$search]['value']) !== "string") return ["success" => false, "message" => "Value pada pertanyaan career dengan nama ".$question_detail['name']." harus bertipe string", "status" => 400];
+            }
+        }
+        $career_apply_question = new CareerV2ApplyQuestion;
+        $career_apply_question->apply_id = $career_apply_id;
+        $career_apply_question->career_question_id = $career_question_id;
+        $career_apply_question->updated_at = date('Y-m-d H:i:s');
+        $career_apply_question->details = $question_details;
+
+        try{
+            $career_apply_question->save();
+            
+            $career_apply_question_id = $career_question->id;
+            foreach($fileArray as $index => $value){
+                if(!$question_details[$index]['value']) continue;
+                $uploadFile = $this->addCareerApplyFile($career_apply_question_id, $value['file'], $value['key']);
+                if($uploadFile['success']) $question_details[$index]['value'] = $uploadFile['new_data']->link;
+            }
+            $career_question->details = $question_details;
+            $career_question->save();
+
+            return ["success" => true, "message" => "Carrer Apply Question Berhasil Dibuat", "id" => $career_question->id, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
+        }
+    }
+
+    private function addCareerApplyFile($id, $file, $description)
+    {
+        $fileService = new FileService;
+        $add_file_response = $fileService->addFile($id, $file, 'App\CareerApply', $description, 'CareerApply', false);
+        return $add_file_response;
     }
 
 }

@@ -36,5 +36,7 @@ class CareerV2Apply extends Model
         return $this->belongsTo(CareerV2ApplyStatus::class, 'career_apply_status_id');
     }
     
-
+    public function question(){
+        return $this->hasOne(CareerV2ApplyQuestion::class, 'apply_id');
+    }
 }
