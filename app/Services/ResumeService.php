@@ -255,8 +255,8 @@ class ResumeService
                 $education->university = $requestEducation->university;
                 $education->major = $requestEducation->major;
                 $education->gpa = !$requestEducation->gpa ? NULL : $requestEducation->gpa;
-                $education->start_date = date('Y-m-01', strtotime($requestEducation->start_date));
-                $education->end_date = date('Y-m-t', strtotime($requestEducation->end_date . '-01'));
+                $education->start_date = $requestEducation->start_date ? date('Y-m-01', strtotime($requestEducation->start_date)): null;
+                $education->end_date = $requestEducation->end_date ? date('Y-m-t', strtotime($requestEducation->end_date . '-01')) : null;
 
                 $educations = new ResumeEducation();
                 if ($after_id == NULL) {
@@ -615,8 +615,8 @@ class ResumeService
                 $education->university = $requestEducation->university;
                 $education->major = $requestEducation->major;
                 $education->gpa = !$requestEducation->gpa ? NULL : $requestEducation->gpa;
-                $education->start_date = date('Y-m-01', strtotime($requestEducation->start_date));
-                $education->end_date = date('Y-m-t', strtotime($requestEducation->end_date . '-01'));
+                $education->start_date = $requestEducation->start_date ? date('Y-m-01', strtotime($requestEducation->start_date)): null;
+                $education->end_date = $requestEducation->end_date ? date('Y-m-t', strtotime($requestEducation->end_date . '-01')) : null;
 
                 $educations = new ResumeEducation();
                 if ($after_id == NULL) {
