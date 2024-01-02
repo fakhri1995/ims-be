@@ -274,7 +274,7 @@ class CareerV2Service{
             $career->save();
             if($question){
                 $questions = (object)$question;
-                $this->addCareerQuestion($questions->career_id, $questions->name, $questions->description, $questions->details);
+                $this->addCareerQuestion($career->id, $questions->name, $questions->description, $questions->details);
             }
             return ["success" => true, "message" => "Career Berhasil Ditambahkan", "id" => $career->id, "status" => 201];
         }catch(Exception $err){
