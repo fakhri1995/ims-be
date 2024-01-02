@@ -78,7 +78,21 @@ class CareerV2Controller extends Controller
         $response = $this->careerV2Service->deleteCareer($request, $route_name);
         return response()->json($response, $response['status']);
     }
-    
+
+    public function updateCareerQuestion(Request $request){
+        $route_name = "CAREER_V2_QUESTION_UPDATE";
+        
+        $response = $this->careerV2Service->updateCareerQuestion($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteCareerQuestion(Request $request){
+        $route_name = "CAREER_V2_QUESTION_DELETE";
+        
+        $response = $this->careerV2Service->deleteCareerQuestion($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     // Career Apply Section
     public function getCareerApply(Request $request){
         $route_name = "CAREER_V2_APPLY_GET";

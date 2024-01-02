@@ -468,6 +468,8 @@ $router->group(['middleware' => 'auth'], function ($router) {
         $router->get('/getCountCareer', 'CareerV2Controller@getCountCareerPosted');
         $router->get('/exportCareersApplicant', 'CareerV2Controller@exportCareersApplicant');
 
+        $router->put('/updateCareerQuestion', 'CareerV2Controller@updateCareerQuestion');
+        $router->delete('/deleteCareerQuestion', 'CareerV2Controller@deleteCareerQuestion');
 
         $router->get('/getCareerApply', 'CareerV2Controller@getCareerApply');
         $router->get('/getCareerApplys', 'CareerV2Controller@getCareerApplys');

@@ -432,10 +432,67 @@ class CareerV2Service{
             }
             $career_question->details = $details;
             $career_question->save();
-            return ["success" => true, "message" => "Attendance Form Berhasil Ditambahkan", "id" => $career_question->id, "status" => 200];
+            return ["success" => true, "message" => "Career Question Berhasil Ditambahkan", "id" => $career_question->id, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
 
+    public function updateCareerQuestion($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $career_question = CareerV2Question::find($id);
+        if($career_question === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        $career_question->name = $request->get('name');
+        $career_question->description = $request->get('description');
+        $career_question->updated_at = date('Y-m-d H:i:s');
+        $details = $request->details;
+        try{
+            $i = 1;
+            if(count($details)){
+                foreach($details as &$detail){
+                    if(!isset($detail['required'])) return ["success" => false, "message" => "Detail pertanyaan $i masih kosong pada required", "status" => 400];
+                    if(gettype($detail['required']) !== "boolean") return ["success" => false, "message" => "Detail pertanyaan $i pada required harus bertipe boolean", "status" => 400];
+                    if(!isset($detail['name'])) return ["success" => false, "message" => "Detail pertanyaan $i masih kosong pada name", "status" => 400];
+                    if(gettype($detail['name']) !== "string") return ["success" => false, "message" => "Detail pertanyaan $i pada name harus bertipe string", "status" => 400];
+                    if(!isset($detail['description'])) return ["success" => false, "message" => "Detail pertanyaan $i masih kosong pada description", "status" => 400];
+                    if(gettype($detail['description']) !== "string") return ["success" => false, "message" => "Detail pertanyaan $i pada description harus bertipe string", "status" => 400];
+                    if(!isset($detail['type'])) return ["success" => false, "message" => "Detail pertanyaan $i masih kosong pada type", "status" => 400];
+                    if(gettype($detail['type']) !== "integer") return ["success" => false, "message" => "Detail pertanyaan $i pada type harus bertipe integer", "status" => 400];
+                    if(in_array($detail['type'], [3,5])){
+                        if(!isset($detail['list'])) return ["success" => false, "message" => "Detail pertanyaan $i masih kosong pada list", "status" => 400];
+                        if(gettype($detail['list']) !== "array") return ["success" => false, "message" => "Detail pertanyaan $i pada list harus bertipe array", "status" => 400];
+                    }
+                    $detail['key'] = Str::uuid()->toString();
+                    $i++;
+                }
+            }
+            $career_question->details = $details;
+
+            $career_question->save();
+            return ["success" => true, "message" => "Career Question Berhasil Diubah", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteCareerQuestion($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $career_question = CareerV2Question::find($id);
+        if($career_question === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+
+        try{
+            $career_question->delete();
+            return ["success" => true, "message" => "Career Question berhasil dihapus", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
 }
