@@ -79,14 +79,6 @@ class CareerV2Controller extends Controller
         return response()->json($response, $response['status']);
     }
     
-    public function addCareerQuestion(Request $request){
-        $route_name = "CAREERS_V2_QUESTION_ADD";
-
-        $response = $this->careerV2Service->addCareerQuestion($request, $route_name);
-        return response()->json($response, $response['status']);
-    }
-
-
     // Career Apply Section
     public function getCareerApply(Request $request){
         $route_name = "CAREER_V2_APPLY_GET";

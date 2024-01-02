@@ -243,7 +243,8 @@ class CareerV2Service{
             "overview" => "required",
             "description" => "required",
             "is_posted" => "required|boolean",
-            "qualification" => "required"
+            "qualification" => "required",
+            "question" => "array"
         ]);
         
         if($validator->fails()){
@@ -268,8 +269,13 @@ class CareerV2Service{
         $career->created_at = Date('Y-m-d H:i:s');
         $career->updated_at = Date('Y-m-d H:i:s');
         $career->created_by = auth()->user()->id;
+        $question = $request->question ?? NULL;
         try{
             $career->save();
+            if($question){
+                $questions = (object)$question;
+                $this->addCareerQuestion($questions->career_id, $questions->name, $questions->description, $questions->details);
+            }
             return ["success" => true, "message" => "Career Berhasil Ditambahkan", "id" => $career->id, "status" => 201];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -395,18 +401,15 @@ class CareerV2Service{
         }
     }
 
-    public function addCareerQuestion($request, $route_name)
+    public function addCareerQuestion($career_id, $name, $description, $details)
     {
-        $access = $this->globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
-
         $career_question = new CareerV2Question;
-        $career_question->career_id = $request->get('career_id');
-        $career_question->name = $request->get('name');
-        $career_question->description = $request->get('description');
+        $career_question->career_id = $career_id;
+        $career_question->name = $name;
+        $career_question->description = $description;
         $career_question->updated_at = date('Y-m-d H:i:s');
         $career_question->created_by = auth()->user()->id;
-        $details = $request->get('details', []);
+        $details = $details;
         try{
             $i = 1;
             if(count($details)){
