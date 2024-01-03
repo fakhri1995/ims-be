@@ -190,7 +190,7 @@ class CareerV2Controller extends Controller
     }
 
     public function addCareerApplyQuestion(Request $request){
-        $route_name = "CAREERS_V2_APPLY_QUESTION_ADD";
+        $route_name = "CAREER_V2_APPLY_QUESTION_ADD";
 
         $response = $this->careerV2ApplyService->addCareerApplyQuestion($request, $route_name);
         return response()->json($response, $response['status']);
