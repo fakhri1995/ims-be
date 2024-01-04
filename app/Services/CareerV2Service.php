@@ -197,8 +197,8 @@ class CareerV2Service{
         
         $id = $request->id ?? NULL;
         $slug = $request->slug ?? NULL;
-        if($id) $career = CareerV2::with(["roleType","experience"])->where(['id' => $id,'is_posted' => 1])->first();
-        else $career = CareerV2::with(["roleType","experience"])->where(['slug' => $slug,'is_posted' => 1])->first();
+        if($id) $career = CareerV2::with(["roleType","experience","question"])->where(['id' => $id,'is_posted' => 1])->first();
+        else $career = CareerV2::with(["roleType","experience","question"])->where(['slug' => $slug,'is_posted' => 1])->first();
 
         
         
