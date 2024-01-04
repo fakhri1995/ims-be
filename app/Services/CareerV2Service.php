@@ -148,7 +148,7 @@ class CareerV2Service{
         $is_posted = 1;
         
         $rows = $request->rows ?? 5;
-        $career = CareerV2::with(["roleType" ,"experience"])->withCount("apply");
+        $career = CareerV2::with(["roleType" ,"experience","question"])->withCount("apply");
         
         // filter
         if($keyword) $career = $career->where("name","LIKE", "%$keyword%");
