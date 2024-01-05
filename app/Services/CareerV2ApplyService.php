@@ -398,9 +398,6 @@ class CareerV2ApplyService{
 
     public function addCareerApplyQuestion($request, $route_name)
     {
-        $access = $this->globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
-
         $career_apply_id = $request->get('career_apply_id');
         $career_question_id = $request->get('career_question_id');
         $career_question = CareerV2Question::find($career_question_id);
