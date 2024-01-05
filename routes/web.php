@@ -475,7 +475,6 @@ $router->group(['middleware' => 'auth'], function ($router) {
         $router->get('/getCareerApplys', 'CareerV2Controller@getCareerApplys');
         $router->post('/updateCareerApply', 'CareerV2Controller@updateCareerApply');
         $router->delete('/deleteCareerApply', 'CareerV2Controller@deleteCareerApply');
-        $router->post('/addCareerApplyQuestion', 'CareerV2Controller@addCareerApplyQuestion');
     });
 
     // RESUME
@@ -763,6 +762,7 @@ $router->delete('/deleteDepreciation', 'DepreciationController@deleteDepreciatio
 $router->group(['prefix' => 'v2'], function () use ($router) {
 
     $router->post('/addCareerApply', 'CareerV2Controller@addCareerApply');
+    $router->post('/addCareerApplyQuestion', 'CareerV2Controller@addCareerApplyQuestion');
     $router->get('/getPostedCareer', 'CareerV2Controller@getPostedCareer');
     $router->get('/getPostedCareers', 'CareerV2Controller@getPostedCareers');
     $router->get('/getCareerApplyStatuses', 'CareerV2Controller@getCareerApplyStatuses');
