@@ -762,6 +762,7 @@ $router->delete('/deleteDepreciation', 'DepreciationController@deleteDepreciatio
 $router->group(['prefix' => 'v2'], function () use ($router) {
 
     $router->post('/addCareerApply', 'CareerV2Controller@addCareerApply');
+    $router->post('/addCareerNoApply', 'CareerV2Controller@addCareerNoApply');
     $router->post('/addCareerApplyQuestion', 'CareerV2Controller@addCareerApplyQuestion');
     $router->get('/getPostedCareer', 'CareerV2Controller@getPostedCareer');
     $router->get('/getPostedCareers', 'CareerV2Controller@getPostedCareers');
