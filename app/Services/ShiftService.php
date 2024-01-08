@@ -135,7 +135,7 @@ class ShiftService
         if ($access["success"] === false) return $access;
         $rules = [
             "id" => "numeric|required",
-            'status' => 'required|in:0,1',
+            'status' => 'required|boolean',
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
