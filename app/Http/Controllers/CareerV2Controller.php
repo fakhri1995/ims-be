@@ -115,6 +115,13 @@ class CareerV2Controller extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function addCareerNoApply(Request $request){
+        $route_name = "CAREER_V2_NO_APPLY_ADD";
+        
+        $response = $this->careerV2ApplyService->addCareerNoApply($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function updateCareerApply(Request $request){
         $route_name = "CAREER_V2_APPLY_UPDATE";
 

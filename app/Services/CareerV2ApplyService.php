@@ -197,6 +197,71 @@ class CareerV2ApplyService{
         }
     }
 
+    public function addCareerNoApply(Request $request, $route_name){
+        $auth = $request->headers->get('Authorization',NULL);
+        $request->headers->set('Authorization', "Bearer ".$auth);
+        $rules = [
+            "name" => "required",
+            "email" => "required|email",
+            "phone" => "required|numeric",
+            "resume" => "required|mimes:pdf|mimetypes:application/pdf|file|max:5120",
+        ];
+        
+        if(!isset(auth()->user()->id) || empty($auth)){
+            $rules["g-recaptcha-response"] = "required";
+        }
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        if(!isset(auth()->user()->id) || empty($auth)){
+            try{
+                $gCaptchaResponse = $request->get('g-recaptcha-response', NULL);
+                $validate = $this->globalService->validateGoogleReCaptcha($gCaptchaResponse);
+                if(!$validate["success"]){
+                    return ["success" => false, "message" => "Error captcha validation", "data" => $validate["error-codes"], "status" => 400];
+                }
+                
+            }catch(Exception $err){
+                return ["success" => false, "message" => $err, "status" => 400];
+            }
+        }
+
+        try{
+            $file = $request->file('resume',NULL);
+            $current_timestamp = date('Y-m-d H:i:s');
+
+            $careerApply = new CareerV2Apply();
+            $careerApply->name = $request->name;
+            $careerApply->email = $request->email;
+            $careerApply->phone = $request->phone;
+            $careerApply->career_id = $request->career_id;
+            $careerApply->career_apply_status_id = 1; //Unprocessed
+            $careerApply->created_at = $current_timestamp;
+            $careerApply->updated_at = $current_timestamp;
+            $careerApply->created_by = isset(auth()->user()->id) ? auth()->user()->id : NULL;
+            $careerApply->save();
+
+            if($file) $addResume = $this->addResume($careerApply->id, $file, "resume");
+
+            $data = (object) array(
+                'name' => $request->name,
+                'role_name' => 'a candidate',
+                'subject' => "Thank you for applying to MIG",
+                'url' => env('APP_URL_WEB'),
+            );
+
+            $sendMail = Mail::to($careerApply->email)->send(new CareerApplyMail($data));
+            return ["success" => true, "message" => "Apply Career Berhasil Ditambahkan", "id" => $careerApply->id, "status" => 201];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     public function updateCareerApply(Request $request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
@@ -444,8 +509,8 @@ class CareerV2ApplyService{
                 $uploadFile = $this->addCareerApplyFile($career_apply_question_id, $value['file'], $value['key']);
                 if($uploadFile['success']) $question_details[$index]['value'] = $uploadFile['new_data']->link;
             }
-            $career_question->details = $question_details;
-            $career_question->save();
+            $career_apply_question->details = $question_details;
+            $career_apply_question->save();
 
             return ["success" => true, "message" => "Carrer Apply Question Berhasil Dibuat", "id" => $career_question->id, "status" => 200];
         } catch(Exception $err){

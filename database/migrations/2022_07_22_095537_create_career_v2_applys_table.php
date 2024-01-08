@@ -18,7 +18,7 @@ class CreateCareerV2ApplysTable extends Migration
             $table->string("name");
             $table->string("email");
             $table->string("phone");
-            $table->unsignedBigInteger('career_id');
+            $table->unsignedBigInteger('career_id')->nullable();
             $table->unsignedBigInteger('career_apply_status_id');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->dateTime('created_at');
