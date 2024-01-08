@@ -710,9 +710,17 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->delete('/deleteContractHistory', 'ContractController@deleteContractHistory');
     // Contract Histories Routes - Log
     $router->get('/getContractHistoryLogs', 'ActivityLogController@getContractHistoryLogs');
+
+    // Shift
+    $router->get('/getShifts', 'ShiftController@getShifts');
+    $router->get('/getShift', 'ShiftController@getShift');
+    $router->post('/addShift', 'ShiftController@addShift');
+    $router->put('/updateShift', 'ShiftController@updateShift');
+    $router->put('/updateShiftStatus', 'ShiftController@updateShiftStatus');
+    $router->delete('/deleteShift', 'ShiftController@deleteShift');
 });
 
-$router->group([],function ($router) {
+$router->group([], function ($router) {
     // TALENT POOL SHARE PUBLIC
     $router->get('/authTalentPoolSharePublic', 'TalentPoolController@authTalentPoolSharePublic');
     $router->get('/getTalentPoolSharePublics', 'TalentPoolController@getTalentPoolSharePublics');
