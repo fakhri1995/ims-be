@@ -88,7 +88,7 @@ class CareerV2ApplyService{
         $career_id = $request->career_id ?? NULL;
         $from = $request->from ?? NULL;
         $to = $request->to ?? NULL;
-        $limit = $request->limit ?? 5;
+        $rows = $request->rows ?? 5;
         $career_apply_status_id = isset($request->career_apply_status_id) ? $request->career_apply_status_id : NULL;
         $has_career = $request->has_career ?? NULL;
         
@@ -116,7 +116,7 @@ class CareerV2ApplyService{
         if($sort_by == "apply_date") $careerApply = $careerApply->orderBy('created_at',$sort_type);
         if($sort_by == "apply_status") $careerApply = $careerApply->orderBy('career_apply_status_id',$sort_type);
 
-        $careerApply = $careerApply->paginate($limit);
+        $careerApply = $careerApply->paginate($rows);
         if($careerApply->count() == 0){
             return ["success" => true, "message" => "Data Tidak Tersedia", "data" => $careerApply, "status" => 200];
         }
