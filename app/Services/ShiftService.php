@@ -67,8 +67,8 @@ class ShiftService
             'title' => 'required',
             'start_at' => 'required|date_format:H:i',
             'end_at' => 'required|date_format:H:i',
-            'start_break' => 'required|date_format:H:i',
-            'end_break' => 'required|date_format:H:i',
+            // 'start_break' => 'required|date_format:H:i',
+            // 'end_break' => 'required|date_format:H:i',
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
@@ -81,8 +81,10 @@ class ShiftService
             $data->title = $request->title;
             $data->start_at = date('H:i:00', strtotime($request->start_at));
             $data->end_at = date('H:i:00', strtotime($request->end_at));
-            $data->start_break = date('H:i:00', strtotime($request->start_break));
-            $data->end_break = date('H:i:00', strtotime($request->end_break));
+            if ($request->start_break && $request->end_break) {
+                $data->start_break = date('H:i:00', strtotime($request->start_break));
+                $data->end_break = date('H:i:00', strtotime($request->end_break));
+            }
             $data->save();
             DB::commit();
             return ["success" => true, "message" => "Data Berhasil Ditambah", "status" => 200];
