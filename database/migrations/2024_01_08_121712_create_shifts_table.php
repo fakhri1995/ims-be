@@ -19,8 +19,8 @@ class CreateShiftsTable extends Migration
             $table->string('title');
             $table->time('start_at');
             $table->time('end_at');
-            $table->time('start_break');
-            $table->time('end_break');
+            $table->time('start_break')->nullable();
+            $table->time('end_break')->nullable();
             $table->boolean('status')->default(true);
             $table->timestamps();
             $table->softDeletes();
