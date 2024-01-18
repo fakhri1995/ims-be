@@ -36,6 +36,9 @@ class ScheduleService
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
+        $keyword = $request->keyword;
+        $company_id = $request->company_id;
+        $position = $request->position;
         $start_at = $request->start_at;
         $end_at = date('Y-m-d', strtotime($request->start_at . ' + 7 days'));
 
@@ -43,16 +46,28 @@ class ScheduleService
             $users = $this->userService->getUserList($request, $this->agent_role_id, true);
             $users = $users->with(['schedule' => function ($q) use ($start_at, $end_at) {
                 $q->whereBetween('date', [$start_at, $end_at]);
-            }]);
+            }])->when($company_id, function ($q) use ($company_id) {
+                $q->where('company_id', $company_id);
+            })->when($position, function ($q) use ($position) {
+                $q->where('position', $position);
+            })->when($keyword, function ($q) use ($keyword) {
+                $q->where(function ($q1) use($keyword) {
+                    $q1->orWhere('position', 'like', '%' . $keyword . '%')
+                        ->orWhere('name', 'like', '%' . $keyword . '%')
+                        ->orWhereHas('company', function ($q2) use($keyword) {
+                            $q2->leftJoin('companies as top_parent', 'companies.parent_id', 'top_parent.id')
+                                ->where(DB::raw("CONCAT(IFNULL(top_parent.name, ''), '-', companies.name)"), 'like', '%' . $keyword . '%');
+                        });
+                });
+            });
 
             $users = $users->paginate($request->rows);
-            if (!count($users)) return ["success" => true, "message" => "User masih kosong", "data" => $users, "status" => 200];
             foreach ($users as $user) {
                 $user->company_name = $user->company->topParent ? $user->company->topParent->name . ' - ' . $user->company->name : $user->company->name;
-                $user->makeHidden(['company']);
+                // $user->makeHidden(['company']);
             }
 
-            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $user, "status" => 200];
+            return ["success" => true, "message" => "Daftar Berhasil Diambil", "data" => $users, "status" => 200];
         } catch (\Exception $err) {
             return ["success" => false, "message" => $err, "status" => 400];
         }
