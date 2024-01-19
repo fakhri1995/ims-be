@@ -45,16 +45,17 @@ class ScheduleService
         try {
             $users = $this->userService->getUserList($request, $this->agent_role_id, true);
             $users = $users->with(['schedule' => function ($q) use ($start_at, $end_at) {
-                $q->whereBetween('date', [$start_at, $end_at]);
+                $q->with(['shift'])
+                    ->whereBetween('date', [$start_at, $end_at]);
             }])->when($company_id, function ($q) use ($company_id) {
                 $q->where('company_id', $company_id);
             })->when($position, function ($q) use ($position) {
                 $q->where('position', $position);
             })->when($keyword, function ($q) use ($keyword) {
-                $q->where(function ($q1) use($keyword) {
+                $q->where(function ($q1) use ($keyword) {
                     $q1->orWhere('position', 'like', '%' . $keyword . '%')
                         ->orWhere('name', 'like', '%' . $keyword . '%')
-                        ->orWhereHas('company', function ($q2) use($keyword) {
+                        ->orWhereHas('company', function ($q2) use ($keyword) {
                             $q2->leftJoin('companies as top_parent', 'companies.parent_id', 'top_parent.id')
                                 ->where(DB::raw("CONCAT(IFNULL(top_parent.name, ''), '-', companies.name)"), 'like', '%' . $keyword . '%');
                         });
