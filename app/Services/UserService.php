@@ -231,7 +231,9 @@ class UserService
                     'token' => $token['access_token'],
                     'subject' => 'Ubah Password Akun MIG'
                 ];
-                Mail::to($email)->send(new ChangePasswordMail($email_data));
+                if($role_id != $this->guest_role_id){
+                    Mail::to($email)->send(new ChangePasswordMail($email_data));
+                }
             }
             if($role_id === 1) return ["success" => true, "message" => "Akun Agent berhasil ditambah", "id" => $user->id, "status" => 200];
             else if($role_id === 2) return ["success" => true, "message" => "Akun Requester berhasil ditambah", "id" => $user->id, "status" => 200];
