@@ -10,6 +10,7 @@ use App\CareerV2Question;
 use App\Exports\CareerApplicantsExport;
 use App\File;
 use App\Mail\CareerApplyMail;
+use App\Recruitment;
 use Exception;
 use App\Services\GlobalService;
 use Illuminate\Http\Request;
@@ -174,6 +175,7 @@ class CareerV2ApplyService{
             $careerApply->name = $request->name;
             $careerApply->email = $request->email;
             $careerApply->phone = $request->phone;
+            $careerApply->university = $request->university;
             $careerApply->career_id = $request->career_id;
             $careerApply->career_apply_status_id = 1; //Unprocessed
             $careerApply->created_at = $current_timestamp;
@@ -239,6 +241,7 @@ class CareerV2ApplyService{
             $careerApply->name = $request->name;
             $careerApply->email = $request->email;
             $careerApply->phone = $request->phone;
+            $careerApply->university = $request->university;
             $careerApply->career_id = $request->career_id;
             $careerApply->career_apply_status_id = 1; //Unprocessed
             $careerApply->created_at = $current_timestamp;
@@ -271,6 +274,7 @@ class CareerV2ApplyService{
             "name" => "filled",
             "email" => "filled|email",
             "phone" => "filled|numeric",
+            "university" => "filled",
             "resume" => "mimes:pdf|mimetypes:application/pdf|file|max:5120",
             "career_apply_status_id" => "filled|exists:career_v2_apply_statuses,id"
         ]);
@@ -282,7 +286,7 @@ class CareerV2ApplyService{
 
         try{
 
-            $fillable = ["career_id","name","email","phone","career_apply_status_id"];
+            $fillable = ["career_id","name","email","phone","university","career_apply_status_id"];
 
             $id = $request->id;
             $careerApply = CareerV2Apply::find($id);
@@ -525,4 +529,31 @@ class CareerV2ApplyService{
         return $add_file_response;
     }
 
+    
+    public function exportCareerApply($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $id = $request->id;
+            $career = CareerV2Apply::with("role")->find($id);
+            $recruitment = new Recruitment();
+            $recruitment->name = $career->name ?? "";
+            $recruitment->email = $career->email ?? "";
+            $recruitment->university = $career->university;
+            $recruitment->recruitment_role_id = $career->recruitment_role_id ?? 0;
+            $recruitment->recruitment_jalur_daftar_id = 1;
+            $recruitment->recruitment_stage_id = 1;
+            $recruitment->recruitment_status_id = 1;
+            $recruitment->lampiran = [];
+            $recruitment->created_at = date('Y-m-d H:i:s');
+            $recruitment->updated_at = date('Y-m-d H:i:s');
+            $recruitment->created_by = auth()->user()->id;
+            $recruitment->save();
+            
+            return ["success" => true, "message" => "Carrer Apply Berhasil di Export", "id" => $recruitment->id, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
+        }
+    }
 }

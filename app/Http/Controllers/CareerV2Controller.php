@@ -203,6 +203,13 @@ class CareerV2Controller extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function exportCareerApply(Request $request){
+        $route_name = "CAREER_V2_APPLY_EXPORT";
+
+        $response = $this->careerV2ApplyService->exportCareerApply($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function recaptcha(Request $request)
     {
         $route_name = "RECAPTCHA";
