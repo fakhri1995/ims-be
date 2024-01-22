@@ -53,4 +53,11 @@ class ScheduleController extends Controller
         $response = $this->scheduleService->deleteSchedule($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    public function deleteAllSchedule(Request $request){
+        $route_name = "SCHEDULE_DELETE";
+
+        $response = $this->scheduleService->deleteAllSchedule($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }
