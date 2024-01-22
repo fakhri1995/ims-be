@@ -33,11 +33,12 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
 
     public $timestamps = false;
 
-    public function company(){
+    public function company()
+    {
         return $this->belongsTo(Company::class)->withDefault([
             'id' => 0,
             'name' => '-',
-            'full_name'=> '-'
+            'full_name' => '-'
         ]);
     }
 
@@ -45,7 +46,7 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     {
         return $this->morphOne(File::class, 'fileable')->select('id', 'link', 'description', 'fileable_id', 'fileable_type')->withDefault([
             'id' => 0,
-            'link' => env('APP_ENV').'/Users/default_user.png',
+            'link' => env('APP_ENV') . '/Users/default_user.png',
             'description' => "profile_image"
         ]);
     }
@@ -57,7 +58,7 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
 
     public function groups()
     {
-        return $this->belongsToMany(Group::class, 'group_user')->select('groups.id','groups.name');
+        return $this->belongsToMany(Group::class, 'group_user')->select('groups.id', 'groups.name');
     }
 
     public function tasks()
@@ -88,5 +89,10 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     public function project_tasks()
     {
         return $this->belongsToMany(ProjectTask::class, 'project_tasks_staffs');
+    }
+
+    public function schedule()
+    {
+        return $this->hasMany(Schedule::class);
     }
 }
