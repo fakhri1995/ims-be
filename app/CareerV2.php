@@ -29,7 +29,7 @@ class CareerV2 extends Model
         return $this->hasMany(CareerV2Apply::class, 'career_id');
     }
 
-    function recuitmentRole(){
+    function recruitmentRole(){
         return $this->belongsTo(RecruitmentRole::class, 'recruitment_role_id');
     }
 }
