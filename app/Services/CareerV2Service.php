@@ -36,8 +36,8 @@ class CareerV2Service{
         $id = $request->id ?? NULL;
         $slug = $request->slug ?? NULL;
         
-        if($id) $career = CareerV2::with(["roleType","experience", "question","recuitmentRole"])->find($id);
-        else $career = CareerV2::with(["roleType","experience", "question", "recuitmentRole"])->where("slug",$slug)->first();
+        if($id) $career = CareerV2::with(["roleType","experience", "question","recruitmentRole"])->find($id);
+        else $career = CareerV2::with(["roleType","experience", "question", "recruitmentRole"])->where("slug",$slug)->first();
         
         if(!$career) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         try{
@@ -79,7 +79,7 @@ class CareerV2Service{
         $is_posted = isset($request->is_posted) ? $request->is_posted : NULL;
         
         $rows = $request->rows ?? 5;
-        $career = CareerV2::with(["roleType" ,"experience", "question", "recuitmentRole"])->withCount("apply");
+        $career = CareerV2::with(["roleType" ,"experience", "question", "recruitmentRole"])->withCount("apply");
         
         // filter
         if($keyword) $career = $career->where("name","LIKE", "%$keyword%");
