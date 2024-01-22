@@ -36,8 +36,8 @@ class CareerV2Service{
         $id = $request->id ?? NULL;
         $slug = $request->slug ?? NULL;
         
-        if($id) $career = CareerV2::with(["roleType","experience", "question"])->find($id);
-        else $career = CareerV2::with(["roleType","experience", "question"])->where("slug",$slug)->first();
+        if($id) $career = CareerV2::with(["roleType","experience", "question","recuitmentRole"])->find($id);
+        else $career = CareerV2::with(["roleType","experience", "question", "recuitmentRole"])->where("slug",$slug)->first();
         
         if(!$career) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         try{
@@ -79,7 +79,7 @@ class CareerV2Service{
         $is_posted = isset($request->is_posted) ? $request->is_posted : NULL;
         
         $rows = $request->rows ?? 5;
-        $career = CareerV2::with(["roleType" ,"experience", "question"])->withCount("apply");
+        $career = CareerV2::with(["roleType" ,"experience", "question", "recuitmentRole"])->withCount("apply");
         
         // filter
         if($keyword) $career = $career->where("name","LIKE", "%$keyword%");
@@ -237,6 +237,7 @@ class CareerV2Service{
         $validator = Validator::make($request->all(), [
             "name" => "required",
             "career_role_type_id" => "required|exists:career_v2_role_types,id|numeric",
+            "recruitment_role_id" => "required|exists:recruitment_roles,id|numeric",
             "career_experience_id" => "required|exists:career_v2_experiences,id|numeric",
             "salary_min" => "required|numeric",
             "salary_max" => "required|numeric",
@@ -260,6 +261,7 @@ class CareerV2Service{
         $career->slug = Str::slug($request->name, '-').'-'.$random;
         $career->career_role_type_id = $request->career_role_type_id;
         $career->career_experience_id = $request->career_experience_id;
+        $career->recruitment_role_id = $request->recruitment_role_id;
         $career->salary_min = $request->salary_min;
         $career->salary_max = $request->salary_max;
         $career->overview = $request->overview;
@@ -289,6 +291,7 @@ class CareerV2Service{
             "id" => "required|exists:career_v2,id",
             "name" => "filled",
             "career_role_type_id" => "exists:career_v2_role_types,id|numeric",
+            "recruitment_role_id" => "exists:recruitment_roles,id|numeric",
             "career_experience_id" => "exists:career_v2_experiences,id|numeric",
             "salary_min" => "filled|numeric",
             "salary_max" => "filled|numeric",
@@ -303,7 +306,7 @@ class CareerV2Service{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        $fillable = ["name","career_role_type_id","career_experience_id","salary_min","salary_max", "overview","description","is_posted","qualification"];
+        $fillable = ["name","career_role_type_id","career_experience_id","recruitment_role_id","salary_min","salary_max", "overview","description","is_posted","qualification"];
 
         $id = $request->id;
         $career = CareerV2::find($id);

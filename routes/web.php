@@ -475,6 +475,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
         $router->get('/getCareerApplys', 'CareerV2Controller@getCareerApplys');
         $router->post('/updateCareerApply', 'CareerV2Controller@updateCareerApply');
         $router->delete('/deleteCareerApply', 'CareerV2Controller@deleteCareerApply');
+        $router->post('/exportCareerApply', 'CareerV2Controller@exportCareerApply');
     });
 
     // RESUME

@@ -18,6 +18,7 @@ class CreateCareerV2Table extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->unsignedBigInteger('career_role_type_id');
+            $table->unsignedBigInteger('recruitment_role_id');
             $table->unsignedBigInteger('career_experience_id');
             $table->integer('salary_min'); // gaji minimal;
             $table->integer('salary_max'); // gaji maksimal;
