@@ -720,12 +720,13 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->put('/updateShiftStatus', 'ShiftController@updateShiftStatus');
     $router->delete('/deleteShift', 'ShiftController@deleteShift');
 
-     // Schedule
-     $router->get('/getSchedules', 'ScheduleController@getSchedules');
-     $router->get('/getSchedule', 'ScheduleController@getSchedule');
-     $router->post('/addSchedule', 'ScheduleController@addSchedule');
-     $router->put('/updateSchedule', 'ScheduleController@updateSchedule');
-     $router->delete('/deleteSchedule', 'ScheduleController@deleteSchedule');
+    // Schedule
+    $router->get('/getSchedules', 'ScheduleController@getSchedules');
+    $router->get('/getSchedule', 'ScheduleController@getSchedule');
+    $router->post('/addSchedule', 'ScheduleController@addSchedule');
+    $router->put('/updateSchedule', 'ScheduleController@updateSchedule');
+    $router->delete('/deleteSchedule', 'ScheduleController@deleteSchedule');
+    $router->delete('/deleteAllSchedule', 'ScheduleController@deleteAllSchedule');
 });
 
 $router->group([], function ($router) {

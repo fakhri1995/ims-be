@@ -156,7 +156,7 @@ class ScheduleService
             if (!$schedule) {
                 return ["success" => false, "message" => "Data Schedule tidak ditemukan", "status" => 404];
             }
-            $schedule->shift_id = $schedule->shift_id;
+            $schedule->shift_id = $request->shift_id;
             $schedule->save();
             return ["success" => true, "message" => "Data Berhasil Diperbarui", "data" => $schedule, "status" => 200];
         } catch (\Exception $err) {
@@ -186,6 +186,36 @@ class ScheduleService
 
             return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $schedule, "status" => 200];
         } catch (\Exception $err) {
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    function deleteAllSchedule($request, $route_name): array
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if ($access["success"] === false) return $access;
+        $rules = [
+            'user_ids' => 'array|required',
+            'user_ids.*' => 'numeric|exists:users,id',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        try {
+            DB::beginTransaction();
+            foreach ($request->user_ids as $item) {
+                $schedules = Schedule::query()->where('user_id', $item)->get();
+                foreach ($schedules as $schedule) {
+                    $schedule->delete();
+                }
+            }
+            DB::commit();
+            return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => null, "status" => 200];
+        } catch (\Exception $err) {
+            DB::rollBack();
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
