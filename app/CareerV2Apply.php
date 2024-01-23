@@ -38,6 +38,6 @@ class CareerV2Apply extends Model
     }
     
     public function question(){
-        return $this->hasOne(CareerV2ApplyQuestion::class, 'apply_id');
+        return $this->hasOne(CareerV2ApplyQuestion::class, 'apply_id')->with('question');
     }
 }
