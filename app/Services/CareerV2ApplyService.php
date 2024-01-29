@@ -536,7 +536,14 @@ class CareerV2ApplyService{
         
         try{
             $id = $request->id;
-            $career = CareerV2Apply::with("role")->find($id);
+            $career = CareerV2Apply::with("role", "resume")->find($id);
+            
+            $lampiran = [];
+            $lampiran[] = [
+                "judul_lampiran" => "CV",
+                "isi_lampiran" => $career->resume->link
+            ];
+
             $recruitment = new Recruitment();
             $recruitment->name = $career->name ?? "";
             $recruitment->email = $career->email ?? "";
@@ -545,7 +552,7 @@ class CareerV2ApplyService{
             $recruitment->recruitment_jalur_daftar_id = 1;
             $recruitment->recruitment_stage_id = 1;
             $recruitment->recruitment_status_id = 1;
-            $recruitment->lampiran = [];
+            $recruitment->lampiran = $lampiran;
             $recruitment->created_at = date('Y-m-d H:i:s');
             $recruitment->updated_at = date('Y-m-d H:i:s');
             $recruitment->created_by = auth()->user()->id;
