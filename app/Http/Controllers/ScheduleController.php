@@ -60,4 +60,12 @@ class ScheduleController extends Controller
         $response = $this->scheduleService->deleteAllSchedule($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+
+    public function getCurrentSchedule(Request $request){
+        $route_name = "SCHEDULE_GET";
+
+        $response = $this->scheduleService->getCurrentSchedule($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }

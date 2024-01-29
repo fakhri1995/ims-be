@@ -20,6 +20,7 @@ use App\Company;
 use App\Exports\AttendanceActivitiesExport;
 use App\File;
 use App\ProjectTask;
+use App\Schedule;
 use App\Task;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -560,7 +561,7 @@ class AttendanceService{
         $startDate = Carbon::parse($date_month)->startOfMonth();
         $endDate = Carbon::parse($date_month)->endOfMonth();
         $period = CarbonPeriod::create($startDate, $endDate);
-        
+
         foreach($period as $date){
             $day = $date->format('w');
             $date_formatted = $date->format('Y-m-d');
@@ -858,28 +859,39 @@ class AttendanceService{
     {
         $date_time_split = explode(' ', $current_timestamp);
         $today_user_attendance = AttendanceUser::select('id', 'user_id', 'check_in', 'is_late')->where('user_id', $login_id)->whereDate('check_in', '=', $date_time_split[0])->first();
-        $user_company_id = auth()->user()->company_id;
-        $company = Company::find($user_company_id);
+        // $user_company_id = auth()->user()->company_id;
+        // $company = Company::find($user_company_id);
+        $check_in_time = null;
 
-        //* get check in time
-        if($company->id == 1) $check_in_time = $company->check_in_time;
-        else if($company->role == 3) {
-            $top_parent_company = Company::find(1);
-            $check_in_time = $top_parent_company->check_in_time;
-        }
-        else{
-            $top_parent_id = $company->getTopParent()->id;
-            if($top_parent_id == null) $check_in_time = $company->check_in_time;
-            else {
-                $top_parent_company = Company::find($top_parent_id);
-                $check_in_time = $top_parent_company->check_in_time;
-            }
+        // //* get check in time
+        // if($company->id == 1) $check_in_time = $company->check_in_time;
+        // else if($company->role == 3) {
+        //     $top_parent_company = Company::find(1);
+        //     $check_in_time = $top_parent_company->check_in_time;
+        // }
+        // else{
+        //     $top_parent_id = $company->getTopParent()->id;
+        //     if($top_parent_id == null) $check_in_time = $company->check_in_time;
+        //     else {
+        //         $top_parent_company = Company::find($top_parent_id);
+        //         $check_in_time = $top_parent_company->check_in_time;
+        //     }
+        // }
+
+        // Get current Schedule
+        $schedule = Schedule::query()->with(['shift'])
+            ->where('user_id', $login_id)->where('date', date('Y-m-d'))
+            ->first();
+        if ($schedule) {
+            $check_in_time = $schedule->shift->start_at;
         }
 
-        if($today_user_attendance) return $today_user_attendance->is_late;
+
+        if ($today_user_attendance) return $today_user_attendance->is_late;
         else {
-            if($check_in_time == null || $check_in_time == '00:00:00') return false;
-            else if($date_time_split[1] > $check_in_time) return true;
+            // if($check_in_time == null || $check_in_time == '00:00:00') return false;
+            // else if($date_time_split[1] > $check_in_time) return true;
+            if ($check_in_time && ($date_time_split[1] > $check_in_time)) return true;
             else return false;
         }
     }
@@ -1196,7 +1208,7 @@ class AttendanceService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
-    
+
     public function getAndroidActivities($request, $route_name){
         $login_id = auth()->user()->id;
         $today = date('Y-m-d');
