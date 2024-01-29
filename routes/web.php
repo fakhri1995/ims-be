@@ -727,6 +727,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->put('/updateSchedule', 'ScheduleController@updateSchedule');
     $router->delete('/deleteSchedule', 'ScheduleController@deleteSchedule');
     $router->delete('/deleteAllSchedule', 'ScheduleController@deleteAllSchedule');
+    $router->get('/getCurrentSchedule', 'ScheduleController@getCurrentSchedule');
 });
 
 $router->group([], function ($router) {

@@ -219,4 +219,31 @@ class ScheduleService
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
+
+    function getCurrentSchedule($request, $route_name): array
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if ($access["success"] === false) return $access;
+        $rules = [
+            "user_id" => "numeric|required",
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        try {
+            $schedule = Schedule::query()->with(['shift'])
+                ->where('user_id', $request->user_id)
+                ->where('date', date('Y-m-d'))
+                ->first();
+            if (!$schedule) {
+                return ["success" => false, "message" => "Data Schedule tidak ditemukan", "status" => 404];
+            }
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $schedule, "status" => 200];
+        } catch (\Exception $err) {
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
 }
