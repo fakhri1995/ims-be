@@ -276,7 +276,7 @@ class CareerV2Service{
             $career->save();
             if($question){
                 $questions = (object)$question;
-                $this->addCareerQuestion($career->id, $questions->name, $questions->description, $questions->details);
+                $this->addCareerQuestionFunc($career->id, $questions->name, $questions->description, $questions->details);
             }
             return ["success" => true, "message" => "Career Berhasil Ditambahkan", "id" => $career->id, "status" => 201];
         }catch(Exception $err){
@@ -298,7 +298,8 @@ class CareerV2Service{
             "overview" => "filled",
             "description" => "filled",
             "is_posted" => "filled|boolean",
-            "qualification" => "filled"
+            "qualification" => "filled",
+            "question" => "array"
         ]);
         
         if($validator->fails()){
@@ -309,7 +310,11 @@ class CareerV2Service{
         $fillable = ["name","career_role_type_id","career_experience_id","recruitment_role_id","salary_min","salary_max", "overview","description","is_posted","qualification"];
 
         $id = $request->id;
-        $career = CareerV2::find($id);
+        $career = CareerV2::with("question")->find($id);
+        $question_temp = $career->question;
+        $question_id = NULL;
+        if($question_temp) $question_id = $question_temp->id;
+        $question = $request->question ?? NULL;
         if(!$career) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
 
@@ -324,12 +329,19 @@ class CareerV2Service{
             $random = random_int(0000,9999);
             $career->slug = Str::slug($request->name, '-').'-'.$random;
         } 
-
+        
         try{
             $career->save();
+            if($question){
+                $questions = (object)$question;
+                if($question_temp) {
+                    $this->updateCareerQuestionFunc($question_id, $questions->name, $questions->description, $questions->details);
+                }
+                else $this->addCareerQuestionFunc($career->id, $questions->name, $questions->description, $questions->details);
+            }
             return ["success" => true, "message" => "Career Berhasil Diubah", "id" => $career->id, "status" => 200];
         }catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
         }
         
         
@@ -404,7 +416,20 @@ class CareerV2Service{
         }
     }
 
-    public function addCareerQuestion($career_id, $name, $description, $details)
+    public function addCareerQuestion($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $career_id = $request->career_id;
+        $name = $request->name;
+        $description = $request->description;
+        $details = $request->details;
+
+        return $this->addCareerQuestionFunc($career_id, $name, $description, $details);
+    }
+
+    public function addCareerQuestionFunc($career_id, $name, $description, $details)
     {
         $career_question = new CareerV2Question;
         $career_question->career_id = $career_id;
@@ -437,7 +462,7 @@ class CareerV2Service{
             $career_question->save();
             return ["success" => true, "message" => "Career Question Berhasil Ditambahkan", "id" => $career_question->id, "status" => 200];
         } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
         }
     }
 
@@ -446,13 +471,21 @@ class CareerV2Service{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $id = $request->get('id');
+        $id = $request->id;
+        $name = $request->name;
+        $description = $request->description;
+        $details = $request->details;
+        
+        return $this->updateCareerQuestionFunc($id, $name, $description, $details);
+    }
+
+    public function updateCareerQuestionFunc($id, $name, $description, $details)
+    {
         $career_question = CareerV2Question::find($id);
         if($career_question === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-        $career_question->name = $request->get('name');
-        $career_question->description = $request->get('description');
+        $career_question->name = $name;
+        $career_question->description = $description;
         $career_question->updated_at = date('Y-m-d H:i:s');
-        $details = $request->details;
         try{
             $i = 1;
             if(count($details)){
@@ -488,6 +521,11 @@ class CareerV2Service{
         if($access["success"] === false) return $access;
 
         $id = $request->get('id');
+        return  $this->deleteCareerQuestionFunc($id);
+    }
+
+    public function deleteCareerQuestionFunc($id)
+    {
         $career_question = CareerV2Question::find($id);
         if($career_question === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
 
