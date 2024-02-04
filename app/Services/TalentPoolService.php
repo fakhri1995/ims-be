@@ -13,6 +13,7 @@ use App\TalentPoolShare;
 use App\TalentPoolShareCut;
 use App\TalentPoolShareMark;
 use App\User;
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -54,6 +55,7 @@ class TalentPoolService
             $talentPools = TalentPool::query()
                 ->with(["resume" => function ($q1) {
                     $q1
+                        ->onlyMaskingName()
                         ->with('profileImage')
                         ->with("lastEducation")
                         ->with("lastAssessment")
@@ -127,7 +129,15 @@ class TalentPoolService
                                 });
                         });
                         if ($keyword) {
-                            $q1->orWhere('name', 'like', '%' . $keyword . '%');
+                            // $q1->orWhere('name', 'like', '%' . $keyword . '%');
+                            $q1->orWhere(DB::raw("CONCAT(
+                                SUBSTRING_INDEX(name, ' ', 1),
+                                IF(LENGTH(name) - LENGTH(REPLACE(name, ' ', '')) > 0, ' ', ''),
+                                IF(LENGTH(name) - LENGTH(REPLACE(name, ' ', '')) > 0,
+                                  SUBSTRING( SUBSTRING_INDEX(name, ' ', -1), 1, 1),
+                                  ''
+                                )
+                              ) AS name"), 'like', '%' . $keyword . '%');
                         }
                     }
                 });
@@ -139,8 +149,8 @@ class TalentPoolService
             $rows = $request->rows ?? 10;
             $talentPools = $talentPools->paginate($rows);
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $talentPools, "status" => 200];
-        } catch (\Exception $err) {
-            return ["success" => false, "message" => $err, "status" => 400];
+        } catch (\Throwable $err) {
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
         }
     }
 
@@ -163,6 +173,7 @@ class TalentPoolService
             $talentPool = TalentPool::query()
                 ->with(["resume" => function ($q1) {
                     $q1
+                        ->onlyMaskingName()
                         ->with('profileImage')
                         ->with(["lastEducation" => function ($q2) {
                             $q2->select('resume_id', 'university');
@@ -276,16 +287,16 @@ class TalentPoolService
                 ELSE YEAR(start_date)
                 END AS year'));
                 }]);
-                // ->with(["lastEducation" => function ($q) {
-                //     $q->select('resume_educations.resume_id', 'resume_educations.university');
-                // }])
-                // ->with(["lastAssessment" => function ($q) {
-                //     $q->select('resume_assessments.id', 'resume_assessments.name');
-                // }])
-                // ->with('skills')
-                // ->with(['lastExperience' => function ($q) {
-                //     $q->select('resume_experiences.id', 'resume_experiences.role');
-                // }]);
+            // ->with(["lastEducation" => function ($q) {
+            //     $q->select('resume_educations.resume_id', 'resume_educations.university');
+            // }])
+            // ->with(["lastAssessment" => function ($q) {
+            //     $q->select('resume_assessments.id', 'resume_assessments.name');
+            // }])
+            // ->with('skills')
+            // ->with(['lastExperience' => function ($q) {
+            //     $q->select('resume_experiences.id', 'resume_experiences.role');
+            // }]);
 
             if ($keyword) {
                 $cadidates = $cadidates->where('name', 'like',  '%' . $keyword . '%');
@@ -559,6 +570,7 @@ class TalentPoolService
             $talentPools = TalentPool::query()
                 ->with(["resume" => function ($q1) {
                     $q1
+                        ->onlyMaskingName()
                         ->with('profileImage')
                         ->with("lastEducation")
                         ->with("lastAssessment")
@@ -633,7 +645,15 @@ class TalentPoolService
                                 });
                         });
                         if ($keyword) {
-                            $q1->orWhere('name', 'like', '%' . $keyword . '%');
+                            // $q1->orWhere('name', 'like', '%' . $keyword . '%');
+                            $q1->orWhere(DB::raw("CONCAT(
+                                SUBSTRING_INDEX(name, ' ', 1),
+                                IF(LENGTH(name) - LENGTH(REPLACE(name, ' ', '')) > 0, ' ', ''),
+                                IF(LENGTH(name) - LENGTH(REPLACE(name, ' ', '')) > 0,
+                                  SUBSTRING( SUBSTRING_INDEX(name, ' ', -1), 1, 1),
+                                  ''
+                                )
+                              ) AS name"), 'like', '%' . $keyword . '%');
                         }
                     }
                 });
@@ -660,7 +680,7 @@ class TalentPoolService
         }
 
         $id = $request->id;
-        $resume = Resume::with(['educations', 'experiences', 'projects', 'skills', 'trainings', 'certificates', 'achievements', 'assessment', 'assessmentResults', 'summaries', 'profileImage'])->find($id);
+        $resume = Resume::with(['educations', 'experiences', 'projects', 'skills', 'trainings', 'certificates', 'achievements', 'assessment', 'assessmentResults', 'summaries', 'profileImage'])->onlyMaskingName()->find($id);
         if (!$resume) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
         try {
