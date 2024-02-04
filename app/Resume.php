@@ -5,17 +5,30 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class Resume extends Model
 {
     use SoftDeletes;
     public $timestamps = false;
 
+    public function scopeOnlyMaskingName($query)
+    {
+        return $query->select('*', DB::raw("CONCAT(
+            SUBSTRING_INDEX(name, ' ', 1),
+            IF(LENGTH(name) - LENGTH(REPLACE(name, ' ', '')) > 0, ' ', ''),
+            IF(LENGTH(name) - LENGTH(REPLACE(name, ' ', '')) > 0,
+              SUBSTRING( SUBSTRING_INDEX(name, ' ', -1), 1, 1),
+              ''
+            )
+          ) AS name"));
+    }
+
     public function profileImage()
     {
         return $this->morphOne(File::class, 'fileable')->select('id', 'link', 'description', 'fileable_id', 'fileable_type')->latest('id')->withDefault([
             'id' => 0,
-            'link' => env('APP_ENV').'/Users/default_user.png',
+            'link' => env('APP_ENV') . '/Users/default_user.png',
             'description' => "profile_image"
         ]);
     }
