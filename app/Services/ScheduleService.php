@@ -237,14 +237,14 @@ class ScheduleService
         try {
             $schedule = Schedule::query()->with(['shift'])
                 ->where('user_id', $request->user_id)
-                ->where('date', date('Y-m-d', $request->date))
+                ->where('date', date('Y-m-d', strtotime($request->date)))
                 ->first();
             if (!$schedule) {
                 return ["success" => false, "message" => "Data Schedule tidak ditemukan", "status" => 404];
             }
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $schedule, "status" => 200];
         } catch (\Exception $err) {
-            return ["success" => false, "message" => $err, "status" => 400];
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
         }
     }
 }
