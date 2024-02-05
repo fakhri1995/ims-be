@@ -226,6 +226,7 @@ class ScheduleService
         if ($access["success"] === false) return $access;
         $rules = [
             "user_id" => "numeric|required",
+            "date"    => "required|date_format:Y-m-d"
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -236,7 +237,7 @@ class ScheduleService
         try {
             $schedule = Schedule::query()->with(['shift'])
                 ->where('user_id', $request->user_id)
-                ->where('date', date('Y-m-d'))
+                ->where('date', date('Y-m-d', $request->date))
                 ->first();
             if (!$schedule) {
                 return ["success" => false, "message" => "Data Schedule tidak ditemukan", "status" => 404];
