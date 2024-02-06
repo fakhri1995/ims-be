@@ -63,7 +63,7 @@ class ScheduleController extends Controller
 
 
     public function getCurrentSchedule(Request $request){
-        $route_name = "ATTENDANCE_CURRENT_SCHEDULE_GET";
+        $route_name = "CURRENT_SCHEDULE_GET";
 
         $response = $this->scheduleService->getCurrentSchedule($request, $route_name);
         return response()->json($response, $response['status']);
