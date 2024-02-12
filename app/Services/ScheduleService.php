@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\RepeatScheduler;
 use App\Schedule;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
@@ -70,7 +72,7 @@ class ScheduleService
 
             return ["success" => true, "message" => "Daftar Berhasil Diambil", "data" => $users, "status" => 200];
         } catch (\Exception $err) {
-            return ["success" => false, "message" => $err, "status" => 400];
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
         }
     }
 
@@ -94,7 +96,7 @@ class ScheduleService
             }
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $schedule, "status" => 200];
         } catch (\Exception $err) {
-            return ["success" => false, "message" => $err, "status" => 400];
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
         }
     }
 
@@ -107,6 +109,12 @@ class ScheduleService
             'user_ids.*' => 'numeric|exists:users,id',
             'shift_id' => 'required|numeric|exists:shifts,id',
             'date' => 'required|date_format:Y-m-d',
+            'start_date' => 'nullable|date_format:Y-m-d',
+            'end_date' => 'nullable|date_format:Y-m-d',
+            'repeats' => 'nullable|array',
+            'repeats.*' => 'nullable|numeric|between:0,6',
+            'forever' => 'nullable|boolean',
+
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
@@ -116,24 +124,105 @@ class ScheduleService
 
         try {
             DB::beginTransaction();
-            $exists = Schedule::query()
+
+            // cek apakah user udah punya schedule selama nya
+            $scheduler = RepeatScheduler::query()
                 ->whereIn('user_id', $request->user_ids)
-                ->where('date', $request->date)
-                ->with('user')
                 ->first();
-            if ($exists) return ["success" => false, "message" => 'Terdapat User yang sudah mempunyai jadwal', "data" => $exists, "status" => 400];
+            if ($scheduler) return ["success" => false, "message" => 'Terdapat User yang sudah mempunyai jadwal.', "data" => null, "status" => 400];
+
+            $dates = [];
+            // jika diulangi dengan range tanggal
+            if (count($request->repeats) && ($request->start_date && $request->end_date)) {
+                $startDate = Carbon::parse($request->start_date);
+                $endDate = Carbon::parse($request->end_date);
+
+                $currentDate = $startDate->copy();
+                while ($currentDate->lessThanOrEqualTo($endDate)) {
+                    $index_day = date('w', strtotime($currentDate));
+                    if (in_array($index_day, $request->repeats)) {
+                        array_push($dates, date('Y-m-d', strtotime($currentDate)));
+                    }
+                    $currentDate->addDay();
+                }
+            }
+            // jika di ulangi selama nya
+            else if (count($request->repeats) && $request->forever) {
+                // Ambil tanggal dari request
+                $startDate = Carbon::createFromFormat('Y-m-d', $request->date);
+                // Tambahkan 3 bulan dari start date
+                $endDate = $startDate->copy()->addMonths(3);
+                // Tambahkan 1 hari dari end date
+                $schedulerDate = $endDate->copy()->addDay();
+
+                $inserts = [];
+                foreach ($request->user_ids as $user_id) {
+                    array_push($inserts, [
+                        "user_id" => $user_id,
+                        "shift_id" => $request->shift_id,
+                        "date" => $schedulerDate,
+                        "repeats" => json_encode($request->repeats),
+                        "created_at" => date('Y-m-d H:i:s')
+                    ]);
+                }
+                DB::table('repeat_scheduler')->insert($inserts);
+                unset($inserts);
+
+                $currentDate = $startDate->copy();
+                while ($currentDate->lessThanOrEqualTo($endDate)) {
+                    $index_day = date('w', strtotime($currentDate));
+                    if (in_array($index_day, $request->repeats)) {
+                        array_push($dates, date('Y-m-d', strtotime($currentDate)));
+                    }
+                    $currentDate->addDay();
+                }
+            }
+            // jika tidak diulangi
+            else {
+                $exists = Schedule::query()
+                    ->whereIn('user_id', $request->user_ids)
+                    ->where('date', $request->date)
+                    ->with('user')
+                    ->first();
+                if ($exists) return ["success" => false, "message" => 'Terdapat User yang sudah mempunyai jadwal', "data" => $exists, "status" => 400];
+            }
+
+            if (count($dates)) {
+                $existsMany = Schedule::query()
+                    ->whereIn('user_id', $request->user_ids)
+                    ->whereIn('date', $dates)
+                    ->with('user')
+                    ->latest('date')
+                    ->first();
+                if ($existsMany) return ["success" => false, "message" => 'Terdapat User yang sudah mempunyai jadwal..', "data" => $existsMany, "status" => 400];
+            }
+
             foreach ($request->user_ids as $user_id) {
-                $schedule = new Schedule();
-                $schedule->user_id = $user_id;
-                $schedule->shift_id = $request->shift_id;
-                $schedule->date = $request->date;
-                $schedule->save();
+                if (!count($dates)) {
+                    $schedule = new Schedule();
+                    $schedule->user_id = $user_id;
+                    $schedule->shift_id = $request->shift_id;
+                    $schedule->date = $request->date;
+                    $schedule->save();
+                } else {
+                    $inserts = [];
+                    foreach ($dates as $date) {
+                        array_push($inserts, [
+                            "user_id" => $user_id,
+                            "shift_id" => $request->shift_id,
+                            "date" => $date,
+                            "created_at" => date('Y-m-d H:i:s')
+                        ]);
+                    }
+                    DB::table('schedules')->insert($inserts);
+                    unset($inserts);
+                }
             }
             DB::commit();
             return ["success" => true, "message" => "Data Berhasil Ditambah", "status" => 200];
         } catch (\Exception $err) {
             DB::rollBack();
-            return ["success" => false, "message" => $err, "status" => 400];
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
         }
     }
 
@@ -160,7 +249,7 @@ class ScheduleService
             $schedule->save();
             return ["success" => true, "message" => "Data Berhasil Diperbarui", "data" => $schedule, "status" => 200];
         } catch (\Exception $err) {
-            return ["success" => false, "message" => $err, "status" => 400];
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
         }
     }
 
@@ -186,7 +275,7 @@ class ScheduleService
 
             return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $schedule, "status" => 200];
         } catch (\Exception $err) {
-            return ["success" => false, "message" => $err, "status" => 400];
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
         }
     }
 
@@ -212,11 +301,12 @@ class ScheduleService
                     $schedule->delete();
                 }
             }
+            RepeatScheduler::whereIn('user_id', $request->user_ids)->delete();
             DB::commit();
             return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => null, "status" => 200];
         } catch (\Exception $err) {
             DB::rollBack();
-            return ["success" => false, "message" => $err, "status" => 400];
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
         }
     }
 
