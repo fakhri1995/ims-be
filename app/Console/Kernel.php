@@ -19,6 +19,7 @@ use App\Console\Commands\GenerateThricePerYearTask;
 use App\Console\Commands\GenerateTwicePerMonthTask;
 use App\Console\Commands\GenerateFourTimesPerYearTask;
 use App\Console\Commands\GenerateOneHourLeftTaskNotification;
+use App\Console\Commands\GenerateScheduleAttendance;
 use App\Console\Commands\RaiseLastPeriodPayslip;
 use App\Console\Commands\SendAndroidNotificationActivity;
 use App\Console\Commands\SendAndroidNotificationCheckIn;
@@ -54,6 +55,7 @@ class Kernel extends ConsoleKernel
         SetEncryptionEmployee::class,
         SetStartEndDateFromGraduationYear::class,
         SetGetMostCommit::class,
+        GenerateScheduleAttendance::class,
     ];
 
     /**
@@ -79,5 +81,10 @@ class Kernel extends ConsoleKernel
         $schedule->command(GenerateThricePerYearTask::class)->cron('0 0 1 */4 *')->runInBackground();
         $schedule->command(GenerateFourTimesPerYearTask::class)->cron('0 0 1 */3 *')->runInBackground();
         $schedule->command(RaiseLastPeriodPayslip::class)->cron('35 0 1 * *')->runInBackground();
+        $schedule->command('task:generate-schedules-attendance 1')->cron('*/15 1-2 * * *')->runInBackground();
+        $schedule->command('task:generate-schedules-attendance 2')->cron('*/15 1-2 * * *')->runInBackground();
+        $schedule->command('task:generate-schedules-attendance 3')->cron('*/15 1-2 * * *')->runInBackground();
+        $schedule->command('task:generate-schedules-attendance 4')->cron('*/15 1-2 * * *')->runInBackground();
+        $schedule->command('task:generate-schedules-attendance 5')->cron('*/15 1-2 * * *')->runInBackground();
     }
 }
