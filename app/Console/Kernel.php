@@ -81,10 +81,17 @@ class Kernel extends ConsoleKernel
         $schedule->command(GenerateThricePerYearTask::class)->cron('0 0 1 */4 *')->runInBackground();
         $schedule->command(GenerateFourTimesPerYearTask::class)->cron('0 0 1 */3 *')->runInBackground();
         $schedule->command(RaiseLastPeriodPayslip::class)->cron('35 0 1 * *')->runInBackground();
+
         $schedule->command('task:generate-schedules-attendance 1')->cron('*/15 1-2 * * *')->runInBackground();
         $schedule->command('task:generate-schedules-attendance 2')->cron('*/15 1-2 * * *')->runInBackground();
         $schedule->command('task:generate-schedules-attendance 3')->cron('*/15 1-2 * * *')->runInBackground();
         $schedule->command('task:generate-schedules-attendance 4')->cron('*/15 1-2 * * *')->runInBackground();
         $schedule->command('task:generate-schedules-attendance 5')->cron('*/15 1-2 * * *')->runInBackground();
+
+        $schedule->command('exclusive:set-display-order-resume 1')->cron('*/30 1-2 * * *')->runInBackground();
+        $schedule->command('exclusive:set-display-order-resume 2')->cron('*/30 1-2 * * *')->runInBackground();
+        $schedule->command('exclusive:set-display-order-resume 3')->cron('*/30 1-2 * * *')->runInBackground();
+        $schedule->command('exclusive:set-display-order-resume 4')->cron('*/30 1-2 * * *')->runInBackground();
+        $schedule->command('exclusive:set-display-order-resume 5')->cron('*/30 1-2 * * *')->runInBackground();
     }
 }
