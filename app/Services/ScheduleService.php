@@ -128,6 +128,9 @@ class ScheduleService
             // cek apakah user udah punya schedule selama nya
             $scheduler = RepeatScheduler::query()
                 ->whereIn('user_id', $request->user_ids)
+                ->when(count($request->repeats), function ($q) use ($request) {
+                    $q->where('repeats', 'like', '%' . implode(', ', $request->repeats) . '%');
+                })
                 ->first();
             if ($scheduler) return ["success" => false, "message" => 'Terdapat User yang sudah mempunyai jadwal.', "data" => null, "status" => 400];
 
