@@ -858,7 +858,7 @@ class TaskService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $is_group = $request->get('is_group', true);
+        $is_group = $request->get('is_group');
         $assign_ids = $request->get('assign_ids', []);
         $inventory_ids = $request->get('inventory_ids', []);
         $task_type_id = $request->get('task_type_id');
