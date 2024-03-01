@@ -62,7 +62,7 @@ class ScheduleService
                                 ->where(DB::raw("CONCAT(IFNULL(top_parent.name, ''), '-', companies.name)"), 'like', '%' . $keyword . '%');
                         });
                 });
-            });
+            })->where('is_enable', 0);
 
             $users = $users->paginate($request->rows);
             foreach ($users as $user) {
@@ -247,6 +247,9 @@ class ScheduleService
             $schedule = Schedule::query()->with(['user'])->find($request->id);
             if (!$schedule) {
                 return ["success" => false, "message" => "Data Schedule tidak ditemukan", "status" => 404];
+            }
+            if($schedule->date < date('Y-m-d')){
+                return ["success" => false, "message" => "Tidak bisa mengedit data yang sudah lewat", "status" => 404];
             }
             $schedule->shift_id = $request->shift_id;
             $schedule->save();
