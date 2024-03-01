@@ -62,7 +62,7 @@ class ScheduleService
                                 ->where(DB::raw("CONCAT(IFNULL(top_parent.name, ''), '-', companies.name)"), 'like', '%' . $keyword . '%');
                         });
                 });
-            })->where('is_enable', 0);
+            })->where('is_enabled', 0);
 
             $users = $users->paginate($request->rows);
             foreach ($users as $user) {
