@@ -891,6 +891,7 @@ class AttendanceService{
         else {
             // if($check_in_time == null || $check_in_time == '00:00:00') return false;
             // else if($date_time_split[1] > $check_in_time) return true;
+            if ($schedule->shift->start_at == '00:00:00' && $schedule->shift->end_at == '00:00:00') return false;
             if ($check_in_time && ($date_time_split[1] > $check_in_time)) return true;
             else return false;
         }
