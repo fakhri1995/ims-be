@@ -255,7 +255,7 @@ class ResumeService
                 $education->university = $requestEducation->university;
                 $education->major = $requestEducation->major;
                 $education->gpa = !$requestEducation->gpa ? NULL : $requestEducation->gpa;
-                $education->start_date = $requestEducation->start_date ? date('Y-m-01', strtotime($requestEducation->start_date)): null;
+                $education->start_date = $requestEducation->start_date ? date('Y-m-01', strtotime($requestEducation->start_date)) : null;
                 $education->end_date = $requestEducation->end_date ? date('Y-m-t', strtotime($requestEducation->end_date . '-01')) : null;
 
                 $educations = new ResumeEducation();
@@ -577,6 +577,12 @@ class ResumeService
                         $add = $fileService->addFile($resume->id, $file, $table, $description, $folder_detail);
                     }
 
+                    if (isset($requestBasicInformation->profile_image)) {
+                        if (empty($requestBasicInformation->profile_image) && $resume->profileImage) {
+                            $del = $fileService->deleteForceFile($resume->profileImage->id);
+                        }
+                    }
+
                     $assessment = ResumeAssessment::with("details")->find($assessment_id);
                     if (!$assessment) return ["success" => false, "message" => "Data Assessment Tidak Ditemukan", "status" => 400];
                     $resumeAssessmentResultsObjArr = [];
@@ -615,7 +621,7 @@ class ResumeService
                 $education->university = $requestEducation->university;
                 $education->major = $requestEducation->major;
                 $education->gpa = !$requestEducation->gpa ? NULL : $requestEducation->gpa;
-                $education->start_date = $requestEducation->start_date ? date('Y-m-01', strtotime($requestEducation->start_date)): null;
+                $education->start_date = $requestEducation->start_date ? date('Y-m-01', strtotime($requestEducation->start_date)) : null;
                 $education->end_date = $requestEducation->end_date ? date('Y-m-t', strtotime($requestEducation->end_date . '-01')) : null;
 
                 $educations = new ResumeEducation();
@@ -972,7 +978,7 @@ class ResumeService
                 try {
                     DB::beginTransaction();
                     if ($model->display_order === 1) {
-                        $rotation = $resume->educations()->where('display_order', '!=', 1)->sortBy('display_order','asc')->first();
+                        $rotation = $resume->educations()->where('display_order', '!=', 1)->sortBy('display_order', 'asc')->first();
                         if ($rotation) {
                             $rotation->display_order = 1;
                             $rotation->save();
@@ -991,7 +997,7 @@ class ResumeService
                 try {
                     DB::beginTransaction();
                     if ($model->display_order === 1) {
-                        $rotation = $resume->experiences()->where('display_order', '!=', 1)->sortBy('display_order','asc')->first();
+                        $rotation = $resume->experiences()->where('display_order', '!=', 1)->sortBy('display_order', 'asc')->first();
                         if ($rotation) {
                             $rotation->display_order = 1;
                             $rotation->save();
@@ -1010,7 +1016,7 @@ class ResumeService
                 try {
                     DB::beginTransaction();
                     if ($model->display_order === 1) {
-                        $rotation = $resume->projects()->where('display_order', '!=', 1)->sortBy('display_order','asc')->first();
+                        $rotation = $resume->projects()->where('display_order', '!=', 1)->sortBy('display_order', 'asc')->first();
                         if ($rotation) {
                             $rotation->display_order = 1;
                             $rotation->save();
@@ -1034,7 +1040,7 @@ class ResumeService
                 try {
                     DB::beginTransaction();
                     if ($model->display_order === 1) {
-                        $rotation = $resume->trainings()->where('display_order', '!=', 1)->sortBy('display_order','asc')->first();
+                        $rotation = $resume->trainings()->where('display_order', '!=', 1)->sortBy('display_order', 'asc')->first();
                         if ($rotation) {
                             $rotation->display_order = 1;
                             $rotation->save();
@@ -1053,7 +1059,7 @@ class ResumeService
                 try {
                     DB::beginTransaction();
                     if ($model->display_order === 1) {
-                        $rotation = $resume->certificates()->where('display_order', '!=', 1)->sortBy('display_order','asc')->first();
+                        $rotation = $resume->certificates()->where('display_order', '!=', 1)->sortBy('display_order', 'asc')->first();
                         if ($rotation) {
                             $rotation->display_order = 1;
                             $rotation->save();
@@ -1072,7 +1078,7 @@ class ResumeService
                 try {
                     DB::beginTransaction();
                     if ($model->display_order === 1) {
-                        $rotation = $resume->achievements()->where('display_order', '!=', 1)->sortBy('display_order','asc')->first();
+                        $rotation = $resume->achievements()->where('display_order', '!=', 1)->sortBy('display_order', 'asc')->first();
                         if ($rotation) {
                             $rotation->display_order = 1;
                             $rotation->save();
