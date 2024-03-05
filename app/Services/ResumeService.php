@@ -578,7 +578,7 @@ class ResumeService
                     }
 
                     if (isset($requestBasicInformation->profile_image)) {
-                        if (empty($requestBasicInformation->profile_image) && $resume->profileImage) {
+                        if (empty($requestBasicInformation->profile_image) && $resume->profileImage->id) {
                             $fileService = new FileService;
                             $del = $fileService->deleteForceFile($resume->profileImage->id);
                         }
