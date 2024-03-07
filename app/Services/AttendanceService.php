@@ -859,24 +859,24 @@ class AttendanceService{
     {
         $date_time_split = explode(' ', $current_timestamp);
         $today_user_attendance = AttendanceUser::select('id', 'user_id', 'check_in', 'is_late')->where('user_id', $login_id)->whereDate('check_in', '=', $date_time_split[0])->first();
-        // $user_company_id = auth()->user()->company_id;
-        // $company = Company::find($user_company_id);
+        $user_company_id = auth()->user()->company_id;
+        $company = Company::find($user_company_id);
         $check_in_time = null;
 
-        // //* get check in time
-        // if($company->id == 1) $check_in_time = $company->check_in_time;
-        // else if($company->role == 3) {
-        //     $top_parent_company = Company::find(1);
-        //     $check_in_time = $top_parent_company->check_in_time;
-        // }
-        // else{
-        //     $top_parent_id = $company->getTopParent()->id;
-        //     if($top_parent_id == null) $check_in_time = $company->check_in_time;
-        //     else {
-        //         $top_parent_company = Company::find($top_parent_id);
-        //         $check_in_time = $top_parent_company->check_in_time;
-        //     }
-        // }
+        //* get check in time
+        if($company->id == 1) $check_in_time = $company->check_in_time;
+        else if($company->role == 3) {
+            $top_parent_company = Company::find(1);
+            $check_in_time = $top_parent_company->check_in_time;
+        }
+        else{
+            $top_parent_id = $company->getTopParent()->id;
+            if($top_parent_id == null) $check_in_time = $company->check_in_time;
+            else {
+                $top_parent_company = Company::find($top_parent_id);
+                $check_in_time = $top_parent_company->check_in_time;
+            }
+        }
 
         // Get current Schedule
         $schedule = Schedule::query()->with(['shift'])
