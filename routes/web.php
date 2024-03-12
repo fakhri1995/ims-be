@@ -728,6 +728,15 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->delete('/deleteSchedule', 'ScheduleController@deleteSchedule');
     $router->delete('/deleteAllSchedule', 'ScheduleController@deleteAllSchedule');
     $router->get('/getCurrentSchedule', 'ScheduleController@getCurrentSchedule');
+
+    // Announcement
+    $router->get('/getAnnouncements', 'AnnouncementController@getAnnouncements');
+    $router->get('/getAnnouncement', 'AnnouncementController@getAnnouncement');
+    $router->post('/addAnnouncement', 'AnnouncementController@addAnnouncement');
+    $router->put('/updateAnnouncement', 'AnnouncementController@updateAnnouncement');
+    $router->delete('/deleteAnnouncement', 'AnnouncementController@deleteAnnouncement');
+    $router->get('/getAnnouncementEmployee', 'AnnouncementController@getAnnouncementEmployee');
+    $router->get('/getAnnouncementMore', 'AnnouncementController@getAnnouncementMore');
 });
 
 $router->group([], function ($router) {
