@@ -88,10 +88,10 @@ class Kernel extends ConsoleKernel
         $schedule->command('task:generate-schedules-attendance 4')->cron('*/15 1-2 * * *')->runInBackground();
         $schedule->command('task:generate-schedules-attendance 5')->cron('*/15 1-2 * * *')->runInBackground();
 
-        $schedule->command('exclusive:set-display-order-resume 1')->cron('*/30 1-2 * * *')->runInBackground();
-        $schedule->command('exclusive:set-display-order-resume 2')->cron('*/30 1-2 * * *')->runInBackground();
-        $schedule->command('exclusive:set-display-order-resume 3')->cron('*/30 1-2 * * *')->runInBackground();
-        $schedule->command('exclusive:set-display-order-resume 4')->cron('*/30 1-2 * * *')->runInBackground();
-        $schedule->command('exclusive:set-display-order-resume 5')->cron('*/30 1-2 * * *')->runInBackground();
+        $schedule->command('exclusive:set-display-order-resume 1')->cron('0 * * * *')->runInBackground();
+        $schedule->command('exclusive:set-display-order-resume 2')->cron('0 * * * *')->runInBackground();
+        $schedule->command('exclusive:set-display-order-resume 3')->cron('0 * * * *')->runInBackground();
+        $schedule->command('exclusive:set-display-order-resume 4')->cron('0 * * * *')->runInBackground();
+        $schedule->command('exclusive:set-display-order-resume 5')->cron('0 * * * *')->runInBackground();
     }
 }
