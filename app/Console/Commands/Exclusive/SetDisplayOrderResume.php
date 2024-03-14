@@ -48,7 +48,7 @@ class SetDisplayOrderResume extends Command
         $page = (int) $this->argument('page') ?? 1;
         $rows = 200;
 
-        // dump('memulai proses');
+        dump('memulai proses');
         $resumes = Resume::query()->orderBy('id', 'DESC')
             ->where(function ($query) {
                 $query
@@ -85,7 +85,7 @@ class SetDisplayOrderResume extends Command
             })
             ->simplePaginate($rows, ['*'], 'page', $page);
 
-        // dump(count($resumes) . ' data akan di proses');
+        dump(count($resumes) . ' data akan di proses');
         foreach ($resumes as $list) {
             try {
                 DB::beginTransaction();
@@ -164,17 +164,16 @@ class SetDisplayOrderResume extends Command
 
                 DB::commit();
                 if ($checkExperience || $checkProject || $checkAchievement || $checkEducation || $checkCertificate || $checkTraining) {
-                    dump($checkExperience ? $checkExperience->id : null, $checkProject ? $checkProject->id : null, $checkAchievement ? $checkAchievement->id : null, $checkEducation ? $checkEducation->id : null, $checkCertificate ? $checkCertificate->id : null, $checkTraining ? $checkTraining->id : null);
-                    // dump('berhasil set resume id => ' . $list->id);
+                    dump('berhasil set resume id => ' . $list->id);
                 } else {
-                    // dump('resume id => ' . $list->id . ' sudah di set sebelumnya atau tidak ada yang harus di set');
+                    dump('resume id => ' . $list->id . ' sudah di set sebelumnya atau tidak ada yang harus di set');
                 }
             } catch (\Error $err) {
                 DB::rollBack();
-                // dump('error di resume id => ' . $list->id);
-                // dump('errornya :');
-                // dump($err->getMessage());
-                // dump('====================');
+                dump('error di resume id => ' . $list->id);
+                dump('errornya :');
+                dump($err->getMessage());
+                dump('====================');
             }
         }
     }
