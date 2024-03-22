@@ -57,14 +57,14 @@ class AnnouncementController extends Controller
     // FOR EMPLOYEE ==================
 
     public function getAnnouncementEmployee(Request $request){
-        $route_name = "";
+        $route_name = "ANNOUNCEMENT_EMPLOYEE_GET";
 
         $response = $this->AnnouncementService->getAnnouncementEmployee($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
     public function getAnnouncementMore(Request $request){
-        $route_name = "";
+        $route_name = "ANNOUNCEMENT_MORE_GET";
 
         $response = $this->AnnouncementService->getAnnouncementMore($request, $route_name);
         return response()->json($response, $response['status']);

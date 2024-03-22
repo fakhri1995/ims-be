@@ -19,6 +19,7 @@ class CreateAnnouncementsTable extends Migration
             $table->string('title');
             $table->text('text');
             $table->timestamp('publish_at');
+            $table->boolean('push_notif')->default(false);
             $table->timestamps();
             $table->softDeletes();
         });

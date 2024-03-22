@@ -2,7 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\AccessFeature;
 use App\Announcement;
+use App\Role;
 use App\Services\CompanyService;
 use App\Services\GlobalService;
 use App\Services\NotificationService;
@@ -61,7 +63,7 @@ class SendAnnounceNotification extends Command
                 $need_push_notification = true;
                 $notificationable_id = $data->id;
                 $notificationable_type = 'App\Announcement';
-                $users = $this->getUserList($this->agent_role_id, true);
+                $users = $this->getUserList($this->agent_role_id, 'ANNOUNCEMENT_EMPLOYEE_GET');
                 $data->push_notif = true;
                 $data->save();
 
@@ -74,10 +76,18 @@ class SendAnnounceNotification extends Command
         }
     }
 
-    private function getUserList($role_id)
+    private function getUserList($role_id, $route_name)
     {
         $users = User::query()
             ->select('users.id')
+            ->whereHas('roles', function ($q) use ($route_name) {
+                $q->where(function ($q1) use ($route_name) {
+                    $q1->where('name', 'Super Admin')
+                        ->orWhereHas('features', function ($q2) use ($route_name) {
+                            $q2->where('name', $route_name);
+                        });
+                });
+            })
             ->where('users.role', $role_id);
 
         return $users->pluck('id');
