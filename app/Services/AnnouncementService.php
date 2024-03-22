@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Announcement;
+use App\Notification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Throwable;
@@ -53,7 +54,7 @@ class AnnouncementService
             return ["success" => false, "message" => $errors, "status" => 400];
         }
         try {
-            $data = Announcement::query()->with(['thumbnailImage','user'])->find($request->id);
+            $data = Announcement::query()->with(['thumbnailImage', 'user'])->find($request->id);
             if (!$data) {
                 return ["success" => false, "message" => "Data Announcement tidak ditemukan", "status" => 404];
             }
@@ -188,6 +189,7 @@ class AnnouncementService
                 $fileService = new FileService;
                 $del = $fileService->deleteForceFile($data->thumbnailImage->id);
             }
+            $this->removeNotification($data->id);
             $data->delete();
             DB::commit();
             return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $data, "status" => 200];
@@ -241,5 +243,12 @@ class AnnouncementService
         } catch (\Exception $err) {
             return ["success" => false, "message" => $err, "status" => 400];
         }
+    }
+
+    private function removeNotification($notificationable_id)
+    {
+        $notification = Notification::where('notificationable_id', $notificationable_id)->first();
+        $notification->users()->detach();
+        $notification->delete();
     }
 }
