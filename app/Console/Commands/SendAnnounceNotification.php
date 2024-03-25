@@ -51,7 +51,11 @@ class SendAnnounceNotification extends Command
     public function handle()
     {
 
-        $list = Announcement::query()->where('push_notif', false)->limit(5)->get();
+        $list = Announcement::query()
+            ->where('push_notif', false)
+            ->where('publish_at', '<=', date('Y-m-d H:i:s'))
+            ->limit(5)
+            ->get();
 
         foreach ($list as $data) {
             try {
