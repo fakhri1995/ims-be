@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\RepeatScheduler;
 use App\Schedule;
+use App\Shift;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -125,14 +126,21 @@ class ScheduleService
         try {
             DB::beginTransaction();
 
-            // cek apakah user udah punya schedule selama nya
-            $scheduler = RepeatScheduler::query()
-                ->whereIn('user_id', $request->user_ids)
-                ->when(count($request->repeats), function ($q) use ($request) {
-                    $q->where('repeats', 'like', '%' . implode(', ', $request->repeats) . '%');
-                })
-                ->first();
-            if ($scheduler) return ["success" => false, "message" => 'Terdapat User yang sudah mempunyai jadwal.', "data" => null, "status" => 400];
+            // cek shift apakah libur atau masuk
+            $shift = Shift::query()->find($request->shift_id);
+            if (!$shift) ["success" => false, "message" => 'Shift tidak ditemukan', "data" => null, "status" => 400];
+            $libur = $shift->start_at == '00:00:00' && $shift->end_at == '00:00:00';
+
+            if (!$libur) {
+                // cek apakah user udah punya schedule selama nya
+                $scheduler = RepeatScheduler::query()
+                    ->whereIn('user_id', $request->user_ids)
+                    ->when(count($request->repeats), function ($q) use ($request) {
+                        $q->where('repeats', 'like', '%' . implode(', ', $request->repeats) . '%');
+                    })
+                    ->first();
+                if ($scheduler) return ["success" => false, "message" => 'Terdapat User yang sudah mempunyai jadwal.', "data" => null, "status" => 400];
+            }
 
             $dates = [];
             // jika diulangi dengan range tanggal
@@ -182,43 +190,70 @@ class ScheduleService
             }
             // jika tidak diulangi
             else {
-                $exists = Schedule::query()
-                    ->whereIn('user_id', $request->user_ids)
-                    ->where('date', $request->date)
-                    ->with('user')
-                    ->first();
-                if ($exists) return ["success" => false, "message" => 'Terdapat User yang sudah mempunyai jadwal', "data" => $exists, "status" => 400];
+                if (!$libur) {
+                    $exists = Schedule::query()
+                        ->whereIn('user_id', $request->user_ids)
+                        ->where('date', $request->date)
+                        ->with('user')
+                        ->first();
+                    if ($exists) return ["success" => false, "message" => 'Terdapat User yang sudah mempunyai jadwal', "data" => $exists, "status" => 400];
+                }
             }
 
             if (count($dates)) {
-                $existsMany = Schedule::query()
-                    ->whereIn('user_id', $request->user_ids)
-                    ->whereIn('date', $dates)
-                    ->with('user')
-                    ->latest('date')
-                    ->first();
-                if ($existsMany) return ["success" => false, "message" => 'Terdapat User yang sudah mempunyai jadwal..', "data" => $existsMany, "status" => 400];
+                if (!$libur) {
+                    $existsMany = Schedule::query()
+                        ->whereIn('user_id', $request->user_ids)
+                        ->whereIn('date', $dates)
+                        ->with('user')
+                        ->latest('date')
+                        ->first();
+                    if ($existsMany) return ["success" => false, "message" => 'Terdapat User yang sudah mempunyai jadwal..', "data" => $existsMany, "status" => 400];
+                }
             }
 
             foreach ($request->user_ids as $user_id) {
                 if (!count($dates)) {
-                    $schedule = new Schedule();
-                    $schedule->user_id = $user_id;
-                    $schedule->shift_id = $request->shift_id;
-                    $schedule->date = $request->date;
-                    $schedule->save();
+                    if ($libur) {
+                        $schedule = Schedule::updateOrCreate(
+                            [
+                                'user_id' => $user_id,
+                                'date' => $request->date
+                            ],
+                            ['shift_id' => $request->shift_id]
+                        );
+                    } else {
+                        $schedule = new Schedule();
+                        $schedule->user_id = $user_id;
+                        $schedule->shift_id = $request->shift_id;
+                        $schedule->date = $request->date;
+                        $schedule->save();
+                    }
                 } else {
                     $inserts = [];
                     foreach ($dates as $date) {
-                        array_push($inserts, [
-                            "user_id" => $user_id,
-                            "shift_id" => $request->shift_id,
-                            "date" => $date,
-                            "created_at" => date('Y-m-d H:i:s')
-                        ]);
+
+                        if ($libur) {
+                            $schedule = Schedule::updateOrCreate(
+                                [
+                                    'user_id' => $user_id,
+                                    'date' => $date
+                                ],
+                                ['shift_id' => $request->shift_id]
+                            );
+                        } else {
+                            array_push($inserts, [
+                                "user_id" => $user_id,
+                                "shift_id" => $request->shift_id,
+                                "date" => $date,
+                                "created_at" => date('Y-m-d H:i:s')
+                            ]);
+                        }
                     }
-                    DB::table('schedules')->insert($inserts);
-                    unset($inserts);
+                    if (!$libur) {
+                        DB::table('schedules')->insert($inserts);
+                        unset($inserts);
+                    }
                 }
             }
             DB::commit();
@@ -248,7 +283,7 @@ class ScheduleService
             if (!$schedule) {
                 return ["success" => false, "message" => "Data Schedule tidak ditemukan", "status" => 404];
             }
-            if($schedule->date < date('Y-m-d')){
+            if ($schedule->date < date('Y-m-d')) {
                 return ["success" => false, "message" => "Tidak bisa mengedit data yang sudah lewat", "status" => 404];
             }
             $schedule->shift_id = $request->shift_id;
