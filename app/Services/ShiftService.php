@@ -28,7 +28,7 @@ class ShiftService
                         DATE_FORMAT(end_at, '%H:%i'), '-', DATE_FORMAT(start_break, '%H:%i'), '-',
                         DATE_FORMAT(end_break, '%H:%i'), '-', status)"), 'like', '%' . $keyword . '%');
                 })
-                ->paginate();
+                ->paginate($request->rows);
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $shift, "status" => 200];
         } catch (\Exception $err) {
             return ["success" => false, "message" => $err, "status" => 400];
@@ -88,7 +88,7 @@ class ShiftService
             $data->save();
             DB::commit();
             return ["success" => true, "message" => "Data Berhasil Ditambah", "status" => 200];
-        } catch (Exception $err) {
+        } catch (\Exception $err) {
             DB::rollBack();
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -127,7 +127,7 @@ class ShiftService
             $data->save();
             DB::commit();
             return ["success" => true, "message" => "Data Berhasil Perbarui", "status" => 200];
-        } catch (Exception $err) {
+        } catch (\Exception $err) {
             DB::rollBack();
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -156,7 +156,7 @@ class ShiftService
             $data->save();
             DB::commit();
             return ["success" => true, "message" => "Data Berhasil Diperbarui", "status" => 200];
-        } catch (Exception $err) {
+        } catch (\Exception $err) {
             DB::rollBack();
             return ["success" => false, "message" => $err, "status" => 400];
         }
