@@ -33,7 +33,7 @@ class AnnouncementService
                             $q1->where('name', 'like', '%' . $keyword . '%');
                         });
                 })
-                ->paginate();
+                ->paginate($request->rows);
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
         } catch (Throwable $err) {
             return ["success" => false, "message" => $err->getMessage(), "status" => 400];
