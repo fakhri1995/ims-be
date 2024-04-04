@@ -420,6 +420,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->get('/exportAttendanceActivityUser', 'AttendanceController@exportAttendanceActivityUser');
     $router->get('/exportAttendanceActivityUsers', 'AttendanceController@exportAttendanceActivityUsers');
     $router->post('/setAttendanceToggle', 'AttendanceController@setAttendanceToggle');
+    $router->get('/getTimeSheet', 'AttendanceController@getTimeSheet');
 
 
     //Attendance Project Routes

@@ -1397,4 +1397,45 @@ class AttendanceService{
             return ["success" => false, "message" => $err->getLine(), "status" => 400];
         }
     }
+
+    public function getTimeSheet($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $user_id = auth()->user()->id;
+        $from = $request->get('from', null);
+        $startDate = Carbon::parse($request->get('from', null));
+        $endDate = Carbon::parse($request->get('to', null));
+        $period = CarbonPeriod::create($startDate, $endDate);
+
+        foreach($period as $date){
+            $date_formatted = $date->format('Y-m-d');
+            $schedule = Schedule::with('shift')->where('user_id', $user_id)->whereDate('date', $date_formatted)->first();
+
+            $attendance = AttendanceUser::select('attendance_users.id', 'user_id', 'check_in', 'check_out', 'is_wfo')
+            ->where('user_id', $user_id)->whereDate('check_in', $date)->first();
+
+            $form = AttendanceActivity::where('user_id', $user_id)->whereDate('updated_at', $date)->get()->toArray();
+            $task = AttendanceTaskActivity::where('user_id', $user_id)->whereDate('updated_at', $date)->get()->toArray();
+            $activity = array_merge($form, $task);
+            if($schedule && in_array($schedule->shift->title, array("Libur Nasional", "Cuti Bersama"))) $activity = $schedule->shift->title;
+
+            $from = null;
+            $to = null;
+            $work = null;
+            if($attendance){
+                $from  = $attendance->check_in;
+                $to = $attendance->check_out;
+                $work = $attendance->is_wfo;
+            }
+            $timesheets[] = [
+                "date" => $date_formatted,
+                "from" => $from,
+                "to" => $to,
+                "work" => $work,
+                "daily activity" => $activity,
+            ];
+        }
+        return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $timesheets, "status" => 200];
+    }
 }
