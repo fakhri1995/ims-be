@@ -434,4 +434,12 @@ class AttendanceController extends Controller
         $response = $this->attendanceService->deleteAttendanceTaskActivity($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    public function getTimeSheet(Request $request)
+    {
+        $route_name = "TIME_SHEET_GET";
+
+        $response = $this->attendanceService->getTimeSheet($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }
