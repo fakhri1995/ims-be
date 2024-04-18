@@ -557,6 +557,9 @@ class CareerV2ApplyService{
             $recruitment->updated_at = date('Y-m-d H:i:s');
             $recruitment->created_by = auth()->user()->id;
             $recruitment->save();
+
+            $career->career_apply_status_id = 2;
+            $career->save();
             
             return ["success" => true, "message" => "Carrer Apply Berhasil di Export", "id" => $recruitment->id, "status" => 200];
         } catch(Exception $err){
