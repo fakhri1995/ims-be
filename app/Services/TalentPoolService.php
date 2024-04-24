@@ -653,7 +653,7 @@ class TalentPoolService
                                   SUBSTRING( SUBSTRING_INDEX(name, ' ', -1), 1, 1),
                                   ''
                                 )
-                              ) AS name"), 'like', '%' . $keyword . '%');
+                              )"), 'like', '%' . $keyword . '%');
                         }
                     }
                 });
