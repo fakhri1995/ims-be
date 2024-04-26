@@ -245,7 +245,9 @@ class CareerV2Service{
             "description" => "required",
             "is_posted" => "required|boolean",
             "qualification" => "required",
-            "question" => "array"
+            "question" => "filled|array",
+            "question.name" => "required_with:question",
+            "question.details" => "required_with:question",
         ]);
         
         if($validator->fails()){
