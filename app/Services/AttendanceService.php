@@ -1419,11 +1419,12 @@ class AttendanceService{
             $task = AttendanceTaskActivity::where('user_id', $user_id)->whereDate('updated_at', $date)->get()->toArray();
             $activity = array_merge($form, $task);
             if($schedule && in_array($schedule->shift->title, array("Libur Nasional", "Cuti Bersama", "Cuti Tahunan"))) $activity = $schedule->shift->title;
-            if(!$schedule) $activity = "Empty";
 
             $from = null;
             $to = null;
             $work = null;
+            
+            if($schedule && !$attendance) $activity = "Empty";
             if($attendance){
                 $from  = $attendance->check_in;
                 $to = $attendance->check_out;
