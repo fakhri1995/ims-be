@@ -1425,6 +1425,7 @@ class AttendanceService{
             $work = null;
             
             if($schedule && !$attendance) $activity = "Empty";
+            if(!$schedule && !$attendance) $activity = "Weekend";
             if($attendance){
                 $from  = $attendance->check_in;
                 $to = $attendance->check_out;
