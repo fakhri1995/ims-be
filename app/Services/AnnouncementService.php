@@ -22,6 +22,16 @@ class AnnouncementService
         $access = $this->globalService->checkRoute($route_name);
         if ($access["success"] === false) return $access;
         $keyword = $request->keyword;
+        $status = $request->status;
+        $orderBy = $request->order_by;
+        $orderTo = $request->order_to;
+
+        if (!$orderBy) {
+            $orderBy = 'id';
+        }
+        if (!$orderTo) {
+            'desc';
+        }
         try {
             $data = Announcement::query()
                 ->with(['user'])
@@ -33,6 +43,10 @@ class AnnouncementService
                             $q1->where('name', 'like', '%' . $keyword . '%');
                         });
                 })
+                ->when($status == 'published', function ($q) {
+                    $q->where('publish_at', '<=', date('Y-m-d H:i:s'));
+                })
+                ->orderBy($orderBy, $orderTo)
                 ->paginate($request->rows);
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
         } catch (Throwable $err) {

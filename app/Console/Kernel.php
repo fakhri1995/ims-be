@@ -8,6 +8,7 @@ use App\Console\Commands\SetOverdueTasks;
 use App\Console\Commands\SearchGeoLocation;
 use App\Console\Commands\AutoCheckOutAttendance;
 use App\Console\Commands\Exclusive\SetContractHistory;
+use App\Console\Commands\Exclusive\SetDayOffSchedule;
 use App\Console\Commands\Exclusive\SetDisplayOrderResume;
 use App\Console\Commands\Exclusive\SetEncryptionEmployee;
 use App\Console\Commands\Exclusive\SetGetMostCommit;
@@ -58,6 +59,7 @@ class Kernel extends ConsoleKernel
         SetGetMostCommit::class,
         GenerateScheduleAttendance::class,
         SendAnnounceNotification::class,
+        SetDayOffSchedule::class,
     ];
 
     /**
