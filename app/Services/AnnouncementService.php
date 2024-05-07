@@ -34,7 +34,7 @@ class AnnouncementService
         }
         try {
             $data = Announcement::query()
-                ->with(['user'])
+                ->with(['user', 'thumbnailImage'])
                 ->when($keyword, function ($q) use ($keyword) {
                     $q->where(DB::raw("CONCAT(
                         title,'-',
