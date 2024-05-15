@@ -738,6 +738,8 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->delete('/deleteAnnouncement', 'AnnouncementController@deleteAnnouncement');
     $router->get('/getAnnouncementEmployee', 'AnnouncementController@getAnnouncementEmployee');
     $router->get('/getAnnouncementMore', 'AnnouncementController@getAnnouncementMore');
+    $router->post('/sendMailAnnouncement', 'AnnouncementController@sendMailAnnouncement');
+    $router->get('/getMailAnnouncement', 'AnnouncementController@getMailAnnouncement');
 });
 
 $router->group([], function ($router) {
