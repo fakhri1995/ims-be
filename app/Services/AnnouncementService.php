@@ -3,6 +3,10 @@
 namespace App\Services;
 
 use App\Announcement;
+use App\AnnouncementMail;
+use App\AnnouncementMailGroup;
+use App\AnnouncementMailStaff;
+use App\Group;
 use App\Notification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -257,6 +261,78 @@ class AnnouncementService
         } catch (\Exception $err) {
             return ["success" => false, "message" => $err, "status" => 400];
         }
+    }
+
+    function sendMailAnnouncement($request, $route_name): array
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if ($access["success"] === false) return $access;
+        $rules = [
+            "id" => "numeric|required",
+            'purpose_type' => 'in:staff,group',
+            'purpose_ids' => 'array|required',
+            'purpose_ids.*' => 'numeric',
+            'publish_type' => 'in:now,pending',
+            'publish_at' => 'required_if:status,pending|date_format:Y-m-d H:i',
+        ];
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+        $data = Announcement::find($request->id);
+        if (!$data) {
+            return ["success" => false, "message" => "Data Announcement tidak ditemukan", "status" => 404];
+        }
+        try {
+            DB::beginTransaction();
+            $announce_mail = new AnnouncementMail();
+            $announce_mail->announcement_id = $data->id;
+            $announce_mail->publish_at = $request->publish_type == 'pending' ? date('Y-m-d H:i:00', strtotime($request->publish_at)) : date('Y-m-d H:i:00');
+            $announce_mail->save();
+            if ($request->purpose_type == 'staf') {
+                foreach ($request->purpose_ids as $purpose) {
+                    $announce_mail_staff = new AnnouncementMailStaff();
+                    $announce_mail_staff->announcement_mail_id = $announce_mail->id;
+                    $announce_mail_staff->user_id = $purpose;
+                    $announce_mail_staff->save();
+                }
+            } else if ($request->purpose_type == 'group') {
+                foreach ($request->purpose_ids as $purpose) {
+                    $announce_mail_staff = new AnnouncementMailGroup();
+                    $announce_mail_staff->announcement_mail_id = $announce_mail->id;
+                    $announce_mail_staff->group_id = $purpose;
+                    $announce_mail_staff->save();
+                }
+            }
+            DB::commit();
+            return ["success" => true, "message" => "Proses Berhasil", "data" => null, "status" => 200];
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            //throw $th;
+            return ["success" => false, "message" => $th->getMessage(), "status" => 400];
+        }
+    }
+
+    function getMailAnnouncement($request, $route_name): array
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if ($access["success"] === false) return $access;
+        $rules = [
+            "id" => "numeric|required",
+        ];
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $data = AnnouncementMail::query()
+            ->with(['result'])
+            ->where('announcement_id', $request->id)
+            ->paginate($request->rows ?? 10);
+
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
     }
 
     private function removeNotification($notificationable_id)

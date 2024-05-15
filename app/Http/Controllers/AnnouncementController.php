@@ -69,4 +69,18 @@ class AnnouncementController extends Controller
         $response = $this->AnnouncementService->getAnnouncementMore($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    public function sendMailAnnouncement(Request $request){
+        $route_name = "ANNOUNCEMENT_SEND_MAIL";
+
+        $response = $this->AnnouncementService->sendMailAnnouncement($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getMailAnnouncement(Request $request){
+        $route_name = "ANNOUNCEMENT_GET";
+
+        $response = $this->AnnouncementService->getMailAnnouncement($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }

@@ -23,4 +23,9 @@ class Announcement extends Model
     {
         return $this->hasOne(User::class, 'id', 'user_id');
     }
+
+    public function mail()
+    {
+        return $this->hasMany(AnnouncementMail::class, 'announcement_id', 'id');
+    }
 }
