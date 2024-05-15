@@ -1418,7 +1418,7 @@ class AttendanceService{
             $form = AttendanceActivity::where('user_id', $user_id)->whereDate('updated_at', $date)->get()->toArray();
             $task = AttendanceTaskActivity::where('user_id', $user_id)->whereDate('updated_at', $date)->get()->toArray();
             $activity = array_merge($form, $task);
-            if($schedule && in_array($schedule->shift->title, array("Libur Nasional", "Cuti Bersama", "Cuti Tahunan"))) $activity = $schedule->shift->title;
+            if(!$attendance && $schedule && in_array($schedule->shift->title, array("Libur Nasional", "Cuti Bersama", "Cuti Tahunan"))) $activity = $schedule->shift->title;
 
             $from = null;
             $to = null;
