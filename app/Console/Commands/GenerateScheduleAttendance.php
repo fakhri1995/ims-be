@@ -90,7 +90,7 @@ class GenerateScheduleAttendance extends Command
 
                 if (count($dates)) {
                     $existsMany = Schedule::query()
-                        ->whereIn('user_id', $item->user_ids)
+                        ->where('user_id', $item->user_id)
                         ->whereIn('date', $dates)
                         ->with('user')
                         ->latest('date')
