@@ -328,9 +328,25 @@ class AnnouncementService
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
+        $keyword = $request->keyword;
+
         $data = AnnouncementMail::query()
             ->with(['result', 'user.profileImage'])
             ->where('announcement_id', $request->id)
+            ->when($keyword, function($q) use($keyword){
+                $q->where(function($q2) use($keyword) {
+                    $q2->whereHas('staff', function($q3) use($keyword){
+                        $q3->whereHas('user', function($q4) use($keyword){
+                            $q4->where('name', 'like', '%'.$keyword.'%');
+                        });
+                    })
+                    ->orWhereHas('group', function($q3) use($keyword){
+                        $q3->whereHas('groups', function($q4) use($keyword){
+                            $q4->where('name', 'like', '%'.$keyword.'%');
+                        });
+                    });
+                });
+            })
             ->orderBy('id', 'desc')
             ->paginate($request->rows ?? 10);
 
