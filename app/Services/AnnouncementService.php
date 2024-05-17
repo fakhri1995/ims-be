@@ -291,7 +291,7 @@ class AnnouncementService
             $announce_mail->user_id = auth()->user()->id;
             $announce_mail->publish_at = $request->publish_type == 'pending' ? date('Y-m-d H:i:00', strtotime($request->publish_at)) : date('Y-m-d H:i:00');
             $announce_mail->save();
-            if ($request->purpose_type == 'staf') {
+            if ($request->purpose_type == 'staff') {
                 foreach ($request->purpose_ids as $purpose) {
                     $announce_mail_staff = new AnnouncementMailStaff();
                     $announce_mail_staff->announcement_mail_id = $announce_mail->id;
@@ -300,10 +300,10 @@ class AnnouncementService
                 }
             } else if ($request->purpose_type == 'group') {
                 foreach ($request->purpose_ids as $purpose) {
-                    $announce_mail_staff = new AnnouncementMailGroup();
-                    $announce_mail_staff->announcement_mail_id = $announce_mail->id;
-                    $announce_mail_staff->group_id = $purpose;
-                    $announce_mail_staff->save();
+                    $announce_mail_group = new AnnouncementMailGroup();
+                    $announce_mail_group->announcement_mail_id = $announce_mail->id;
+                    $announce_mail_group->group_id = $purpose;
+                    $announce_mail_group->save();
                 }
             }
             DB::commit();
@@ -331,6 +331,7 @@ class AnnouncementService
         $data = AnnouncementMail::query()
             ->with(['result', 'user.profileImage'])
             ->where('announcement_id', $request->id)
+            ->orderBy('id', 'desc')
             ->paginate($request->rows ?? 10);
 
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
