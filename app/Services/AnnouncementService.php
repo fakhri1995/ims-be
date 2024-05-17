@@ -288,6 +288,7 @@ class AnnouncementService
             DB::beginTransaction();
             $announce_mail = new AnnouncementMail();
             $announce_mail->announcement_id = $data->id;
+            $announce_mail->user_id = auth()->user()->id;
             $announce_mail->publish_at = $request->publish_type == 'pending' ? date('Y-m-d H:i:00', strtotime($request->publish_at)) : date('Y-m-d H:i:00');
             $announce_mail->save();
             if ($request->purpose_type == 'staf') {
@@ -328,7 +329,7 @@ class AnnouncementService
         }
 
         $data = AnnouncementMail::query()
-            ->with(['result'])
+            ->with(['result', 'user.profileImage'])
             ->where('announcement_id', $request->id)
             ->paginate($request->rows ?? 10);
 

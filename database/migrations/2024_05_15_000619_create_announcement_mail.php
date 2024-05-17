@@ -16,6 +16,7 @@ class CreateAnnouncementMail extends Migration
         Schema::create('announcement_mails', function (Blueprint $table) {
             $table->id();
             $table->integer('announcement_id', false, true);
+            $table->integer('user_id', false, true);
             $table->timestamp('publish_at');
             $table->boolean('is_send')->default(0);
             $table->timestamps();
@@ -29,6 +30,6 @@ class CreateAnnouncementMail extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('announcement_mail');
+        Schema::dropIfExists('announcement_mails');
     }
 }
