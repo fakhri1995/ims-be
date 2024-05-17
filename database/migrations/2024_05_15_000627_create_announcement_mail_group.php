@@ -28,6 +28,6 @@ class CreateAnnouncementMailGroup extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('announcement_mail_group');
+        Schema::dropIfExists('announcement_mail_groups');
     }
 }

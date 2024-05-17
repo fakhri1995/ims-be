@@ -28,6 +28,6 @@ class CreateAnnouncementMailResult extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('announcement_mail_result');
+        Schema::dropIfExists('announcement_mail_results');
     }
 }

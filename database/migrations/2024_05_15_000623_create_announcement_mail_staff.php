@@ -28,6 +28,6 @@ class CreateAnnouncementMailStaff extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('announcement_mail_staff');
+        Schema::dropIfExists('announcement_mail_staffs');
     }
 }

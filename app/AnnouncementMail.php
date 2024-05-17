@@ -13,6 +13,11 @@ class AnnouncementMail extends Model
         return $this->hasOne(Announcement::class, 'id', 'announcement_id');
     }
 
+    public function user()
+    {
+        return $this->hasOne(User::class, 'id', 'user_id');
+    }
+
     public function staff()
     {
         return $this->hasMany(AnnouncementMailStaff::class, 'announcement_mail_id', 'id');
