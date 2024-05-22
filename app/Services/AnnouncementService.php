@@ -356,7 +356,9 @@ class AnnouncementService
     private function removeNotification($notificationable_id)
     {
         $notification = Notification::where('notificationable_id', $notificationable_id)->first();
-        $notification->users()->detach();
-        $notification->delete();
+        if ($notification) {
+            $notification->users()->detach();
+            $notification->delete();
+        }
     }
 }
