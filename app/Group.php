@@ -17,6 +17,6 @@ class Group extends Model
 
     public function users()
     {
-        return $this->belongsToMany(User::class)->select('users.id','users.name');
+        return $this->belongsToMany(User::class)->select('users.id','users.name','users.email');
     }
 }
