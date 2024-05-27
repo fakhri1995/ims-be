@@ -239,6 +239,19 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->delete('/removeInventoryPart', 'AssetController@removeInventoryPart');
     $router->delete('/deleteInventory', 'AssetController@deleteInventory');
 
+    //Leave Routes
+    $router->get('/getLeaveStatuses','LeaveController@getLeaveStatuses');
+    $router->get('/getLeaves','LeaveController@getLeaves');
+    $router->get('/getLeave','LeaveController@getLeave');
+    $router->post('/addLeave','LeaveController@addLeave');
+    $router->delete('/deleteLeave','LeaveController@deleteLeave');
+    $router->put('/updateLeave','LeaveController@updateLeave');
+    $router->put('/approveLeave','LeaveController@approveLeave');
+    $router->get('/getLeaveTypes','LeaveController@getLeaveTypes');
+    $router->get('/getLeaveType','LeaveController@getLeaveType');
+    $router->post('/addLeaveType','LeaveController@addLeaveType');
+    $router->delete('/deleteLeaveType','LeaveController@deleteLeaveType');
+
     //Manufacturer Routes
     $router->get('/getManufacturers', 'AssetController@getManufacturers');
     $router->post('/addManufacturer', 'AssetController@addManufacturer');
