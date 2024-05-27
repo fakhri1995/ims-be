@@ -241,8 +241,6 @@ class CareerV2ApplyService{
             $careerApply->name = $request->name;
             $careerApply->email = $request->email;
             $careerApply->phone = $request->phone;
-            $careerApply->university = $request->university;
-            $careerApply->career_id = $request->career_id;
             $careerApply->career_apply_status_id = 1; //Unprocessed
             $careerApply->created_at = $current_timestamp;
             $careerApply->updated_at = $current_timestamp;
