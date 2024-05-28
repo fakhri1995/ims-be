@@ -10,6 +10,14 @@ class Announcement extends Model
 {
     use SoftDeletes;
 
+    protected $appends = [
+        'is_publish'
+    ];
+
+    public function getIsPublishAttribute() {
+        return (date('Y-m-d H:i:s', strtotime($this->attributes['publish_at'])) < date('Y-m-d H:i:s') );
+    }
+
     public function thumbnailImage()
     {
         return $this->morphOne(File::class, 'fileable')->select('id', 'link', 'description', 'fileable_id', 'fileable_type')->latest('id')->withDefault([
