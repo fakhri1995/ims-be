@@ -89,6 +89,13 @@ class LeaveController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function updateLeaveType(Request $request){
+        $route_name = "LEAVE_TYPE_UPDATE";
+
+        $response = $this->LeaveService->updateLeaveType($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function deleteLeaveType(Request $request){
         $route_name = "LEAVE_TYPE_DELETE";
 

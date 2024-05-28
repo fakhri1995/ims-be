@@ -62,7 +62,7 @@ class LeaveService
       if($access["success"] === false) return $access;
       
       $validator = Validator::make($request->all(), [
-          "type" => "numeric|required",
+          "type" => "numeric|required|exists:App\LeaveType,id",
           "employee_id" => "numeric|required|exists:App\Employee,id",
           "delegate_id" => "numeric|required|exists:App\Employee,id",
           "start_date" => "required",
@@ -100,6 +100,7 @@ class LeaveService
           $leave->issued_date = Date('Y-m-d H:i:s');
           $leave->status = 1;
           
+          if(!$request->document && $type->is_document_required)  return ["success" => false, "message" => "Dokumen pendukung harus diisi.", "status" => 400];
           if(!$leave->save()) return ["success" => false, "message" => "Gagal Menambah Leave", "status" => 400];
 
           if($request->document) $this->addDocument($leave->id, $request->document, "resume");
@@ -186,14 +187,15 @@ class LeaveService
     $leave_id = $request->id;
     $approve = $request ->approve;
 
-    $leave = Leave::with("employee")->find($leave_id);
+    $leave = Leave::with(['employee', 'type'])->find($leave_id);
+    $type = LeaveType::find($leave->type);
     $employee = Employee::with('contract')->find($leave->employee->id);
     $contract = EmployeeContract::find($employee->contract->id);
 
     if($approve){
       $leave->status = 2;
-      $contract->annual_leave = $contract->annual_leave - 1;
-
+      if($type->is_tahunan) $contract->annual_leave = $contract->annual_leave - 1;
+      
       $contract->save();
     }
     else $leave->status = 3;
@@ -208,9 +210,9 @@ class LeaveService
       $access = $this->globalService->checkRoute($route_name);
       if($access["success"] === false) return $access;
       try{
-          $leaveTypes = LeaveType::select("name");
+          $leaveTypes = LeaveType::get();
           
-          return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $leaveTypes->get(), "status" => 200];
+          return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $leaveTypes, "status" => 200];
       }catch(Exception $err){
           return ["success" => false, "message" => $err->getMessage(), "status" => 400];
       }
@@ -235,7 +237,9 @@ class LeaveService
       if($access["success"] === false) return $access;
       
       $validator = Validator::make($request->all(), [
-          "name" => "required"
+          "name" => "required",
+          "is_tahunan" => "boolean|required",
+          "is_document_required" => "boolean|required",
       ]);
 
       if($validator->fails()){
@@ -246,6 +250,9 @@ class LeaveService
       try{
           $leaveType = new LeaveType();
           $leaveType->name = $request->name;
+          $leaveType->description = $request->description;
+          $leaveType->is_tahunan = $request->is_tahunan;
+          $leaveType->is_document_required = $request->is_document_required;
 
           if(!$leaveType->save()) return ["success" => false, "message" => "Gagal Menambah Leave Type", "status" => 400];
 
@@ -253,6 +260,37 @@ class LeaveService
       }catch(Exception $err){
           return ["success" => false, "message" => $err, "status" => 400];
       }
+  }
+
+  public function updateLeaveType(Request $request, $route_name)
+  {
+    $access = $this->globalService->checkRoute($route_name);
+    if($access["success"] === false) return $access;
+    
+    $id = $request->id ?? NULL;
+    $validator = Validator::make($request->all(), [
+        "id" => "required|exists:App\LeaveType,id",
+        "is_document_required" => "numeric|in:0,1",
+        "is_document_required" => "numeric|in:0,1",
+        "is_tahunan" => "numeric|in:0,1",
+    ]);
+    
+
+    if($validator->fails()){
+        $errors = $validator->errors()->all();
+        return ["success" => false, "message" => $errors, "status" => 400];
+    }
+    
+    $leaveType = LeaveType::find($id);
+    if(!$leaveType) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+
+    if($request->name)$leaveType->name = $request->name;
+    if($request->description)$leaveType->description = $request->description;
+    if($request->is_document_required != NULL)$leaveType->is_document_required = $request->is_document_required;
+    if($request->is_tahunan != NULL)$leaveType->is_tahunan = $request->is_tahunan;
+
+    if(!$leaveType->save()) return ["success" => false, "message" => "Gagal Mengubah Tipe Cuti", "status" => 400];
+    return ["success" => true, "message" => "Data Berhasil Diubah", "status" => 200];
   }
 
   public function deleteLeaveType(Request $request, $route_name)

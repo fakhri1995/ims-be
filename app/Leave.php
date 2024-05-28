@@ -17,7 +17,7 @@ class Leave extends Model
     }
 
     public function type(){
-        return $this->belongsTo(LeaveType::class, 'leave_type');
+        return $this->belongsTo(LeaveType::class, 'type');
     }
 
     public function employee()

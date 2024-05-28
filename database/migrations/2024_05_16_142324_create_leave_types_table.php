@@ -16,6 +16,9 @@ class CreateLeaveTypesTable extends Migration
         Schema::create('leave_types', function (Blueprint $table) {
             $table->id();
             $table->string("name");
+            $table->string("description");
+            $table->boolean("is_tahunan");
+            $table->boolean("is_document_required");
         });
     }
 
