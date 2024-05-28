@@ -252,6 +252,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->get('/getLeaveType','LeaveController@getLeaveType');
     $router->post('/addLeaveType','LeaveController@addLeaveType');
     $router->delete('/deleteLeaveType','LeaveController@deleteLeaveType');
+    $router->put('/updateLeaveType','LeaveController@updateLeaveType');
 
     //Manufacturer Routes
     $router->get('/getManufacturers', 'AssetController@getManufacturers');
