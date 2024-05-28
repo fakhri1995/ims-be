@@ -25,6 +25,7 @@ use App\Console\Commands\RaiseLastPeriodPayslip;
 use App\Console\Commands\SendAndroidNotificationActivity;
 use App\Console\Commands\SendAndroidNotificationCheckIn;
 use App\Console\Commands\SendAnnounceNotification;
+use App\Console\Commands\SendMailAnnouncement;
 use Illuminate\Console\Scheduling\Schedule;
 use Laravel\Lumen\Console\Kernel as ConsoleKernel;
 
@@ -60,6 +61,7 @@ class Kernel extends ConsoleKernel
         GenerateScheduleAttendance::class,
         SendAnnounceNotification::class,
         SetDayOffSchedule::class,
+        SendMailAnnouncement::class,
     ];
 
     /**
@@ -98,5 +100,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('exclusive:set-display-order-resume 3')->cron('0 * * * *')->runInBackground();
         $schedule->command('exclusive:set-display-order-resume 4')->cron('0 * * * *')->runInBackground();
         $schedule->command('exclusive:set-display-order-resume 5')->cron('0 * * * *')->runInBackground();
+
+        foreach (range(1, 5) as $i) {
+            $schedule->command('notification:send-mail-announcement ' . $i)->cron('* * * * *')->runInBackground();
+        }
     }
 }

@@ -27,6 +27,14 @@ class CompanyProfileController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getPaginateMessage(Request $request)
+    {
+        $route_name = "MESSAGES_GET";
+
+        $response = $this->companyProfileService->getPaginateMessage($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function addMessage(Request $request)
     {
         $route_name = "MESSAGE_GET";
@@ -126,8 +134,8 @@ class CompanyProfileController extends Controller
         $response = $this->companyProfileService->uploadFile($request, $route_name);
         return response()->json($response, $response['status']);
     }
-    
-    
+
+
     public function getTestimonialLandingPage(Request $request)
     {
         $route_name = "FORM_GET";
@@ -142,7 +150,7 @@ class CompanyProfileController extends Controller
         $response = $this->companyProfileService->getCustomerStoriesPage($request, $route_name);
         return response()->json($response, $response['status']);
     }
-    
+
     public function getOtherTestimonial(Request $request)
     {
         $route_name = "FORM_GET";
@@ -150,7 +158,7 @@ class CompanyProfileController extends Controller
         $response = $this->companyProfileService->getOtherTestimonial($request, $route_name);
         return response()->json($response, $response['status']);
     }
-    
+
     public function getTestimonialHardwarePage(Request $request)
     {
         $route_name = "FORM_GET";
@@ -172,7 +180,7 @@ class CompanyProfileController extends Controller
         $response = $this->companyProfileService->getTestimonialTalentPage($request, $route_name);
         return response()->json($response, $response['status']);
     }
-    
+
     public function getArticle(Request $request)
     {
         $route_name = "FORM_GET";
@@ -236,7 +244,7 @@ class CompanyProfileController extends Controller
         $response = $this->companyProfileService->getTestimonialDetail($request, $route_name);
         return response()->json($response, $response['status']);
     }
-    
+
     public function updateArticle(Request $request)
     {
         $route_name = "FORM_GET";
@@ -279,5 +287,5 @@ class CompanyProfileController extends Controller
         $response = $this->companyProfileService->updateProduct($request, $route_name);
         return response()->json($response, $response['status']);
     }
-    
+
 }

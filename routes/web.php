@@ -60,6 +60,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
 
     //Message Routes
     $router->get('/getMessages', 'CompanyProfileController@getMessages');
+    $router->get('/getPaginateMessage', 'CompanyProfileController@getPaginateMessage');
     $router->delete('/deleteMessage', 'CompanyProfileController@deleteMessage');
 
     //formsolution routes
@@ -752,6 +753,8 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->delete('/deleteAnnouncement', 'AnnouncementController@deleteAnnouncement');
     $router->get('/getAnnouncementEmployee', 'AnnouncementController@getAnnouncementEmployee');
     $router->get('/getAnnouncementMore', 'AnnouncementController@getAnnouncementMore');
+    $router->post('/sendMailAnnouncement', 'AnnouncementController@sendMailAnnouncement');
+    $router->get('/getMailAnnouncement', 'AnnouncementController@getMailAnnouncement');
 });
 
 $router->group([], function ($router) {
