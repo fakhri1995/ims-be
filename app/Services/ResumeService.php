@@ -754,14 +754,53 @@ class ResumeService
                 return ["success" => false, "message" => "Gagal Mengubah Project Resume", "status" => 400];
             }
         } else if ($request->skill) {
-            $requestSkill = (object)$request->skill;
-            $id = $requestSkill->id;
-            $skill = $resume->skills()->find($id);
-            if (!$skill) return ["success" => false, "message" => "Skill ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
-            $skill->name = ucfirst($requestSkill->name);
-            DB::table('resume_skill_lists')->insertOrIgnore([['name' => $skill->name]]);
-            if (!$skill->save()) return ["success" => false, "message" => "Gagal Mengubah Skill Resume", "status" => 400];
-            return ["success" => true, "message" => "Data Skill Berhasil Diubah", "status" => 200];
+            try {
+                DB::beginTransaction();
+                $requestSkill = (object)$request->skill;
+                $id = $requestSkill->id;
+                $skill = $resume->skills()->find($id);
+                if (!$skill) return ["success" => false, "message" => "Skill ID : [$id] bukan child dari Resume ID : [$resume_id]", "status" => 400];
+
+                $after_id = $requestSkill->after_id ?? NULL;
+                if ($after_id != NULL) {
+                    $skillAfter = $resume->skills()->find($after_id);
+                    if (!$skillAfter) return ["success" => false, "message" => "After id tidak ditemukan", "status" => 400];
+                }
+
+                if ($id == $after_id) return ["success" => false, "message" => "id dan after id tidak boleh sama", "status" => 400];
+
+                $skill->name = ucfirst($requestSkill->name);
+                DB::table('resume_skill_lists')->insertOrIgnore([['name' => $skill->name]]);
+
+                $skills = new ResumeSkill();
+                if ($after_id == NULL) {
+                    $skills->where("display_order", "<", $skill->display_order)->increment("display_order");
+                    $skill->display_order = 1;
+                } else {
+                    if ($skillAfter->display_order < $skill->display_order) {
+                        $skills
+                            ->where("display_order", ">", $skillAfter->display_order)
+                            ->where("display_order", "<", $skill->display_order)
+                            ->increment("display_order");
+                        $skill->display_order = $skillAfter->display_order + 1;
+                    } else {
+                        $skills
+                            ->where("display_order", ">", $skill->display_order)
+                            ->where("display_order", "<=", $skillAfter->display_order)
+                            ->decrement("display_order");
+                        $skill->display_order = $skillAfter->display_order;
+                    }
+                }
+
+                $skill->save();
+
+                DB::commit();
+                return ["success" => true, "message" => "Data Experience Berhasil Diubah", "status" => 200];
+            } catch (\Throwable $th) {
+                // throw $th;
+                DB::rollBack();
+                return ["success" => false, "message" => "Gagal Mengubah Experience Resume", "status" => 400];
+            }
         } else if ($request->training) {
             try {
                 DB::beginTransaction();

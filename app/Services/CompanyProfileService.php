@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Services;
 
@@ -26,9 +26,23 @@ class CompanyProfileService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         try{
             $messages = Message::get();
+            if($messages->isEmpty()) return ["success" => false, "message" => "Message Belum Terdaftar", "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $messages, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getPaginateMessage(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $messages = Message::paginate($request->rows);
             if($messages->isEmpty()) return ["success" => false, "message" => "Message Belum Terdaftar", "status" => 200];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $messages, "status" => 200];
         } catch(Exception $err){
@@ -57,7 +71,7 @@ class CompanyProfileService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('id', null);
         $career = Message::find($id);
         if($career === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
@@ -85,7 +99,7 @@ class CompanyProfileService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $career = new Career;
         $career->position_name = $request->get('position_name');
         $career->job_description = $request->get('job_description');
@@ -103,7 +117,7 @@ class CompanyProfileService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('id', null);
         $career = Career::find($id);
         if($career === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
@@ -123,7 +137,7 @@ class CompanyProfileService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         $id = $request->get('id', null);
         $career = Career::find($id);
         if($career === null) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
@@ -157,7 +171,7 @@ class CompanyProfileService{
                 $table = 'App\FormSolution';
                 $description = 'attachment_software';
                 $folder_detail = 'FormSolution';
-                
+
                 $add_file_response = $fileService->addFile($message->id, $file, $table, $description, $folder_detail);
             }
             $data = [
@@ -191,11 +205,11 @@ class CompanyProfileService{
         $message->meeting_schedule = $request->meeting_schedule;
         $message->kind_form = $request->kind_form;
         $message->many_people = $request->many_people;
-        
+
         try{
             $message->save();
             $talent_list =$request->get('talent_list');
-            
+
              for ($a = 0; $a < count($request->talent_list); $a++) {
                 $data_talent = $request->talent_list[$a];
                 $product_list="";
@@ -252,8 +266,8 @@ class CompanyProfileService{
         try{
             $message->save();
             $talent_list =$request->get('hardware_list');
-            
-            
+
+
              for ($a = 0; $a < count($request->hardware_list); $a++) {
                 $hardware=$request->hardware_list[$a];
                 $hardware_detail = new FormSolutionDetail;
@@ -291,13 +305,13 @@ class CompanyProfileService{
                     $table = 'App\FormSolution';
                     $description = 'attachment_hardware';
                     $folder_detail = 'FormSolution';
-                    
+
                     $add_file_response = $fileService->addFile($hardware_detail->id, $file, $table, $description, $folder_detail);
                 }
-                
+
                 // $file = $request->file('contract_file',NULL);
-                
-                
+
+
              }
             // FormSolutionDetail::insert($data_save);
             $data =array('company_name' => $request->company_name,
@@ -319,7 +333,7 @@ class CompanyProfileService{
     {
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
+
         try{
             $messages = FormSolution::get();
             if($messages->isEmpty()) return ["success" => false, "message" => "Message Belum Terdaftar", "status" => 200];
@@ -360,8 +374,8 @@ class CompanyProfileService{
         $message = new Blog;
         $message->title = $request->title;
         $message->description = $request->description;
-        
-        
+
+
         $message->tags = $request->tags;
         $message->company_name = $request->company_name;
         $message->quote = $request->quote;
@@ -381,7 +395,7 @@ class CompanyProfileService{
         $message->article_type = $request->article_type;
         $message->page_path = $request->page_path;
         $message->content = $request->content;
-        
+
         $message->user_id = auth()->user()->id;
         try{
             $message->save();
@@ -391,7 +405,7 @@ class CompanyProfileService{
                 $table = 'App\Blog';
                 $description = 'attachment_article';
                 $folder_detail = 'Blog';
-                
+
                 $add_file_response = $fileService->addFile($message->id, $file, $table, $description, $folder_detail);
             }
             if(method_exists($request,'hasFile') && $request->hasFile('company_logo')) {
@@ -400,10 +414,10 @@ class CompanyProfileService{
                 $table = 'App\Blog';
                 $description = 'company_logo';
                 $folder_detail = 'Blog';
-                
+
                 $add_file_response = $fileService->addFile($message->id, $file, $table, $description, $folder_detail);
             }
-           
+
             return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -420,7 +434,7 @@ class CompanyProfileService{
                 $table = 'App\Blog';
                 $description = 'attachment_content';
                 $folder_detail = 'Blog';
-                
+
                 $add_file_response = $fileService->addFile(1, $file, $table, $description, $folder_detail);
             }
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $add_file_response, "status" => 200];
@@ -431,7 +445,7 @@ class CompanyProfileService{
 
     public function getTestimonialLandingPage(Request $request, $route_name)
     {
-        
+
         try{
             $messages = Blog::with(["attachment_article","company_logo"])->where('article_type', '=', 'Customer Stories')->skip(0)->take(6)->get();
             if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
@@ -442,7 +456,7 @@ class CompanyProfileService{
     }
     public function getCustomerStoriesPage(Request $request, $route_name)
     {
-        
+
         try{
             $messages = Blog::with(["attachment_article","company_logo"])->where('article_type', '=', 'Customer Stories')->get();
             if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
@@ -464,7 +478,7 @@ class CompanyProfileService{
     }
     public function getTestimonialHardwarePage(Request $request, $route_name)
     {
-        
+
         try{
             $messages = Blog::with(["attachment_article","company_logo"])->where('article_type', '=', 'Customer Stories')->whereRaw('LOWER(`tags`) LIKE ? ',[trim(strtolower('hardware')).'%'])->skip(0)->take(6)->get();
             if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
@@ -475,7 +489,7 @@ class CompanyProfileService{
     }
     public function getTestimonialSoftwarePage(Request $request, $route_name)
     {
-        
+
         try{
             $messages = Blog::with(["attachment_article","company_logo"])->where('article_type', '=', 'Customer Stories')->whereRaw('LOWER(`tags`) LIKE ? ',[trim(strtolower('software')).'%'])->skip(0)->take(6)->get();
             if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
@@ -486,7 +500,7 @@ class CompanyProfileService{
     }
     public function getTestimonialTalentPage(Request $request, $route_name)
     {
-        
+
         try{
             $messages = Blog::with(["attachment_article","company_logo"])->where('article_type', '=', 'Customer Stories')->whereRaw('LOWER(`tags`) LIKE ? ',[trim(strtolower('talents')).'%'])->skip(0)->take(6)->get();
             if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
@@ -497,7 +511,7 @@ class CompanyProfileService{
     }
     public function getArticleList(Request $request, $route_name)
     {
-        
+
         try{
             $messages = Blog::with('attachment_article')->where('article_type', '=', 'Blog')->get();
             if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
@@ -508,7 +522,7 @@ class CompanyProfileService{
     }
     public function getArticlePopularList(Request $request, $route_name)
     {
-        
+
         try{
             $messages = Blog::with('attachment_article')->where('article_type', '=', 'Blog')->skip(0)->take(4)->get();
             if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
@@ -517,10 +531,10 @@ class CompanyProfileService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
-    
+
     public function getArticle(Request $request, $route_name)
     {
-        
+
         try{
             $messages = Blog::with('attachment_article')->get();
             // if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
@@ -532,7 +546,7 @@ class CompanyProfileService{
 
     public function getCountArticle(Request $request, $route_name)
     {
-        
+
         try{
             $messages = Blog::where('article_type','=','Blog')->count();
             // if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
@@ -543,7 +557,7 @@ class CompanyProfileService{
     }
     public function getCountCustomerStories(Request $request, $route_name)
     {
-        
+
         try{
             $messages = Blog::where('article_type','=','Customer Stories')->count();
             // if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
@@ -626,7 +640,7 @@ class CompanyProfileService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
-    
+
 
     public function deleteArticle($request, $route_name)
     {
@@ -643,7 +657,7 @@ class CompanyProfileService{
         }
     }
 
-    public function updateArticle($request,$route_name) 
+    public function updateArticle($request,$route_name)
     {
         $validator = Validator::make($request->all(), [
             "id" => "numeric|required",
@@ -654,7 +668,7 @@ class CompanyProfileService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        
+
             $id = $request->id;
             $article = Blog::with('attachment_article')->find($id);
             if(!$article) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
@@ -700,7 +714,7 @@ class CompanyProfileService{
                     $fileService->deleteForceFile($old_file_id);
                 }
             }
-            
+
             return ["success" => true, "message" => "Data Berhasil Diupdate", "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -720,10 +734,10 @@ class CompanyProfileService{
                 $table = 'App\Product';
                 $description = 'attachment_product';
                 $folder_detail = 'Product';
-                
+
                 $add_file_response = $fileService->addFile($product->id, $file, $table, $description, $folder_detail);
             }
-           
+
             return ["success" => true, "message" => "Data Berhasil Disimpan", "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -732,7 +746,7 @@ class CompanyProfileService{
 
     public function getProduct(Request $request, $route_name)
     {
-        
+
         try{
             $messages = Product::with('attachment_product')->get();
             if($messages->isEmpty()) return ["success" => false, "message" => "Data Belum Ada", "status" => 200];
@@ -782,7 +796,7 @@ class CompanyProfileService{
         }
     }
 
-    public function updateProduct($request,$route_name) 
+    public function updateProduct($request,$route_name)
     {
         $validator = Validator::make($request->all(), [
             "id" => "numeric|required",
@@ -793,7 +807,7 @@ class CompanyProfileService{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        
+
             $id = $request->id;
             $product = Product::with('attachment_product')->find($id);
             if(!$product) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
@@ -811,12 +825,12 @@ class CompanyProfileService{
                     $fileService->deleteForceFile($old_file_id);
                 }
             }
-            
+
             return ["success" => true, "message" => "Data Berhasil Diupdate", "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
 
-    
+
 }
