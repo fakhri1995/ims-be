@@ -60,6 +60,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
 
     //Message Routes
     $router->get('/getMessages', 'CompanyProfileController@getMessages');
+    $router->get('/getPaginateMessage', 'CompanyProfileController@getPaginateMessage');
     $router->delete('/deleteMessage', 'CompanyProfileController@deleteMessage');
 
     //formsolution routes
