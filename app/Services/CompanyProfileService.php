@@ -41,11 +41,14 @@ class CompanyProfileService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
+        $order = $request->sort_by ?? 'created_at';
+        $sort = $request->sort_type ?? 'asc';
         try{
-            $messages = Message::paginate($request->rows);
+            $messages = Message::orderBy($order, $sort)->paginate($request->rows);
             if($messages->isEmpty()) return ["success" => false, "message" => "Message Belum Terdaftar", "status" => 200];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $messages, "status" => 200];
         } catch(Exception $err){
+            dd($err);
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
