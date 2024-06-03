@@ -33,6 +33,13 @@ class LeaveController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getLeavesUser(Request $request){
+        $route_name = "LEAVES_USER_GET";
+
+        $response = $this->LeaveService->getLeavesUser($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getLeave(Request $request){
         $route_name = "LEAVE_GET";
 
@@ -100,6 +107,20 @@ class LeaveController extends Controller
         $route_name = "LEAVE_TYPE_DELETE";
 
         $response = $this->LeaveService->deleteLeaveType($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getLeavesCount(Request $request){
+        $route_name = "LEAVES_COUNT_GET";
+
+        $response = $this->LeaveService->getLeavesCount($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function addLeaveDocument(Request $request){
+        $route_name = "LEAVE_DOCUMENT_ADD";
+
+        $response = $this->LeaveService->addLeaveDocument($request, $route_name);
         return response()->json($response, $response['status']);
     }
 }

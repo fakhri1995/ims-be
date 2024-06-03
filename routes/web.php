@@ -243,6 +243,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     //Leave Routes
     $router->get('/getLeaveStatuses','LeaveController@getLeaveStatuses');
     $router->get('/getLeaves','LeaveController@getLeaves');
+    $router->get('/getLeavesUser','LeaveController@getLeavesUser');
     $router->get('/getLeave','LeaveController@getLeave');
     $router->post('/addLeave','LeaveController@addLeave');
     $router->delete('/deleteLeave','LeaveController@deleteLeave');
@@ -253,6 +254,8 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->post('/addLeaveType','LeaveController@addLeaveType');
     $router->delete('/deleteLeaveType','LeaveController@deleteLeaveType');
     $router->put('/updateLeaveType','LeaveController@updateLeaveType');
+    $router->get('/getLeavesCount','LeaveController@getLeavesCount');
+    $router->post('/addLeaveDocument','LeaveController@addLeaveDocument');
 
     //Manufacturer Routes
     $router->get('/getManufacturers', 'AssetController@getManufacturers');
