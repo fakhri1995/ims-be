@@ -60,7 +60,7 @@ class Resume extends Model
 
     public function skills()
     {
-        return $this->hasMany(ResumeSkill::class, 'resume_id');
+        return $this->hasMany(ResumeSkill::class, 'resume_id')->orderBy("display_order", "asc");
     }
 
     public function trainings()

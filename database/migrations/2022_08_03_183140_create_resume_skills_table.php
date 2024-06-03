@@ -16,6 +16,7 @@ class CreateResumeSkillsTable extends Migration
         Schema::create('resume_skills', function (Blueprint $table) {
             $table->id();
             $table->string("name");
+            $table->integer("display_order")->default(2);
             $table->unsignedBigInteger("resume_id");
 
         });
