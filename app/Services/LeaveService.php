@@ -8,6 +8,7 @@ use App\EmployeeContract;
 use App\File;
 use App\Leave;
 use App\LeaveType;
+use App\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Exception;
@@ -19,6 +20,8 @@ class LeaveService
   public function __construct()
   {
       $this->globalService = new GlobalService;
+      $this->table = 'App\Leave';
+      $this->folder_detail = 'Leave';
   }
 
   public function getLeaveStatuses(Request $request, $route_name){
@@ -50,6 +53,21 @@ class LeaveService
       $id = $request->id;
       try{
           $leaves = Leave::with(['document', 'type', 'employee', 'delegate'])->find($id);
+          return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $leaves, "status" => 200];
+      }catch(Exception $err){
+          return ["success" => false, "message" => $err->getMessage(), "status" => 400];
+      }
+  }
+
+  public function getLeavesUser(Request $request, $route_name)
+  {
+      $access = $this->globalService->checkRoute($route_name);
+      if($access["success"] === false) return $access;
+      $user = User::with('employee')->find(auth()->user()->id);
+      if(!$user->employee) return ["success" => false, "message" => "User tidak terdaftar sebagai Employee", "status" => 400];
+
+      try{
+          $leaves = Leave::with(['document', 'type', 'employee', 'delegate'])->where("employee_id", $user->employee->id)->get();
           return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $leaves, "status" => 200];
       }catch(Exception $err){
           return ["success" => false, "message" => $err->getMessage(), "status" => 400];
@@ -103,7 +121,7 @@ class LeaveService
           if(!$request->document && $type->is_document_required)  return ["success" => false, "message" => "Dokumen pendukung harus diisi.", "status" => 400];
           if(!$leave->save()) return ["success" => false, "message" => "Gagal Menambah Leave", "status" => 400];
 
-          if($request->document) $this->addDocument($leave->id, $request->document, "resume");
+          if($request->document) $this->addDocument($leave->id, $request->document, "document");
 
           return ["success" => true, "message" => "Data Berhasil Ditambahkan", "id" => $leave->id, "status" => 200];
       }catch(Exception $err){
@@ -168,7 +186,7 @@ class LeaveService
     $file = $request->file('document');
           if($file){
               $oldFile = File::where(['fileable_id' => $leave->id, 'fileable_type' => $this->table])->first(); //using first() because resume just single file
-              $addResume = $this->addDocument($leave->id, $file, "resume");
+              $addResume = $this->addDocument($leave->id, $file, "document");
               $fileService = new FileService;
               if($oldFile){
                   $deleteDocument = $fileService->deleteForceFile($oldFile->id);
@@ -326,4 +344,26 @@ class LeaveService
       $add_file_response = $fileService->addFile($id, $file, $this->table, $description, $this->folder_detail, false);
       return $add_file_response;
   }
+
+  public function getLeavesCount(Request $request, $route_name)
+  {
+    $access = $this->globalService->checkRoute($route_name);
+    if($access["success"] === false) return $access;
+
+    $user = User::with('employee','employee.contract')->find(auth()->user()->id);
+    return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $user->employee->contract->annual_leave, "status" => 200];
+  }
+
+  public function addLeaveDocument(Request $request, $route_name)
+  {
+    $access = $this->globalService->checkRoute($route_name);
+    if($access["success"] === false) return $access;
+
+    $id = $request->id;
+    $file = $request->file('file');
+    $fileService = new FileService;
+    $add_file_response = $fileService->addFile($id, $file, $this->table, "document", $this->folder_detail, false);
+    return ["success" => true, "message" => "Dokumen Berhasil Diunggah", "status" => 200];
+  }
+  
 }
