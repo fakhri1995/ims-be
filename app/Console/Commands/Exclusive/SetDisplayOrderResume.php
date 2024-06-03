@@ -8,6 +8,7 @@ use App\ResumeCertificate;
 use App\ResumeEducation;
 use App\ResumeExperience;
 use App\ResumeProject;
+use App\ResumeSkill;
 use App\ResumeTraining;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -81,9 +82,14 @@ class SetDisplayOrderResume extends Command
                         $q
                             ->groupBy('resume_id')
                             ->havingRaw('SUM(CASE WHEN display_order <> 1 THEN 0 ELSE 1 END) = 0');
+                    })
+                    ->orWhereHas('skills', function ($q) {
+                        $q
+                            ->groupBy('resume_id')
+                            ->havingRaw('SUM(CASE WHEN display_order <> 1 THEN 0 ELSE 1 END) = 0');
                     });
             })
-            ->simplePaginate($rows, ['*'], 'page', $page);
+            ->simplePaginate(500, ['*'], 'page', $page);
 
         dump(count($resumes) . ' data akan di proses');
         foreach ($resumes as $list) {
@@ -162,8 +168,20 @@ class SetDisplayOrderResume extends Command
                     }
                 }
 
+                // check udah pernah di set belum trainingnya, kalau belum harusnya display order ada yang null
+                // $checkTraining = ResumeTraining::query()->where('resume_id', $list->id)->whereNull('display_order')->first();
+                $checkSkill = ResumeSkill::query()->where('resume_id', $list->id)->first();
+                $updatedIfNull = ResumeSkill::whereNull('display_order')->update(['display_order' => '99']);
+                if ($checkSkill) {
+                    $trainings = ResumeSkill::query()->where('resume_id', $list->id)->orderBy('display_order', 'ASC')->orderBy('id', 'DESC')->get();
+                    foreach ($trainings as $i => $item) {
+                        $item->display_order = $i + 1;
+                        $item->save();
+                    }
+                }
+
                 DB::commit();
-                if ($checkExperience || $checkProject || $checkAchievement || $checkEducation || $checkCertificate || $checkTraining) {
+                if ($checkExperience || $checkProject || $checkAchievement || $checkEducation || $checkCertificate || $checkTraining || $checkSkill) {
                     dump('berhasil set resume id => ' . $list->id);
                 } else {
                     dump('resume id => ' . $list->id . ' sudah di set sebelumnya atau tidak ada yang harus di set');

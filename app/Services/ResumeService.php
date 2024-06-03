@@ -795,11 +795,11 @@ class ResumeService
                 $skill->save();
 
                 DB::commit();
-                return ["success" => true, "message" => "Data Experience Berhasil Diubah", "status" => 200];
+                return ["success" => true, "message" => "Data Skill Berhasil Diubah", "status" => 200];
             } catch (\Throwable $th) {
                 // throw $th;
                 DB::rollBack();
-                return ["success" => false, "message" => "Gagal Mengubah Experience Resume", "status" => 400];
+                return ["success" => false, "message" => "Gagal Mengubah Skill Resume", "status" => 400];
             }
         } else if ($request->training) {
             try {
