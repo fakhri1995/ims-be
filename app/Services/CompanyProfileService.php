@@ -48,7 +48,6 @@ class CompanyProfileService{
             if($messages->isEmpty()) return ["success" => false, "message" => "Message Belum Terdaftar", "status" => 200];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $messages, "status" => 200];
         } catch(Exception $err){
-            dd($err);
             return ["success" => false, "message" => $err, "status" => 400];
         }
     }
