@@ -605,6 +605,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     // Employee
     $router->get('/getEmployee', 'EmployeeController@getEmployee');
     $router->get('/getEmployees', 'EmployeeController@getEmployees');
+    $router->get('/getFilterEmployees', 'EmployeeController@getFilterEmployees');
     $router->post('/addEmployee', 'EmployeeController@addEmployee');
     $router->post('/addEmployeeFromUser', 'EmployeeController@addEmployeeFromUser');
     $router->post('/updateEmployee', 'EmployeeController@updateEmployee');

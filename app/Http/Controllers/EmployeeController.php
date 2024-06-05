@@ -45,6 +45,14 @@ class EmployeeController extends Controller
         return response()->json($response, $response['status']);
     }
     
+    public function getFilterEmployees(Request $request)
+    {
+        $route_name = "FILTER_EMPLOYEES_GET";
+
+        $response = $this->employeeService->getFilterEmployees($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getEmployees(Request $request)
     {
         $route_name = "EMPLOYEES_GET";
