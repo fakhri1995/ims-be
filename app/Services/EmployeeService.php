@@ -281,7 +281,16 @@ class EmployeeService{
         }
     }
 
+    public function getFilterEmployees($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
 
+        $name = $request->get('name', null);
+        $employees = Employee::with(['contract:id,role_id', 'contract.role'])->select('id', 'name', 'nip', 'last_contract_id');
+        if($name) $employees = $employees->where('name', 'like', "%".$name."%");
+        $employees = $employees->get();
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $employees, "status" => 200];
+    }
 
     public function addEmployee($request, $route_name)
     {
