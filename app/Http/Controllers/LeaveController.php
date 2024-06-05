@@ -54,6 +54,13 @@ class LeaveController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function addLeaveUser(Request $request){
+        $route_name = "LEAVE_USER_ADD";
+
+        $response = $this->LeaveService->addLeaveUser($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function updateLeave(Request $request){
         $route_name = "LEAVE_UPDATE";
 

@@ -82,7 +82,7 @@ class LeaveService
       $validator = Validator::make($request->all(), [
           "type" => "numeric|required|exists:App\LeaveType,id",
           "employee_id" => "numeric|required|exists:App\Employee,id",
-          "delegate_id" => "numeric|required|exists:App\Employee,id",
+          "delegate_id" => "numeric|exists:App\Employee,id",
           "start_date" => "required",
           "end_date" => "required",
           "document" => "mimes:pdf|mimetypes:application/pdf|file|max:5120",
@@ -98,6 +98,63 @@ class LeaveService
           $leave->notes = $request->notes;
           
           $employee = Employee::find($request->employee_id);
+          if($employee === null) return ["success" => false, "message" => "Id Karyawan Tidak Ditemukan", "status" => 400];
+          $leave->employee_id = $employee->id;
+
+          if($request->delegate_id){
+            $delegate = Employee::find($request->delegate_id);
+            if($delegate === null) return ["success" => false, "message" => "Id Karyawan Tidak Ditemukan", "status" => 400];
+            $leave->delegate_id = $delegate->id;
+          }
+          
+          $type = LeaveType::find($request->type);
+          if($type === null) return ["success" => false, "message" => "Id Tipe Cuti Tidak Ditemukan", "status" => 400];
+          $leave->type = $type->id;
+
+
+          $duration = Carbon::parse($request->start_date)->diffInDays(Carbon::parse($request->end_date));
+          
+          $leave->duration=$duration;
+          $leave->start_date = $request->start_date;
+          $leave->end_date = $request->end_date;
+          $leave->issued_date = Date('Y-m-d H:i:s');
+          $leave->status = 1;
+          
+          if(!$request->document && $type->is_document_required)  return ["success" => false, "message" => "Dokumen pendukung harus diisi.", "status" => 400];
+          if(!$leave->save()) return ["success" => false, "message" => "Gagal Menambah Leave", "status" => 400];
+
+          if($request->document) $this->addDocument($leave->id, $request->document, "document");
+
+          return ["success" => true, "message" => "Data Berhasil Ditambahkan", "id" => $leave->id, "status" => 200];
+      }catch(Exception $err){
+          return ["success" => false, "message" => $err, "status" => 400];
+      }
+  }
+
+  public function addLeaveUser(Request $request, $route_name)
+  {
+      $access = $this->globalService->checkRoute($route_name);
+      if($access["success"] === false) return $access;
+      
+      $validator = Validator::make($request->all(), [
+          "type" => "numeric|required|exists:App\LeaveType,id",
+          "delegate_id" => "numeric|required|exists:App\Employee,id",
+          "start_date" => "required",
+          "end_date" => "required",
+          "document" => "mimes:pdf|mimetypes:application/pdf|file|max:5120",
+      ]);
+
+      if($validator->fails()){
+          $errors = $validator->errors()->all();
+          return ["success" => false, "message" => $errors, "status" => 400];
+      }
+      
+      try{
+          $leave = new Leave();
+          $leave->notes = $request->notes;
+          
+          $user = auth()->user()->id;
+          $employee = Employee::where('user_id', $user)->first();
           if($employee === null) return ["success" => false, "message" => "Id Karyawan Tidak Ditemukan", "status" => 400];
           $leave->employee_id = $employee->id;
 

@@ -18,7 +18,7 @@ class CreateLeavesTable extends Migration
 
             $table->integer('type');
             $table->integer('employee_id');
-            $table->integer('delegate_id');
+            $table->integer('delegate_id')->nullable();
             $table->string('status');
             $table->string('notes');
 

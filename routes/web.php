@@ -246,6 +246,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->get('/getLeavesUser','LeaveController@getLeavesUser');
     $router->get('/getLeave','LeaveController@getLeave');
     $router->post('/addLeave','LeaveController@addLeave');
+    $router->post('/addLeaveUser','LeaveController@addLeaveUser');
     $router->delete('/deleteLeave','LeaveController@deleteLeave');
     $router->put('/updateLeave','LeaveController@updateLeave');
     $router->put('/approveLeave','LeaveController@approveLeave');
