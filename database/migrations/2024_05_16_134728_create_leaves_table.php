@@ -20,7 +20,7 @@ class CreateLeavesTable extends Migration
             $table->integer('employee_id');
             $table->integer('delegate_id')->nullable();
             $table->string('status');
-            $table->string('notes');
+            $table->string('notes')->nullable();
 
             $table->integer('duration');
             $table->dateTime('start_date');
