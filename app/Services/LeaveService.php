@@ -37,9 +37,13 @@ class LeaveService
       $access = $this->globalService->checkRoute($route_name);
       if($access["success"] === false) return $access;
       $keyword = $request->keyword;
+      $rows = $request->rows ?? NULL;
       try{
           $leaves = Leave::with(['document', 'type', 'employee', 'delegate']);
           if($keyword) $leaves = $leaves->where("name","LIKE", "%$keyword%");
+          if($rows){
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $leaves->paginate($rows), "status" => 200];  
+          }
           return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $leaves->get(), "status" => 200];
       }catch(Exception $err){
           return ["success" => false, "message" => $err->getMessage(), "status" => 400];
@@ -65,10 +69,14 @@ class LeaveService
       if($access["success"] === false) return $access;
       $user = User::with('employee')->find(auth()->user()->id);
       if(!$user->employee) return ["success" => false, "message" => "User tidak terdaftar sebagai Employee", "status" => 400];
-
+      $rows = $request->rows ?? NULL;
+      
       try{
-          $leaves = Leave::with(['document', 'type', 'employee', 'delegate'])->where("employee_id", $user->employee->id)->get();
-          return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $leaves, "status" => 200];
+          $leaves = Leave::with(['document', 'type', 'employee', 'delegate'])->where("employee_id", $user->employee->id);
+          if($rows){
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $leaves->paginate($rows), "status" => 200];  
+          }
+          return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $leaves->get(), "status" => 200];
       }catch(Exception $err){
           return ["success" => false, "message" => $err->getMessage(), "status" => 400];
       }
