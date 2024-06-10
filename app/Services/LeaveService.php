@@ -24,6 +24,19 @@ class LeaveService
       $this->folder_detail = 'Leave';
   }
 
+  public function getLeaveStatistics(Request $request, $route_name){
+    $access = $this->globalService->checkRoute($route_name);
+    if($access["success"] === false) return $access;
+
+    $has_leave = count(Employee::has('leave')->get());
+    $no_leave = count(Employee::whereDoesntHave('leave')->get());
+    $statistics = (object)[
+        "has_leave" => $has_leave,
+        "no_leave" => $no_leave
+    ];
+    return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $statistics, "status" => 200];
+  }
+
   public function getLeaveStatuses(Request $request, $route_name){
     $access = $this->globalService->checkRoute($route_name);
     if($access["success"] === false) return $access;
@@ -194,11 +207,8 @@ class LeaveService
       }
   }
 
-  public function deleteLeave(Request $request, $route_name)
+  public function deleteLeaveFunc(Request $request, $is_user = false)
   {
-      $access = $this->globalService->checkRoute($route_name);
-      if($access["success"] === false) return $access;
-      
       $validator = Validator::make($request->all(), [
           "id" => "required|exists:App\Leave,id"
       ]);
@@ -213,11 +223,34 @@ class LeaveService
       if(!$leave) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 
       try{
+          if($is_user){
+            $user = auth()->user()->id;
+            $employee = Employee::where('user_id', $user)->first()->id;
+            $user_leave = $leave->get()->employee_id;
+            if($employee != $user_leave){
+                return ["success" => false, "message" => "Pengajuan cuti bukan milik user", "status" => 400];
+            }
+          }
           $leave->delete();
           return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $leave, "status" => 200];
       }catch(Exception $err){
           return ["success" => false, "message" => $err, "status" => 400];
       }
+  }
+
+  public function deleteLeave(Request $request, $route_name){
+    $access = $this->globalService->checkRoute($route_name);
+    if($access["success"] === false) return $access;
+
+    return $this->deleteLeaveFunc($request, false);
+  }
+
+  public function deleteLeaveUser(Request $request, $route_name)
+  {
+      $access = $this->globalService->checkRoute($route_name);
+      if($access["success"] === false) return $access;
+      
+      return $this->deleteLeaveFunc($request, true);
   }
 
   public function updateLeave(Request $request, $route_name)

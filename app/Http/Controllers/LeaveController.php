@@ -19,6 +19,13 @@ class LeaveController extends Controller
         $this->LeaveService = new LeaveService;
     }
 
+    public function getLeaveStatistics(Request $request){
+        $route_name = "LEAVE_STATISTICS_GET";
+
+        $response = $this->LeaveService->getLeaveStatistics($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getLeaveStatuses(Request $request){
         $route_name = "LEAVE_STATUSES_GET";
 

@@ -241,6 +241,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->delete('/deleteInventory', 'AssetController@deleteInventory');
 
     //Leave Routes
+    $router->get('/getLeaveStatistics','LeaveController@getLeaveStatistics');
     $router->get('/getLeaveStatuses','LeaveController@getLeaveStatuses');
     $router->get('/getLeaves','LeaveController@getLeaves');
     $router->get('/getLeavesUser','LeaveController@getLeavesUser');
