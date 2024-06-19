@@ -8,6 +8,7 @@ use App\AnnouncementMailGroup;
 use App\AnnouncementMailStaff;
 use App\Group;
 use App\Notification;
+use App\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Throwable;
@@ -104,6 +105,7 @@ class AnnouncementService
             $data->text = $request->text;
             if ($request->publish_type == 'now') {
                 $request->publish_at = date('Y-m-d H:i:s');
+                $this->publishAnnouncement();
             }
             $data->publish_at = $request->publish_at;
             $data->user_id = auth()->user()->id;
@@ -153,6 +155,7 @@ class AnnouncementService
             $data->text = $request->text;
             if ($request->publish_type == 'now') {
                 $request->publish_at = date('Y-m-d H:i:s');
+                $this->publishAnnouncement();
             }
             $data->publish_at = $request->publish_at;
             $data->user_id = auth()->user()->id;
@@ -230,6 +233,9 @@ class AnnouncementService
                 ->orderBy('publish_at', 'desc')
                 ->limit(3)
                 ->get();
+            $user = User::find(auth()->user()->id);
+            $user->is_announcement = 0;
+            $user->save();
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
         } catch (\Exception $err) {
             return ["success" => false, "message" => $err, "status" => 400];
@@ -360,5 +366,29 @@ class AnnouncementService
             $notification->users()->detach();
             $notification->delete();
         }
+    }
+
+    private function publishAnnouncement(){
+        $route_name = 'ANNOUNCEMENT_EMPLOYEE_GET';
+        $users = User::query()
+            ->select('users.id')
+            ->whereHas('roles', function ($q) use ($route_name) {
+                $q->where(function ($q1) use ($route_name) {
+                    $q1->where('name', 'Super Admin')
+                        ->orWhereHas('features', function ($q2) use ($route_name) {
+                            $q2->where('name', $route_name);
+                        });
+                });
+            });
+
+        $user_ids = $users->pluck('id');
+
+        foreach ($user_ids as $user_id){
+            $user = User::find($user_id);
+            $user->is_announcement = 1;
+            $user->save();
+        }
+
+        return $user_ids;
     }
 }

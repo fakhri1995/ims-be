@@ -27,6 +27,7 @@ class CreateUsersTable extends Migration
             $table->dateTime('created_time');
             $table->softDeletes();
             $table->index('company_id');
+            $table->boolean("is_announcement");
         });
     }
 
