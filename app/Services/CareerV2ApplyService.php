@@ -10,6 +10,7 @@ use App\CareerV2Question;
 use App\Exports\CareerApplicantsExport;
 use App\File;
 use App\Mail\CareerApplyMail;
+use App\Mail\CareerApplyPretestMail;
 use App\Recruitment;
 use Exception;
 use App\Services\GlobalService;
@@ -191,8 +192,12 @@ class CareerV2ApplyService{
                 'subject' => "Thank you for applying to MIG",
                 'url' => env('APP_URL_WEB'),
             );
+            
+            $career = CareerV2::find($request->career_id);
 
-            $sendMail = Mail::to($careerApply->email)->send(new CareerApplyMail($data));
+            if($career->recruitment_role_id == 1) $sendMail = Mail::to($careerApply->email)->send(new CareerApplyPretestMail($data));
+            else $sendMail = Mail::to($careerApply->email)->send(new CareerApplyMail($data));
+            
             return ["success" => true, "message" => "Apply Career Berhasil Ditambahkan", "id" => $careerApply->id, "status" => 201];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
