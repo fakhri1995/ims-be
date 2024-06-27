@@ -335,11 +335,10 @@ class CareerV2Service{
         try{
             $career->save();
             if($question){
-                $questions = (object)$question;
                 if($question_temp) {
-                    $this->updateCareerQuestionFunc($question_id, $questions->name, $questions->description, $questions->details);
+                    $this->updateCareerQuestionFunc($question_id, $question_temp->name, $question_temp->description, $question);
                 }
-                else $this->addCareerQuestionFunc($career->id, $questions->name, $questions->description, $questions->details);
+                else $this->addCareerQuestionFunc($career->id, $question_temp->name, $question_temp->description, $question);
             }
             return ["success" => true, "message" => "Career Berhasil Diubah", "id" => $career->id, "status" => 200];
         }catch(Exception $err){
