@@ -20,6 +20,8 @@ class CreateCompaniesTable extends Migration
             $table->string("name");
             $table->string("phone_number");
             $table->string("address");
+            $table->string("lat_address")->nullable();
+            $table->string("long_address")->nullable();
             $table->tinyInteger("role");
             $table->boolean("is_enabled");
             $table->dateTime('created_time');
