@@ -152,6 +152,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->get('/getAllCompanyList', 'CompanyController@getAllCompanyList');
     $router->get('/getMainLocations', 'CompanyController@getMainLocations');
     $router->get('/getLocations', 'CompanyController@getLocations');
+    $router->get('/getLocationsSubCompany', 'CompanyController@getLocationsSubCompany');
     $router->get('/getSubLocations', 'CompanyController@getSubLocations');
     $router->get('/getCompanyDetail', 'CompanyController@getCompanyDetail');
     $router->get('/getSubCompanyDetail', 'CompanyController@getSubCompanyDetail');
