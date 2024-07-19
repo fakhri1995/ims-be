@@ -575,11 +575,8 @@ class AttendanceService{
         return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $attendances, "status" => 200];
     }
 
-    public function getAttendancesUsersPaginate($request, $route_name)
+    public function getAttendancesUsersPaginateFunc($request, $admin = false)
     {
-        $access = $this->globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
-
         $validator = Validator::make($request->all(), [
             "is_hadir" => "boolean",
             "is_late" => "boolean",
@@ -608,16 +605,31 @@ class AttendanceService{
         $company_ids = $request->company_ids ? explode(",",$request->company_ids) : NULL;
         // try{
             $current_time = date('Y-m-d');
-            $users_attendances = User::select("id","name", "company_id", "position")->with(["attendance_user" => function($q) use($current_time, $is_late){
-                $q->select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
-                ->whereDate("check_in","=",$current_time)
-                ->join('long_lat_lists AS check_in_list', function ($join) {
-                    $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
-                })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
-                    $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
-                });
-            }, "profileImage", "company"])->withCount("project_tasks");
 
+            if($admin){
+                $users_attendances = User::select("id","name", "company_id", "position")->with(["attendance_user" => function($q) use($current_time, $is_late){
+                    $q->select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
+                    ->whereDate("check_in","=",$current_time)
+                    ->join('long_lat_lists AS check_in_list', function ($join) {
+                        $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
+                    })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
+                        $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
+                    });
+                }, "profileImage", "company"])->withCount("project_tasks");
+            }
+            else{
+                $company_id = auth()->user()->company_id;
+                $users_attendances = User::select("id","name", "company_id", "position")->where('company_id', $company_id)->with(["attendance_user" => function($q) use($current_time, $is_late){
+                    $q->select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
+                    ->whereDate("check_in","=",$current_time)
+                    ->join('long_lat_lists AS check_in_list', function ($join) {
+                        $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
+                    })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
+                        $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
+                    });
+                }, "profileImage", "company"])->withCount("project_tasks");
+            }
+            
             //filter
             if($keyword) $users_attendances = $users_attendances->where("name","LIKE","%$keyword%");
             if($keyword_role) $users_attendances = $users_attendances->where("position","LIKE","%$keyword_role%");
@@ -670,6 +682,20 @@ class AttendanceService{
         // } catch(Exception $err){
         //     return ["success" => false, "message" => $err, "status" => 400];
         // }
+    }
+
+    public function getAttendancesUsersPaginate($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        return $this->getAttendancesUsersPaginateFunc($request, $admin = true);
+    }
+
+    public function getAttendancesUsersPaginateCompany($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        return $this->getAttendancesUsersPaginateFunc($request, $admin = false);
     }
 
     public function getAttendancesUser($request, $route_name)
@@ -906,6 +932,7 @@ class AttendanceService{
             $login_id = auth()->user()->id;
             $lat = $request->get('lat');
             $long = $request->get('long');
+            $company_id = $request->get('company_id') ?? auth()->user()->company_id;
             if(!$request->hasFile('evidence')) return ["success" => false, "message" => "Evidence belum diisi", "status" => 400];
             if(!$lat) return ["success" => false, "message" => "Lat belum diisi", "status" => 400];
             if(!$long) return ["success" => false, "message" => "Long belum diisi", "status" => 400];
@@ -928,7 +955,7 @@ class AttendanceService{
                 $user_attendance->is_wfo = $request->get('wfo', false);
                 if($user_attendance->is_wfo){
                     //check if check in is more than 2km than company or not
-                    $company = Company::where('id', auth()->user()->company_id)->first();
+                    $company = Company::where('id', $company_id)->first();
                     $lat_company = (float) $company->lat_address;
                     $long_company = (float) $company->long_address;
                     // convert from degrees to radians
