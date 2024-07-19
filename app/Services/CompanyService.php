@@ -129,6 +129,16 @@ class CompanyService
 
     }
 
+    public function getLocationsSubCompany($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('company_id') ?? auth()->user()->company_id;
+        $company =  Company::where('top_parent_id', $id)->orWhere('id', $id)->get();
+
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $company, "status" => 200];
+    }
+
     public function getMainLocations($route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
