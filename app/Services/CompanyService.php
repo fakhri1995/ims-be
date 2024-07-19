@@ -134,7 +134,8 @@ class CompanyService
         if($access["success"] === false) return $access;
 
         $id = $request->get('company_id') ?? auth()->user()->company_id;
-        $company =  Company::where('top_parent_id', $id)->orWhere('id', $id)->get();
+        $company =  Company::where('top_parent_id', $id)->whereNotNull('lat_address')->whereNotNull('long_address')->orWhere('id', $id)
+        ->get();
 
         return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $company, "status" => 200];
     }
