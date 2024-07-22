@@ -503,6 +503,39 @@ class AttendanceService{
         }
     }
 
+    public function getAttendancesUsersCompany($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $company_id = auth()->user()->company_id;
+            $users_attendances = AttendanceUser::select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
+            ->join('long_lat_lists AS check_in_list', function ($join) {
+                $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
+            })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
+                $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
+            })->whereHas('user', function($q) use($company_id){
+                $q->where('role', 1)->where('company_id', $company_id);
+            })->with('user:id,name')->whereDate('check_in', '=', date("Y-m-d"))->get();
+            foreach($users_attendances as $user_attendance){
+                $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
+                $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
+            }
+            $attendance_user_ids = $users_attendances->pluck('user_id')->unique()->values();
+            $absent_users = User::select('id','name', 'position')->with('attendanceForms:id,name', 'profileImage')->where('role', 1)->whereNotIn('id', $attendance_user_ids)->whereNull('deleted_at')->where('is_enabled', true)->get();
+            $data = (object)[
+                'users_attendances_count' => count($users_attendances),
+                'absent_users_count' => count($absent_users),
+                'users_attendances' => $users_attendances,
+                'absent_users' => $absent_users,
+            ];
+            return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $data, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     public function getAttendancesClient($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
