@@ -523,7 +523,7 @@ class AttendanceService{
                 $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
             }
             $attendance_user_ids = $users_attendances->pluck('user_id')->unique()->values();
-            $absent_users = User::select('id','name', 'position')->with('attendanceForms:id,name', 'profileImage')->where('role', 1)->whereNotIn('id', $attendance_user_ids)->whereNull('deleted_at')->where('is_enabled', true)->get();
+            $absent_users = User::select('id','name', 'position')->with('attendanceForms:id,name', 'profileImage')->where('role', 1)->where('company_id', $company_id)->whereNotIn('id', $attendance_user_ids)->whereNull('deleted_at')->where('is_enabled', true)->get();
             $data = (object)[
                 'users_attendances_count' => count($users_attendances),
                 'absent_users_count' => count($absent_users),
