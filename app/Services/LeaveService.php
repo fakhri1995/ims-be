@@ -310,7 +310,7 @@ class LeaveService
 
     if($approve){
       $leave->status = 2;
-      if($type->is_tahunan) $contract->annual_leave = $contract->annual_leave - 1;
+      if($type->is_tahunan) $contract->annual_leave = $contract->annual_leave - $leave->duration;
       
       $contract->save();
     }
