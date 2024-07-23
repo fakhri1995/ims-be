@@ -986,26 +986,26 @@ class AttendanceService{
                 $user_attendance->lat_check_in = $lat;
                 $user_attendance->check_in = $current_timestamp;
                 $user_attendance->is_wfo = $request->get('wfo', false);
-                if($user_attendance->is_wfo){
-                    //check if check in is more than 2km than company or not
-                    $company = Company::where('id', $company_id)->first();
-                    $lat_company = (float) $company->lat_address;
-                    $long_company = (float) $company->long_address;
-                    // convert from degrees to radians
-                    $latFrom = deg2rad($lat_company);
-                    $lonFrom = deg2rad($long_company);
-                    $latTo = deg2rad((float) $lat);
-                    $lonTo = deg2rad((float) $long);
+                // if($user_attendance->is_wfo){
+                //     //check if check in is more than 2km than company or not
+                //     $company = Company::where('id', $company_id)->first();
+                //     $lat_company = (float) $company->lat_address;
+                //     $long_company = (float) $company->long_address;
+                //     // convert from degrees to radians
+                //     $latFrom = deg2rad($lat_company);
+                //     $lonFrom = deg2rad($long_company);
+                //     $latTo = deg2rad((float) $lat);
+                //     $lonTo = deg2rad((float) $long);
 
-                    $latDelta = $latTo - $latFrom;
-                    $lonDelta = $lonTo - $lonFrom;
+                //     $latDelta = $latTo - $latFrom;
+                //     $lonDelta = $lonTo - $lonFrom;
 
-                    $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) +
-                    cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
+                //     $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) +
+                //     cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
 
-                    $distance = $angle * 6371000; //earth radius = 6371000
-                    if($distance >= 2000) return ["success" => false, "message" => "Posisi lebih dari 2km dari alamat kantor", "status" => 200];
-                }
+                //     $distance = $angle * 6371000; //earth radius = 6371000
+                //     if($distance >= 2000) return ["success" => false, "message" => "Posisi lebih dari 2km dari alamat kantor", "status" => 200];
+                // }
                 $user_attendance->is_late = $is_late;
                 $user_attendance->checked_out_by_system = false;
                 $user_attendance->save();
