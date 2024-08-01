@@ -17,7 +17,7 @@ class Overtime extends Model
     }
 
     public function status(){
-        return $this->belongsTo(OvertimeStatus::class, 'status');
+        return $this->belongsTo(OvertimeStatus::class, 'status_id');
     }
 
     public function project(){
