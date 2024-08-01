@@ -259,6 +259,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->put('/updateLeaveType','LeaveController@updateLeaveType');
     $router->get('/getLeavesCount','LeaveController@getLeavesCount');
     $router->post('/addLeaveDocument','LeaveController@addLeaveDocument');
+    $router->post('/addLeaveApproval','LeaveController@addLeaveApproval');
 
     //Manufacturer Routes
     $router->get('/getManufacturers', 'AssetController@getManufacturers');

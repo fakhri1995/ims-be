@@ -16,6 +16,11 @@ class Leave extends Model
         return $this->morphOne(File::class, 'fileable');
     }
 
+    public function approval()
+    {
+        return $this->morphOne(File::class, 'fileable');
+    }
+
     public function type(){
         return $this->belongsTo(LeaveType::class, 'type');
     }
