@@ -107,6 +107,7 @@ class LeaveService
           "start_date" => "required",
           "end_date" => "required",
           "document" => "mimes:pdf|mimetypes:application/pdf|file|max:5120",
+          "approval" => "mimes:pdf|mimetypes:application/pdf|file|max:5120",
       ]);
 
       if($validator->fails()){
@@ -145,6 +146,7 @@ class LeaveService
           if(!$leave->save()) return ["success" => false, "message" => "Gagal Menambah Leave", "status" => 400];
 
           if($request->document) $this->addDocument($leave->id, $request->document, "document");
+          if($request->approval) $this->addDocument($leave->id, $request->approval, "approval");
 
           return ["success" => true, "message" => "Data Berhasil Ditambahkan", "id" => $leave->id, "status" => 200];
       }catch(Exception $err){
@@ -196,7 +198,7 @@ class LeaveService
           $leave->issued_date = Date('Y-m-d H:i:s');
           $leave->status = 1;
           
-          if(!$request->document && $type->is_document_require  d)  return ["success" => false, "message" => "Dokumen pendukung harus diisi.", "status" => 400];
+          if(!$request->document && $type->is_document_required)  return ["success" => false, "message" => "Dokumen pendukung harus diisi.", "status" => 400];
           if(!$leave->save()) return ["success" => false, "message" => "Gagal Menambah Leave", "status" => 400];
 
           if($request->document) $this->addDocument($leave->id, $request->document, "document");

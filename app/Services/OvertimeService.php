@@ -135,11 +135,6 @@ class OvertimeService
             if($project === null) return ["success" => false, "message" => "Id Project Tidak Ditemukan", "status" => 400];
             $overtime->project_id = $project->id;
           }
-          
-          $type = OvertimeStatus::find($request->status_id);
-          if($type === null) return ["success" => false, "message" => "Id Tipe Cuti Tidak Ditemukan", "status" => 400];
-          $overtime->type = $type->id;
-
 
           $duration = Carbon::parse($request->start_at)->diffInHours(Carbon::parse($request->end_at));
           
@@ -197,11 +192,6 @@ class OvertimeService
             if($project === null) return ["success" => false, "message" => "Id Project Tidak Ditemukan", "status" => 400];
             $overtime->project_id = $project->id;
           }
-          
-          $type = OvertimeStatus::find($request->status_id);
-          if($type === null) return ["success" => false, "message" => "Id Tipe Cuti Tidak Ditemukan", "status" => 400];
-          $overtime->type = $type->id;
-
 
           $duration = Carbon::parse($request->start_at)->diffInHours(Carbon::parse($request->end_at));
           
