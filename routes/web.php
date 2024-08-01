@@ -260,6 +260,25 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->get('/getLeavesCount','LeaveController@getLeavesCount');
     $router->post('/addLeaveDocument','LeaveController@addLeaveDocument');
     $router->post('/addLeaveApproval','LeaveController@addLeaveApproval');
+    
+    //Overtime Routes
+    $router->get('/getOvertimeStatistics','OvertimeController@getOvertimeStatistics');
+    $router->get('/getOvertimeStatuses','OvertimeController@getOvertimeStatuses');
+    $router->get('/getOvertimeStatus','OvertimeController@getOvertimeStatus');
+    $router->get('/getOvertimes','OvertimeController@getOvertimes');
+    $router->get('/getOvertimesUser','OvertimeController@getOvertimesUser');
+    $router->get('/getOvertime','OvertimeController@getOvertime');
+    $router->post('/addOvertime','OvertimeController@addOvertime');
+    $router->post('/addOvertimeUser','OvertimeController@addOvertimeUser');
+    $router->delete('/deleteOvertime','OvertimeController@deleteOvertime');
+    $router->put('/updateOvertime','OvertimeController@updateOvertime');
+    $router->put('/approveOvertime','OvertimeController@approveOvertime');
+    $router->get('/getOvertimeTypes','OvertimeController@getOvertimeTypes');
+    $router->get('/getOvertimeType','OvertimeController@getOvertimeType');
+    $router->post('/addOvertimeType','OvertimeController@addOvertimeType');
+    $router->delete('/deleteOvertimeType','OvertimeController@deleteOvertimeType');
+    $router->put('/updateOvertimeType','OvertimeController@updateOvertimeType');
+    $router->post('/addOvertimeDocument','OvertimeController@addOvertimeDocument');
 
     //Manufacturer Routes
     $router->get('/getManufacturers', 'AssetController@getManufacturers');
