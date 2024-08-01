@@ -137,4 +137,11 @@ class LeaveController extends Controller
         $response = $this->LeaveService->addLeaveDocument($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    public function addLeaveApproval(Request $request){
+        $route_name = "LEAVE_APPROVAL_ADD";
+
+        $response = $this->LeaveService->addLeaveApproval($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }

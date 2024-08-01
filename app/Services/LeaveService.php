@@ -52,7 +52,7 @@ class LeaveService
       $keyword = $request->keyword;
       $rows = $request->rows ?? NULL;
       try{
-          $leaves = Leave::with(['document', 'type', 'employee', 'delegate']);
+          $leaves = Leave::with(['document', 'approval', 'type', 'employee', 'delegate']);
           if($keyword) $leaves = $leaves->where("name","LIKE", "%$keyword%");
           if($rows){
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $leaves->paginate($rows), "status" => 200];  
@@ -69,7 +69,7 @@ class LeaveService
       if($access["success"] === false) return $access;
       $id = $request->id;
       try{
-          $leaves = Leave::with(['document', 'type', 'employee', 'delegate'])->find($id);
+          $leaves = Leave::with(['document', 'approval', 'type', 'employee', 'delegate'])->find($id);
           return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $leaves, "status" => 200];
       }catch(Exception $err){
           return ["success" => false, "message" => $err->getMessage(), "status" => 400];
@@ -85,7 +85,7 @@ class LeaveService
       $rows = $request->rows ?? NULL;
       
       try{
-          $leaves = Leave::with(['document', 'type', 'employee', 'delegate'])->where("employee_id", $user->employee->id);
+          $leaves = Leave::with(['document', 'approval', 'type', 'employee', 'delegate'])->where("employee_id", $user->employee->id);
           if($rows){
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $leaves->paginate($rows), "status" => 200];  
           }
@@ -196,7 +196,7 @@ class LeaveService
           $leave->issued_date = Date('Y-m-d H:i:s');
           $leave->status = 1;
           
-          if(!$request->document && $type->is_document_required)  return ["success" => false, "message" => "Dokumen pendukung harus diisi.", "status" => 400];
+          if(!$request->document && $type->is_document_require  d)  return ["success" => false, "message" => "Dokumen pendukung harus diisi.", "status" => 400];
           if(!$leave->save()) return ["success" => false, "message" => "Gagal Menambah Leave", "status" => 400];
 
           if($request->document) $this->addDocument($leave->id, $request->document, "document");
@@ -461,6 +461,18 @@ class LeaveService
     $file = $request->file('file');
     $fileService = new FileService;
     $add_file_response = $fileService->addFile($id, $file, $this->table, "document", $this->folder_detail, false);
+    return ["success" => true, "message" => "Dokumen Berhasil Diunggah", "status" => 200];
+  }
+
+  public function addLeaveApproval(Request $request, $route_name)
+  {
+    $access = $this->globalService->checkRoute($route_name);
+    if($access["success"] === false) return $access;
+
+    $id = $request->id;
+    $file = $request->file('file');
+    $fileService = new FileService;
+    $add_file_response = $fileService->addFile($id, $file, $this->table, "approval", $this->folder_detail, false);
     return ["success" => true, "message" => "Dokumen Berhasil Diunggah", "status" => 200];
   }
   
