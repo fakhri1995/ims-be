@@ -26,7 +26,7 @@ class Overtime extends Model
 
     public function employee()
     {
-        return $this->belongsTo(Employee::class, 'employee_id')->with('user');
+        return $this->belongsTo(Employee::class, 'employee_id')->with('user', 'user.company');
     }
 
     public function manager()
