@@ -51,11 +51,23 @@ class OvertimeService
   {
       $access = $this->globalService->checkRoute($route_name);
       if($access["success"] === false) return $access;
-      $keyword = $request->keyword;
+      $employee = $request->employee;
+      $status_id = $request->status_id;
+      $company_id = $request->company_id;
+      $issued_date = $request->issued_date;
       $rows = $request->rows ?? NULL;
       try{
           $overtimes = Overtime::with(['document', 'status', 'project', 'employee', 'manager']);
-          if($keyword) $overtimes = $overtimes->where("name","LIKE", "%$keyword%");
+          if($employee) $overtimes = $overtimes->whereHas('employee', function($q) use ($employee){
+            return $q->where("name","LIKE", "%$employee%");
+          });
+          if($status_id) $overtimes = $overtimes->where("status_id", $status_id);
+          if($company_id) $overtimes = $overtimes->whereHas('employee', function($q) use ($company_id){
+            return $q->whereHas('user', function($q) use ($company_id){
+                return $q->where('company_id', $company_id);
+              });
+          });
+          if($issued_date) $overtimes = $overtimes->whereDate("issued_date", $issued_date);
           if($rows){
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $overtimes->paginate($rows), "status" => 200];  
           }
