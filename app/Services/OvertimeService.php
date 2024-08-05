@@ -323,9 +323,9 @@ class OvertimeService
     $overtime = Overtime::find($overtime_id);
 
     if($approve){
-      $overtime->status = 2;
+      $overtime->status_id = 2;
     }
-    else $overtime->status = 3;
+    else $overtime->status_id = 3;
     $overtime->save();
     return ["success" => true, "message" => $overtime, "status" => 200];
   }
