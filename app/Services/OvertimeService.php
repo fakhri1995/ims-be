@@ -320,7 +320,7 @@ class OvertimeService
     $overtime_id = $request->id;
     $approve = $request->approve;
 
-    $overtime = Overtime::with(['employee', 'type'])->find($overtime_id);
+    $overtime = Overtime::find($overtime_id);
 
     if($approve){
       $overtime->status = 2;
