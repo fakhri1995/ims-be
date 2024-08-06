@@ -32,9 +32,13 @@ class OvertimeService
 
     $has_overtime = count(Employee::has('overtime')->get());
     $no_overtime = count(Employee::whereDoesntHave('overtime')->get());
+    $rejected_overtime = count(Overtime::where('status_id', 3)->whereMonth("issued_date", date('m'))->get());
+    $pending_overtime = count(Overtime::where('status_id', 1)->get());
     $statistics = (object)[
         "has_overtime" => $has_overtime,
-        "no_overtime" => $no_overtime
+        "no_overtime" => $no_overtime,
+        "rejected_overtime" => $rejected_overtime,
+        "pending_overtime" => $pending_overtime
     ];
     return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $statistics, "status" => 200];
   }
