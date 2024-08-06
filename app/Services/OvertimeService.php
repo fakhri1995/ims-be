@@ -30,13 +30,13 @@ class OvertimeService
     $access = $this->globalService->checkRoute($route_name);
     if($access["success"] === false) return $access;
 
-    $has_overtime = count(Employee::has('overtime')->get());
-    $no_overtime = count(Employee::whereDoesntHave('overtime')->get());
+    $total_overtime = count(Overtime::whereMonth("issued_date", date('m'))->get());
+    $approved_overtime = count(Overtime::where('status_id', 2)->whereMonth("issued_date", date('m'))->get());
     $rejected_overtime = count(Overtime::where('status_id', 3)->whereMonth("issued_date", date('m'))->get());
     $pending_overtime = count(Overtime::where('status_id', 1)->get());
     $statistics = (object)[
-        "has_overtime" => $has_overtime,
-        "no_overtime" => $no_overtime,
+        "total_overtime" => $total_overtime,
+        "approved_overtime" => $approved_overtime,
         "rejected_overtime" => $rejected_overtime,
         "pending_overtime" => $pending_overtime
     ];
