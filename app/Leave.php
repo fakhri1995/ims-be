@@ -13,12 +13,12 @@ class Leave extends Model
 
     public function document()
     {
-        return $this->morphOne(File::class, 'fileable');
+        return $this->morphOne(File::class, 'fileable')->where('description', 'document');
     }
 
     public function approval()
     {
-        return $this->morphOne(File::class, 'fileable');
+        return $this->morphOne(File::class, 'fileable')->where('description', 'approval');
     }
 
     public function type(){
