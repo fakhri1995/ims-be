@@ -55,6 +55,10 @@ class Employee extends Model
         return $this->hasMany(Leave::class, "employee_id", "id");
     }
 
+    public function overtime(){
+        return $this->hasMany(Overtime::class, "employee_id", "id");
+    }
+
     public function last_month_payslip(){
         $lastDate = explode("-",date("Y-m",strtotime("-1 month")));
         $year = $lastDate[0]; //current month - 1
