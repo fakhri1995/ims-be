@@ -304,6 +304,7 @@ class LeaveService
     
     $leave_id = $request->id;
     $approve = $request ->approve;
+    $admin_notes = $request->admin_notes;
 
     $leave = Leave::with(['employee', 'type'])->find($leave_id);
     $type = LeaveType::find($leave->type);
@@ -317,6 +318,8 @@ class LeaveService
       $contract->save();
     }
     else $leave->status = 3;
+
+    if($admin_notes) $leave->admin_notes = $admin_notes;
     $leave->save();
     return ["success" => true, "message" => $contract, "status" => 200];
   }
