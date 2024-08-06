@@ -22,6 +22,7 @@ class CreateLeavesTable extends Migration
             $table->string('status');
             $table->string('notes')->nullable();
 
+            $table->string('admin_notes')->nullable();
             $table->integer('duration');
             $table->dateTime('start_date');
             $table->dateTime('end_date');
