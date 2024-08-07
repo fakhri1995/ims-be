@@ -17,9 +17,9 @@ class CreateOvertimesTable extends Migration
             $table->id();
 
             $table->integer('employee_id');
-            $table->integer('manager_id');
-            $table->integer('project_id');
             $table->integer('status_id');
+            $table->string('manager_name');
+            $table->string('project_name');
             $table->string('notes')->nullable();
 
             $table->integer('duration');
