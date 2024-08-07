@@ -203,7 +203,7 @@ class LeaveService
           if(!$leave->save()) return ["success" => false, "message" => "Gagal Menambah Leave", "status" => 400];
 
           if($request->document) $this->addDocument($leave->id, $request->document, "document");
-          if($request->approval) $this->addDocument($leave->id, $request->document, "approval");
+          if($request->approval) $this->addDocument($leave->id, $request->approval, "approval");
 
           return ["success" => true, "message" => "Data Berhasil Ditambahkan", "id" => $leave->id, "status" => 200];
       }catch(Exception $err){

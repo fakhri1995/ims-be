@@ -20,17 +20,8 @@ class Overtime extends Model
         return $this->belongsTo(OvertimeStatus::class, 'status_id');
     }
 
-    public function project(){
-        return $this->belongsTo(Project::class, 'project_id');
-    }
-
     public function employee()
     {
         return $this->belongsTo(Employee::class, 'employee_id')->with('user', 'user.company');
-    }
-
-    public function manager()
-    {
-        return $this->belongsTo(Employee::class, 'manager_id');
     }
 }

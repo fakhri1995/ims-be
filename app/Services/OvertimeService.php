@@ -120,8 +120,8 @@ class OvertimeService
       
       $validator = Validator::make($request->all(), [
           "employee_id" => "numeric|required|exists:App\Employee,id",
-          "manager_id" => "numeric|exists:App\Employee,id",
-          "project_id" => "numeric|exists:App\Project,id",
+          "manager_name" => "required",
+          "project_name" => "required",
           "start_at" => "required",
           "end_at" => "required",
           "document" => "mimes:pdf|mimetypes:application/pdf|file|max:5120",
@@ -135,22 +135,12 @@ class OvertimeService
       try{
           $overtime = new Overtime();
           $overtime->notes = $request->notes;
+          $overtime->manager_name = $request->manager_name;
+          $overtime->project_name = $request->project_name;
           
           $employee = Employee::find($request->employee_id);
           if($employee === null) return ["success" => false, "message" => "Id Karyawan Tidak Ditemukan", "status" => 400];
           $overtime->employee_id = $employee->id;
-
-          if($request->manager_id){
-            $manager = Employee::find($request->manager_id);
-            if($manager === null) return ["success" => false, "message" => "Id Manajer Tidak Ditemukan", "status" => 400];
-            $overtime->manager_id = $manager->id;
-          }
-
-          if($request->project_id){
-            $project = Project::find($request->project_id);
-            if($project === null) return ["success" => false, "message" => "Id Project Tidak Ditemukan", "status" => 400];
-            $overtime->project_id = $project->id;
-          }
 
           $duration = Carbon::parse($request->start_at)->diffInHours(Carbon::parse($request->end_at));
           
@@ -176,8 +166,8 @@ class OvertimeService
       if($access["success"] === false) return $access;
       
       $validator = Validator::make($request->all(), [
-          "manager_id" => "numeric|exists:App\Employee,id",
-          "project_id" => "numeric|exists:App\Project,id",
+          "manager_name" => "required",
+          "project_name" => "required",
           "start_at" => "required",
           "end_at" => "required",
           "document" => "mimes:pdf|mimetypes:application/pdf|file|max:5120",
@@ -191,23 +181,13 @@ class OvertimeService
       try{
           $overtime = new Overtime();
           $overtime->notes = $request->notes;
+          $overtime->manager_name = $request->manager_name;
+          $overtime->project_name = $request->project_name;
           
           $user = auth()->user()->id;
           $employee = Employee::where('user_id', $user)->first();
           if($employee === null) return ["success" => false, "message" => "Id Karyawan Tidak Ditemukan", "status" => 400];
           $overtime->employee_id = $employee->id;
-
-          if($request->manager_id){
-            $manager = Employee::find($request->manager_id);
-            if($manager === null) return ["success" => false, "message" => "Id Manajer Tidak Ditemukan", "status" => 400];
-            $overtime->manager_id = $manager->id;
-          }
-
-          if($request->project_id){
-            $project = Project::find($request->project_id);
-            if($project === null) return ["success" => false, "message" => "Id Project Tidak Ditemukan", "status" => 400];
-            $overtime->project_id = $project->id;
-          }
 
           $duration = Carbon::parse($request->start_at)->diffInHours(Carbon::parse($request->end_at));
           
@@ -282,8 +262,6 @@ class OvertimeService
     $validator = Validator::make($request->all(), [
         "id" => "required|exists:App\Overtime,id",
         "employee_id" => "numeric|exists:App\Employee,id",
-        "manager_id" => "numeric|exists:App\Employee,id",
-        "project_id" => "numeric|exists:App\Project,id",
         "document" => "mimes:pdf|mimetypes:application/pdf|file|max:5120",
     ]);
     
@@ -299,8 +277,8 @@ class OvertimeService
     if($request->notes)$overtime->notes = $request->notes;
     if($request->status_id)$overtime->status_id = $request->status_id;
     if($request->employee_id)$overtime->employee_id = $request->employee_id;
-    if($request->manager_id)$overtime->manager_id = $request->manager_id;
-    if($request->project_id)$overtime->project_id = $request->project_id;
+    if($request->manager_name)$overtime->manager_name = $request->manager_name;
+    if($request->project_name)$overtime->project_name = $request->project_name;
     
     $file = $request->file('document');
           if($file){
