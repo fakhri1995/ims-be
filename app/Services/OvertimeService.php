@@ -9,7 +9,6 @@ use App\File;
 use App\Overtime;
 use App\OvertimeStatus;
 use App\OvertimeType;
-use App\Project;
 use App\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -61,7 +60,7 @@ class OvertimeService
       $issued_date = $request->issued_date;
       $rows = $request->rows ?? NULL;
       try{
-          $overtimes = Overtime::with(['document', 'status', 'project', 'employee', 'manager']);
+          $overtimes = Overtime::with(['document', 'status', 'employee']);
           if($employee) $overtimes = $overtimes->whereHas('employee', function($q) use ($employee){
             return $q->where("name","LIKE", "%$employee%");
           });
@@ -87,7 +86,7 @@ class OvertimeService
       if($access["success"] === false) return $access;
       $id = $request->id;
       try{
-          $overtimes = Overtime::with(['document', 'status', 'project', 'employee', 'manager'])->find($id);
+          $overtimes = Overtime::with(['document', 'status', 'employee'])->find($id);
           return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $overtimes, "status" => 200];
       }catch(Exception $err){
           return ["success" => false, "message" => $err->getMessage(), "status" => 400];
@@ -103,7 +102,7 @@ class OvertimeService
       $rows = $request->rows ?? NULL;
       
       try{
-          $overtimes = Overtime::with(['document', 'status', 'project', 'employee', 'manager'])->where("employee_id", $user->employee->id);
+          $overtimes = Overtime::with(['document', 'status', 'employee'])->where("employee_id", $user->employee->id);
           if($rows){
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $overtimes->paginate($rows), "status" => 200];  
           }
@@ -341,6 +340,10 @@ class OvertimeService
     if($access["success"] === false) return $access;
 
     $id = $request->id;
+    $overtime = Overtime::find($id);
+    if($overtime->status_id != 2){
+        return ["success" => false, "message" => "Overtime belum disetujui", "status" => 400];
+    }
     $file = $request->file('file');
     $fileService = new FileService;
     $add_file_response = $fileService->addFile($id, $file, $this->table, "document", $this->folder_detail, false);
