@@ -341,6 +341,10 @@ class OvertimeService
     if($access["success"] === false) return $access;
 
     $id = $request->id;
+    $overtime = Overtime::find($id);
+    if($overtime->status_id != 2){
+        return ["success" => false, "message" => "Overtime belum disetujui", "status" => 400];
+    }
     $file = $request->file('file');
     $fileService = new FileService;
     $add_file_response = $fileService->addFile($id, $file, $this->table, "document", $this->folder_detail, false);
