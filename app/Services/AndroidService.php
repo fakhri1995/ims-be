@@ -159,7 +159,35 @@ class AndroidService{
 
         $attendance_activity_count = DB::table('attendance_activities')->where('user_id', $login_id)->whereDate('updated_at', date('Y-m-d'))->count();
         $attendance_task_activity_count = DB::table('attendance_task_activities')->where('user_id', $login_id)->whereDate('updated_at', date('Y-m-d'))->count();
-        
+
+        //Attendance Late & Present
+        $user_attendances = AttendanceUser::with('evidence:link,description,fileable_id,fileable_type')->select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
+            ->join('long_lat_lists AS check_in_list', function ($join) {
+                $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
+            })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
+                $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
+            })->where('user_id', $login_id)
+            ->whereDate('check_in', '>', date("Y-m-d", strtotime("-1 months"))
+        )->get();
+
+        $is_late_count = 0;
+        $on_time_count = 0;
+
+        $is_late_days = [];
+        foreach($user_attendances as $user_attendance){
+            $attendance_day = date('m-d', strtotime($user_attendance->check_in));
+            $is_late_days[$attendance_day] = $user_attendance->is_late;
+            $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
+            $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
+        }
+
+        foreach($is_late_days as $is_late_day){
+            if($is_late_day) $is_late_count++;
+            else $on_time_count++;
+        }
+
+        $attendance_count = $is_late_count + $on_time_count;
+
         $data = (object)[
             "ticket" => $ticket_statuses,
             "last_three_tickets" => $last_three_tickets,
@@ -175,7 +203,10 @@ class AndroidService{
             "attendanceForm" => $attendance_forms,
             "attendance_activity_count" => $attendance_activity_count,
             "attendance_task_activity_count" => $attendance_task_activity_count,
-            "last_check_in" => $last_check_in
+            "last_check_in" => $last_check_in,
+            "attendance_count" => $attendance_count,
+            "is_late_count" => $is_late_count,
+            "on_time_count" => $on_time_count
         ];
         
         return ["success" => true, "message" => "Main Data Berhasil Diambil", "data" => $data, "status" => 200];
