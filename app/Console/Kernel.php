@@ -101,8 +101,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('exclusive:set-display-order-resume 4')->cron('0 * * * *')->runInBackground();
         $schedule->command('exclusive:set-display-order-resume 5')->cron('0 * * * *')->runInBackground();
 
-        // foreach (range(1, 5) as $i) {
-        //     $schedule->command('notification:send-mail-announcement ' . $i)->cron('* * * * *')->runInBackground();
-        // }
+        foreach (range(1, 5) as $i) {
+            $schedule->command('notification:send-mail-announcement ' . $i)->cron('0 * * * *')->runInBackground();
+        }
     }
 }
