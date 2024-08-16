@@ -73,33 +73,33 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         //$schedule->command(SendAndroidPushNotifications::class)->cron('* * * * *')->runInBackground();
-        // $schedule->command(SendAndroidNotificationCheckIn::class)->cron('0 8 * * *')->runInBackground();
-        // $schedule->command(SendAndroidNotificationActivity::class)->cron('0 13 * * *')->runInBackground();
+        $schedule->command(SendAndroidNotificationCheckIn::class)->cron('0 8 * * *')->runInBackground();
+        $schedule->command(SendAndroidNotificationActivity::class)->cron('0 13 * * *')->runInBackground();
         // $schedule->command(UnhideTasks::class)->cron('* * * * *')->runInBackground();
         // $schedule->command(SetOverdueTasks::class)->cron('* * * * *')->runInBackground();
         // $schedule->command(SearchGeoLocation::class)->cron('* * * * *')->runInBackground();
         // $schedule->command(GenerateOneHourLeftTaskNotification::class)->cron('* * * * *')->runInBackground();
-        // $schedule->command(AutoCheckOutAttendance::class)->cron('59 23 * * *')->runInBackground();
-        // $schedule->command(GenerateDailyTask::class)->cron('0 0 * * *')->runInBackground();
-        // $schedule->command(GenerateWeeklyTask::class)->cron('0 0 * * 1')->runInBackground();
-        // $schedule->command(GenerateTwicePerMonthTask::class)->cron('0 0 1,15 * *')->runInBackground();
-        // $schedule->command(GenerateMonthlyTask::class)->cron('0 0 1 * *')->runInBackground();
-        // $schedule->command(GenerateThricePerYearTask::class)->cron('0 0 1 */4 *')->runInBackground();
-        // $schedule->command(GenerateFourTimesPerYearTask::class)->cron('0 0 1 */3 *')->runInBackground();
-        // $schedule->command(RaiseLastPeriodPayslip::class)->cron('35 0 1 * *')->runInBackground();
+        $schedule->command(AutoCheckOutAttendance::class)->cron('59 23 * * *')->runInBackground();
+        $schedule->command(GenerateDailyTask::class)->cron('0 0 * * *')->runInBackground();
+        $schedule->command(GenerateWeeklyTask::class)->cron('0 0 * * 1')->runInBackground();
+        $schedule->command(GenerateTwicePerMonthTask::class)->cron('0 0 1,15 * *')->runInBackground();
+        $schedule->command(GenerateMonthlyTask::class)->cron('0 0 1 * *')->runInBackground();
+        $schedule->command(GenerateThricePerYearTask::class)->cron('0 0 1 */4 *')->runInBackground();
+        $schedule->command(GenerateFourTimesPerYearTask::class)->cron('0 0 1 */3 *')->runInBackground();
+        $schedule->command(RaiseLastPeriodPayslip::class)->cron('35 0 1 * *')->runInBackground();
         // $schedule->command(SendAnnounceNotification::class)->cron('* * * * *')->runInBackground();
 
-        // $schedule->command('task:generate-schedules-attendance 1')->cron('*/15 1-2 * * *')->runInBackground();
-        // $schedule->command('task:generate-schedules-attendance 2')->cron('*/15 1-2 * * *')->runInBackground();
-        // $schedule->command('task:generate-schedules-attendance 3')->cron('*/15 1-2 * * *')->runInBackground();
-        // $schedule->command('task:generate-schedules-attendance 4')->cron('*/15 1-2 * * *')->runInBackground();
-        // $schedule->command('task:generate-schedules-attendance 5')->cron('*/15 1-2 * * *')->runInBackground();
+        $schedule->command('task:generate-schedules-attendance 1')->cron('*/15 1-2 * * *')->runInBackground();
+        $schedule->command('task:generate-schedules-attendance 2')->cron('*/15 1-2 * * *')->runInBackground();
+        $schedule->command('task:generate-schedules-attendance 3')->cron('*/15 1-2 * * *')->runInBackground();
+        $schedule->command('task:generate-schedules-attendance 4')->cron('*/15 1-2 * * *')->runInBackground();
+        $schedule->command('task:generate-schedules-attendance 5')->cron('*/15 1-2 * * *')->runInBackground();
 
-        // $schedule->command('exclusive:set-display-order-resume 1')->cron('0 * * * *')->runInBackground();
-        // $schedule->command('exclusive:set-display-order-resume 2')->cron('0 * * * *')->runInBackground();
-        // $schedule->command('exclusive:set-display-order-resume 3')->cron('0 * * * *')->runInBackground();
-        // $schedule->command('exclusive:set-display-order-resume 4')->cron('0 * * * *')->runInBackground();
-        // $schedule->command('exclusive:set-display-order-resume 5')->cron('0 * * * *')->runInBackground();
+        $schedule->command('exclusive:set-display-order-resume 1')->cron('0 * * * *')->runInBackground();
+        $schedule->command('exclusive:set-display-order-resume 2')->cron('0 * * * *')->runInBackground();
+        $schedule->command('exclusive:set-display-order-resume 3')->cron('0 * * * *')->runInBackground();
+        $schedule->command('exclusive:set-display-order-resume 4')->cron('0 * * * *')->runInBackground();
+        $schedule->command('exclusive:set-display-order-resume 5')->cron('0 * * * *')->runInBackground();
 
         // foreach (range(1, 5) as $i) {
         //     $schedule->command('notification:send-mail-announcement ' . $i)->cron('* * * * *')->runInBackground();
