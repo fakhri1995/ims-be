@@ -424,6 +424,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     //Form Routes
     $router->get('/getAttendanceForms', 'AttendanceController@getAttendanceForms');
     $router->get('/getAttendanceForm', 'AttendanceController@getAttendanceForm');
+    $router->get('/getAttendanceFormCompany', 'AttendanceController@getAttendanceFormCompany');
     $router->post('/addAttendanceForm', 'AttendanceController@addAttendanceForm');
     $router->post('/addUserAttendanceForm', 'AttendanceController@addUserAttendanceForm');
     $router->put('/updateAttendanceForm', 'AttendanceController@updateAttendanceForm');

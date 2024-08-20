@@ -88,6 +88,24 @@ class AttendanceService{
         }
     }
 
+    public function getAttendanceFormCompany($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        try{
+            $id = $request->get('id');
+            $company_id = auth()->user()->company_id;
+            $attendance_form = AttendanceForm::with(['users' => function($q) use($company_id){
+                $q->where('company_id', $company_id);
+            }, 'users.profileImage', 'creator:id,name,position'])->find($id);
+            if($attendance_form === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+            return ["success" => true, "message" => "Attendance Form Berhasil Diambil", "data" => $attendance_form, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+
     public function addAttendanceForm($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
