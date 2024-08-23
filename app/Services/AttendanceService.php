@@ -655,12 +655,12 @@ class AttendanceService{
         $sort_type = $request->sort_type ?? NULL;
         $company_ids = $request->company_ids ? explode(",",$request->company_ids) : NULL;
         // try{
-            $current_time = date('Y-m-d');
+            $date = $request->date ?? date('Y-m-d');
 
             if($admin){
-                $users_attendances = User::select("id","name", "company_id", "position")->with(["attendance_user" => function($q) use($current_time, $is_late){
+                $users_attendances = User::select("id","name", "company_id", "position")->with(["attendance_user" => function($q) use($date, $is_late){
                     $q->select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
-                    ->whereDate("check_in","=",$current_time)
+                    ->whereDate("check_in","=",$date)
                     ->join('long_lat_lists AS check_in_list', function ($join) {
                         $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
                     })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
@@ -670,9 +670,9 @@ class AttendanceService{
             }
             else{
                 $company_id = auth()->user()->company_id;
-                $users_attendances = User::select("id","name", "company_id", "position")->where('company_id', $company_id)->with(["attendance_user" => function($q) use($current_time, $is_late){
+                $users_attendances = User::select("id","name", "company_id", "position")->where('company_id', $company_id)->with(["attendance_user" => function($q) use($date, $is_late){
                     $q->select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
-                    ->whereDate("check_in","=",$current_time)
+                    ->whereDate("check_in","=",$date)
                     ->join('long_lat_lists AS check_in_list', function ($join) {
                         $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
                     })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
@@ -687,9 +687,9 @@ class AttendanceService{
 
 
 
-            $users_attendances = $users_attendances->where(function($q) use($current_time, $is_late, $is_on_time, $is_wfh, $is_wfo, $is_hadir){
+            $users_attendances = $users_attendances->where(function($q) use($date, $is_late, $is_on_time, $is_wfh, $is_wfo, $is_hadir){
                 if($is_late || $is_on_time || $is_wfh || $is_wfo || $is_hadir == 1){
-                    $q->whereHas("attendance_user", function($q) use($current_time, $is_late, $is_on_time, $is_wfh, $is_wfo){
+                    $q->whereHas("attendance_user", function($q) use($date, $is_late, $is_on_time, $is_wfh, $is_wfo){
                         if($is_late && $is_on_time) ;
                         elseif($is_late != NULL) $q->where("is_late",$is_late);
                         elseif($is_on_time != NULL) $q->where("is_late",0);
@@ -697,12 +697,12 @@ class AttendanceService{
                         if($is_wfh && $is_wfo);
                         elseif($is_wfh) $q->where("is_wfo", 0);
                         elseif($is_wfo)$q->where("is_wfo", 1);
-                        $q->whereDate("check_in","=",$current_time);
+                        $q->whereDate("check_in","=",$date);
                     });
                 }
                 elseif(!$is_hadir && $is_hadir !== NULL){
-                    $q->orWhereDoesntHave("attendance_user", function($q) use($current_time){
-                        $q->whereDate("check_in","=",$current_time);
+                    $q->orWhereDoesntHave("attendance_user", function($q) use($date){
+                        $q->whereDate("check_in","=",$date);
                         return $q;
                     });
                 }
