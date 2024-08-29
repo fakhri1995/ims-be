@@ -55,7 +55,7 @@ class OvertimeService
       $access = $this->globalService->checkRoute($route_name);
       if($access["success"] === false) return $access;
       $employee = $request->employee;
-      $status_id = $request->status_id;
+      $status = $request->status;
       $company_id = $request->company_id;
       $issued_date = $request->issued_date;
       $rows = $request->rows ?? NULL;
@@ -64,7 +64,7 @@ class OvertimeService
           if($employee) $overtimes = $overtimes->whereHas('employee', function($q) use ($employee){
             return $q->where("name","LIKE", "%$employee%");
           });
-          if($status_id) $overtimes = $overtimes->where("status_id", $status_id);
+          if($status) $overtimes = $overtimes->where("status_id", $status);
           if($company_id) $overtimes = $overtimes->whereHas('employee', function($q) use ($company_id){
             return $q->whereHas('user', function($q) use ($company_id){
                 return $q->where('company_id', $company_id);
