@@ -51,9 +51,13 @@ class LeaveService
       if($access["success"] === false) return $access;
       $keyword = $request->keyword;
       $rows = $request->rows ?? NULL;
+      $status = $request->status ?? NULL;
       try{
           $leaves = Leave::with(['document', 'approval', 'type', 'employee', 'delegate']);
-          if($keyword) $leaves = $leaves->where("name","LIKE", "%$keyword%");
+          if($keyword) $leaves = $leaves->whereHas('employee', function($q) use($keyword){
+            $q->where("name","LIKE", "%$keyword%");
+          });
+          if($status) $leaves = $leaves->where('status', $status);
           if($rows){
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $leaves->paginate($rows), "status" => 200];  
           }
