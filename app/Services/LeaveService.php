@@ -52,12 +52,14 @@ class LeaveService
       $keyword = $request->keyword;
       $rows = $request->rows ?? NULL;
       $status = $request->status ?? NULL;
+      $date = $request->date ?? NULL;
       try{
           $leaves = Leave::with(['document', 'approval', 'type', 'employee', 'delegate']);
           if($keyword) $leaves = $leaves->whereHas('employee', function($q) use($keyword){
             $q->where("name","LIKE", "%$keyword%");
           });
           if($status) $leaves = $leaves->where('status', $status);
+          if($date) $leaves = $leaves->whereDate('start_date', $date);
           if($rows){
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $leaves->paginate($rows), "status" => 200];  
           }
