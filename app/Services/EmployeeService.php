@@ -7,6 +7,7 @@ use App\EmployeeBenefit;
 use App\EmployeeContract;
 use App\EmployeeDevice;
 use App\EmployeeInventory;
+use App\EmployeeLeaveQuota;
 use App\EmployeePayslip;
 use App\EmployeeSalary;
 use App\EmployeeSalaryColumn;
@@ -105,7 +106,7 @@ class EmployeeService{
                 "contracts" => function ($q){
                     $q->orderBy('contract_start_at','desc');
                 },"contracts.role","contracts.contract_status","contracts.salaries","contract.salaries.column",
-                "inventories","inventories.devices","inventories.delivery_file","inventories.return_file","last_month_payslip"])->find($id);
+                "inventories","inventories.devices","inventories.delivery_file","inventories.return_file","last_month_payslip", "leaveQuota"])->find($id);
             if(!$employee) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             if($employee->is_posted == false && $employee->created_by != auth()->user()->id && $employee->created_by != null){
                 return ["success" => false, "message" => "Draft dibuat oleh user lain", "status" => 400]; 
@@ -151,7 +152,7 @@ class EmployeeService{
         $employees = Employee::with(["contract" => function ($query) use($current_timestamp) {
             $query->selectRaw("*, DATEDIFF(contract_end_at, '$current_timestamp') as contract_end_countdown");
             // $query->orderBy("contract_end_countdown", "desc");
-        },"contract.role","contract.contract_status"])
+        },"contract.role","contract.contract_status", "leaveQuota"])
         ->leftJoin("employee_contracts","employees.last_contract_id","=","employee_contracts.id")
         ->leftJoin("recruitment_roles","employee_contracts.role_id","=","recruitment_roles.id")
         ->select("employees.*","recruitment_roles.name as role_name")
@@ -184,7 +185,6 @@ class EmployeeService{
         }
         if($sort_by == "name") $employees = $employees->orderBy('name',$sort_type);
         if($sort_by == "role") $employees = $employees->orderBy("recruitment_roles.name",$sort_type);
-           
         
         if($is_employee_active){
             $employeesDraft = Employee::with(["contract" => function ($query) use($current_timestamp) {
@@ -244,6 +244,32 @@ class EmployeeService{
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
+    }
+
+    public function getEmployeeLeaveQuotas($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $keyword = $request->keyword;
+        $rows = $request->rows;
+        $keyword = $request->keyword;
+        $role_ids = $request->role_ids ? explode(",",$request->role_ids) : NULL;
+
+        $employees = Employee::with(['contract', 'contract.role', 'leaveQuota'])->has('leaveQuota');
+
+        if($keyword) $employees = $employees->where("name","LIKE", "%$keyword%");
+            $employees = $employees->whereHas("contract", function ($query) use($role_ids) {
+                if($role_ids) $query->whereIn('role_id', $role_ids);
+                return $query;
+            });
+
+        $sort_by = $request->sort_by ?? NULL;
+        $sort_type = $request->sort_type == 'desc' ? 'desc' : 'asc';
+
+        if($sort_by == "name") $employees = $employees->orderBy('name',$sort_type);
+
+        $data = $employees->paginate($rows);
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
     }
 
     public function getEmployeesDraft($request, $route_name)
@@ -1846,6 +1872,97 @@ class EmployeeService{
         ));
         
         return ["success" => true, "message" => "Berhasil Membuat Notes Ticket", "data" => $res, "status" => 200];
+    }
+
+    public function addEmployeeLeaveQuota($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "employee_id" => "numeric|required",
+            "leave_total" => "numeric|required",
+            "start_period" => "required",
+            "end_period" => "required",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+            if(Employee::with('leaveQuota')->find($request->employee_id)->leaveQuota){
+                return ["success" => false, "message" => "Employee sudah memiliki Quota Cuti!", "status" => 400];
+            }
+
+            $data = new EmployeeLeaveQuota();
+            $data->employee_id  = $request->employee_id;
+            $data->leave_total  = $request->leave_total;
+            $data->leave_used  = 0;
+            $data->leave_remaining  = 0;
+            $data->start_period = $request->start_period;
+            $data->end_period   = $request->end_period;
+
+            $data->save();
+            return ["success" => true, "message" => "Quota Cuti berhasil ditambahkan", "data" => Employee::with('leaveQuota')->find($request->employee_id), "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
+        }
+    }
+
+    public function updateEmployeeLeaveQuota($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $validator = Validator::make($request->all(), [
+            "id" => "numeric|required",
+            "employee_id" => "numeric",
+            "leave_total" => "numeric",
+        ]);
+
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        try{
+            $data = EmployeeLeaveQuota::find($request->id);
+            if($request->employee_id){    
+                if((Employee::with('leaveQuota')->find($request->employee_id)->leaveQuota) && ($data->employee_id != $request->employee_id)){
+                    return ["success" => false, "message" => "Employee sudah memiliki Quota Cuti!", "status" => 400];
+                }
+
+                $data->employee_id  = $request->employee_id;
+            }
+            if($request->leave_total){
+                $data->leave_total  = $request->leave_total;
+                $data->leave_remaining = $data->leave_total - $data->leave_used;
+            }
+            if($request->start_period)  $data->start_period = $request->start_period;
+            if($request->end_period)    $data->end_period   = $request->end_period;
+
+            $data->save();
+            return ["success" => true, "message" => "Quota Cuti berhasil diupdate", "data" => $data, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteEmployeeLeaveQuota($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $data = EmployeeLeaveQuota::find($request->id);
+
+            $data->delete();
+            return ["success" => true, "message" => "Quota Cuti berhasil didelete", "data" => $request->id, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
     }
 
     private function addEmployeeFile($id, $file, $description)
