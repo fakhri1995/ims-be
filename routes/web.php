@@ -682,6 +682,11 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->get('/postedEmployeeLastPayslips', 'EmployeeController@postedEmployeeLastPayslips');
     $router->get('/raiseLastPeriodPayslip', 'EmployeeController@raiseLastPeriodPayslip');
 
+    //Employee Leave Quota
+    $router->get('/getEmployeeLeaveQuotas', 'EmployeeController@getEmployeeLeaveQuotas');
+    $router->post('/addEmployeeLeaveQuota', 'EmployeeController@addEmployeeLeaveQuota');
+    $router->put('/updateEmployeeLeaveQuota', 'EmployeeController@updateEmployeeLeaveQuota');
+    $router->delete('/deleteEmployeeLeaveQuota', 'EmployeeController@deleteEmployeeLeaveQuota');
 
     // Project & Task Management - Project
     $router->get('/getProject', 'ProjectTaskController@getProject');

@@ -60,6 +60,15 @@ class EmployeeController extends Controller
         $response = $this->employeeService->getEmployees($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    
+    public function getEmployeeLeaveQuotas(Request $request)
+    {
+        $route_name = "EMPLOYEE_LEAVE_QUOTAS_GET";
+
+        $response = $this->employeeService->getEmployeeLeaveQuotas($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
 
     public function getEmployeesDraft(Request $request)
     {
@@ -364,6 +373,30 @@ class EmployeeController extends Controller
         $route_name = "EMPLOYEE_PAYSLIP_RAISE";
 
         $response = $this->employeeService->raiseLastPeriodPayslip($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function addEmployeeLeaveQuota(Request $request)
+    {
+        $route_name = "EMPLOYEE_LEAVE_QUOTA_ADD";
+
+        $response = $this->employeeService->addEmployeeLeaveQuota($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateEmployeeLeaveQuota(Request $request)
+    {
+        $route_name = "EMPLOYEE_LEAVE_QUOTA_UPDATE";
+
+        $response = $this->employeeService->updateEmployeeLeaveQuota($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteEmployeeLeaveQuota(Request $request)
+    {
+        $route_name = "EMPLOYEE_LEAVE_QUOTA_DELETE";
+
+        $response = $this->employeeService->deleteEmployeeLeaveQuota($request, $route_name);
         return response()->json($response, $response['status']);
     }
 }

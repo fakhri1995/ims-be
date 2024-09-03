@@ -55,6 +55,10 @@ class Employee extends Model
         return $this->hasMany(Leave::class, "employee_id", "id");
     }
 
+    public function leaveQuota(){
+        return $this->hasOne(EmployeeLeaveQuota::class, "employee_id", "id");
+    }
+
     public function overtime(){
         return $this->hasMany(Overtime::class, "employee_id", "id");
     }
