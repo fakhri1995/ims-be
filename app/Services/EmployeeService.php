@@ -1905,7 +1905,7 @@ class EmployeeService{
             $data->end_period   = $request->end_period;
 
             $data->save();
-            return ["success" => true, "message" => "Quota Cuti berhasil ditambahkan", "data" => Employee::with('leaveQuota')->find($request->employee_id), "status" => 200];
+            return ["success" => true, "message" => "Quota Cuti berhasil ditambahkan", "data" => $data, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err->getMessage(), "status" => 400];
         }
