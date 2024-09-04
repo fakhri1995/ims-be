@@ -1956,7 +1956,11 @@ class EmployeeService{
         if($access["success"] === false) return $access;
 
         try{
-            $data = EmployeeLeaveQuota::find($request->id);
+            $id = $request->id;
+            $data = EmployeeLeaveQuota::find($id);
+            if(!$data){
+                return ["success" => false, "message" => "Data Quota Cuti tidak ditemukan!", "status" => 400];
+            }
 
             $data->delete();
             return ["success" => true, "message" => "Quota Cuti berhasil didelete", "data" => $request->id, "status" => 200];
