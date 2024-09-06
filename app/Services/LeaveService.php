@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Contract;
 use App\Employee;
 use App\EmployeeContract;
+use App\EmployeeLeaveQuota;
 use App\File;
 use App\Leave;
 use App\LeaveType;
@@ -317,19 +318,22 @@ class LeaveService
     $leave = Leave::with(['employee', 'type'])->find($leave_id);
     $type = LeaveType::find($leave->type);
     $employee = Employee::with('contract')->find($leave->employee->id);
-    $contract = EmployeeContract::find($employee->contract->id);
+    $leave_quota = EmployeeLeaveQuota::find($employee->id);
 
     if($approve){
       $leave->status = 2;
-      if($type->is_tahunan) $contract->annual_leave = $contract->annual_leave - $leave->duration;
+      if($type->is_tahunan){ 
+        $leave_quota->leave_used = $leave_quota->leave_used + $leave->duration;
+        $leave_quota->leave_remaining = $leave_quota->leave_remaining - $leave->duration;
+    }
       
-      $contract->save();
+      $leave_quota->save();
     }
     else $leave->status = 3;
 
     if($admin_notes) $leave->admin_notes = $admin_notes;
     $leave->save();
-    return ["success" => true, "message" => $contract, "status" => 200];
+    return ["success" => true, "message" => $leave_quota, "status" => 200];
   }
 
   //LEAVE TYPE
@@ -461,8 +465,9 @@ class LeaveService
     $access = $this->globalService->checkRoute($route_name);
     if($access["success"] === false) return $access;
 
-    $user = User::with('employee','employee.contract')->find(auth()->user()->id);
-    return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $user->employee->contract->annual_leave, "status" => 200];
+    $user = User::with('employee','employee.contract', 'employee.leaveQuota')->find(auth()->user()->id);
+    
+    return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $user->employee->leaveQuota, "status" => 200];
   }
 
   public function addLeaveDocument(Request $request, $route_name)
