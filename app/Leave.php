@@ -27,7 +27,7 @@ class Leave extends Model
 
     public function employee()
     {
-        return $this->belongsTo(Employee::class, 'employee_id')->with('contract', 'contract.role');
+        return $this->belongsTo(Employee::class, 'employee_id')->with('contract', 'contract.role', 'leaveQuota');
     }
 
     public function delegate()
