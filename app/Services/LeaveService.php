@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 
 class LeaveService
 {
@@ -311,29 +312,36 @@ class LeaveService
     $access = $this->globalService->checkRoute($route_name);
     if($access["success"] === false) return $access;
     
-    $leave_id = $request->id;
-    $approve = $request ->approve;
-    $admin_notes = $request->admin_notes;
-
-    $leave = Leave::with(['employee', 'type'])->find($leave_id);
-    $type = LeaveType::find($leave->type);
-    $employee = Employee::with('contract')->find($leave->employee->id);
-    $leave_quota = EmployeeLeaveQuota::find($employee->id);
-
-    if($approve){
-      $leave->status = 2;
-      if($type->is_tahunan){ 
-        $leave_quota->leave_used = $leave_quota->leave_used + $leave->duration;
-        $leave_quota->leave_remaining = $leave_quota->leave_remaining - $leave->duration;
+    try{
+        $leave_id = $request->id;
+        $approve = $request ->approve;
+        $admin_notes = $request->admin_notes;
+    
+        $leave = Leave::with(['employee', 'type'])->find($leave_id);
+        if($leave->status == 2){
+            return ["success" => true, "message" => "Cuti sudah diterima", "status" => 200];
+        }
+        $type = LeaveType::find($leave->type);
+        $employee = Employee::with('contract')->find($leave->employee->id);
+        $leave_quota = EmployeeLeaveQuota::where('employee_id', $employee->id)->first();
+    
+        if($approve){
+          $leave->status = 2;
+          if($type->is_tahunan){ 
+            $leave_quota->leave_used = $leave_quota->leave_used + $leave->duration;
+            $leave_quota->leave_remaining = $leave_quota->leave_remaining - $leave->duration;
+        }
+          
+          $leave_quota->save();
+        }
+        else $leave->status = 3;
+    
+        if($admin_notes) $leave->admin_notes = $admin_notes;
+        $leave->save();
+        return ["success" => true, "message" => $leave, "status" => 200];
+    } catch (Exception $e){
+        return ["success" => false, "message" => $leave_quota, "status" => 400];
     }
-      
-      $leave_quota->save();
-    }
-    else $leave->status = 3;
-
-    if($admin_notes) $leave->admin_notes = $admin_notes;
-    $leave->save();
-    return ["success" => true, "message" => $leave_quota, "status" => 200];
   }
 
   //LEAVE TYPE
