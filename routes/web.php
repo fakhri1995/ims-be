@@ -465,6 +465,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->get('/exportAttendanceActivityUsers', 'AttendanceController@exportAttendanceActivityUsers');
     $router->post('/setAttendanceToggle', 'AttendanceController@setAttendanceToggle');
     $router->get('/getTimeSheet', 'AttendanceController@getTimeSheet');
+    $router->get('/getAttendaceRecap', 'AttendanceController@getAttendaceRecap');
 
 
     //Attendance Project Routes

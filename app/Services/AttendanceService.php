@@ -19,12 +19,15 @@ use App\AttendanceTaskActivity;
 use App\Company;
 use App\Exports\AttendanceActivitiesExport;
 use App\File;
+use App\Leave;
+use App\Overtime;
 use App\ProjectTask;
 use App\Schedule;
 use App\Task;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class AttendanceService{
@@ -1538,5 +1541,75 @@ class AttendanceService{
             ];
         }
         return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $timesheets, "status" => 200];
+    }
+
+    public function getAttendaceRecap($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $keyword = $request->keyword ?? NULL;
+        $role_ids = $request->role_ids ? explode(",",$request->role_ids) : NULL;
+        $company_id = $request->company_id ?? NULL;
+        $start_date = $request->start_date ?? date('Y-m-d', strtotime('-1 months'));
+        $end_date = $request->end_date ?? date('Y-m-d');
+
+        $non_working_schedules = ['Cuti Tahunan', 'Cuti Bersama', 'Libur Nasional'];
+        $users = Schedule::with([
+            'shift',
+            'user',
+            'user.employee',
+            'user.company'
+        ])
+        ->whereHas('user', function($q) use($keyword, $company_id, $role_ids){
+            if($company_id) $q->where('company_id', $company_id);
+            if($role_ids) $q->whereIn('company_id', $role_ids);
+            if($keyword) $q->where('name', 'LIKE', "%$keyword%");
+            $q->has('company');
+        })
+        ->whereHas('shift', function($q) use($non_working_schedules){
+            $q->whereNotIn('title', $non_working_schedules);
+        })
+        ->whereBetween('date', [$start_date, $end_date])
+        ->select('user_id', DB::raw('count(*) as total_work_day'))
+        ->groupBy('user_id')
+        ->get();
+
+        $data = array();
+        foreach($users as $user){
+        if($user->user->employee){
+            $attendances = AttendanceUser::where('user_id', $user->user_id)
+            ->whereBetween('check_in', [$start_date, $end_date])->get();
+            $wfo_count = count($attendances->where('is_wfo', 1));
+            $wfh_count = count($attendances->where('is_wfo', 0));
+            $late_count = count($attendances->where('is_late', 1));
+            $alpha_count = $user->total_work_day - count($attendances);
+
+            $leave_count = count(Leave::where('employee_id', $user->user->employee->id)
+            ->whereBetween('start_date', [$start_date, $end_date])
+            ->where('status', 2)->get());
+
+            $overtimes = Overtime::where('employee_id', $user->user->employee->id)
+            ->whereBetween('issued_date', [$start_date, $end_date])
+            ->where('status_id', 2)->get();
+
+            $overtime_count = 0;
+            foreach($overtimes as $overtime){
+                $overtime_count += $overtime->duration;
+            }
+            $data[] = [
+                'name' => $user->user->name,
+                'role' => $user->user->role,
+                'company' => $user->user->company->name,
+                'total_work_day' => $user->total_work_day,
+                'wfo_count' => $wfo_count,
+                'wfh_count' => $wfh_count,
+                'late_count' => $late_count,
+                'alpha_count' => $alpha_count,
+                'leave_count' => $leave_count,
+                'overtime_count' => $overtime_count
+            ];
+        }
+        }
+        return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $data, "status" => 200];
     }
 }
