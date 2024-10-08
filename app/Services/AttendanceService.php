@@ -307,27 +307,27 @@ class AttendanceService{
         foreach($attendance_form->details as $form_detail){
             $search = array_search($form_detail['key'], array_column($activity_details, 'key'));
             if($search === false) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum diisi" , "status" => 400];
-                if($form_detail['type'] === 6){
-                    $file = $request->file("details.$search.value",NULL);
-                    $isFile = is_file($file);
-                    if($form_detail['required'] && !$isFile) return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe file" , "status" => 400];
-                    else if($isFile) {
-                        $activity_details[$search]['value'] = true;
-                    }
-                    else $activity_details[$search]['value'] = NULL;
-    
-                    $fileArray[$search] = [
-                        "key" => $form_detail['key'],
-                        "file" => $file
-                    ];
+            if($form_detail['type'] === 6){
+                $file = $request->file("details.$search.value",NULL);
+                $isFile = is_file($file);
+                if($form_detail['required'] && !$isFile) return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe file" , "status" => 400];
+                else if($isFile) {
+                    $activity_details[$search]['value'] = true;
                 }
-                // if(!isset($activity_details[$search]['value']) || ($form_detail['required'] && $activity_details[$search]['value'] === "")) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
-                if(!isset($activity_details[$search]['value']) && $form_detail['required']) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
-                if($form_detail['type'] === 3){
-                    if(gettype($activity_details[$search]['value']) !== "array") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe array", "status" => 400];
-                } else if($form_detail['type'] !== 6) {
-                    if(gettype($activity_details[$search]['value']) !== "string") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe string", "status" => 400];
-                }
+                else $activity_details[$search]['value'] = NULL;
+
+                $fileArray[$search] = [
+                    "key" => $form_detail['key'],
+                    "file" => $file
+                ];
+            }
+            // if(!isset($activity_details[$search]['value']) || ($form_detail['required'] && $activity_details[$search]['value'] === "")) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
+            if(!isset($activity_details[$search]['value']) && $form_detail['required']) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
+            if($form_detail['type'] === 3){
+                if(gettype($activity_details[$search]['value']) !== "array") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe array", "status" => 400];
+            } else if($form_detail['type'] !== 6) {
+                if(gettype($activity_details[$search]['value']) !== "string") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe string", "status" => 400];
+            }
         }
         $attendance_activity = new AttendanceActivity;
         $attendance_activity->user_id = auth()->user()->id;
