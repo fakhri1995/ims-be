@@ -307,7 +307,6 @@ class AttendanceService{
         foreach($attendance_form->details as $form_detail){
             $search = array_search($form_detail['key'], array_column($activity_details, 'key'));
             if($search === false) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum diisi" , "status" => 400];
-            if(array_search(array_column($activity_details, 'key'), $form_detail['key'])){
                 if($form_detail['type'] === 6){
                     $file = $request->file("details.$search.value",NULL);
                     $isFile = is_file($file);
@@ -329,7 +328,6 @@ class AttendanceService{
                 } else if($form_detail['type'] !== 6) {
                     if(gettype($activity_details[$search]['value']) !== "string") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe string", "status" => 400];
                 }
-            }
         }
         $attendance_activity = new AttendanceActivity;
         $attendance_activity->user_id = auth()->user()->id;
