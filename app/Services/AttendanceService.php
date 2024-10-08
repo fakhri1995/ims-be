@@ -27,6 +27,9 @@ use App\Task;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
@@ -304,26 +307,28 @@ class AttendanceService{
         foreach($attendance_form->details as $form_detail){
             $search = array_search($form_detail['key'], array_column($activity_details, 'key'));
             if($search === false) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum diisi" , "status" => 400];
-            if($form_detail['type'] === 6){
-                $file = $request->file("details.$search.value",NULL);
-                $isFile = is_file($file);
-                if($form_detail['required'] && !$isFile) return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe file" , "status" => 400];
-                else if($isFile) {
-                    $activity_details[$search]['value'] = true;
+            if(array_search(array_column($activity_details, 'key'), $form_detail['key'])){
+                if($form_detail['type'] === 6){
+                    $file = $request->file("details.$search.value",NULL);
+                    $isFile = is_file($file);
+                    if($form_detail['required'] && !$isFile) return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe file" , "status" => 400];
+                    else if($isFile) {
+                        $activity_details[$search]['value'] = true;
+                    }
+                    else $activity_details[$search]['value'] = NULL;
+    
+                    $fileArray[$search] = [
+                        "key" => $form_detail['key'],
+                        "file" => $file
+                    ];
                 }
-                else $activity_details[$search]['value'] = NULL;
-
-                $fileArray[$search] = [
-                    "key" => $form_detail['key'],
-                    "file" => $file
-                ];
-            }
-            // if(!isset($activity_details[$search]['value']) || ($form_detail['required'] && $activity_details[$search]['value'] === "")) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
-            if(!isset($activity_details[$search]['value']) && $form_detail['required']) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
-            if($form_detail['type'] === 3){
-                if(gettype($activity_details[$search]['value']) !== "array") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe array", "status" => 400];
-            } else if($form_detail['type'] !== 6) {
-                if(gettype($activity_details[$search]['value']) !== "string") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe string", "status" => 400];
+                // if(!isset($activity_details[$search]['value']) || ($form_detail['required'] && $activity_details[$search]['value'] === "")) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
+                if(!isset($activity_details[$search]['value']) && $form_detail['required']) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
+                if($form_detail['type'] === 3){
+                    if(gettype($activity_details[$search]['value']) !== "array") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe array", "status" => 400];
+                } else if($form_detail['type'] !== 6) {
+                    if(gettype($activity_details[$search]['value']) !== "string") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe string", "status" => 400];
+                }
             }
         }
         $attendance_activity = new AttendanceActivity;
@@ -1552,6 +1557,8 @@ class AttendanceService{
         $company_id = $request->company_id ?? NULL;
         $start_date = $request->start_date ?? date('Y-m-d', strtotime('-1 months'));
         $end_date = $request->end_date ?? date('Y-m-d');
+        $rows = $request->rows ?? 5;
+        $page = $request->page ?? 1;
 
         $non_working_schedules = ['Cuti Tahunan', 'Cuti Bersama', 'Libur Nasional'];
         $users = Schedule::with([
@@ -1574,7 +1581,7 @@ class AttendanceService{
         ->groupBy('user_id')
         ->get();
 
-        $data = array();
+        $data_array = array();
         foreach($users as $user){
         if($user->user->employee){
             $attendances = AttendanceUser::where('user_id', $user->user_id)
@@ -1596,7 +1603,7 @@ class AttendanceService{
             foreach($overtimes as $overtime){
                 $overtime_count += $overtime->duration;
             }
-            $data[] = [
+            $data_array[] = [
                 'name' => $user->user->name,
                 'role' => $user->user->role,
                 'company' => $user->user->company->name,
@@ -1610,6 +1617,14 @@ class AttendanceService{
             ];
         }
         }
+        $data = $this->paginateObject($data_array, $rows, $page);
         return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $data, "status" => 200];
+    }
+
+    public function paginateObject($items, $perPage = 5, $page = 2, $options = [])
+    {
+        $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
+        $items = $items instanceof Collection ? $items : Collection::make($items);
+        return new LengthAwarePaginator($items->forPage($page, $perPage), $items->count(), $perPage, $page, $options);
     }
 }
