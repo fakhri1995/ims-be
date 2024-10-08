@@ -27,6 +27,9 @@ use App\Task;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
@@ -1552,6 +1555,8 @@ class AttendanceService{
         $company_id = $request->company_id ?? NULL;
         $start_date = $request->start_date ?? date('Y-m-d', strtotime('-1 months'));
         $end_date = $request->end_date ?? date('Y-m-d');
+        $rows = $request->rows ?? 5;
+        $page = $request->page ?? 1;
 
         $non_working_schedules = ['Cuti Tahunan', 'Cuti Bersama', 'Libur Nasional'];
         $users = Schedule::with([
@@ -1574,7 +1579,7 @@ class AttendanceService{
         ->groupBy('user_id')
         ->get();
 
-        $data = array();
+        $data_array = array();
         foreach($users as $user){
         if($user->user->employee){
             $attendances = AttendanceUser::where('user_id', $user->user_id)
@@ -1596,7 +1601,7 @@ class AttendanceService{
             foreach($overtimes as $overtime){
                 $overtime_count += $overtime->duration;
             }
-            $data[] = [
+            $data_array[] = [
                 'name' => $user->user->name,
                 'role' => $user->user->role,
                 'company' => $user->user->company->name,
@@ -1610,6 +1615,14 @@ class AttendanceService{
             ];
         }
         }
+        $data = $this->paginateObject($data_array, $rows, $page);
         return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $data, "status" => 200];
+    }
+
+    public function paginateObject($items, $perPage = 5, $page = 2, $options = [])
+    {
+        $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
+        $items = $items instanceof Collection ? $items : Collection::make($items);
+        return new LengthAwarePaginator($items->forPage($page, $perPage), $items->count(), $perPage, $page, $options);
     }
 }
