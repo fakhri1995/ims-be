@@ -1604,6 +1604,7 @@ class AttendanceService{
             $data_array[] = [
                 'name' => $user->user->name,
                 'role' => $user->user->role,
+                'position' => $user->user->position,
                 'company' => $user->user->company->name,
                 'total_work_day' => $user->total_work_day,
                 'wfo_count' => $wfo_count,
