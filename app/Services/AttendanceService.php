@@ -1576,8 +1576,12 @@ class AttendanceService{
         ])
         ->whereHas('user', function($q) use($keyword, $company_id, $role_ids){
             if($company_id) $q->where('company_id', $company_id);
-            if($role_ids) $q->whereIn('company_id', $role_ids);
             if($keyword) $q->where('name', 'LIKE', "%$keyword%");
+            if($role_ids) $q->whereHas('employee', function($p) use($role_ids){
+                $p->whereHas('contract', function($q) use($role_ids){
+                    $q->whereIn('role_id', $role_ids);
+                });
+            });
             $q->has('company');
         })
         ->whereHas('shift', function($q) use($non_working_schedules){
