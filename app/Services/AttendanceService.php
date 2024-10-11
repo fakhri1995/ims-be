@@ -304,6 +304,7 @@ class AttendanceService{
         $activity_details = $request->get('details', []);
         ksort($activity_details);
         $fileArray = []; // index => [ "key" : value, "value" : value ]
+        $arr_details = array_column($attendance_form->details, 'key');
         foreach($attendance_form->details as $form_detail){
             $search = array_search($form_detail['key'], array_column($activity_details, 'key'));
             if($search === false) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum diisi" , "status" => 400];
@@ -329,13 +330,21 @@ class AttendanceService{
                 if(gettype($activity_details[$search]['value']) !== "string") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe string", "status" => 400];
             }
         }
+
+        $details = array();
+        foreach($activity_details as $activity_detail){
+            $search = array_search($activity_detail['key'], $arr_details);
+            if($search !== false){
+                $details[] = $activity_detail;
+            }
+        }
         $attendance_activity = new AttendanceActivity;
         $attendance_activity->user_id = auth()->user()->id;
         $attendance_activity->attendance_form_id = $attendance_form_id;
         // $attendance_activity->attendance_project_id = $request->get('attendance_project_id');
         // $attendance_activity->attendance_project_status_id = $request->get('attendance_project_status_id');
         $attendance_activity->updated_at = date('Y-m-d H:i:s');
-        $attendance_activity->details = $activity_details;
+        $attendance_activity->details = $details;
 
         try{
             $attendance_activity->save();
@@ -346,7 +355,7 @@ class AttendanceService{
                 $uploadFile = $this->addAttendanceActivityFile($attendance_id, $value['file'], $value['key']);
                 if($uploadFile['success']) $activity_details[$index]['value'] = $uploadFile['new_data']->link;
             }
-            $attendance_activity->details = $activity_details;
+            $attendance_activity->details = $details;
             $attendance_activity->save();
 
             return ["success" => true, "message" => "Attendance Activity Berhasil Dibuat", "id" => $attendance_activity->id, "status" => 200];
@@ -965,7 +974,7 @@ class AttendanceService{
         $schedule = Schedule::query()->with(['shift'])
             ->where('user_id', $login_id)->where('date', date('Y-m-d'))
             ->first();
-        if ($schedule) {
+        if ($schedule && $schedule->shift) {
             $check_in_time = $schedule->shift->start_at;
         }
 
@@ -974,7 +983,7 @@ class AttendanceService{
         else {
             // if($check_in_time == null || $check_in_time == '00:00:00') return false;
             // else if($date_time_split[1] > $check_in_time) return true;
-            if ($schedule && $schedule->shift->start_at == '00:00:00' && $schedule->shift->end_at == '00:00:00') return false;
+            if ($schedule && $schedule->shift && $schedule->shift->start_at == '00:00:00' && $schedule->shift->end_at == '00:00:00') return false;
             if ($check_in_time && ($date_time_split[1] > $check_in_time)) return true;
             else return false;
         }
