@@ -17,11 +17,13 @@ use App\AttendanceProjectStatus;
 use App\AttendanceProjectCategory;
 use App\AttendanceTaskActivity;
 use App\Company;
+use App\EmployeeContract;
 use App\Exports\AttendanceActivitiesExport;
 use App\File;
 use App\Leave;
 use App\Overtime;
 use App\ProjectTask;
+use App\RecruitmentRole;
 use App\Schedule;
 use App\Task;
 use Carbon\Carbon;
@@ -1567,12 +1569,16 @@ class AttendanceService{
         $rows = $request->rows ?? 5;
         $page = $request->page ?? 1;
 
+        $sort_by = $request->sort_by ?? NULL;
+        $sort_type = $request->sort_type ?? NULL;
+
         $non_working_schedules = ['Cuti Tahunan', 'Cuti Bersama', 'Libur Nasional'];
         $users = Schedule::with([
             'shift',
             'user',
             'user.employee',
-            'user.company'
+            'user.company',
+            'user.employee.contract'
         ])
         ->whereHas('user', function($q) use($keyword, $company_id, $role_ids){
             if($company_id) $q->where('company_id', $company_id);
@@ -1614,6 +1620,8 @@ class AttendanceService{
             foreach($overtimes as $overtime){
                 $overtime_count += $overtime->duration;
             }
+
+            $position = RecruitmentRole::find($user->user->employee->contract->role_id);
             $data_array[] = [
                 'name' => $user->user->name,
                 'role' => $user->user->role,
@@ -1627,6 +1635,11 @@ class AttendanceService{
                 'leave_count' => $leave_count,
                 'overtime_count' => $overtime_count
             ];
+            if($sort_by){
+                if($sort_type == 'asc'){
+                    array_multisort(array_column($data_array, $sort_by), SORT_ASC, $data_array);
+                } else array_multisort(array_column($data_array, $sort_by), SORT_DESC, $data_array);
+            }
         }
         }
         $data = $this->paginateObject($data_array, $rows, $page);
