@@ -1563,6 +1563,7 @@ class AttendanceService{
 
         $keyword = $request->keyword ?? NULL;
         $role_ids = $request->role_ids ? explode(",",$request->role_ids) : NULL;
+        $employee_ids = $request->employee_ids ? explode(",",$request->employee_ids) : NULL;
         $company_id = $request->company_id ?? NULL;
         $start_date = $request->start_date ?? date('Y-m-d', strtotime('-1 months'));
         $end_date = $request->end_date ?? date('Y-m-d');
@@ -1580,13 +1581,16 @@ class AttendanceService{
             'user.company',
             'user.employee.contract'
         ])
-        ->whereHas('user', function($q) use($keyword, $company_id, $role_ids){
+        ->whereHas('user', function($q) use($keyword, $company_id, $role_ids, $employee_ids){
             if($company_id) $q->where('company_id', $company_id);
             if($keyword) $q->where('name', 'LIKE', "%$keyword%");
             if($role_ids) $q->whereHas('employee', function($p) use($role_ids){
                 $p->whereHas('contract', function($q) use($role_ids){
                     $q->whereIn('role_id', $role_ids);
                 });
+            });
+            if($employee_ids) $q->whereHas('employee', function($p) use($employee_ids){
+                $p->whereIn('id', $employee_ids);
             });
             $q->has('company');
         })
