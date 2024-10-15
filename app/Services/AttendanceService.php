@@ -17,11 +17,13 @@ use App\AttendanceProjectStatus;
 use App\AttendanceProjectCategory;
 use App\AttendanceTaskActivity;
 use App\Company;
+use App\EmployeeContract;
 use App\Exports\AttendanceActivitiesExport;
 use App\File;
 use App\Leave;
 use App\Overtime;
 use App\ProjectTask;
+use App\RecruitmentRole;
 use App\Schedule;
 use App\Task;
 use Carbon\Carbon;
@@ -1561,26 +1563,34 @@ class AttendanceService{
 
         $keyword = $request->keyword ?? NULL;
         $role_ids = $request->role_ids ? explode(",",$request->role_ids) : NULL;
+        $employee_ids = $request->employee_ids ? explode(",",$request->employee_ids) : NULL;
         $company_id = $request->company_id ?? NULL;
         $start_date = $request->start_date ?? date('Y-m-d', strtotime('-1 months'));
         $end_date = $request->end_date ?? date('Y-m-d');
         $rows = $request->rows ?? 5;
         $page = $request->page ?? 1;
 
+        $sort_by = $request->sort_by ?? NULL;
+        $sort_type = $request->sort_type ?? NULL;
+
         $non_working_schedules = ['Cuti Tahunan', 'Cuti Bersama', 'Libur Nasional'];
         $users = Schedule::with([
             'shift',
             'user',
             'user.employee',
-            'user.company'
+            'user.company',
+            'user.employee.contract'
         ])
-        ->whereHas('user', function($q) use($keyword, $company_id, $role_ids){
+        ->whereHas('user', function($q) use($keyword, $company_id, $role_ids, $employee_ids){
             if($company_id) $q->where('company_id', $company_id);
             if($keyword) $q->where('name', 'LIKE', "%$keyword%");
             if($role_ids) $q->whereHas('employee', function($p) use($role_ids){
                 $p->whereHas('contract', function($q) use($role_ids){
                     $q->whereIn('role_id', $role_ids);
                 });
+            });
+            if($employee_ids) $q->whereHas('employee', function($p) use($employee_ids){
+                $p->whereIn('id', $employee_ids);
             });
             $q->has('company');
         })
@@ -1614,6 +1624,8 @@ class AttendanceService{
             foreach($overtimes as $overtime){
                 $overtime_count += $overtime->duration;
             }
+
+            $position = RecruitmentRole::find($user->user->employee->contract->role_id);
             $data_array[] = [
                 'name' => $user->user->name,
                 'role' => $user->user->role,
@@ -1627,6 +1639,11 @@ class AttendanceService{
                 'leave_count' => $leave_count,
                 'overtime_count' => $overtime_count
             ];
+            if($sort_by){
+                if($sort_type == 'asc'){
+                    array_multisort(array_column($data_array, $sort_by), SORT_ASC, $data_array);
+                } else array_multisort(array_column($data_array, $sort_by), SORT_DESC, $data_array);
+            }
         }
         }
         $data = $this->paginateObject($data_array, $rows, $page);
