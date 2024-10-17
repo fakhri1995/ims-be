@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Company;
 use App\Employee;
 use App\EmployeeBenefit;
 use App\EmployeeContract;
@@ -147,6 +148,7 @@ class EmployeeService{
         $rows = $request->rows ?? 5;
         $page = $request->page ?? 1;
         $offset = $rows*$page-$rows;
+        $paginate = $request->paginate ?? 1;
         
         $current_timestamp = date("Y-m-d");
         $employees = Employee::with(["contract" => function ($query) use($current_timestamp) {
@@ -214,36 +216,57 @@ class EmployeeService{
             }else{
                 $employees = [];
             }
-    
             $employeeMerge = array_merge($employeesDraft, $employees);
             
-            $last_page = ceil($employeeTotalCount/5);
-    
-            $data = [
-                "current_page" => $page,
-                "data" => $employeeMerge,
-                "first_page_url" => "http://service-migsys.patar/getEmployees?page=1",
-                "from" => count($employeeMerge) <= 0 ? NULL : $page*$rows-$rows+1,
-                "last_page" => $last_page,
-                "last_page_url" => "http://service-migsys.patar/getEmployees?page=$last_page",
-                "next_page_url" => $page < $last_page ? $page + 1 : NULL,
-                "path" => "http://service-migsys.patar/getEmployees",
-                "per_page" => $rows,
-                "prev_page_url" => $page <= 1 ? NULL : $page - 1,
-                "to" => count($employeeMerge) <= 0 ? NULL : $page*$rows + count($employeeMerge) - $rows,
-                "total" => $employeeTotalCount
-            ];
+            if($paginate){
+                $last_page = ceil($employeeTotalCount/5);
+        
+                $data = [
+                    "current_page" => $page,
+                    "data" => $employeeMerge,
+                    "first_page_url" => "http://service-migsys.patar/getEmployees?page=1",
+                    "from" => count($employeeMerge) <= 0 ? NULL : $page*$rows-$rows+1,
+                    "last_page" => $last_page,
+                    "last_page_url" => "http://service-migsys.patar/getEmployees?page=$last_page",
+                    "next_page_url" => $page < $last_page ? $page + 1 : NULL,
+                    "path" => "http://service-migsys.patar/getEmployees",
+                    "per_page" => $rows,
+                    "prev_page_url" => $page <= 1 ? NULL : $page - 1,
+                    "to" => count($employeeMerge) <= 0 ? NULL : $page*$rows + count($employeeMerge) - $rows,
+                    "total" => $employeeTotalCount
+                ];
+            }else{
+                $data = $employeeMerge;
+            }
         }else{
-            $data = $employees->paginate($rows);
+            if($paginate){
+                $data = $employees->paginate($rows);
+            }else{
+                $data = $employees->get()->toArray();
+            }
         }        
         
         
 
-        try{
-            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
-        }catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
+    }
+
+    public function getEmployeeNames($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $role_ids = $request->role_ids ? explode(",",$request->role_ids) : NULL;
+        $company_id = $request->company_id ?? NULL;
+        if($company_id) $company_name = Company::find($company_id);
+        else $company_name = NULL;
+        $employees = Employee::select('id', 'name', 'last_contract_id')->whereHas('contract', function($q) use($role_ids, $company_name){
+            if($role_ids) $q->whereIn('role_id', $role_ids);
+            if($company_name) $q->where('placement', $company_name->name);
+        });
+        
+        $data = $employees->get();
+
+        return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
     }
 
     public function getEmployeeLeaveQuotas($request, $route_name){
@@ -256,6 +279,7 @@ class EmployeeService{
         $role_ids = $request->role_ids ? explode(",",$request->role_ids) : NULL;
 
         $employees = Employee::with(['contract', 'contract.role', 'leaveQuota'])->has('leaveQuota');
+
 
         if($keyword) $employees = $employees->where("name","LIKE", "%$keyword%");
             $employees = $employees->whereHas("contract", function ($query) use($role_ids) {
