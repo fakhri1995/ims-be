@@ -19,6 +19,7 @@ use App\AttendanceTaskActivity;
 use App\Company;
 use App\EmployeeContract;
 use App\Exports\AttendanceActivitiesExport;
+use App\Exports\AttendanceRecapExport;
 use App\File;
 use App\Leave;
 use App\Overtime;
@@ -34,6 +35,7 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use stdClass;
 
 class AttendanceService{
     public function __construct()
@@ -1557,7 +1559,7 @@ class AttendanceService{
         return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $timesheets, "status" => 200];
     }
 
-    public function getAttendaceRecap($request, $route_name){
+    public function getAttendanceRecap($request, $route_name, $paginate = true){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
@@ -1646,9 +1648,103 @@ class AttendanceService{
             }
         }
         }
-        $data = $this->paginateObject($data_array, $rows, $page);
+        if($paginate){
+            $data = $this->paginateObject($data_array, $rows, $page);
+        } else $data = $data_array;
         return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $data, "status" => 200];
     }
+
+    public function exportAttendanceRecap($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $employee_ids = $request->employee_ids ? explode(",",$request->employee_ids) : NULL;
+        $company_id = $request->company_id;
+        $start_date = $request->start_date ?? date('Y-m-d', strtotime('-1 months'));
+        $end_date = $request->end_date ?? date('Y-m-d');
+        $format = $request->format;
+
+        try{
+            $non_working_schedules = ['Cuti Tahunan', 'Cuti Bersama', 'Libur Nasional'];
+            $users = Schedule::with([
+                'shift',
+                'user',
+                'user.employee',
+                'user.company',
+                'user.employee.contract'
+            ])
+            ->whereHas('user', function($q) use($company_id, $employee_ids){
+                if($company_id) $q->where('company_id', $company_id);
+                if($employee_ids) $q->whereHas('employee', function($p) use($employee_ids){
+                    $p->whereIn('id', $employee_ids);
+                });
+                $q->has('company');
+            })
+            ->whereHas('shift', function($q) use($non_working_schedules){
+                $q->whereNotIn('title', $non_working_schedules);
+            })
+            ->whereBetween('date', [$start_date, $end_date])
+            ->select('user_id', DB::raw('count(*) as total_work_day'))
+            ->groupBy('user_id')
+            ->get();
+    
+            $data_array = array();
+            foreach($users as $user){
+                if($user->user->employee){
+                    $attendances = AttendanceUser::where('user_id', $user->user_id)
+                    ->whereBetween('check_in', [$start_date, $end_date])->get();
+                    $wfo_count = count($attendances->where('is_wfo', 1));
+                    $wfh_count = count($attendances->where('is_wfo', 0));
+                    $late_count = count($attendances->where('is_late', 1));
+                    $alpha_count = $user->total_work_day - count($attendances);
+    
+                    $leave_count = count(Leave::where('employee_id', $user->user->employee->id)
+                    ->whereBetween('start_date', [$start_date, $end_date])
+                    ->where('status', 2)->get());
+    
+                    $overtimes = Overtime::where('employee_id', $user->user->employee->id)
+                    ->whereBetween('issued_date', [$start_date, $end_date])
+                    ->where('status_id', 2)->get();
+    
+                    $overtime_count = 0;
+                    foreach($overtimes as $overtime){
+                        $overtime_count += $overtime->duration;
+                    }
+
+                    $obj = new stdClass();
+                    $obj->name = $user->user->name;
+                    $obj->role = $user->user->role;
+                    $obj->position = $user->user->position;
+                    $obj->company = $user->user->company->name;
+                    $obj->total_work_day = $user->total_work_day;
+                    $obj->wfo_count = $wfo_count;
+                    $obj->wfh_count = $wfh_count;
+                    $obj->late_count = $late_count;
+                    $obj->alpha_count = $alpha_count;
+                    $obj->leave_count = $leave_count;
+                    $obj->overtime_count = $overtime_count;
+    
+                    $data_array[] = $obj;
+                }
+            }
+            $excel = $this->recapExport($data_array);
+            return ["success" => true, "message" => "Berhasil Export Attendance Recap", "data" => $excel, "status" => 200];
+        } catch(Exception $e){
+            return ["success" => false, "message" => $e->getMessage(), "status" => 400];
+        }
+    }
+
+    private function recapExport($data_array)
+    {
+        try{
+            ob_end_clean(); // this
+            ob_start(); // and this
+            return Excel::download(new AttendanceRecapExport($data_array), 'AttendanceRecapExport.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        } catch(Exception $e){
+            return ["success" => false, "message" => $e->getMessage(), "status" => 400];
+        }
+    }
+
 
     public function paginateObject($items, $perPage = 5, $page = 2, $options = [])
     {
