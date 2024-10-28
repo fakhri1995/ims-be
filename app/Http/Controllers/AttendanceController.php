@@ -466,12 +466,21 @@ class AttendanceController extends Controller
         $response = $this->attendanceService->getTimeSheet($request, $route_name);
         return response()->json($response, $response['status']);
     }
-
-    public function getAttendaceRecap(Request $request)
+    
+    public function getAttendanceRecap(Request $request)
     {
         $route_name = "ATTENDANCE_RECAP_GET";
 
-        $response = $this->attendanceService->getAttendaceRecap($request, $route_name);
+        $response = $this->attendanceService->getAttendanceRecap($request, $route_name);
         return response()->json($response, $response['status']);
+    }
+
+    public function exportAttendanceRecap(Request $request)
+    {
+        $route_name = "ATTENDANCE_EXPORT_GET";
+
+        $response = $this->attendanceService->exportAttendanceRecap($request, $route_name);
+        if(!$response['success']) return response()->json($response, $response['status']);
+        return $response['data'];
     }
 }
