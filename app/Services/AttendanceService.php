@@ -29,7 +29,10 @@ use App\Schedule;
 use App\Task;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
@@ -1662,7 +1665,7 @@ class AttendanceService{
         $company_id = $request->company_id;
         $start_date = $request->start_date ?? date('Y-m-d', strtotime('-1 months'));
         $end_date = $request->end_date ?? date('Y-m-d');
-        $format = $request->format;
+        $format = $request->format ?? 'excel';
 
         try{
             $non_working_schedules = ['Cuti Tahunan', 'Cuti Bersama', 'Libur Nasional'];
@@ -1727,8 +1730,34 @@ class AttendanceService{
                     $data_array[] = $obj;
                 }
             }
-            $excel = $this->recapExport($data_array);
-            return ["success" => true, "message" => "Berhasil Export Attendance Recap", "data" => $excel, "status" => 200];
+            if($format == 'excel'){
+                $excel = $this->recapExport($data_array);
+                return ["success" => true, "message" => "Berhasil Export Attendance Recap", "data" => $excel, "status" => 200];
+            } else{
+                $options = new Options();
+                $options->set('isHtml5ParserEnabled ', true);
+                $options->set("isPhpEnabled", true);
+                $options->set("isRemoteEnabled", true);
+                $options->set("dpi", 150);
+                $options->set("pdfBackend", 'CPDF');
+
+                $pdf = new Dompdf($options);
+                
+                $html = view('excel.attendance_recap', ["data_array" => $data_array])->render();
+                $pdf->setPaper('A4', 'portrait');
+                $pdf->loadHtml($html);
+                $pdf->render();
+                
+                $output = $pdf->output();
+
+                $res = new Response ($output, 200, array(
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' =>  'attachment; filename="AttendanceRecapExport.pdf"',
+                    'Content-Length' => strlen($output),
+                ));
+
+                return ["success" => true, "message" => "Berhasil Export Attendance Recap", "data" => $res, "status" => 200];
+            }
         } catch(Exception $e){
             return ["success" => false, "message" => $e->getMessage(), "status" => 400];
         }
