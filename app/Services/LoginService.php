@@ -7,6 +7,8 @@ use Illuminate\Support\Str;
 use App\FirebaseAndroidToken;
 use App\Services\FileService;
 use App\Mail\ForgetPasswordMail;
+use App\Mail\OtpMail;
+use Ichtrojan\Otp\Otp;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
@@ -248,5 +250,26 @@ class LoginService
             return ["success" => false, "message" => $err, "status" => 400];
         }
         
+    }
+
+    public function sendOtp($request){
+        $otp_service = new Otp;
+        $email = $request->email;
+
+        $otp = $otp_service->generate($email, 'numeric', 4, 10);
+        Mail::to($email)->send(new OtpMail($otp));
+        return ["success" => true, "data" => $otp, "status" => 200];
+    }
+
+    public function validateOtp($request){
+        $otp_service = new Otp;
+        $token = $request->token;
+        $email = $request->email;
+
+        $res = $otp_service->validate($email, $token);
+        if($res->status == false){
+            return ["success" => false, "data" => $res->message, "status" => 200];
+        }
+        return ["success" => true, "data" => $res->message, "status" => 200];
     }
 }

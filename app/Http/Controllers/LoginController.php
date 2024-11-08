@@ -98,4 +98,16 @@ class LoginController extends Controller
         $response = $this->loginService->resetPassword($password, $confirm_password, $token);
         return response()->json($response, $response['status']);
     }
+
+    public function sendOtp(Request $request)
+    {
+        $response = $this->loginService->sendOtp($request);
+        return response()->json($response, $response['status']);
+    }
+
+    public function validateOtp(Request $request)
+    {
+        $response = $this->loginService->validateOtp($request);
+        return response()->json($response, $response['status']);
+    }
 }
