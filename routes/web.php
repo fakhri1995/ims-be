@@ -39,6 +39,8 @@ $router->post('/addFormSolutionHardware', 'CompanyProfileController@addFormSolut
 $router->post('/login', 'LoginController@login');
 $router->post('/mailForgetPassword', 'LoginController@mailForgetPassword');
 $router->post('/resetPassword', 'LoginController@resetPassword');
+$router->post('/sendOtp', 'LoginController@sendOtp');
+$router->get('/validateOtp', 'LoginController@validateOtp');
 
 $router->group(['middleware' => 'auth'], function ($router) {
     //Android Routes
