@@ -258,7 +258,7 @@ class LoginService
 
         $otp = $otp_service->generate($email, 'numeric', 4, 10);
         Mail::to($email)->send(new OtpMail($otp));
-        return ["success" => true, "data" => $otp, "status" => 200];
+        return ["success" => true, "data" => "Email OTP berhasil dikirimkan", "status" => 200];
     }
 
     public function validateOtp($request){
