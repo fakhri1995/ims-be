@@ -463,6 +463,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->get('/getAttendancesUser', 'AttendanceController@getAttendancesUser');
     $router->get('/getAttendanceUser', 'AttendanceController@getAttendanceUser');
     $router->get('/getAttendanceUserAdmin', 'AttendanceController@getAttendanceUserAdmin');
+    $router->get('/getAttendanceUserByDate', 'AttendanceController@getAttendanceUserByDate');
     $router->get('/exportAttendanceActivityUser', 'AttendanceController@exportAttendanceActivityUser');
     $router->get('/exportAttendanceActivityUsers', 'AttendanceController@exportAttendanceActivityUsers');
     $router->post('/setAttendanceToggle', 'AttendanceController@setAttendanceToggle');
