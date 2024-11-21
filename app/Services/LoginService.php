@@ -252,6 +252,27 @@ class LoginService
         
     }
 
+    public function resetPasswordOtp($request){
+        $token = $request->token;
+        $email = $request->email;
+        $validate = $this->validateOtp($request);
+        $password = $request->password;
+        $confirm_password = $request->confirm_password;
+        if($validate["success"] == false) return ["success" => false, "message" => "OTP tidak valid", "status" => 400];
+        if(!$password) return ["success" => false, "data" => "Password Belum Terisi", "status" => 400];
+        if($password !== $confirm_password) return ["success" => false, "data" => "Password Tidak Sama", "status" => 400];
+        
+        $user = User::where('email', $email)->first();
+        if(!$user) return ["success" => false, "message" => "Id Dengan Email Tersebut Tidak Ditemukan", "status" => 400];
+        try{
+            $user->password = Hash::make($password);
+            $user->save();
+            return ["success" => true, "data" => "Berhasil Merubah Password Akun", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     public function sendOtp($request){
         $otp_service = new Otp;
         $email = $request->email;

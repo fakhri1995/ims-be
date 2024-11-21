@@ -59,6 +59,44 @@ class AnnouncementService
         }
     }
 
+    function getAnnouncementsUser($request, $route_name): array
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if ($access["success"] === false) return $access;
+        $keyword = $request->keyword;
+        $status = $request->status;
+        $orderBy = $request->order_by;
+        $orderTo = $request->order_to;
+        $user = auth()->user()->id;
+
+        if (!$orderBy) {
+            $orderBy = 'id';
+        }
+        if (!$orderTo) {
+            'desc';
+        }
+        try {
+            $data = Announcement::query()
+                ->with(['user', 'thumbnailImage'])
+                ->when($keyword, function ($q) use ($keyword) {
+                    $q->where(DB::raw("CONCAT(
+                        title,'-',
+                        text)"), 'like', '%' . $keyword . '%')
+                        ->orWhereHas('user', function ($q1) use ($keyword) {
+                            $q1->where('name', 'like', '%' . $keyword . '%');
+                        });
+                })
+                ->when($status == 'published', function ($q) {
+                    $q->where('publish_at', '<=', date('Y-m-d H:i:s'));
+                })
+                ->orderBy($orderBy, $orderTo)
+                ->paginate($request->rows);
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
+        } catch (Throwable $err) {
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
+        }
+    }
+
     function getAnnouncement($request, $route_name): array
     {
         $access = $this->globalService->checkRoute($route_name);
