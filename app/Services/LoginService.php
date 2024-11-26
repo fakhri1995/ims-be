@@ -255,13 +255,16 @@ class LoginService
     public function resetPasswordOtp($request){
         $token = $request->token;
         $email = $request->email;
-        $validate = $this->validateOtp($request);
         $password = $request->password;
         $confirm_password = $request->confirm_password;
-        if($validate["success"] == false) return ["success" => false, "message" => "OTP tidak valid", "status" => 400];
+
+        $validate = DB::table('password_resets')->where('token', $token)->first();
+        if(!$validate) return ["success" => false, "message" => "OTP tidak valid", "status" => 400];
         if(!$password) return ["success" => false, "data" => "Password Belum Terisi", "status" => 400];
         if($password !== $confirm_password) return ["success" => false, "data" => "Password Tidak Sama", "status" => 400];
         
+        DB::table('password_resets')->delete($validate->id);
+        DB::commit();
         $user = User::where('email', $email)->first();
         if(!$user) return ["success" => false, "message" => "Id Dengan Email Tersebut Tidak Ditemukan", "status" => 400];
         try{
@@ -291,6 +294,7 @@ class LoginService
         if($res->status == false){
             return ["success" => false, "data" => $res->message, "status" => 200];
         }
+        DB::table('password_resets')->insert(['email' => $email, 'token' => $token, 'created_at' => date("Y-m-d H:i:s")]);
         return ["success" => true, "data" => $res->message, "status" => 200];
     }
 }
