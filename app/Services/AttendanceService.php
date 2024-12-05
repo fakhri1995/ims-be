@@ -192,8 +192,8 @@ class AttendanceService{
                     $detail['key'] = Str::uuid()->toString();
                     $i++;
                 }
+                $attendance_form->details = $details;
             }
-            $attendance_form->details = $details;
             $attendance_form->save();
             return ["success" => true, "message" => "Attendance Form Berhasil Diubah", "status" => 200];
         } catch(Exception $err){
