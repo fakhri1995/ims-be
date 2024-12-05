@@ -172,7 +172,28 @@ class AttendanceService{
         $attendance_form->name = $request->get('name');
         $attendance_form->description = $request->get('description');
         $attendance_form->updated_at = date('Y-m-d H:i:s');
+        $details = $request->get('details', []);
         try{
+            $i = 1;
+            if(count($details)){
+                foreach($details as &$detail){
+                    if(!isset($detail['required'])) return ["success" => false, "message" => "Detail form $i masih kosong pada required", "status" => 400];
+                    if(gettype($detail['required']) !== "boolean") return ["success" => false, "message" => "Detail form $i pada required harus bertipe boolean", "status" => 400];
+                    if(!isset($detail['name'])) return ["success" => false, "message" => "Detail form $i masih kosong pada name", "status" => 400];
+                    if(gettype($detail['name']) !== "string") return ["success" => false, "message" => "Detail form $i pada name harus bertipe string", "status" => 400];
+                    if(!isset($detail['description'])) return ["success" => false, "message" => "Detail form $i masih kosong pada description", "status" => 400];
+                    if(gettype($detail['description']) !== "string") return ["success" => false, "message" => "Detail form $i pada description harus bertipe string", "status" => 400];
+                    if(!isset($detail['type'])) return ["success" => false, "message" => "Detail form $i masih kosong pada type", "status" => 400];
+                    if(gettype($detail['type']) !== "integer") return ["success" => false, "message" => "Detail form $i pada type harus bertipe integer", "status" => 400];
+                    if(in_array($detail['type'], [3,5])){
+                        if(!isset($detail['list'])) return ["success" => false, "message" => "Detail form $i masih kosong pada list", "status" => 400];
+                        if(gettype($detail['list']) !== "array") return ["success" => false, "message" => "Detail form $i pada list harus bertipe array", "status" => 400];
+                    }
+                    $detail['key'] = Str::uuid()->toString();
+                    $i++;
+                }
+            }
+            $attendance_form->details = $details;
             $attendance_form->save();
             return ["success" => true, "message" => "Attendance Form Berhasil Diubah", "status" => 200];
         } catch(Exception $err){
