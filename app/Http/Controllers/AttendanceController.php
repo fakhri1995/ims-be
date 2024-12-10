@@ -35,6 +35,14 @@ class AttendanceController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function addAttendanceFormDetails(Request $request)
+    {
+        $route_name = "ATTENDANCE_FORM_DETAILS_ADD";
+
+        $response = $this->attendanceService->addAttendanceFormDetails($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getAttendanceFormCompany(Request $request)
     {
         $route_name = "ATTENDANCE_FORM_COMPANY_GET";

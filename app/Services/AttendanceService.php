@@ -172,7 +172,22 @@ class AttendanceService{
         $attendance_form->name = $request->get('name');
         $attendance_form->description = $request->get('description');
         $attendance_form->updated_at = date('Y-m-d H:i:s');
-        $details = $request->get('details', []);
+        try{
+            $attendance_form->save();
+            return ["success" => true, "message" => "Attendance Form Berhasil Diubah", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addAttendanceFormDetails($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $details = $request->get('details');
+        $attendance_form = AttendanceForm::find($id);
+
         try{
             $i = 1;
             if(count($details)){
@@ -192,14 +207,17 @@ class AttendanceService{
                     $detail['key'] = Str::uuid()->toString();
                     $i++;
                 }
-                $attendance_form->details = $details;
             }
+            
+            $new_details = array_merge($attendance_form->details, $details);
+            $attendance_form->details = $new_details;
             $attendance_form->save();
             return ["success" => true, "message" => "Attendance Form Berhasil Diubah", "status" => 200];
         } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
+            return ["success" => false, "message" => "lol", "status" => 400];
         }
     }
+
 
     public function deleteAttendanceForm($request, $route_name)
     {
