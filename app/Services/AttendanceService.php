@@ -21,6 +21,7 @@ use App\EmployeeContract;
 use App\Exports\AttendanceActivitiesExport;
 use App\Exports\AttendanceRecapExport;
 use App\File;
+use App\Http\Controllers\AttendanceController;
 use App\Leave;
 use App\Overtime;
 use App\ProjectTask;
@@ -1602,44 +1603,75 @@ class AttendanceService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $user_id = auth()->user()->id;
-        $from = $request->get('from', null);
-        $startDate = Carbon::parse($request->get('from', null));
-        $endDate = Carbon::parse($request->get('to', null));
-        $period = CarbonPeriod::create($startDate, $endDate);
-
-        foreach($period as $date){
-            $date_formatted = $date->format('Y-m-d');
-            $schedule = Schedule::with('shift')->where('user_id', $user_id)->whereDate('date', $date_formatted)->first();
-
-            $attendance = AttendanceUser::select('attendance_users.id', 'user_id', 'check_in', 'check_out', 'is_wfo')
-            ->where('user_id', $user_id)->whereDate('check_in', $date)->first();
-
-            $form = AttendanceActivity::where('user_id', $user_id)->whereDate('updated_at', $date)->get()->toArray();
-            $task = AttendanceTaskActivity::where('user_id', $user_id)->whereDate('updated_at', $date)->get()->toArray();
-            $activity = array_merge($form, $task);
-            if(!$attendance && $schedule && in_array($schedule->shift->title, array("Libur Nasional", "Cuti Bersama", "Cuti Tahunan"))) $activity = $schedule->shift->title;
-
-            $from = null;
-            $to = null;
-            $work = null;
-            
-            if($schedule && !$attendance) $activity = "Empty";
-            if(!$schedule && !$attendance) $activity = "Weekend";
-            if($attendance){
-                $from  = $attendance->check_in;
-                $to = $attendance->check_out;
-                $work = $attendance->is_wfo;
+        try{
+            $user_id = auth()->user()->id;
+            $user = User::with('attendanceForms')->find($user_id);
+            $from = $request->get('from', null);
+            $startDate = Carbon::parse($request->get('from', null));
+            $endDate = Carbon::parse($request->get('to', null));
+            $period = CarbonPeriod::create($startDate, $endDate);
+            $attendance_form = $user->attendanceForms[0];
+    
+            foreach($period as $date){
+                $date_formatted = $date->format('Y-m-d');
+                $schedule = Schedule::with('shift')->where('user_id', $user_id)->whereDate('date', $date_formatted)->first();
+    
+                $attendance = AttendanceUser::select('attendance_users.id', 'user_id', 'check_in', 'check_out', 'is_wfo')
+                ->where('user_id', $user_id)->whereDate('check_in', $date)->first();
+    
+                $forms = AttendanceActivity::where('user_id', $user_id)->whereDate('updated_at', $date)->get()->toArray();
+                $activities = array();
+                foreach($forms as $form){
+                    foreach($attendance_form->details as $detail){
+                        $search = array_search($detail['key'], array_column($form['details'], 'key'));
+        
+                        if($search !== false){
+                            $value = $form['details'][$search]['value'];
+                            if($detail['type'] !== 3){
+                                $activities[] = $value;
+                            } 
+                            else {
+                                if(count($value)){
+                                    $checklist_value = "";
+                                    $index_checklist = 1;
+                                    foreach($value as $item){
+                                        if($index_checklist !== 1) $checklist_value .= ", ";
+                                        $checklist_value .= $detail['list'][$item];
+                                        $index_checklist++;
+                                    }
+                                    $activities[] = $checklist_value;
+                                }
+                            } 
+                        }
+                    }
+                }
+                $task = AttendanceTaskActivity::where('user_id', $user_id)->whereDate('updated_at', $date)->get()->toArray();
+                $activity = array_merge($activities, $task);
+                if(!$attendance && $schedule && in_array($schedule->shift->title, array("Libur Nasional", "Cuti Bersama", "Cuti Tahunan"))) $activity = $schedule->shift->title;
+    
+                $from = null;
+                $to = null;
+                $work = null;
+                
+                if($schedule && !$attendance) $activity = "Empty";
+                if(!$schedule && !$attendance) $activity = "Weekend";
+                if($attendance){
+                    $from  = $attendance->check_in;
+                    $to = $attendance->check_out;
+                    $work = $attendance->is_wfo;
+                }
+                $timesheets[] = [
+                    "date" => $date_formatted,
+                    "from" => $from,
+                    "to" => $to,
+                    "work" => $work,
+                    "daily activity" => $activity,
+                ];
             }
-            $timesheets[] = [
-                "date" => $date_formatted,
-                "from" => $from,
-                "to" => $to,
-                "work" => $work,
-                "daily activity" => $activity,
-            ];
+            return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $timesheets, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
         }
-        return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $timesheets, "status" => 200];
     }
 
     public function getAttendanceRecap($request, $route_name, $paginate = true){
