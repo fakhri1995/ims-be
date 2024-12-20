@@ -1415,8 +1415,8 @@ class AttendanceService{
         $login_id = auth()->user()->id;
         $today = date('Y-m-d');
 
-        $attendance_activities = AttendanceActivity::where('user_id', $login_id)->whereDate('updated_at', '=', $today)->orderBy('updated_at', 'desc')->get();
-        $attendance_task_activities = AttendanceTaskActivity::with(['task', 'taskExport'])->where('user_id', $login_id)->whereDate('updated_at', '=', $today)->orderBy('updated_at', 'desc')->get();
+        $attendance_activities = AttendanceActivity::where('user_id', $login_id)->whereDate('updated_at', '=', $today)->get();
+        $attendance_task_activities = AttendanceTaskActivity::with(['task', 'taskExport'])->where('user_id', $login_id)->whereDate('updated_at', '=', $today)->get();
 
         $data = (object)[
             "attendance_activities" => $attendance_activities,
