@@ -60,6 +60,14 @@ class EmployeeController extends Controller
         $response = $this->employeeService->getEmployees($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    public function getEmployeeNames(Request $request)
+    {
+        $route_name = "EMPLOYEE_NAMES_GET";
+
+        $response = $this->employeeService->getEmployeeNames($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
     
     public function getEmployeeLeaveQuotas(Request $request)
     {

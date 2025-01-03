@@ -465,8 +465,8 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->get('/exportAttendanceActivityUsers', 'AttendanceController@exportAttendanceActivityUsers');
     $router->post('/setAttendanceToggle', 'AttendanceController@setAttendanceToggle');
     $router->get('/getTimeSheet', 'AttendanceController@getTimeSheet');
-    $router->get('/getAttendaceRecap', 'AttendanceController@getAttendaceRecap');
-
+    $router->get('/getAttendanceRecap', 'AttendanceController@getAttendanceRecap');
+    $router->get('/exportAttendanceRecap', 'AttendanceController@exportAttendanceRecap');
 
     //Attendance Project Routes
     $router->get('/getAttendanceProjects', 'AttendanceController@getAttendanceProjects');
@@ -631,6 +631,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     // Employee
     $router->get('/getEmployee', 'EmployeeController@getEmployee');
     $router->get('/getEmployees', 'EmployeeController@getEmployees');
+    $router->get('/getEmployeeNames', 'EmployeeController@getEmployeeNames');
     $router->get('/getFilterEmployees', 'EmployeeController@getFilterEmployees');
     $router->post('/addEmployee', 'EmployeeController@addEmployee');
     $router->post('/addEmployeeFromUser', 'EmployeeController@addEmployeeFromUser');
