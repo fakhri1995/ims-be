@@ -180,6 +180,45 @@ class AttendanceService{
         }
     }
 
+    public function addAttendanceFormDetails($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $details = $request->get('details');
+        $attendance_form = AttendanceForm::find($id);
+
+        try{
+            $i = 1;
+            if(count($details)){
+                foreach($details as &$detail){
+                    if(!isset($detail['required'])) return ["success" => false, "message" => "Detail form $i masih kosong pada required", "status" => 400];
+                    if(gettype($detail['required']) !== "boolean") return ["success" => false, "message" => "Detail form $i pada required harus bertipe boolean", "status" => 400];
+                    if(!isset($detail['name'])) return ["success" => false, "message" => "Detail form $i masih kosong pada name", "status" => 400];
+                    if(gettype($detail['name']) !== "string") return ["success" => false, "message" => "Detail form $i pada name harus bertipe string", "status" => 400];
+                    if(!isset($detail['description'])) return ["success" => false, "message" => "Detail form $i masih kosong pada description", "status" => 400];
+                    if(gettype($detail['description']) !== "string") return ["success" => false, "message" => "Detail form $i pada description harus bertipe string", "status" => 400];
+                    if(!isset($detail['type'])) return ["success" => false, "message" => "Detail form $i masih kosong pada type", "status" => 400];
+                    if(gettype($detail['type']) !== "integer") return ["success" => false, "message" => "Detail form $i pada type harus bertipe integer", "status" => 400];
+                    if(in_array($detail['type'], [3,5])){
+                        if(!isset($detail['list'])) return ["success" => false, "message" => "Detail form $i masih kosong pada list", "status" => 400];
+                        if(gettype($detail['list']) !== "array") return ["success" => false, "message" => "Detail form $i pada list harus bertipe array", "status" => 400];
+                    }
+                    $detail['key'] = Str::uuid()->toString();
+                    $i++;
+                }
+            }
+            
+            $new_details = array_merge($attendance_form->details, $details);
+            $attendance_form->details = $new_details;
+            $attendance_form->save();
+            return ["success" => true, "message" => "Attendance Form Berhasil Diubah", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => "lol", "status" => 400];
+        }
+    }
+
+
     public function deleteAttendanceForm($request, $route_name)
     {
         $access = $this->globalService->checkRoute($route_name);
@@ -946,6 +985,47 @@ class AttendanceService{
         return $this->getAttendanceUserFunc($request, $route_name, true);
     }
 
+    public function getAttendanceUserByDate($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $login_id = auth()->user()->id;
+
+            $date = $request->date ?? date('Y-m-d');
+            $data_user = auth()->user()->name;
+            $name = auth()->user()->name;
+            $user_attendance = AttendanceUser::with('evidence:link,description,fileable_id,fileable_type')->select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
+            ->join('long_lat_lists AS check_in_list', function ($join) {
+                $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
+            })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
+                $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
+            })
+            ->where('user_id',$login_id)->whereDate('check_in',$date)
+            ->first();
+            if(!$user_attendance) return ["success" => false, "message" => "User Attendance Tidak Ditemukan" , "status" => 400];
+
+            $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
+            $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
+            $user_attendance->name = $name;
+            $attendance_activities = AttendanceActivity::with('attendanceForm:id,name,details')->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
+            $attendance_task_activities = AttendanceTaskActivity::with(['task', 'taskExport'])->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
+            $attendance_activities_count = count($attendance_activities);
+            $attendance_task_activities_count = count($attendance_task_activities);
+            $activities_count = $attendance_task_activities_count + $attendance_activities_count;
+            $data = (object)[
+                "user_attendance" => $user_attendance,
+                "attendance_activities" => $attendance_activities,
+                "attendance_task_activities" => $attendance_task_activities,
+                "activities_count" => $activities_count
+            ];
+            return ["success" => true, "message" => "Berhasil Mengambil Data Attendance", "data" => $data, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
+        }
+    }
+
     private function addCheckEvidence($id, $file, $description)
     {
         $fileService = new FileService;
@@ -1334,8 +1414,8 @@ class AttendanceService{
         $login_id = auth()->user()->id;
         $today = date('Y-m-d');
 
-        $attendance_activities = AttendanceActivity::where('user_id', $login_id)->whereDate('updated_at', '=', $today)->get();
-        $attendance_task_activities = AttendanceTaskActivity::with(['task', 'taskExport'])->where('user_id', $login_id)->whereDate('updated_at', '=', $today)->get();
+        $attendance_activities = AttendanceActivity::where('user_id', $login_id)->whereDate('updated_at', '=', $today)->orderBy('updated_at', 'desc')->get();
+        $attendance_task_activities = AttendanceTaskActivity::with(['task', 'taskExport'])->where('user_id', $login_id)->whereDate('updated_at', '=', $today)->orderBy('updated_at', 'desc')->get();
 
         $data = (object)[
             "attendance_activities" => $attendance_activities,

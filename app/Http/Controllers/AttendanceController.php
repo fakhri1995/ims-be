@@ -35,6 +35,14 @@ class AttendanceController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function addAttendanceFormDetails(Request $request)
+    {
+        $route_name = "ATTENDANCE_FORM_DETAILS_ADD";
+
+        $response = $this->attendanceService->addAttendanceFormDetails($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getAttendanceFormCompany(Request $request)
     {
         $route_name = "ATTENDANCE_FORM_COMPANY_GET";
@@ -220,7 +228,15 @@ class AttendanceController extends Controller
         $response = $this->attendanceService->getAttendanceUserAdmin($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    
+    public function getAttendanceUserByDate(Request $request)
+    {
+        $route_name = "ATTENDANCE_USER_BY_DATE_GET";
 
+        $response = $this->attendanceService->getAttendanceUserByDate($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    
     public function exportAttendanceActivityUser(Request $request)
     {
         $route_name = "ATTENDANCE_ACTIVITY_USER_EXPORT";
