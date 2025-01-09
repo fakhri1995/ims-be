@@ -7,10 +7,12 @@ use Illuminate\Support\Str;
 use App\FirebaseAndroidToken;
 use App\Services\FileService;
 use App\Mail\ForgetPasswordMail;
+use App\Mail\OtpMail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use App\Services\OtpService;
 
 class LoginService
 {   
@@ -248,5 +250,49 @@ class LoginService
             return ["success" => false, "message" => $err, "status" => 400];
         }
         
+    }
+
+    public function resetPasswordOtp($request){
+        $token = $request->token;
+        $email = $request->email;
+        $password = $request->password;
+        $confirm_password = $request->confirm_password;
+
+        $validate = DB::table('password_resets')->where('token', $token)->first();
+        if(!$validate) return ["success" => false, "message" => "OTP tidak valid", "status" => 400];
+        if(!$password) return ["success" => false, "data" => "Password Belum Terisi", "status" => 400];
+        if($password !== $confirm_password) return ["success" => false, "data" => "Password Tidak Sama", "status" => 400];
+
+        DB::table('password_resets')->delete($validate->id);
+        DB::commit();
+        $user = User::where('email', $email)->first();
+        if(!$user) return ["success" => false, "message" => "Id Dengan Email Tersebut Tidak Ditemukan", "status" => 400];
+        try{
+            $user->password = Hash::make($password);
+            $user->save();
+            return ["success" => true, "data" => "Berhasil Merubah Password Akun", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function sendOtp($request){
+        $otp_service = new OtpService;
+        $email = $request->email;
+        $otp = $otp_service->generate($email, 'numeric', 4, 10);
+        Mail::to($email)->send(new OtpMail($otp));
+        return ["success" => true, "data" => $otp, "status" => 200];
+    }
+
+    public function validateOtp($request){
+        $otp_service = new OtpService;
+        $token = $request->token;
+        $email = $request->email;
+        $res = $otp_service->validate($email, $token);
+        if($res->status == false){
+            return ["success" => false, "data" => $res->message, "status" => 200];
+        }
+        DB::table('password_resets')->insert(['email' => $email, 'token' => $token, 'created_at' => date("Y-m-d H:i:s")]);
+        return ["success" => true, "data" => $res->message, "status" => 200];
     }
 }
