@@ -77,7 +77,7 @@ class Kernel extends ConsoleKernel
         $schedule->command(SendAndroidNotificationActivity::class)->cron('0 13 * * *')->runInBackground();
         // $schedule->command(UnhideTasks::class)->cron('* * * * *')->runInBackground();
         // $schedule->command(SetOverdueTasks::class)->cron('* * * * *')->runInBackground();
-        $schedule->command(SearchGeoLocation::class)->cron('* * * * *')->runInBackground();
+        $schedule->command(SearchGeoLocation::class)->cron('0 12 * * *')->runInBackground();
         // $schedule->command(GenerateOneHourLeftTaskNotification::class)->cron('* * * * *')->runInBackground();
         $schedule->command(AutoCheckOutAttendance::class)->cron('59 23 * * *')->runInBackground();
         $schedule->command(GenerateDailyTask::class)->cron('0 0 * * *')->runInBackground();
@@ -87,7 +87,7 @@ class Kernel extends ConsoleKernel
         $schedule->command(GenerateThricePerYearTask::class)->cron('0 0 1 */4 *')->runInBackground();
         $schedule->command(GenerateFourTimesPerYearTask::class)->cron('0 0 1 */3 *')->runInBackground();
         $schedule->command(RaiseLastPeriodPayslip::class)->cron('35 0 1 * *')->runInBackground();
-        $schedule->command(SendAnnounceNotification::class)->cron('* * * * *')->runInBackground();
+        $schedule->command(SendAnnounceNotification::class)->cron('0 22 * * *')->runInBackground();
 
         $schedule->command('task:generate-schedules-attendance 1')->cron('*/15 1-2 * * *')->runInBackground();
         $schedule->command('task:generate-schedules-attendance 2')->cron('*/15 1-2 * * *')->runInBackground();
