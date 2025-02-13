@@ -630,6 +630,9 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->put('/updateRecruitmentEmailTemplate', 'RecruitmentController@updateRecruitmentEmailTemplate');
     $router->delete('/deleteRecruitmentEmailTemplate', 'RecruitmentController@deleteRecruitmentEmailTemplate');
     $router->post('/sendRecruitmentEmail', 'RecruitmentController@sendRecruitmentEmail');
+    // RECRUITMENT AI
+    $router->post('/uploadCVs', 'RecruitmentController@uploadCVs');
+    $router->put('/approveRecruitment', 'RecruitmentController@approveRecruitment');
 
 
     // Employee Module -- -- -- -- --

@@ -22,6 +22,7 @@ class CreateRecruitmentsTable extends Migration
             $table->unsignedBigInteger('recruitment_jalur_daftar_id');
             $table->unsignedBigInteger("recruitment_stage_id");
             $table->unsignedBigInteger("recruitment_status_id");
+            $table->unsignedBigInteger("cv_processing_status");
             $table->dateTime('created_at');
             $table->dateTime('updated_at');
             $table->unsignedBigInteger('created_by');

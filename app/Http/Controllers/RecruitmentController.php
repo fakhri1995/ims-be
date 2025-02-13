@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-
+use App\Services\RecruitmentAIService;
 use App\Services\RecruitmentService;
 use Illuminate\Http\Request;
 
@@ -11,6 +11,7 @@ class RecruitmentController extends Controller
     public function __construct()
     {
         $this->recruitmentService = new RecruitmentService;
+        $this->recruitmentAIService = new RecruitmentAIService;
     }
 
     //RECRUITMENT SECTION
@@ -428,6 +429,23 @@ class RecruitmentController extends Controller
     }
 
     //END OF RECRUITMENT EMAIL TEMPLATE SECTION
+
+    //RECRUITMENT AI 
+    public function uploadCVs(Request $request)
+    {
+        $route_name = "RECRUITMENT_UPLOAD_CVS";
+
+        $response = $this->recruitmentAIService->uploadCVs($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function approveRecruitment(Request $request)
+    {
+        $route_name = "RECRUITMENT_APPROVE";
+
+        $response = $this->recruitmentAIService->approveRecruitment($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }
 
 
