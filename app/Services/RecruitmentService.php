@@ -1082,7 +1082,7 @@ class RecruitmentService{
         
         $validator = Validator::make($request->all(), [
             "id" => "required|numeric",
-            "name" => "required",
+            "role" => "required",
             "alias" => "required",
             "recruitment_role_type_id" => "required|numeric",
         ]);
