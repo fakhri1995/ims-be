@@ -1057,8 +1057,9 @@ class RecruitmentService{
 
 
             $recruitmentRole = new RecruitmentRole();
-            $recruitmentRole->name = $request->name ?? "";
+            $recruitmentRole->role = $request->role ?? "";
             $recruitmentRole->alias = $request->alias ?? "";
+            $recruitmentRole->client = $request->client ?? "";
             $recruitmentRole->recruitment_role_type_id = $request->recruitment_role_type_id ?? "";
 
 
@@ -1104,8 +1105,9 @@ class RecruitmentService{
 
             
 
-            $recruitmentRole->name = $request->name ?? $recruitmentRole->name;
+            $recruitmentRole->role = $request->role ?? $recruitmentRole->role;
             $recruitmentRole->alias = $request->alias ?? $recruitmentRole->alias;
+            $recruitmentRole->client = $request->client ?? $recruitmentRole->client;
             $recruitmentRole->recruitment_role_type_id = $request->recruitment_role_type_id ?? $recruitmentRole->recruitment_role_type_id;
 
 
