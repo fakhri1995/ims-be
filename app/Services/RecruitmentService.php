@@ -1000,7 +1000,7 @@ class RecruitmentService{
         $recruitmentRoles = RecruitmentRole::with(['type'])->withCount('recruitments');
         
         // filter
-        if($keyword) $recruitmentRoles = $recruitmentRoles->where("name","LIKE", "%$keyword%");
+        if($keyword) $recruitmentRoles = $recruitmentRoles->where("role","LIKE", "%$keyword%");
         if($recruitment_role_type_id) $recruitmentRoles = $recruitmentRoles->whereIn("recruitment_role_type_id", $recruitment_role_type_id);
         
         // sort
