@@ -15,8 +15,9 @@ class CreateRecruitmentRolesTable extends Migration
     {
         Schema::create('recruitment_roles', function (Blueprint $table) {
             $table->id();
-            $table->string("name");
+            $table->string("role");
             $table->string("alias");
+            $table->string("client");
             $table->unsignedBigInteger("recruitment_role_type_id");
             $table->dateTime('created_at');
             $table->dateTime('updated_at');
