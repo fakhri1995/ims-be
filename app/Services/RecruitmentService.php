@@ -1041,7 +1041,7 @@ class RecruitmentService{
         if($access["success"] === false) return $access;
         
         $validator = Validator::make($request->all(), [
-            "name" => "required",
+            "role" => "required",
             "alias" => "required",
             "recruitment_role_type_id" => "required|numeric",
         ]);
