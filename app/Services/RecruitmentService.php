@@ -7,6 +7,7 @@ use App\Exports\RecruitmentExportTemplate;
 use App\Mail\RecruitmentMail;
 use App\Recruitment;
 use App\RecruitmentAccountRoleTemplate;
+use App\RecruitmentClient;
 use App\RecruitmentEmailTemplate;
 use App\RecruitmentJalurDaftar;
 use App\RecruitmentRole;
@@ -1058,10 +1059,19 @@ class RecruitmentService{
 
             $recruitmentRole = new RecruitmentRole();
             $recruitmentRole->role = $request->role ?? "";
-            $recruitmentRole->alias = $request->alias ?? "";
             $recruitmentRole->client = $request->client ?? "";
             $recruitmentRole->recruitment_role_type_id = $request->recruitment_role_type_id ?? "";
 
+            $client = RecruitmentClient::where("name", $request->client)->first();
+            if(!$client){
+                $client = new RecruitmentClient();
+                $client->name = $request->client;
+                $client->save();
+                $client->number = str_pad($client->id, 4, '0', STR_PAD_LEFT);;
+                $client->save();
+            }
+
+            $recruitmentRole->alias = $request->alias . $client->number;
 
             $current_timestamp = date('Y-m-d H:i:s');
             $recruitmentRole->created_at = $current_timestamp;
@@ -1106,9 +1116,19 @@ class RecruitmentService{
             
 
             $recruitmentRole->role = $request->role ?? $recruitmentRole->role;
-            $recruitmentRole->alias = $request->alias ?? $recruitmentRole->alias;
             $recruitmentRole->client = $request->client ?? $recruitmentRole->client;
             $recruitmentRole->recruitment_role_type_id = $request->recruitment_role_type_id ?? $recruitmentRole->recruitment_role_type_id;
+
+            $client = RecruitmentClient::where("name", $request->client)->first();
+            if(!$client){
+                $client = new RecruitmentClient();
+                $client->name = $request->client;
+                $client->save();
+                $client->number = str_pad($client->id, 4, '0', STR_PAD_LEFT);;
+                $client->save();
+            }
+
+            $recruitmentRole->alias = $request->alias . $client->number;
 
 
             $current_timestamp = date('Y-m-d H:i:s');
