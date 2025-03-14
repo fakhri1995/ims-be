@@ -244,7 +244,6 @@ class CareerV2Service{
             "overview" => "required",
             "description" => "required",
             "is_posted" => "required|boolean",
-            "qualification" => "required",
             "question" => "filled|array",
             "question.name" => "required_with:question",
             "question.details" => "required_with:question",
