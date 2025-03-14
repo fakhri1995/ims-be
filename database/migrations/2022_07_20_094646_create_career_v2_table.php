@@ -24,7 +24,7 @@ class CreateCareerV2Table extends Migration
             $table->integer('salary_max'); // gaji maksimal;
             $table->text('overview');
             $table->text('description');
-            $table->text('qualification');
+            $table->text('qualification')->nullable();
             $table->unsignedBigInteger('created_by');
             $table->boolean('is_posted');
             $table->dateTime('created_at');
