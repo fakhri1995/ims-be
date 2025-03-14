@@ -446,7 +446,12 @@ class RecruitmentController extends Controller
         $response = $this->recruitmentAIService->approveRecruitment($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    
+        public function getRecruitmentRolePlatforms(Request $request)
+        {
+            $route_name = "RECRUITMENT_ROLE_PLATFORMS_GET";
+    
+            $response = $this->recruitmentService->getRecruitmentRolePlatforms($request, $route_name);
+            return response()->json($response, $response['status']);
+        }
 }
-
-
-

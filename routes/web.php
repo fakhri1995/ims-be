@@ -601,6 +601,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->put('/updateRecruitmentRole', 'RecruitmentController@updateRecruitmentRole');
     $router->delete('/deleteRecruitmentRole', 'RecruitmentController@deleteRecruitmentRole');
     $router->get('/getRecruitmentRoleTypesList', 'RecruitmentController@getRecruitmentRoleTypesList');
+    $router->get('/getRecruitmentRolePlatforms', 'RecruitmentController@getRecruitmentRolePlatforms');
     // RECRUITMENT STATUS
     $router->get('/getRecruitmentStatus', 'RecruitmentController@getRecruitmentStatus');
     $router->get('/getRecruitmentStatuses', 'RecruitmentController@getRecruitmentStatuses');
