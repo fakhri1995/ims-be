@@ -11,6 +11,7 @@ use App\RecruitmentClient;
 use App\RecruitmentEmailTemplate;
 use App\RecruitmentJalurDaftar;
 use App\RecruitmentRole;
+use App\RecruitmentRolePlatform;
 use App\RecruitmentRoleType;
 use App\RecruitmentStage;
 use App\RecruitmentStatus;
@@ -1178,6 +1179,20 @@ class RecruitmentService{
         
         try{
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitmentRoleTypes, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getRecruitmentRolePlatforms(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $recruitmentRolePlatforms = RecruitmentRolePlatform::get();
+        
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitmentRolePlatforms, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }

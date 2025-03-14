@@ -36,8 +36,8 @@ class CareerV2Service{
         $id = $request->id ?? NULL;
         $slug = $request->slug ?? NULL;
         
-        if($id) $career = CareerV2::with(["roleType","experience", "question","recruitmentRole"])->find($id);
-        else $career = CareerV2::with(["roleType","experience", "question", "recruitmentRole"])->where("slug",$slug)->first();
+        if($id) $career = CareerV2::with(["roleType","experience", "question","recruitmentRole","platforms"])->find($id);
+        else $career = CareerV2::with(["roleType","experience", "question", "recruitmentRole","platforms"])->where("slug",$slug)->first();
         
         if(!$career) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
         try{
@@ -79,7 +79,7 @@ class CareerV2Service{
         $is_posted = isset($request->is_posted) ? $request->is_posted : NULL;
         
         $rows = $request->rows ?? 5;
-        $career = CareerV2::with(["roleType" ,"experience", "question", "recruitmentRole"])->withCount("apply");
+        $career = CareerV2::with(["roleType" ,"experience", "question", "recruitmentRole","platforms"])->withCount("apply");
         
         // filter
         if($keyword) $career = $career->where("name","LIKE", "%$keyword%");
@@ -248,6 +248,7 @@ class CareerV2Service{
             "question" => "filled|array",
             "question.name" => "required_with:question",
             "question.details" => "required_with:question",
+            "platform" => "filled|array",
         ]);
         
         if($validator->fails()){
@@ -274,8 +275,12 @@ class CareerV2Service{
         $career->updated_at = Date('Y-m-d H:i:s');
         $career->created_by = auth()->user()->id;
         $question = $request->question ?? NULL;
+        $platform_ids = $request->get('platforms', []);
         try{
             $career->save();
+            if($platform_ids){
+                $career->platforms()->sync($platform_ids);
+            }
             if($question){
                 $questions = (object)$question;
                 $this->addCareerQuestionFunc($career->id, $questions->name, $questions->description, $questions->details);
@@ -301,7 +306,8 @@ class CareerV2Service{
             "description" => "filled",
             "is_posted" => "filled|boolean",
             "qualification" => "filled",
-            "question" => "array"
+            "question" => "array",
+            "platforms" => "array"
         ]);
         
         if($validator->fails()){
@@ -313,6 +319,7 @@ class CareerV2Service{
 
         $id = $request->id;
         $career = CareerV2::with("question")->find($id);
+        $platform_ids = $request->get('platforms', []);
         $question_temp = $career->question;
         $question_id = NULL;
         if($question_temp) $question_id = $question_temp->id;
@@ -334,6 +341,9 @@ class CareerV2Service{
         
         try{
             $career->save();
+            if($platform_ids){
+                $career->platforms()->sync($platform_ids);
+            }
             if($question){
                 if($question_temp) {
                     $this->updateCareerQuestionFunc($question_id, $question_temp->name, $question_temp->description, $question);

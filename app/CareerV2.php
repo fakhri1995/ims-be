@@ -32,4 +32,8 @@ class CareerV2 extends Model
     function recruitmentRole(){
         return $this->belongsTo(RecruitmentRole::class, 'recruitment_role_id');
     }
+    
+    public function platforms(){
+        return $this->belongsToMany(RecruitmentRolePlatform::class, 'career_platform_pivots', 'career_id', 'platform_id', 'id', 'id');
+    }
 }
