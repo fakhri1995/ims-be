@@ -304,7 +304,6 @@ class CareerV2Service{
             "overview" => "filled",
             "description" => "filled",
             "is_posted" => "filled|boolean",
-            "qualification" => "filled",
             "question" => "array",
             "platforms" => "array"
         ]);
@@ -314,7 +313,7 @@ class CareerV2Service{
             return ["success" => false, "message" => $errors, "status" => 400];
         }
 
-        $fillable = ["name","career_role_type_id","career_experience_id","recruitment_role_id","salary_min","salary_max", "overview","description","is_posted","qualification"];
+        $fillable = ["name","career_role_type_id","career_experience_id","recruitment_role_id","salary_min","salary_max", "overview","description","is_posted"];
 
         $id = $request->id;
         $career = CareerV2::with("question")->find($id);
