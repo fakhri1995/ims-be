@@ -17,7 +17,7 @@ class CreateRecruitmentRolesTable extends Migration
             $table->id();
             $table->string("role");
             $table->string("alias");
-            $table->string("client");
+        $table->string("client");
             $table->unsignedBigInteger("recruitment_role_type_id");
             $table->dateTime('created_at');
             $table->dateTime('updated_at');

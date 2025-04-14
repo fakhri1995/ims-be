@@ -157,7 +157,7 @@ class EmployeeService{
         },"contract.role","contract.contract_status", "leaveQuota"])
         ->leftJoin("employee_contracts","employees.last_contract_id","=","employee_contracts.id")
         ->leftJoin("recruitment_roles","employee_contracts.role_id","=","recruitment_roles.id")
-        ->select("employees.*","recruitment_roles.name as role_name")
+        ->select("employees.*","recruitment_roles.role as role_name")
         ->where("is_posted",1);
 
         function filter($employees, $keyword, $is_employee_active, $role_ids, $placements, $contract_status_ids){
@@ -186,7 +186,7 @@ class EmployeeService{
                 ->whereColumn("employees.last_contract_id","employee_contracts.id"),$sort_type);
         }
         if($sort_by == "name") $employees = $employees->orderBy('name',$sort_type);
-        if($sort_by == "role") $employees = $employees->orderBy("recruitment_roles.name",$sort_type);
+        if($sort_by == "role") $employees = $employees->orderBy("recruitment_roles.role",$sort_type);
         
         if($is_employee_active){
             $employeesDraft = Employee::with(["contract" => function ($query) use($current_timestamp) {
@@ -194,7 +194,7 @@ class EmployeeService{
             },"contract.role","contract.contract_status"])
             ->leftJoin("employee_contracts","employees.last_contract_id","=","employee_contracts.id")
             ->leftJoin("recruitment_roles","employee_contracts.role_id","=","recruitment_roles.id")
-            ->select("employees.*","recruitment_roles.name as role_name")
+            ->select("employees.*","recruitment_roles.role as role_name")
             ->where('updating_by',auth()->user()->id)->where('is_posted',0);
             $employeesDraft = filter($employeesDraft, $keyword, NULL, $role_ids, $placements, $contract_status_ids);
             $employeesDraft = $employeesDraft->orWhere(function($query) {
@@ -1383,7 +1383,7 @@ class EmployeeService{
         $sort_type = $request->sort_type == 'desc' ? 'desc' : 'asc';
         
         if($sort_by == "name") $employees = $employees->orderBy('name',$sort_type);
-        if($sort_by == "role") $employees = $employees->orderBy(RecruitmentRole::select("name")
+        if($sort_by == "role") $employees = $employees->orderBy(RecruitmentRole::select("role")
                 ->whereColumn("employee_roles.id","employees.employee_role_id"),$sort_type);
 
         $data = $employees->paginate($rows);

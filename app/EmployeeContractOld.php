@@ -23,7 +23,7 @@ class EmployeeContractOld extends Model
 
     public function role()
     {
-        return $this->belongsTo(RecruitmentRole::class, "role_id")->select('id','name','alias');
+        return $this->belongsTo(RecruitmentRole::class, "role_id")->select('id','role','alias');
     }
 
     public function contract_status()
