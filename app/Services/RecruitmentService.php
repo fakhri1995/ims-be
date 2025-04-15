@@ -117,7 +117,7 @@ class RecruitmentService{
         $sort_type = $request->get('sort_type','asc');
         if($sort_by == "id") $recruitments = $recruitments->orderBy('id',$sort_type);
         if($sort_by == "name") $recruitments = $recruitments->orderBy('name',$sort_type);
-        if($sort_by == "role") $recruitments = $recruitments->orderBy(RecruitmentRole::select("name")
+        if($sort_by == "role") $recruitments = $recruitments->orderBy(RecruitmentRole::select("role")
                 ->whereColumn("recruitment_roles.id","recruitments.recruitment_role_id"),$sort_type);
         if($sort_by == "jalur_daftar") $recruitments = $recruitments->orderBy(RecruitmentJalurDaftar::select("name")
                 ->whereColumn("recruitment_jalur_daftars.id","recruitments.recruitment_jalur_daftar_id"),$sort_type);
