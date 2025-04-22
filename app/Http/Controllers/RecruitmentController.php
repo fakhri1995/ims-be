@@ -447,11 +447,19 @@ class RecruitmentController extends Controller
         return response()->json($response, $response['status']);
     }
     
-        public function getRecruitmentRolePlatforms(Request $request)
-        {
-            $route_name = "RECRUITMENT_ROLE_PLATFORMS_GET";
-    
-            $response = $this->recruitmentService->getRecruitmentRolePlatforms($request, $route_name);
-            return response()->json($response, $response['status']);
-        }
+    public function getRecruitmentRolePlatforms(Request $request)
+    {
+        $route_name = "RECRUITMENT_ROLE_PLATFORMS_GET";
+
+        $response = $this->recruitmentService->getRecruitmentRolePlatforms($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getRecruitmentsAI(Request $request)
+    {
+        $route_name = "RECRUITMENTS_AI_GET";
+
+        $response = $this->recruitmentAIService->getRecruitmentsAI($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }

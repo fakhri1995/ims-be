@@ -323,6 +323,7 @@ class RecruitmentAIService{
 			$education->display_order = 1;
 			$education->save();
 
+			$batch = DB::table('resumes')->orderBy('cv_processing_batch', 'desc')->first() + 1;
 			$recruitment = new Recruitment;
 			$recruitment->owner_id = $resume->id;
 			$recruitment->name = 'Lorem Ipsum';
@@ -332,6 +333,7 @@ class RecruitmentAIService{
 			$recruitment->recruitment_jalur_daftar_id = 1;
 			$recruitment->recruitment_stage_id = 1;
 			$recruitment->cv_processing_status = 1;
+			$recruitment->cv_processing_batch = $batch;
 			$recruitment->lampiran = [];
 			$recruitment->created_at = Date('Y-m-d H:i:s');
 			$recruitment->updated_at = Date('Y-m-d H:i:s');
@@ -364,5 +366,63 @@ class RecruitmentAIService{
 			}catch(Exception $err){
 				return ["success" => false, "message" => $err->getLine(), "status" => 400];
 			}
+		}
+		
+		public function getRecruitmentsAI($request, $route_name){
+			$access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $rules = [
+            "page" => "numeric",
+            "rows" => "numeric|between:1,100",
+            "sort_by" => "in:id,name,role,jalur_daftar,stage,status",
+            "sort_type" => "in:asc,desc"
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if($validator->fails()){
+            $errors = $validator->errors()->all();
+            return ["success" => false, "message" => $errors, "status" => 400];
+        }
+
+        $keyword = $request->keyword ?? NULL;
+        $recruitment_role_id = $request->recruitment_role_id ? explode(",",$request->recruitment_role_id) : NULL;
+        $recruitment_jalur_daftar_id = $request->recruitment_jalur_daftar_id ? explode(",",$request->recruitment_jalur_daftar_id) : NULL;
+        $recruitment_stage_id = $request->recruitment_stage_id ? explode(",",$request->recruitment_stage_id) : NULL;
+        $recruitment_status_id = $request->recruitment_status_id ? explode(",",$request->recruitment_status_id) : NULL;
+				$cv_processing_status = $request->cv_processing_status ? explode(",",$request->cv_processing_status) : NULL;
+
+        $rows = $request->rows ?? 5;
+        $recruitments = Recruitment::with(['role','role.type','jalur_daftar','stage','status','resume','user'])->where("cv_processing_status", '!=', 0);
+
+        // filter
+        if($keyword) $recruitments = $recruitments->where("name","LIKE", "%$keyword%");
+        if($recruitment_role_id) $recruitments = $recruitments->whereIn("recruitment_role_id", $recruitment_role_id);
+        if($recruitment_jalur_daftar_id) $recruitments = $recruitments->whereIn("recruitment_jalur_daftar_id", $recruitment_jalur_daftar_id);
+        if($recruitment_stage_id) $recruitments = $recruitments->whereIn("recruitment_stage_id", $recruitment_stage_id);
+        if($recruitment_status_id) $recruitments = $recruitments->whereIn("recruitment_status_id", $recruitment_status_id);
+        
+
+        // sort
+        $sort_by = $request->sort_by ?? NULL;
+        $sort_type = $request->get('sort_type','asc');
+        if($sort_by == "id") $recruitments = $recruitments->orderBy('id',$sort_type);
+        if($sort_by == "name") $recruitments = $recruitments->orderBy('name',$sort_type);
+        if($sort_by == "role") $recruitments = $recruitments->orderBy(RecruitmentRole::select("role")
+                ->whereColumn("recruitment_roles.id","recruitments.recruitment_role_id"),$sort_type);
+        if($sort_by == "jalur_daftar") $recruitments = $recruitments->orderBy(RecruitmentJalurDaftar::select("name")
+                ->whereColumn("recruitment_jalur_daftars.id","recruitments.recruitment_jalur_daftar_id"),$sort_type);
+        if($sort_by == "stage") $recruitments = $recruitments->orderBy(RecruitmentStage::select("name")
+                ->whereColumn("recruitment_stages.id","recruitments.recruitment_stage_id"),$sort_type);
+        if($sort_by == "status") $recruitments = $recruitments->orderBy(RecruitmentStatus::select("name")
+                ->whereColumn("recruitment_statuses.id","recruitments.recruitment_status_id"),$sort_type);
+
+        $recruitments = $recruitments->groupBy('cv_processing_batch')->paginate($rows);
+        
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitments, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
 		}
 }
