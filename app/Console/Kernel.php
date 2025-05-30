@@ -27,6 +27,7 @@ use App\Console\Commands\SendAndroidNotificationCheckIn;
 use App\Console\Commands\SendAnnounceNotification;
 use App\Console\Commands\SendMailAnnouncement;
 use Illuminate\Console\Scheduling\Schedule;
+use App\Console\Commands\FindNearbyLocations;
 use Laravel\Lumen\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
@@ -62,6 +63,7 @@ class Kernel extends ConsoleKernel
         SendAnnounceNotification::class,
         SetDayOffSchedule::class,
         SendMailAnnouncement::class,
+        FindNearbyLocations::class,
     ];
 
     /**

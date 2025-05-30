@@ -298,3 +298,23 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ---
 
 **Backend Mighty** – Building powerful APIs with simplicity and performance in mind.
+
+## Feature
+
+### Normalize
+/ Sample usage:
+// ----------------------------------------
+// Run search for specific parent ID (112) with default range (1000m):
+// php artisan geo:find-nearby 112
+
+// Run search for parent ID (112) within a 500m radius:
+// php artisan geo:find-nearby 112 500
+
+// Run and apply normalization (mark, preserve raw, overwrite original):
+// php artisan geo:find-nearby 112 --mark
+
+// Run with custom range and normalization:
+// php artisan geo:find-nearby 112 500 --mark
+
+// NOTE: The first argument is always the parent record's ID. If you omit it, the command
+// will default to processing the first unassigned, unprocessed record (often ID 1).
