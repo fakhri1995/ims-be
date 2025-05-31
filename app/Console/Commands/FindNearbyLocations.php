@@ -11,22 +11,34 @@ class FindNearbyLocations extends Command
         {parent_id : ID of the parent record} 
         {range=1000 : Search radius in meters} 
         {--mark : Mark, preserve raw values, & normalize parent to best child}
-        {--strategy=centroid : Normalization strategy: centroid, best_accuracy, most_recent}';
+        {--strategy=centroid : Normalization strategy: centroid, best_accuracy, most_recent}
+        {--search-null-geo : Only find children with null attempts and null geo_location}
+        {--copy-geo : Copy geo_location from parent to children with null geo_location}';
 
     protected $description = 'Find and (optionally) normalize a parent record with its nearby points.';
 
     public function handle()
     {
-        $parentId    = (int) $this->argument('parent_id');
-        $rangeMeters = (float) $this->argument('range');
-        $mark        = $this->option('mark');
-        $strategy    = $this->option('strategy');
+        $parentId       = (int) $this->argument('parent_id');
+        $rangeMeters    = (float) $this->argument('range');
+        $mark           = $this->option('mark');
+        $strategy       = $this->option('strategy');
+        $searchNullGeo  = $this->option('search-null-geo');
+        $copyGeo        = $this->option('copy-geo');
 
         $parent = LongLatList::find($parentId);
         if (! $parent) {
             return $this->error(json_encode([
                 'success' => false,
                 'message' => "Parent record ID {$parentId} not found."
+            ], JSON_PRETTY_PRINT));
+        }
+
+        // Check if parent has geo_location for copy-geo operation
+        if ($copyGeo && !$parent->geo_location) {
+            return $this->error(json_encode([
+                'success' => false,
+                'message' => "Parent record ID {$parentId} has no geo_location. Cannot copy geo data."
             ], JSON_PRETTY_PRINT));
         }
 
@@ -38,8 +50,8 @@ class FindNearbyLocations extends Command
         $deltaLat = $rangeMeters / 111320.0;
         $deltaLon = $rangeMeters / (111320.0 * cos(deg2rad($originalParentLat)));
 
-        // Find unprocessed nearby children
-        $children = LongLatList::whereNull('parent_id')
+        // Build children query
+        $childrenQuery = LongLatList::whereNull('parent_id')
             ->where('is_nearby_processed', false)
             ->where('id', '<>', $parentId)
             ->whereBetween('latitude',  [$originalParentLat - $deltaLat,  $originalParentLat + $deltaLat])
@@ -51,12 +63,19 @@ class FindNearbyLocations extends Command
                     sin(radians(?)) * sin(radians(latitude))
                 )) <= ?",
                 [$originalParentLat, $originalParentLon, $originalParentLat, $rangeMeters]
-            )
-            ->get();
+            );
 
-        // Prepare normalization data based on strategy
+        // Apply search-null-geo filter if requested
+        if ($searchNullGeo) {
+            $childrenQuery->whereNull('attempts')
+                         ->whereNull('geo_location');
+        }
+
+        $children = $childrenQuery->get();
+
+        // Prepare normalization data based on strategy (only for --mark operation)
         $normalized = null;
-        if ($children->isNotEmpty()) {
+        if ($mark && $children->isNotEmpty()) {
             $normalized = $this->calculateNormalizedLocation($parent, $children, $strategy);
         }
 
@@ -67,6 +86,7 @@ class FindNearbyLocations extends Command
                 $parent->raw_latitude     = $parent->latitude;
                 $parent->raw_longitude    = $parent->longitude;
                 $parent->raw_geo_location = $parent->geo_location;
+                $parent->raw_attempts     = $parent->attempts;
             }
 
             // Apply normalized values
@@ -85,6 +105,28 @@ class FindNearbyLocations extends Command
             }
         }
 
+        // Apply geo_location copying if requested
+        if ($copyGeo && $children->isNotEmpty()) {
+            $copiedCount = 0;
+            foreach ($children as $child) {
+                // Only copy to children with null geo_location
+                if (is_null($child->geo_location)) {
+                    // Preserve original attempts value
+                    if (is_null($child->raw_attempts)) {
+                        $child->raw_attempts = $child->attempts;
+                    }
+                    
+                    // Copy geo_location from parent and set attempts to 100
+                    $child->geo_location = $parent->geo_location;
+                    $child->attempts = 100;
+                    $child->save();
+                    $copiedCount++;
+                }
+            }
+            
+            $this->info("Copied geo_location from parent to {$copiedCount} children.");
+        }
+
         // Calculate distances using original parent coordinates
         $childrenWithDistance = $children->map(function ($child) use ($originalParentLat, $originalParentLon) {
             $distance = $this->calculateDistance(
@@ -101,6 +143,7 @@ class FindNearbyLocations extends Command
                 'distance_m'  => round($distance, 2),
                 'geo_location'=> $child->geo_location,
                 'attempts'    => $child->attempts,
+                'raw_attempts'=> $child->raw_attempts,
             ];
         })->sortBy('distance_m')->values()->all();
 
@@ -109,10 +152,16 @@ class FindNearbyLocations extends Command
             'success'    => true,
             'parent_id'  => $parentId,
             'strategy'   => $strategy,
+            'filters'    => [
+                'mark' => $mark,
+                'search_null_geo' => $searchNullGeo,
+                'copy_geo' => $copyGeo,
+            ],
             'original'   => [
                 'latitude'    => $originalParentLat,
                 'longitude'   => $originalParentLon,
                 'geo_location'=> $parent->raw_geo_location ?? $parent->geo_location,
+                'attempts'    => $parent->raw_attempts ?? $parent->attempts,
             ],
             'normalized' => $normalized,
             'children_count' => $children->count(),

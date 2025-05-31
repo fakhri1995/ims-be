@@ -12,6 +12,7 @@ class LongLatList extends Model
         'geo_location'        => 'object',
         'is_nearby_processed' => 'boolean',
         'raw_geo_location'    => 'object',
+        'raw_attempts'        => 'integer',
     ];
 
     protected $fillable = [
@@ -24,6 +25,7 @@ class LongLatList extends Model
         'raw_latitude',
         'raw_longitude',
         'raw_geo_location',
+        'raw_attempts',
     ];
 
     public function parent()
