@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  db-mysql:
+    image: mysql:8.0
+    container_name: local-mysql-migsys
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: dGo1biwpE3bItfgl
+      MYSQL_DATABASE: migsys
+      MYSQL_USER: doadmin
+      MYSQL_PASSWORD: dGo1biwpE3bItfgl
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - "25060:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    command: --sql-mode="" --default-authentication-plugin=mysql_native_password --log-bin-trust-function-creators=1 --skip-log-bin
+    networks:
+      - migsys-network
+
+
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  migsys-network:
+    driver: bridge
