@@ -2,7 +2,7 @@
     "name": "laravel/lumen",
     "description": "The Laravel Lumen Framework.",
     "keywords": [
-        "framework",
+    "framework",
         "laravel",
         "lumen"
     ],
@@ -10,17 +10,21 @@
     "type": "project",
     "require": {
         "php": "^7.4",
-        "dompdf/dompdf": "dev-master as v1.2.2",
         "barryvdh/laravel-dompdf": "^0.9.0",
+        "dompdf/dompdf": "dev-master as v1.2.2",
         "dusterio/lumen-passport": "^0.3.4",
         "flipbox/lumen-generator": "^8.2",
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.2",
+        "illuminate/auth": "^7.22",
+        "illuminate/bus": "^7.22",
+        "illuminate/events": "^7.30",
         "illuminate/mail": "^7",
         "laravel/lumen-framework": "^7.0",
         "league/flysystem-aws-s3-v3": "~1.0",
         "maatwebsite/excel": "^3.1",
-        "symfony/psr-http-message-bridge": "^2.0"
+        "symfony/psr-http-message-bridge": "^2.0",
+        "vladimir-yuldashev/laravel-queue-rabbitmq": "10.2.2"
     },
     "require-dev": {
         "fzaninotto/faker": "^1.9.1",
