@@ -112,6 +112,8 @@ $app->register(Dusterio\LumenPassport\PassportServiceProvider::class);
 $app->register(Maatwebsite\Excel\ExcelServiceProvider::class);
 $app->register(Barryvdh\DomPDF\ServiceProvider::class);
 $app->register(Illuminate\Mail\MailServiceProvider::class);
+$app->register(VladimirYuldashev\LaravelQueueRabbitMQ\LaravelQueueRabbitMQServiceProvider::class);
+
 
 /*
 |--------------------------------------------------------------------------
