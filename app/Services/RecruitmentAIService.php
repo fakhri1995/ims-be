@@ -425,4 +425,18 @@ class RecruitmentAIService{
             return ["success" => false, "message" => $err, "status" => 400];
         }
 		}
+
+		public function getPendingRecruitmentsAI($request, $route_name){
+			$access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $recruitments = Recruitment::with(['resume', 'resume.skills'])->where("cv_processing_status", 1);
+				$recruitments = $recruitments->orderBy('id','desc');
+        
+        try{
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitments->get(), "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+		}
 }
