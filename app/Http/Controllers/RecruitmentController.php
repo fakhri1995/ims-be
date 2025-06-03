@@ -462,4 +462,12 @@ class RecruitmentController extends Controller
         $response = $this->recruitmentAIService->getRecruitmentsAI($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    public function getPendingRecruitmentsAI(Request $request)
+    {
+        $route_name = "RECRUITMENTS_AI_PENDING_GET";
+
+        $response = $this->recruitmentAIService->getPendingRecruitmentsAI($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }

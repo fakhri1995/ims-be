@@ -635,6 +635,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->post('/uploadCVs', 'RecruitmentController@uploadCVs');
     $router->put('/approveRecruitment', 'RecruitmentController@approveRecruitment');
     $router->get('/getRecruitmentsAI', 'RecruitmentController@getRecruitmentsAI');
+    $router->get('/getPendingRecruitmentsAI', 'RecruitmentController@getPendingRecruitmentsAI');
 
 
     // Employee Module -- -- -- -- --
