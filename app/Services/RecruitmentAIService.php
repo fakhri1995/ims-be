@@ -428,17 +428,29 @@ class RecruitmentAIService{
 
 		public function getPendingRecruitmentsAI($request, $route_name){
 			$access = $this->globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+			if($access["success"] === false) return $access;
 
-        $recruitments = Recruitment::with(['resume', 'resume.skills', 'resume.educations'])->where("cv_processing_status", 1);
-				$recruitments = $recruitments->orderBy('id','desc');
-        
-        $rows = $request->rows ?? 5;
-				$data = $recruitments->paginate($rows);
-        try{
-            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
-        }catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
+			$rules = [
+				"page" => "numeric",
+				"rows" => "numeric|between:1,100"
+			];
+
+			$validator = Validator::make($request->all(), $rules);
+			if($validator->fails()){
+					$errors = $validator->errors()->all();
+					return ["success" => false, "message" => $errors, "status" => 400];
+			}
+
+
+			$recruitments = Recruitment::with(['resume', 'resume.skills', 'resume.educations'])->where("cv_processing_status", 1);
+			$recruitments = $recruitments->orderBy('id','desc');
+			
+			$rows = $request->rows ?? 5;
+			$data = $recruitments->paginate($rows);
+			try{
+					return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
+			}catch(Exception $err){
+					return ["success" => false, "message" => $err, "status" => 400];
+			}
 		}
 }
