@@ -433,8 +433,10 @@ class RecruitmentAIService{
         $recruitments = Recruitment::with(['resume', 'resume.skills', 'resume.educations'])->where("cv_processing_status", 1);
 				$recruitments = $recruitments->orderBy('id','desc');
         
+        $rows = $request->rows ?? 5;
+				$data = $recruitments->paginate($rows);
         try{
-            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitments->get(), "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
