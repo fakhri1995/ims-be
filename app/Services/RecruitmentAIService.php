@@ -430,7 +430,7 @@ class RecruitmentAIService{
 			$access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        $recruitments = Recruitment::with(['resume', 'resume.skills'])->where("cv_processing_status", 1);
+        $recruitments = Recruitment::with(['resume', 'resume.skills', 'resume.educations'])->where("cv_processing_status", 1);
 				$recruitments = $recruitments->orderBy('id','desc');
         
         try{
