@@ -95,7 +95,7 @@ class Resume extends Model
 
     function lastEducation(): HasOne
     {
-        return $this->hasOne(ResumeEducation::class, 'resume_id')->where('display_order', 1)->latest('id');
+        return $this->hasOne(ResumeEducation::class, 'resume_id')->latest('start_date');
     }
 
     function lastExperience(): HasOne
