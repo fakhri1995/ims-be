@@ -469,6 +469,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->get('/exportAttendanceActivityUser', 'AttendanceController@exportAttendanceActivityUser');
     $router->get('/exportAttendanceActivityUsers', 'AttendanceController@exportAttendanceActivityUsers');
     $router->post('/setAttendanceToggle', 'AttendanceController@setAttendanceToggle');
+    $router->post('/setAttendanceToggleMobile', 'AttendanceController@setAttendanceToggleMobile');
     $router->get('/getTimeSheet', 'AttendanceController@getTimeSheet');
     $router->get('/getAttendanceRecap', 'AttendanceController@getAttendanceRecap');
     $router->get('/exportAttendanceRecap', 'AttendanceController@exportAttendanceRecap');
