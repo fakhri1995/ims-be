@@ -62,6 +62,9 @@ return [
             'cdn_endpoint' => env('DO_CDN_ENDPOINT'),
             'token_api' => env('DO_TOKEN_API'),
             'visibility' => 'public',
+            'options' => [
+                'suppress_php_deprecation_warning' => true
+            ],
         ],
 
     ],

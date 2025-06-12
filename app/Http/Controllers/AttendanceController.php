@@ -263,6 +263,14 @@ class AttendanceController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function setAttendanceToggleMobile(Request $request)
+    {
+        $route_name = "ATTENDANCE_TOGGLE_SET";
+
+        $response = $this->attendanceService->setAttendanceToggleMobile($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
    // Attendance Project 
     public function getAttendanceProjects(Request $request)
     {
