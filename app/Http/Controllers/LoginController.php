@@ -67,7 +67,8 @@ class LoginController extends Controller
     public function changePassword(Request $request)
     {
         $password = $request->input("new_password");
-        $response = $this->loginService->changePassword($password);
+        $password_old = $request->input("old_password");
+        $response = $this->loginService->changePassword($password, $password_old);
         return response()->json($response, $response['status']);
     }
 

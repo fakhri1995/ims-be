@@ -134,9 +134,11 @@ class LoginService
         return ["success" => true, "message" => "Token android berhasil dimasukkan", "status" => 200];
     }
 
-    public function changePassword($password){
+    public function changePassword($password, $password_old){
         try{
             if(strlen($password) < 8) return ["success" => false, "data" => "Password Minimal 8 Karakter", "status" => 400];
+            // $password_old = Hash::make($password_old);
+            if(!Hash::check($password_old, auth()->user()->password)) return["success" => false, "data" => "Password Salah", "status" => 400];
             auth()->user()->password = Hash::make($password);
             auth()->user()->save();
             return ["success" => true, "message" => "Password Berhasil Diubah", "status" => 200];
