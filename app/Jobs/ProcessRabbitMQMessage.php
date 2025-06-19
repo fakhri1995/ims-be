@@ -111,6 +111,10 @@ class ProcessRabbitMQMessage implements ShouldQueue
                     $experience->end_date = $requestExperience->end_date;
                     $experience->description = $normalized_responsibilities;
 
+                    //new
+                    $experience->achievements = $requestExperience->achievements;
+                    $experience->technologies = $requestExperience->technologies;
+
                     $experiences = new ResumeExperience();
                     if ($after_id == NULL) {
                             $experiences->increment("display_order");
@@ -140,6 +144,11 @@ class ProcessRabbitMQMessage implements ShouldQueue
                 $education->gpa = !$requestEducation->gpa ? NULL : $requestEducation->gpa;
                 $education->start_date = $requestEducation->start_date ? date('Y-m-01', strtotime($requestEducation->start_date)) : null;
                 $education->end_date = $requestEducation->end_date ? date('Y-m-t', strtotime($requestEducation->end_date . '-01')) : null;
+
+                //new
+                $education->location = $requestEducation->location;
+                $education->honors = $requestEducation->honors;
+                $education->relevant_coursework = $requestEducation->relevant_coursework;
 
                 $educations = new ResumeEducation();
                 if ($after_id == NULL) {
