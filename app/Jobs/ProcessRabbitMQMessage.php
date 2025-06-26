@@ -11,6 +11,7 @@ use App\ResumeAchievement;
 use App\ResumeCertificate;
 use App\ResumeEducation;
 use App\ResumeExperience;
+use App\ResumeLanguage;
 use App\ResumeProject;
 use App\ResumeSkill;
 use App\ResumeSummary;
@@ -42,6 +43,10 @@ class ProcessRabbitMQMessage implements ShouldQueue
         $resume->created_at = Date('Y-m-d H:i:s');
         $resume->updated_at = Date('Y-m-d H:i:s');
         $resume->created_by = 1;
+        
+        $resume->linkedin = $data->user["linkedin"];
+        $resume->summary = $data->user["summary"];
+
         if (!$resume->save()) return ["success" => false, "message" => "Gagal Menambah Resume", "status" => 400];
 
         $recruitment = new Recruitment;
@@ -63,7 +68,6 @@ class ProcessRabbitMQMessage implements ShouldQueue
 
 
         foreach($data->projects as $project){
-                Log::info("masuk project");
                 DB::beginTransaction();
                 $requestProject = (object)$project;
 
@@ -92,7 +96,6 @@ class ProcessRabbitMQMessage implements ShouldQueue
         }
 
         foreach($data->experience as $experience){
-                Log::info($experience);
                 DB::beginTransaction();
                     $requestExperience = (object)$experience;
 
@@ -112,8 +115,8 @@ class ProcessRabbitMQMessage implements ShouldQueue
                     $experience->description = $normalized_responsibilities;
 
                     //new
-                    $experience->achievements = $requestExperience->achievements;
-                    $experience->technologies = $requestExperience->technologies;
+                    $experience->achievements = implode(', ', $requestExperience->achievements);
+                    $experience->technologies = implode(', ', $requestExperience->technologies);
 
                     $experiences = new ResumeExperience();
                     if ($after_id == NULL) {
@@ -147,8 +150,8 @@ class ProcessRabbitMQMessage implements ShouldQueue
 
                 //new
                 $education->location = $requestEducation->location;
-                $education->honors = $requestEducation->honors;
-                $education->relevant_coursework = $requestEducation->relevant_coursework;
+                $education->honors = implode(', ', $requestEducation->honors);
+                $education->relevant_coursework = implode(', ', $requestEducation->relevant_coursework);
 
                 $educations = new ResumeEducation();
                 if ($after_id == NULL) {
@@ -219,6 +222,35 @@ class ProcessRabbitMQMessage implements ShouldQueue
                 $certificate->name = $requestCertificates->name;
                 $certificate->organizer = $requestCertificates->issuer ?? "";
                 $certificate->year = !$requestCertificates->date_earned ? "2000-01-01" : $requestCertificates->date_earned;
+
+                $certificates = new ResumeCertificate();
+                if ($after_id == NULL) {
+                        $certificates->increment("display_order");
+                        $certificate->display_order = 1;
+                } else {
+                        $certificates->where("display_order", ">", $certificateAfter->display_order)->increment("display_order");
+                        $certificate->display_order = $certificateAfter->display_order + 1;
+                }
+
+                $resume->certificates()->save($certificate);
+                DB::commit();
+        }
+
+        foreach($data->languages as $language){
+                DB::beginTransaction();
+                $requestLanguage = (object)$language;
+
+                $after_id = $requestLanguage->after_id ?? NULL;
+                if ($after_id != NULL) {
+                        $languageAfter = ResumeLanguage::find($after_id);
+                        if (!$languageAfter) return ["success" => true, "message" => "After id tidak ditemukan", "status" => 200];
+                }
+
+                $language = new ResumeLanguage();
+                $language->language = $requestLanguage->language;
+                $language->proficiency = $requestLanguage->proficiency;
+                $language->certifications = implode(', ', $requestLanguage->certifications);
+                
 
                 $certificates = new ResumeCertificate();
                 if ($after_id == NULL) {
