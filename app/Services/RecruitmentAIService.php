@@ -442,7 +442,7 @@ class RecruitmentAIService{
 			}
 
 
-			$recruitments = Recruitment::with(['resume', 'resume.skills', 'resume.lastEducation'])->where("cv_processing_status", 1);
+			$recruitments = Recruitment::with(['resume', 'resume.skills', 'resume.lastEducation', 'resume.experiences', 'resume.languages'])->where("cv_processing_status", 1);
 			$recruitments = $recruitments->orderBy('id','desc');
 			
 			$rows = $request->rows ?? 5;

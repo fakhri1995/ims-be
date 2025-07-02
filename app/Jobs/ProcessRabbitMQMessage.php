@@ -48,6 +48,8 @@ class ProcessRabbitMQMessage implements ShouldQueue
         $resume->summary = $data->user["summary"];
 
         if (!$resume->save()) return ["success" => false, "message" => "Gagal Menambah Resume", "status" => 400];
+        $resume->owner_id = $resume->id;
+        $resume->save();
 
         $recruitment = new Recruitment;
         $recruitment->name = $resume->name;
