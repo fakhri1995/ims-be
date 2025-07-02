@@ -63,6 +63,11 @@ class Resume extends Model
         return $this->hasMany(ResumeSkill::class, 'resume_id')->orderBy("display_order", "asc");
     }
 
+    public function tools()
+    {
+        return $this->hasMany(ResumeTool::class, 'resume_id')->orderBy("display_order", "asc");
+    }
+
     public function languages()
     {
         return $this->hasMany(ResumeLanguage::class, 'resume_id')->orderBy("display_order", "asc");
@@ -81,6 +86,11 @@ class Resume extends Model
     public function assessmentResults()
     {
         return $this->hasMany(ResumeAssessmentResult::class, 'resume_id');
+    }
+
+    public function evaluation()
+    {
+        return $this->hasOne(ResumeEvaluation::class, 'resume_id', 'id');
     }
 
     public function summaries()
