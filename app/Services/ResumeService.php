@@ -11,6 +11,7 @@ use App\ResumeAssessmentDetail;
 use App\ResumeAssessmentResult;
 use App\ResumeCertificate;
 use App\ResumeEducation;
+use App\ResumeEvaluation;
 use App\ResumeExperience;
 use App\ResumeProject;
 use App\ResumeSkill;
@@ -1499,6 +1500,80 @@ class ResumeService
             if ($request->name) $resumeSkillLists->where("name", "LIKE", "%$request->name%");
             $resumeSkillLists = $resumeSkillLists->get();
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $resumeSkillLists, "status" => 200];
+        } catch (Exception $err) {
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function addResumeEvaluation($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if ($access["success"] === false) return $access;
+
+        try {
+            $resume_id = $request->resume_id;
+            $user_id = auth()->user()->id;
+            
+            if(!Resume::find($resume_id)){
+                return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+            }
+            $resume_evaluation = new ResumeEvaluation();
+            $resume_evaluation->grammar_and_spelling = $request-> grammar_and_spelling;
+            $resume_evaluation->content_validity = $request->content_validity;
+            $resume_evaluation->skill_alignment = $request->skill_alignment;
+            $resume_evaluation->flags = $request-> flags;
+            $resume_evaluation->improvement_points = $request->improvement_points;
+            $resume_evaluation->evaluated_by = $request->user_id;
+            $resume_evaluation->resume_id = $request->resume_id;
+
+            if (!$resume_evaluation->save()) return ["success" => false, "message" => "Gagal Menambah Evaluation", "status" => 400];
+            return ["success" => true, "message" => "Data Berhasil Ditambahkan", "data" => $resume_evaluation, "status" => 200];
+
+        } catch (Exception $err) {
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function deleteResumeEvaluation($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if ($access["success"] === false) return $access;
+
+        $resume_evaluation = ResumeEvaluation::find($request->id);
+        if(!$resume_evaluation){
+            return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        }
+
+        if (!$resume_evaluation->delete()) return ["success" => false, "message" => "Gagal Menghapus Evaluation", "status" => 400];
+        return ["success" => true, "message" => "Data Berhasil Dihapuskan", "status" => 200];
+    }
+
+    public function updateResumeEvaluation($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if ($access["success"] === false) return $access;
+
+        try {
+            $resume_id = $request->resume_id;
+            $user_id = auth()->user()->id;
+
+            $resume_evaluation = ResumeEvaluation::find($request->id);
+            if(!$resume_evaluation){
+                return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+            }
+            
+            if(!Resume::find($resume_id)){
+                return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+            }
+
+            $resume_evaluation->grammar_and_spelling = $request-> grammar_and_spelling;
+            $resume_evaluation->content_validity = $request->content_validity;
+            $resume_evaluation->skill_alignment = $request->skill_alignment;
+            $resume_evaluation->flags = $request-> flags;
+            $resume_evaluation->improvement_points = $request->improvement_points;
+            $resume_evaluation->evaluated_by = $request->user_id;
+            $resume_evaluation->resume_id = $request->resume_id;
+
+            if (!$resume_evaluation->save()) return ["success" => false, "message" => "Gagal Menambah Evaluation", "status" => 400];
+            return ["success" => true, "message" => "Data Berhasil Ditambahkan", "data" => $resume_evaluation, "status" => 200];
+
         } catch (Exception $err) {
             return ["success" => false, "message" => $err, "status" => 400];
         }

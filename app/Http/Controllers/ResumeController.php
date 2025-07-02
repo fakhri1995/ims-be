@@ -160,5 +160,27 @@ class ResumeController extends Controller
         return response()->json($response, $response['status']);
     }
     
+    public function addResumeEvaluation(Request $request)
+    {
+        $route_name = "RESUME_EVALUATION_ADD";
 
+        $response = $this->resumeService->addResumeEvaluation($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateResumeEvaluation(Request $request)
+    {
+        $route_name = "RESUME_EVALUATION_UPDATE";
+
+        $response = $this->resumeService->updateResumeEvaluation($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteResumeEvaluation(Request $request)
+    {
+        $route_name = "RESUME_EVALUATION_DELETE";
+
+        $response = $this->resumeService->deleteResumeEvaluation($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }

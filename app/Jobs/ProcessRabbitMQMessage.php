@@ -15,6 +15,7 @@ use App\ResumeLanguage;
 use App\ResumeProject;
 use App\ResumeSkill;
 use App\ResumeSummary;
+use App\ResumeTool;
 use App\ResumeTraining;
 use Dom\Attr;
 use Exception;
@@ -176,10 +177,15 @@ class ProcessRabbitMQMessage implements ShouldQueue
         }
 
         foreach($data->tools as $tool){
-                $requestSkill = (object)$tool;
-                $skill = new ResumeSkill();
-                $skill->name = ucfirst($requestSkill->tool_name);
-                $resume->skills()->save($skill);
+                $requestTool = (object)$tool;
+                $tool = new ResumeTool();
+                $tool->name = ucfirst($requestTool->tool_name);
+                $tool->category = $requestTool->category;
+                $tool->proficiency = $requestTool->proficiency;
+                $tool->details = $requestTool->details;
+                $tool->certifications = implode(', ', $requestTool->certifications);
+
+                $resume->tools()->save($tool);
         }
 
         foreach($data->achievements as $achievement){
