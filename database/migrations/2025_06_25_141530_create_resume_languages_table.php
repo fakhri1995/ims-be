@@ -18,6 +18,8 @@ class CreateResumeLanguagesTable extends Migration
             $table->string("language")->nullable();
             $table->string("proficiency")->nullable();
             $table->string("certifications")->nullable();
+            $table->unsignedBigInteger("resume_id");
+            $table->unsignedInteger('display_order');
         });
     }
 

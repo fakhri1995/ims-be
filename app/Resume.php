@@ -63,6 +63,11 @@ class Resume extends Model
         return $this->hasMany(ResumeSkill::class, 'resume_id')->orderBy("display_order", "asc");
     }
 
+    public function languages()
+    {
+        return $this->hasMany(ResumeLanguage::class, 'resume_id')->orderBy("display_order", "asc");
+    }
+
     public function trainings()
     {
         return $this->hasMany(ResumeTraining::class, 'resume_id')->orderBy("display_order", "asc");
