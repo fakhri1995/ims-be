@@ -1563,7 +1563,7 @@ class ResumeService
                 return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
             }
 
-            $resume_evaluation->grammar_and_spelling = $request-> grammar_and_spelling;
+            $resume_evaluation->grammar_and_spelling = $request->grammar_and_spelling;
             $resume_evaluation->content_validity = $request->content_validity;
             $resume_evaluation->skill_alignment = $request->skill_alignment;
             $resume_evaluation->flags = $request-> flags;

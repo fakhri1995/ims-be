@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\ResumeSectionService;
 use App\Services\ResumeService;
 use Illuminate\Http\Request;
 
@@ -10,6 +11,7 @@ class ResumeController extends Controller
     public function __construct()
     {
         $this->resumeService = new ResumeService;
+        $this->resumeSectionService = new ResumeSectionService;
     }
 
     public function getResumes(Request $request){
@@ -182,5 +184,12 @@ class ResumeController extends Controller
 
         $response = $this->resumeService->deleteResumeEvaluation($request, $route_name);
         return response()->json($response, $response['status']);
+    }
+
+    public function updateResumePersonalInfo(Request $request)
+    {
+        $route_name = "RESUME_PERSONAL_INFO_UPDATE";
+
+        $response = $this->resumeSectionService->updateResumePersonalInfo($request, $route_name);
     }
 }
