@@ -191,5 +191,6 @@ class ResumeController extends Controller
         $route_name = "RESUME_PERSONAL_INFO_UPDATE";
 
         $response = $this->resumeSectionService->updateResumePersonalInfo($request, $route_name);
+        return response()->json($response, $response['status']);
     }
 }
