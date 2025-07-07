@@ -36,7 +36,7 @@ class ResumeSectionService
 						$resume->linkedin = $request->linkedin;
 
             if (!$resume->save()) return ["success" => false, "message" => "Gagal Menambah Resume", "status" => 400];
-            return ["success" => true, "message" => "Data Berhasil Ditambahkan", "data" => $resume, "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Diubah", "data" => $resume, "status" => 200];
 
         } catch (Exception $err) {
             return ["success" => false, "message" => $err, "status" => 400];
