@@ -1520,9 +1520,9 @@ class ResumeService
             $resume_evaluation->grammar_and_spelling = $request-> grammar_and_spelling;
             $resume_evaluation->content_validity = $request->content_validity;
             $resume_evaluation->skill_alignment = $request->skill_alignment;
-            $resume_evaluation->flags = $request-> flags;
+            $resume_evaluation->flags = $request->flags;
             $resume_evaluation->improvement_points = $request->improvement_points;
-            $resume_evaluation->evaluated_by = $request->user_id;
+            $resume_evaluation->evaluated_by = $user_id;
             $resume_evaluation->resume_id = $request->resume_id;
 
             if (!$resume_evaluation->save()) return ["success" => false, "message" => "Gagal Menambah Evaluation", "status" => 400];
