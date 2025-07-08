@@ -41,6 +41,7 @@ class ProcessRabbitMQMessage implements ShouldQueue
         $resume->email = $normalizedEmail;
         $resume->city = $data->user["location"];
         $resume->province = $data->user["location"];
+        $resume->location = $data->user["location"];
         $resume->created_at = Date('Y-m-d H:i:s');
         $resume->updated_at = Date('Y-m-d H:i:s');
         $resume->created_by = 1;
