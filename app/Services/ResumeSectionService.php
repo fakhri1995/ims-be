@@ -30,8 +30,7 @@ class ResumeSectionService
             $resume->name = $request->name;
 						$resume->telp = $request->telp;
 						$resume->email = $request->email;
-						$resume->city = $request->city;
-						$resume->province = $request->province;
+						$resume->location = $request->location;
 						$resume->summary = $request->summary;
 						$resume->linkedin = $request->linkedin;
 

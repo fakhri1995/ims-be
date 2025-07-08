@@ -23,7 +23,7 @@ class CreateResumesTable extends Migration
 
             $table->string("city");
             $table->string("province");
-            $table->string("location");
+            $table->string("location")->nullable();
             $table->string("linkedin");
             $table->string("summary");
             $table->unsignedBigInteger("assessment_id")->nullable();
