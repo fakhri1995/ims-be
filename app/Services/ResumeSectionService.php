@@ -104,6 +104,7 @@ class ResumeSectionService
 			$education->university = $request->university;
 			$education->major = $request->major;
 			$education->gpa = !$request->gpa ? NULL : $request->gpa;
+			$education->degree = !$request->degree ? NULL : $request->degree;
 			$education->start_date = $request->start_date ? date('Y-m-01', strtotime($request->start_date)) : null;
 			$education->end_date = $request->end_date ? date('Y-m-t', strtotime($request->end_date . '-01')) : null;
 			$education->location = $request->location;
@@ -142,6 +143,7 @@ class ResumeSectionService
 			$education->university = $request->university;
 			$education->major = $request->major;
 			$education->gpa = !$request->gpa ? NULL : $request->gpa;
+			$education->degree = !$request->degree ? NULL : $request->degree;
 			$education->start_date = $request->start_date ? date('Y-m-01', strtotime($request->start_date)) : null;
 			$education->end_date = $request->end_date ? date('Y-m-t', strtotime($request->end_date . '-01')) : null;
 			$education->location = $request->location;
