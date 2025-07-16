@@ -201,20 +201,36 @@ class ResumeController extends Controller
         $response = $this->resumeSectionService->addResumeSkill($request, $route_name);
         return response()->json($response, $response['status']);
     }
-    
-    public function updateResumeSkill(Request $request)
-    {
-        $route_name = "RESUME_SKILL_UPDATE";
-
-        $response = $this->resumeSectionService->updateResumeSkill($request, $route_name);
-        return response()->json($response, $response['status']);
-    }
 
     public function deleteResumeSkill(Request $request)
     {
         $route_name = "RESUME_SKILL_DELETE";
 
         $response = $this->resumeSectionService->deleteResumeSkill($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function addResumeEducation(Request $request)
+    {
+        $route_name = "RESUME_EDUCATION_ADD";
+
+        $response = $this->resumeSectionService->addResumeEducation($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteResumeEducation(Request $request)
+    {
+        $route_name = "RESUME_EDUCATION_DELETE";
+
+        $response = $this->resumeSectionService->deleteResumeEducation($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateResumeEducation(Request $request)
+    {
+        $route_name = "RESUME_EDUCATION_UPDATE";
+
+        $response = $this->resumeSectionService->updateResumeEducation($request, $route_name);
         return response()->json($response, $response['status']);
     }
 }
