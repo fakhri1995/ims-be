@@ -149,6 +149,7 @@ class ProcessRabbitMQMessage implements ShouldQueue
                 $education->university = $requestEducation->school_name;
                 $education->major = $requestEducation->field;
                 $education->gpa = !$requestEducation->gpa ? NULL : $requestEducation->gpa;
+                $education->degree = !$requestEducation->degree ? NULL : $requestEducation->degree;
                 $education->start_date = $requestEducation->start_date ? date('Y-m-01', strtotime($requestEducation->start_date)) : null;
                 $education->end_date = $requestEducation->end_date ? date('Y-m-t', strtotime($requestEducation->end_date . '-01')) : null;
                 $education->location = $requestEducation->location;
