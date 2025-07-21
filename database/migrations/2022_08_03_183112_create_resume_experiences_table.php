@@ -22,7 +22,8 @@ class CreateResumeExperiencesTable extends Migration
             $table->text('description');
             $table->unsignedBigInteger("resume_id");
             $table->unsignedInteger('display_order');
-
+            $table->text('achievements');
+            $table->text('technologies');
         });
     }
 

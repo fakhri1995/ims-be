@@ -362,6 +362,7 @@ class RecruitmentAIService{
 				if($approve){
 					$recruitment->cv_processing_status = 2;
 				} else $recruitment->cv_processing_status = 3;
+				$recruitment->save();
 				return ["success" => true, "message" => "Recruitment berhasil diedit", "data" => $recruitment, "status" => 200];
 			}catch(Exception $err){
 				return ["success" => false, "message" => $err->getLine(), "status" => 400];
@@ -442,7 +443,7 @@ class RecruitmentAIService{
 			}
 
 
-			$recruitments = Recruitment::with(['resume', 'resume.skills', 'resume.educations', 'resume.experiences', 'resume.languages', 'resume.tools', 'resume.evaluation'])->where("cv_processing_status", 1);
+			$recruitments = Recruitment::with(['resume', 'resume.skills', 'resume.educations', 'resume.experiences', 'resume.languages', 'resume.tools', 'resume.evaluation'])->where("cv_processing_status", 1)->orWhere("cv_processing_status", 3);
 			$recruitments = $recruitments->orderBy('id','desc');
 			
 			$rows = $request->rows ?? 5;

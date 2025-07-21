@@ -549,6 +549,9 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->post('/addResumeEducation', 'ResumeController@addResumeEducation');
     $router->put('/updateResumeEducation', 'ResumeController@updateResumeEducation');
     $router->delete('/deleteResumeEducation', 'ResumeController@deleteResumeEducation');
+    $router->post('/addResumeExperience', 'ResumeController@addResumeExperience');
+    $router->put('/updateResumeExperience', 'ResumeController@updateResumeExperience');
+    $router->delete('/deleteResumeExperience', 'ResumeController@deleteResumeExperience');
 
     //RESUME EVALUATION
     $router->post('addResumeEvaluation', 'ResumeController@addResumeEvaluation');

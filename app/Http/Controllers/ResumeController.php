@@ -233,4 +233,28 @@ class ResumeController extends Controller
         $response = $this->resumeSectionService->updateResumeEducation($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    public function addResumeExperience(Request $request)
+    {
+        $route_name = "RESUME_EXPERIENCE_ADD";
+
+        $response = $this->resumeSectionService->addResumeExperience($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteResumeExperience(Request $request)
+    {
+        $route_name = "RESUME_EXPERIENCE_DELETE";
+
+        $response = $this->resumeSectionService->deleteResumeExperience($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateResumeExperience(Request $request)
+    {
+        $route_name = "RESUME_EXPERIENCE_UPDATE";
+
+        $response = $this->resumeSectionService->updateResumeExperience($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }
