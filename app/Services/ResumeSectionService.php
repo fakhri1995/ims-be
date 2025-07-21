@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Resume;
 use App\ResumeEducation;
+use App\ResumeExperience;
 use App\ResumeSkill;
 use Exception;
 use Illuminate\Http\Request;
@@ -170,6 +171,95 @@ class ResumeSectionService
 			}
 
 			if (!$education->delete()) return ["success" => false, "message" => "Gagal Delete Resume Education", "status" => 400];
+			return ["success" => true, "message" => "Data Berhasil Dihapus", "status" => 200];
+		} catch (Exception $err) {
+			return ["success" => false, "message" => $err, "status" => 400];
+		}
+	}
+
+	public function addResumeExperience(Request $request, $route_name){
+		$access = $this->globalService->checkRoute($route_name);
+		if ($access["success"] === false) return $access;
+
+		try{
+			$resume = Resume::find($request->resume_id);
+			
+			if(!$resume){
+				return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+			}
+
+			$after_id = $request->after_id ?? NULL;
+			if ($after_id != NULL) {
+				$experienceAfter = ResumeExperience::find($after_id);
+				if (!$experienceAfter) return ["success" => true, "message" => "After id tidak ditemukan", "status" => 200];
+			}
+
+			$experience = new ResumeExperience();
+			$experience->role = $request->position;
+			$experience->company = $request->company;
+			$experience->start_date = $request->start_date;
+			$experience->end_date = $request->end_date;
+			$experience->description = $request->responsibilities;
+			$experience->achievements = $request->achievements;
+			$experience->technologies = $request->technologies;
+
+			$experiences = new ResumeExperience();
+			if ($after_id == NULL) {
+				$experiences->increment("display_order");
+				$experience->display_order = 1;
+			} else {
+				$experiences->where("display_order", ">", $experienceAfter->display_order)->increment("display_order");
+				$experience->display_order = $experienceAfter->display_order + 1;
+			}
+
+			$resume->educations()->save($experience);
+
+			return ["success" => true, "message" => "Data Berhasil Ditambahkan", "data" => $experience, "status" => 200];
+		} catch (Exception $err) {
+			return ["success" => false, "message" => $err, "status" => 400];
+		}
+	}
+
+	public function updateResumeExperience(Request $request, $route_name){
+		$access = $this->globalService->checkRoute($route_name);
+		if ($access["success"] === false) return $access;
+
+		
+		try{
+			$experience = ResumeExperience::find($request->id);
+			
+			if(!$experience){
+				return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+			}
+
+			$experience->role = $request->position;
+			$experience->company = $request->company;
+			$experience->start_date = $request->start_date;
+			$experience->end_date = $request->end_date;
+			$experience->description = $request->responsibilities;
+			$experience->achievements = $request->achievements;
+			$experience->technologies = $request->technologies;
+
+			
+			if (!$experience->save()) return ["success" => false, "message" => "Gagal Menambah Resume Experience", "status" => 400];
+			return ["success" => true, "message" => "Data Berhasil Diubah", "data" => $experience, "status" => 200];
+		} catch (Exception $err) {
+			return ["success" => false, "message" => $err, "status" => 400];
+		}
+	}
+
+	public function deleteResumeExperience(Request $request, $route_name){
+		$access = $this->globalService->checkRoute($route_name);
+		if ($access["success"] === false) return $access;
+
+		try{
+			$experience = ResumeExperience::find($request->id);
+			
+			if(!$experience){
+				return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+			}
+
+			if (!$experience->delete()) return ["success" => false, "message" => "Gagal Delete Resume Experience", "status" => 400];
 			return ["success" => true, "message" => "Data Berhasil Dihapus", "status" => 200];
 		} catch (Exception $err) {
 			return ["success" => false, "message" => $err, "status" => 400];
