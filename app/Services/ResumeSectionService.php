@@ -214,7 +214,7 @@ class ResumeSectionService
 				$experience->display_order = $experienceAfter->display_order + 1;
 			}
 
-			$resume->educations()->save($experience);
+			$resume->experiences()->save($experience);
 
 			return ["success" => true, "message" => "Data Berhasil Ditambahkan", "data" => $experience, "status" => 200];
 		} catch (Exception $err) {
