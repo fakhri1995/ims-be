@@ -199,7 +199,7 @@ class ResumeSectionService
 			$experience->company = $request->company;
 			$experience->start_date = $request->start_date;
 			$experience->end_date = $request->end_date;
-			$experience->description = $request->responsibilities;
+			$experience->description = $request->description;
 			$experience->achievements = $request->achievements;
 			$experience->technologies = $request->technologies;
 			$experience->location = $request->location;
@@ -238,7 +238,7 @@ class ResumeSectionService
 			$experience->company = $request->company;
 			$experience->start_date = $request->start_date;
 			$experience->end_date = $request->end_date;
-			$experience->description = $request->responsibilities;
+			$experience->description = $request->description;
 			$experience->achievements = $request->achievements;
 			$experience->technologies = $request->technologies;
 			$experience->location = $request->location;
