@@ -195,13 +195,15 @@ class ResumeSectionService
 			}
 
 			$experience = new ResumeExperience();
-			$experience->role = $request->position;
+			$experience->role = $request->role;
 			$experience->company = $request->company;
 			$experience->start_date = $request->start_date;
 			$experience->end_date = $request->end_date;
 			$experience->description = $request->responsibilities;
 			$experience->achievements = $request->achievements;
 			$experience->technologies = $request->technologies;
+			$experience->location = $request->location;
+			$experience->industry = $request->industry;
 
 			$experiences = new ResumeExperience();
 			if ($after_id == NULL) {
@@ -232,14 +234,15 @@ class ResumeSectionService
 				return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
 			}
 
-			$experience->role = $request->position;
+			$experience->role = $request->role;
 			$experience->company = $request->company;
 			$experience->start_date = $request->start_date;
 			$experience->end_date = $request->end_date;
 			$experience->description = $request->responsibilities;
 			$experience->achievements = $request->achievements;
 			$experience->technologies = $request->technologies;
-
+			$experience->location = $request->location;
+			$experience->industry = $request->industry;
 			
 			if (!$experience->save()) return ["success" => false, "message" => "Gagal Menambah Resume Experience", "status" => 400];
 			return ["success" => true, "message" => "Data Berhasil Diubah", "data" => $experience, "status" => 200];
