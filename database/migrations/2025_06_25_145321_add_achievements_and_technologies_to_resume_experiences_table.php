@@ -16,6 +16,8 @@ class AddAchievementsAndTechnologiesToResumeExperiencesTable extends Migration
         Schema::table('resume_experiences', function (Blueprint $table) {
             $table->string('achievements')->nullable();
             $table->string('technologies')->nullable();
+            $table->string('location')->nullable();
+            $table->string('industry')->nullable();
         });
     }
 

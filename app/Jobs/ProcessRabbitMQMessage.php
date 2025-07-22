@@ -121,6 +121,8 @@ class ProcessRabbitMQMessage implements ShouldQueue
                     //new
                     $experience->achievements = implode(', ', $requestExperience->achievements);
                     $experience->technologies = implode(', ', $requestExperience->technologies);
+                    $experience->location = $requestExperience->location;
+                    $experience->industry = $requestExperience->industry;
 
                     $experiences = new ResumeExperience();
                     if ($after_id == NULL) {
