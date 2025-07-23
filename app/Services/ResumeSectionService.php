@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Resume;
 use App\ResumeEducation;
 use App\ResumeExperience;
+use App\ResumeLanguage;
 use App\ResumeSkill;
 use Exception;
 use Illuminate\Http\Request;
@@ -263,6 +264,86 @@ class ResumeSectionService
 			}
 
 			if (!$experience->delete()) return ["success" => false, "message" => "Gagal Delete Resume Experience", "status" => 400];
+			return ["success" => true, "message" => "Data Berhasil Dihapus", "status" => 200];
+		} catch (Exception $err) {
+			return ["success" => false, "message" => $err, "status" => 400];
+		}
+	}
+
+	public function addResumeLanguage(Request $request, $route_name){
+		$access = $this->globalService->checkRoute($route_name);
+		if ($access["success"] === false) return $access;
+
+		try{
+			$resume = Resume::find($request->resume_id);
+			
+			if(!$resume){
+				return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+			}
+
+			$after_id = $request->after_id ?? NULL;
+			if ($after_id != NULL) {
+				$languageAfter = ResumeLanguage::find($after_id);
+				if (!$languageAfter) return ["success" => true, "message" => "After id tidak ditemukan", "status" => 200];
+			}
+
+			$language = new ResumeLanguage();
+			$language->language = $request->language;
+			$language->proficiency = $request->proficiency;
+			$language->certifications = $request->certifications;
+
+			$languages = new ResumeLanguage();
+			if ($after_id == NULL) {
+				$languages->increment("display_order");
+				$language->display_order = 1;
+			} else {
+				$languages->where("display_order", ">", $languageAfter->display_order)->increment("display_order");
+				$language->display_order = $languageAfter->display_order + 1;
+			}
+
+			$resume->languages()->save($language);
+
+			return ["success" => true, "message" => "Data Berhasil Ditambahkan", "data" => $language, "status" => 200];
+		} catch (Exception $err) {
+			return ["success" => false, "message" => $err, "status" => 400];
+		}
+	}
+
+	public function updateResumeLanguage(Request $request, $route_name){
+		$access = $this->globalService->checkRoute($route_name);
+		if ($access["success"] === false) return $access;
+
+		try{
+			$language = ResumeLanguage::find($request->id);
+			
+			if(!$language){
+				return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+			}
+
+			$language->language = $request->language;
+			$language->proficiency = $request->proficiency;
+			$language->certifications = $request->certifications;
+
+			$language->save();
+
+			return ["success" => true, "message" => "Data Berhasil Ditambahkan", "data" => $language, "status" => 200];
+		} catch (Exception $err) {
+			return ["success" => false, "message" => $err, "status" => 400];
+		}
+	}
+
+	public function deleteResumeLanguage(Request $request, $route_name){
+		$access = $this->globalService->checkRoute($route_name);
+		if ($access["success"] === false) return $access;
+
+		try{
+			$language = ResumeLanguage::find($request->id);
+			
+			if(!$language){
+				return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+			}
+
+			if (!$language->delete()) return ["success" => false, "message" => "Gagal Delete Resume Language", "status" => 400];
 			return ["success" => true, "message" => "Data Berhasil Dihapus", "status" => 200];
 		} catch (Exception $err) {
 			return ["success" => false, "message" => $err, "status" => 400];

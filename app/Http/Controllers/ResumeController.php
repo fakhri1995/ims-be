@@ -257,4 +257,28 @@ class ResumeController extends Controller
         $response = $this->resumeSectionService->updateResumeExperience($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    public function addResumeLanguage(Request $request)
+    {
+        $route_name = "RESUME_LANGUAGE_ADD";
+
+        $response = $this->resumeSectionService->addResumeLanguage($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateResumeLanguage(Request $request)
+    {
+        $route_name = "RESUME_LANGUAGE_UPDATE";
+
+        $response = $this->resumeSectionService->updateResumeLanguage($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteResumeLanguage(Request $request)
+    {
+        $route_name = "RESUME_LANGUAGE_DELETE";
+
+        $response = $this->resumeSectionService->deleteResumeLanguage($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }
