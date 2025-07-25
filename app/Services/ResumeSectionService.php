@@ -7,6 +7,7 @@ use App\ResumeEducation;
 use App\ResumeExperience;
 use App\ResumeLanguage;
 use App\ResumeSkill;
+use App\ResumeTool;
 use Exception;
 use Illuminate\Http\Request;
 
@@ -344,6 +345,76 @@ class ResumeSectionService
 			}
 
 			if (!$language->delete()) return ["success" => false, "message" => "Gagal Delete Resume Language", "status" => 400];
+			return ["success" => true, "message" => "Data Berhasil Dihapus", "status" => 200];
+		} catch (Exception $err) {
+			return ["success" => false, "message" => $err, "status" => 400];
+		}
+	}
+
+	public function addResumeTool(Request $request, $route_name){
+		$access = $this->globalService->checkRoute($route_name);
+		if ($access["success"] === false) return $access;
+
+		try{
+			$resume = Resume::find($request->resume_id);
+			
+			if(!$resume){
+				return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+			}
+
+			$tool = new ResumeTool();
+			$tool->name = $request->name;
+			$tool->category = $request->category;
+			$tool->proficiency = $request->proficiency;
+			$tool->details = $request->details;
+			$tool->certifications = $request->certifications;
+
+			
+			$resume->tools()->save($tool);
+
+			return ["success" => true, "message" => "Data Berhasil Ditambahkan", "data" => $tool, "status" => 200];
+		} catch (Exception $err) {
+			return ["success" => false, "message" => $err, "status" => 400];
+		}
+	}
+
+	public function updateResumeTool(Request $request, $route_name){
+		$access = $this->globalService->checkRoute($route_name);
+		if ($access["success"] === false) return $access;
+
+		try{
+			$tool = ResumeTool::find($request->id);
+			
+			if(!$tool){
+				return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+			}
+
+			$tool->name = $request->name;
+			$tool->category = $request->category;
+			$tool->proficiency = $request->proficiency;
+			$tool->details = $request->details;
+			$tool->certifications = $request->certifications;
+
+			$tool->save();
+
+			return ["success" => true, "message" => "Data Berhasil Ditambahkan", "data" => $tool, "status" => 200];
+		} catch (Exception $err) {
+			return ["success" => false, "message" => $err, "status" => 400];
+		}
+	}
+
+	public function deleteResumeTool(Request $request, $route_name){
+		$access = $this->globalService->checkRoute($route_name);
+		if ($access["success"] === false) return $access;
+
+		try{
+			$tool = ResumeTool::find($request->id);
+			
+			if(!$tool){
+				return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+			}
+
+			if (!$tool->delete()) return ["success" => false, "message" => "Gagal Delete Resume Tool", "status" => 400];
 			return ["success" => true, "message" => "Data Berhasil Dihapus", "status" => 200];
 		} catch (Exception $err) {
 			return ["success" => false, "message" => $err, "status" => 400];
