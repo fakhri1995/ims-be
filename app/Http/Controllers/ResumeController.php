@@ -281,4 +281,28 @@ class ResumeController extends Controller
         $response = $this->resumeSectionService->deleteResumeLanguage($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    public function addResumeTool(Request $request)
+    {
+        $route_name = "RESUME_TOOL_ADD";
+
+        $response = $this->resumeSectionService->addResumeTool($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateResumeTool(Request $request)
+    {
+        $route_name = "RESUME_TOOL_UPDATE";
+
+        $response = $this->resumeSectionService->updateResumeTool($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteResumeTool(Request $request)
+    {
+        $route_name = "RESUME_TOOL_DELETE";
+
+        $response = $this->resumeSectionService->deleteResumeTool($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }
