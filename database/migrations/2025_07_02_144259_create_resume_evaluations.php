@@ -18,7 +18,8 @@ class CreateResumeEvaluations extends Migration
             $table->string("grammar_and_spelling");
             $table->string("content_validity");
             $table->string("skill_alignment");
-            $table->string("flags");
+            $table->string("mismatched_skills");
+            $table->string("questionable_claims");
             $table->string("improvement_points");
             $table->unsignedBigInteger("evaluated_by");
             $table->unsignedBigInteger("resume_id");
