@@ -274,5 +274,7 @@ class ProcessRabbitMQMessage implements ShouldQueue
                 $resume->certificates()->save($certificate);
                 DB::commit();
         }
+
+        sleep(5);
     }
 }
