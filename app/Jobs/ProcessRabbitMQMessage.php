@@ -266,16 +266,16 @@ class ProcessRabbitMQMessage implements ShouldQueue
                 $language->certifications = implode(', ', $requestLanguage->certifications);
                 
 
-                $certificates = new ResumeCertificate();
+                $languages = new ResumeLanguage();
                 if ($after_id == NULL) {
-                        $certificates->increment("display_order");
-                        $certificate->display_order = 1;
+                        $languages->increment("display_order");
+                        $language->display_order = 1;
                 } else {
-                        $certificates->where("display_order", ">", $certificateAfter->display_order)->increment("display_order");
-                        $certificate->display_order = $certificateAfter->display_order + 1;
+                        $languages->where("display_order", ">", $languageAfter->display_order)->increment("display_order");
+                        $language->display_order = $languageAfter->display_order + 1;
                 }
 
-                $resume->certificates()->save($certificate);
+                $resume->languages()->save($language);
                 DB::commit();
         }
 
