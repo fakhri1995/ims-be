@@ -40,18 +40,18 @@ class ProcessRabbitMQMessage implements ShouldQueue
                 return;
         }
         $resume = new Resume;
-        $resume->name = $data->user["name"];
-        $resume->telp = $data->user["phone"];
+        $resume->name = $data->user["name"] ?? "Name";
+        $resume->telp = $data->user["phone"] ?? "-";
         $resume->email = $normalizedEmail;
-        $resume->city = $data->user["location"];
-        $resume->province = $data->user["location"];
-        $resume->location = $data->user["location"];
+        $resume->city = $data->user["location"] ?? "-";
+        $resume->province = $data->user["location"] ?? "-";
+        $resume->location = $data->user["location"] ?? "-";
         $resume->created_at = Date('Y-m-d H:i:s');
         $resume->updated_at = Date('Y-m-d H:i:s');
         $resume->created_by = 1;
         
-        $resume->linkedin = $data->user["linkedin"];
-        $resume->summary = $data->user["summary"];
+        $resume->linkedin = $data->user["linkedin"] ?? "-";
+        $resume->summary = $data->user["summary"] ?? "-";
 
         if (!$resume->save()) return ["success" => false, "message" => "Gagal Menambah Resume", "status" => 400];
         $resume->owner_id = $resume->id;
