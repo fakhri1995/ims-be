@@ -33,8 +33,12 @@ class ProcessRabbitMQMessage implements ShouldQueue
         $data = (object) json_decode($job->getRawBody(), true)["data"]["data"];
         Log::info('handling job', (array) $data);
         $email = $data->user["email"];
-        $normalizedEmail = is_array($email) ? implode(',', $email) : $email;
-
+        $normalizedEmail = is_array($email) ? $email[0] : $email;
+        $is_duplicate = Resume::where('email', $normalizedEmail)->first();
+        if($is_duplicate){
+                Log::info('duplicate detected');
+                return;
+        }
         $resume = new Resume;
         $resume->name = $data->user["name"];
         $resume->telp = $data->user["phone"];
