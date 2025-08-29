@@ -36,7 +36,7 @@ class ProcessRabbitMQMessage implements ShouldQueue
         $normalizedEmail = is_array($email) ? $email[0] : $email;
         $is_duplicate = Resume::where('email', $normalizedEmail)->first();
         if(empty($email)){
-                $is_duplicate = Resume::where('phone', $data->user["phone"])->first();
+                $is_duplicate = Resume::where('telp', $data->user["phone"])->first();
                 if(empty($data->user["phone"])){
                         $is_duplicate = Resume::where('name', $data->user["name"])->first();
                 }
