@@ -90,7 +90,7 @@ return [
                     'exclusive' => false,
                     'auto_delete' => false,
                     'arguments' => [],
-                    'auto_ack' => false,
+                    'auto_ack' => true,
                 ],
                 'ssl_options' => [
                     'cafile' => env('RABBITMQ_SSL_CAFILE', null),
