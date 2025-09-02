@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Recruitment;
-use App\TicketStatus;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 use App\Resume;
@@ -43,6 +42,7 @@ class ProcessRabbitMQMessage implements ShouldQueue
         }
         if($is_duplicate){
                 Log::info('duplicate detected');
+                throw new Exception("duplicate detected");
                 return true;
         }
         $resume = new Resume;
