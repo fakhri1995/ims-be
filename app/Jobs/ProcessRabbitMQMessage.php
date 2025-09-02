@@ -48,7 +48,7 @@ class ProcessRabbitMQMessage implements ShouldQueue
         $resume = new Resume;
         $resume->name = $data->user["name"] ?? "Name";
         $resume->telp = $data->user["phone"] ?? "-";
-        $resume->email = $normalizedEmail;
+        $resume->email = $normalizedEmail ?? "-";
         $resume->city = $data->user["location"] ?? "-";
         $resume->province = $data->user["location"] ?? "-";
         $resume->location = $data->user["location"] ?? "-";
