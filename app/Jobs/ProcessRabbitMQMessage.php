@@ -2,9 +2,7 @@
 
 namespace App\Jobs;
 
-use App\FailedCV;
 use App\Recruitment;
-use App\TicketStatus;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 use App\Resume;
