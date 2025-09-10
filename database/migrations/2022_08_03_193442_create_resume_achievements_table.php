@@ -17,7 +17,7 @@ class CreateResumeAchievementsTable extends Migration
             $table->id();
             $table->string("name");
             $table->string("organizer");
-            $table->date('year');
+            $table->date('year')->nullable();
             $table->unsignedBigInteger("resume_id");
             $table->unsignedInteger('display_order');
         });
