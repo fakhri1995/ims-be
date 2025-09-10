@@ -100,7 +100,7 @@ class ProcessRabbitMQMessage implements ShouldQueue
         
                                 $project = new ResumeProject();
                                 $project->name = $requestProject->name;
-                                $project->year = !$requestProject->end_date ? '0000-00-00' : $requestProject->end_date;
+                                $project->year = !$requestProject->end_date ? NULL : $requestProject->end_date;
                                 $project->description = $requestProject->description ?? "";
         
                                 $projects = new ResumeProject();
@@ -220,7 +220,7 @@ class ProcessRabbitMQMessage implements ShouldQueue
                                 $achievement = new ResumeAchievement();
                                 $achievement->name = $requestAchievement->description;
                                 $achievement->organizer = $requestAchievement->organization ?? "";
-                                $achievement->year = !$requestAchievement->date ? '0000-00-00' : $requestAchievement->date;
+                                $achievement->year = !$requestAchievement->date ? NULL : $requestAchievement->date;
         
                                 $achievements = new ResumeAchievement();
                                 if ($after_id == NULL) {
