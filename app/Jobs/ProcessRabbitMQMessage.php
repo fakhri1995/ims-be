@@ -69,6 +69,13 @@ class ProcessRabbitMQMessage implements ShouldQueue
                         if (!$resume->save()) return ["success" => false, "message" => "Gagal Menambah Resume", "status" => 400];
                         $resume->owner_id = $resume->id;
                         $resume->save();
+
+                        $cv_url = $data->metadata["s3_filepath"];
+
+                        $lampiran[] = [
+                                "judul_lampiran" => "CV",
+                                "isi_lampiran" => $cv_url
+                        ];
         
                         $recruitment = new Recruitment;
                         $recruitment->name = $resume->name;
@@ -79,7 +86,7 @@ class ProcessRabbitMQMessage implements ShouldQueue
                         $recruitment->recruitment_status_id = 0;
                         $recruitment->cv_processing_status = 1;
                         $recruitment->cv_processing_batch = $resume->id;
-                        $recruitment->lampiran = [];
+                        $recruitment->lampiran = $lampiran;
                         $recruitment->created_at = date("Y-m-d H:i:s");
                         $recruitment->updated_at = date("Y-m-d H:i:s");
                         $recruitment->created_by = 1;
