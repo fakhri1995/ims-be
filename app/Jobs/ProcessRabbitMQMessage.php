@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Recruitment;
+use App\RecruitmentRole;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 use App\Resume;
@@ -52,6 +53,7 @@ class ProcessRabbitMQMessage implements ShouldQueue
                                 throw new Exception("duplicate detected");
                                 return true;
                         }
+
                         $resume = new Resume;
                         $resume->name = $data->user["name"] ?? "Name";
                         $resume->telp = $data->user["phone"] ?? "-";
@@ -76,11 +78,17 @@ class ProcessRabbitMQMessage implements ShouldQueue
                                 "judul_lampiran" => "CV",
                                 "isi_lampiran" => $cv_url
                         ];
+
+                        $file_path = str_replace("\\","/", $data->metadata["file_path"]);
+                        $dir = dirname($file_path);
+                        $role_alias = basename($dir);
+                        $recruitment_role = RecruitmentRole::where("alias", $role_alias)->first();
+                        $role_id = !$recruitment_role ? 0 : $recruitment_role->id;
         
                         $recruitment = new Recruitment;
                         $recruitment->name = $resume->name;
                         $recruitment->email = $resume->email;
-                        $recruitment->recruitment_role_id = 0;
+                        $recruitment->recruitment_role_id = $role_id;
                         $recruitment->recruitment_jalur_daftar_id = 1;
                         $recruitment->recruitment_stage_id = 1;
                         $recruitment->recruitment_status_id = 0;
