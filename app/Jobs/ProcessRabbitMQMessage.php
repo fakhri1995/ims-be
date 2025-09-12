@@ -90,7 +90,7 @@ class ProcessRabbitMQMessage implements ShouldQueue
                         $recruitment->email = $resume->email;
                         $recruitment->recruitment_role_id = $role_id;
                         $recruitment->recruitment_jalur_daftar_id = 1;
-                        $recruitment->recruitment_stage_id = 1;
+                        $recruitment->recruitment_stage_id = 8;
                         $recruitment->recruitment_status_id = 0;
                         $recruitment->cv_processing_status = 1;
                         $recruitment->cv_processing_batch = $resume->id;
