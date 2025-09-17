@@ -102,44 +102,26 @@ class ProcessRabbitMQMessage implements ShouldQueue
                         
                         if (!$recruitment->save()) return ["success" => false, "message" => "Gagal Menambah Recruitment", "status" => 400];
         
-        
+                        $count = 1;
                         foreach($data->projects as $project){
                                 DB::beginTransaction();
                                 $requestProject = (object)$project;
-        
-                                $after_id = $requestProject->after_id ?? NULL;
-                                if ($after_id != NULL) {
-                                        $projectAfter = ResumeProject::find($after_id);
-                                        if (!$projectAfter) return ["success" => true, "message" => "After id tidak ditemukan", "status" => 200];
-                                }
-        
+                                
                                 $project = new ResumeProject();
                                 $project->name = $requestProject->name;
                                 $project->year = !$requestProject->end_date ? NULL : $requestProject->end_date;
                                 $project->description = $requestProject->description ?? "";
-        
-                                $projects = new ResumeProject();
-                                if ($after_id == NULL) {
-                                        $projects->increment("display_order");
-                                        $project->display_order = 1;
-                                } else {
-                                        $projects->where("display_order", ">", $projectAfter->display_order)->increment("display_order");
-                                        $project->display_order = $projectAfter->display_order + 1;
-                                }
+                                $project->display_order = $count;
         
                                 $resume->projects()->save($project);
                                 DB::commit();
+                                $count += 1;
                         }
-        
+                        
+                        $count = 1;
                         foreach($data->experience as $experience){
                                 DB::beginTransaction();
                                 $requestExperience = (object)$experience;
-        
-                                $after_id = $requestExperience->after_id ?? NULL;
-                                if ($after_id != NULL) {
-                                        $experienceAfter = ResumeExperience::find($after_id);
-                                        if (!$experienceAfter) return ["success" => true, "message" => "After id tidak ditemukan", "status" => 200];
-                                }
         
                                 $experience = new ResumeExperience();
                                 $responsibilities = $requestExperience->responsibility;
@@ -149,26 +131,18 @@ class ProcessRabbitMQMessage implements ShouldQueue
                                 $experience->start_date = $requestExperience->start_date;
                                 $experience->end_date = $requestExperience->end_date;
                                 $experience->description = $normalized_responsibilities;
-        
-                                //new
                                 $experience->achievements = implode(', ', $requestExperience->achievements);
                                 $experience->technologies = implode(', ', $requestExperience->technologies);
                                 $experience->location = $requestExperience->location;
                                 $experience->industry = $requestExperience->industry;
-        
-                                $experiences = new ResumeExperience();
-                                if ($after_id == NULL) {
-                                        $experiences->increment("display_order");
-                                        $experience->display_order = 1;
-                                } else {
-                                        $experiences->where("display_order", ">", $experienceAfter->display_order)->increment("display_order");
-                                        $experience->display_order = $experienceAfter->display_order + 1;
-                                }
+                                $experience->display_order = $count;
         
                                 $resume->experiences()->save($experience);
                                 DB::commit();
+                                $count += 1;
                         }
         
+                        $count = 1;
                         foreach($data->education as $education){
                                 DB::beginTransaction();
                                 $requestEducation = (object)$education;
@@ -201,13 +175,16 @@ class ProcessRabbitMQMessage implements ShouldQueue
         
                                 $resume->educations()->save($education);
                                 DB::commit();
+                                $count += 1;
                         }
         
+                        $count = 1;
                         foreach($data->skills as $skill){
                                 $requestSkill = (object)$skill;
                                 $skill = new ResumeSkill();
                                 $skill->name = ucfirst($requestSkill->skill_name);
                                 $resume->skills()->save($skill);
+                                $count += 1;
                         }
         
                         foreach($data->tools as $tool){
@@ -222,89 +199,55 @@ class ProcessRabbitMQMessage implements ShouldQueue
                                 $resume->tools()->save($tool);
                         }
         
+                        $count = 1;
                         foreach($data->achievements as $achievement){
                                 DB::beginTransaction();
                                 $requestAchievement = (object)$achievement;
-        
-                                $after_id = $requestAchievement->after_id ?? NULL;
-                                if ($after_id != NULL) {
-                                        $achievementAfter = ResumeAchievement::find($after_id);
-                                        if (!$achievementAfter) return ["success" => true, "message" => "After id tidak ditemukan", "status" => 200];
-                                }
-        
+
                                 $achievement = new ResumeAchievement();
                                 $achievement->name = $requestAchievement->description;
                                 $achievement->organizer = $requestAchievement->organization ?? "";
                                 $achievement->year = !$requestAchievement->date ? NULL : $requestAchievement->date;
-        
-                                $achievements = new ResumeAchievement();
-                                if ($after_id == NULL) {
-                                        $achievements->increment("display_order");
-                                        $achievement->display_order = 1;
-                                } else {
-                                        $achievements->where("display_order", ">", $achievementAfter->display_order)->increment("display_order");
-                                        $achievement->display_order = $achievementAfter->display_order + 1;
-                                }
+                                $achievement->display_order = $count;
         
                                 $resume->achievements()->save($achievement);
                                 DB::commit();
+                                $count += 1;
                         }
         
+                        $count = 1;
                         foreach($data->certifications as $certificate){
                                 DB::beginTransaction();
                                 $requestCertificates = (object)$certificate;
         
-                                $after_id = $requestCertificates->after_id ?? NULL;
-                                if ($after_id != NULL) {
-                                        $certificateAfter = ResumeCertificate::find($after_id);
-                                        if (!$certificateAfter) return ["success" => true, "message" => "After id tidak ditemukan", "status" => 200];
-                                }
-        
                                 $certificate = new ResumeCertificate();
                                 $certificate->name = $requestCertificates->name;
                                 $certificate->organizer = $requestCertificates->issuer ?? "";
-                                $certificate->year = !$requestCertificates->date_earned ? "2000-01-01" : $requestCertificates->date_earned;
-        
-                                $certificates = new ResumeCertificate();
-                                if ($after_id == NULL) {
-                                        $certificates->increment("display_order");
-                                        $certificate->display_order = 1;
-                                } else {
-                                        $certificates->where("display_order", ">", $certificateAfter->display_order)->increment("display_order");
-                                        $certificate->display_order = $certificateAfter->display_order + 1;
+                                if($requestCertificates->date_earned == "0000-00-00"){
+                                        $certificate->year = "2000-01-01";
+                                } else{
+                                        $certificate->year = !$requestCertificates->date_earned ? "2000-01-01" : $requestCertificates->date_earned;
                                 }
+                                $certificate->display_order = $count;
         
                                 $resume->certificates()->save($certificate);
                                 DB::commit();
+                                $count += 1;
                         }
         
+                        $count = 1;
                         foreach($data->languages as $language){
                                 DB::beginTransaction();
                                 $requestLanguage = (object)$language;
-        
-                                $after_id = $requestLanguage->after_id ?? NULL;
-                                if ($after_id != NULL) {
-                                        $languageAfter = ResumeLanguage::find($after_id);
-                                        if (!$languageAfter) return ["success" => true, "message" => "After id tidak ditemukan", "status" => 200];
-                                }
         
                                 $language = new ResumeLanguage();
                                 $language->language = $requestLanguage->language;
                                 $language->proficiency = $requestLanguage->proficiency;
                                 $language->certifications = implode(', ', $requestLanguage->certifications);
-                                
-        
-                                $languages = new ResumeLanguage();
-                                if ($after_id == NULL) {
-                                        $languages->increment("display_order");
-                                        $language->display_order = 1;
-                                } else {
-                                        $languages->where("display_order", ">", $languageAfter->display_order)->increment("display_order");
-                                        $language->display_order = $languageAfter->display_order + 1;
-                                }
-        
+                                $language->display_order = $count;
                                 $resume->languages()->save($language);
                                 DB::commit();
+                                $count += 1;
                         }
                         return true;
                 }catch(QueryException $e){
