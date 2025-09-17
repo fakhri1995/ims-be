@@ -464,10 +464,12 @@ class RecruitmentService{
 
             $recruitments_count = Recruitment::count(); 
             $recruitment_roles_count = RecruitmentRole::count();
+            $recruitment_unvalidated_count = Recruitment::where("cv_processing_status", 1)->count();
 
             $recruitments = [
                 "recruitments_count" => $recruitments_count,
-                "recruitment_roles_count" => $recruitment_roles_count
+                "recruitment_roles_count" => $recruitment_roles_count,
+                "recruitment_unvalidated_count" => $recruitment_unvalidated_count
             ];
 
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $recruitments, "status" => 200];
