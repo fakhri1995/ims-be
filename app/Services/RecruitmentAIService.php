@@ -394,7 +394,7 @@ class RecruitmentAIService{
 				$cv_processing_status = $request->cv_processing_status ? explode(",",$request->cv_processing_status) : NULL;
 
         $rows = $request->rows ?? 5;
-        $recruitments = Recruitment::with(['role','role.type','jalur_daftar','stage','status','resume','user'])->where("cv_processing_status", 2);
+        $recruitments = Recruitment::with(['role','role.type','jalur_daftar','stage','status','resume','user'])->where("cv_processing_status", 1);
 
         // filter
         if($keyword) $recruitments = $recruitments->where("name","LIKE", "%$keyword%");
