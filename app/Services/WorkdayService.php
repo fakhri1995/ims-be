@@ -98,7 +98,7 @@ class WorkdayService{
         try{
             $year = $request->year;
             $month = $request->month;
-            $date = $year . '-' . $month . '01';
+            $date = $year . '-' . $month . '-01';
 
             $schedule = $request->schedule;
 
@@ -111,7 +111,7 @@ class WorkdayService{
 
             $holidays = $request->holidays ?? [];
             $workday->holidays()->sync($holidays);
-            return ["success" => true, "message" => "Data Berhasil Ditambahkan", "id" => $workday, "status" => 200];
+            return ["success" => true, "message" => "Data Berhasil Ditambahkan", "id" => $workday->id, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
@@ -126,9 +126,9 @@ class WorkdayService{
             $id = $request->id;
             $year = $request->year;
             $month = $request->month;
-            $date = $year . '-' . $month . '01';
+            $date = $year . '-' . $month . '-01';
 
-            $schedule = json_encode($request->schedule);
+            $schedule = $request->schedule;
 
             $workday = Workday::find($id);
             $workday->name = $request->name;
@@ -143,7 +143,6 @@ class WorkdayService{
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
-        
     }
 
     public function deleteWorkday(Request $request, $route_name){
@@ -151,13 +150,14 @@ class WorkdayService{
         if($access["success"] === false) return $access;
         
         try{
-            //your code
-            $data = [];//what you want to send
-            return ["success" => true, "message" => "Data Berhasil Dihapus", "data" => $data, "status" => 200];
+            $id = $request->id;
+            $workday = Workday::find($id);
+            if($workday === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+            $workday->delete();
+            return ["success" => true, "message" => "Data Berhasil Dihapus", "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
-        
     }
 
 }
