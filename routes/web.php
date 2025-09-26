@@ -616,6 +616,9 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->post('/generateRecruitmentAccount', 'RecruitmentController@generateRecruitmentAccount');
     $router->get('/getRecruitmentAccountToken', 'RecruitmentController@getRecruitmentAccountToken');
 
+    //WORKDAY
+    $router->get('/getPublicHolidays', 'WorkdayController@getPublicHolidays');
+
     // RECRUITMENT ROLE
     $router->get('/getRecruitmentRole', 'RecruitmentController@getRecruitmentRole');
     $router->get('/getRecruitmentRoles', 'RecruitmentController@getRecruitmentRoles');
