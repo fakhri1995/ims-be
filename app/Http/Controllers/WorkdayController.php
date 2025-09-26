@@ -18,6 +18,20 @@ class WorkdayController extends Controller
         $this->workdayService = new WorkdayService;
     }
 
+    public function getWorkdayCompanies(Request $request){
+        $route_name = "WORKDAY_COMPANIES_GET";
+
+        $response = $this->workdayService->getWorkdayCompanies($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getWorkdayStatistics(Request $request){
+        $route_name = "WORKDAY_STATISTICS_GET";
+
+        $response = $this->workdayService->getWorkdayStatistics($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function getWorkdays(Request $request){
         $route_name = "WORKDAYS_GET";
 
@@ -43,13 +57,6 @@ class WorkdayController extends Controller
         $route_name = "WORKDAY_ADD";
 
         $response = $this->workdayService->addWorkday($request, $route_name);
-        return response()->json($response, $response['status']);
-    }
-    
-    public function addWorkdaySection(Request $request){
-        $route_name = "WORKDAY_SECTION_ADD";
-
-        $response = $this->workdayService->addWorkdaySection($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
