@@ -79,68 +79,103 @@ class WorkdayService{
         ];
 
         } catch (Exception $err) {
-            return [
-                "success" => false,
-                "message" => $err->getMessage(),
-                "status"  => 400
-            ];
+            return ["success" => false, "message" => $err, "status" => 400];
         }
     }
     
     public function getWorkdayStatistics(Request $request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
-        
-        try {
-        $company_id = $request->get('company_id');
-        $year       = $request->get('year');
-        $month      = $request->get('month'); // numeric: 1–12
 
-        if (!$company_id || !$year || !$month) {
+        try {
+        $id    = $request->get('id');
+        $year  = $request->get('year');
+        $month = $request->get('month');
+
+        if (!$id || !$year || !$month) {
             return [
                 "success" => false,
-                "message" => "company_id, year and month are required",
+                "message" => "id, year and month are required",
                 "status"  => 400
             ];
         }
 
-        $company = Company::find($company_id);
-        if (!$company) {
+        $workday = Workday::with(['company.employees', 'holidays'])->find($id);
+        if (!$workday) {
             return [
                 "success" => false,
-                "message" => "Company not found",
+                "message" => "Workday not found",
                 "status"  => 404
             ];
         }
 
+        $company = $workday->company;
         $total_employees        = $company->employees()->count();
         $total_workday_schedule = $company->workdays()->count();
 
-        $start = Carbon::createFromDate($year, $month, 1)->startOfMonth();
-        $end   = Carbon::createFromDate($year, $month, 1)->endOfMonth();
+        $schedule = is_array($workday->schedule)
+            ? $workday->schedule
+            : json_decode($workday->schedule, true);
 
-        $total_workdays_in_month = Workday::where('company_id', $company_id)
-            ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
-            ->count();
+        if (!$schedule) {
+            return [
+                "success" => false,
+                "message" => "No schedule found for this workday",
+                "status"  => 404
+            ];
+        }
+
+        $activeDays = collect($schedule)
+            ->where('active', true)
+            ->pluck('day')
+            ->map(fn($d) => ucfirst(strtolower($d)))
+            ->toArray();
+
+        $holidayDates = $workday->holidays
+            ->filter(function ($holiday) use ($year, $month) {
+                $date = Carbon::parse($holiday->date);
+                return $date->year == $year && $date->month == $month;
+            })
+            ->pluck('date')
+            ->map(fn($d) => Carbon::parse($d)->format('Y-m-d'))
+            ->toArray();
+
+        $start = Carbon::create($year, $month, 1)->startOfMonth();
+        $end   = $start->copy()->endOfMonth();
+
+        $total_workdays_in_month = 0;
+        $cursor = $start->copy();
+
+        while ($cursor->lte($end)) {
+            $isActiveDay = in_array($cursor->format('l'), $activeDays);
+            $isHoliday   = in_array($cursor->format('Y-m-d'), $holidayDates);
+
+            if ($isActiveDay && !$isHoliday) {
+                $total_workdays_in_month++;
+            }
+            $cursor->addDay();
+        }
+
+        $data = [
+            "total_employees"         => $total_employees,
+            "total_workday_schedules" => $total_workday_schedule,
+            "total_workdays_in_month" => $total_workdays_in_month
+        ];
 
         return [
             "success" => true,
-            "message" => "Workday statistics retrieved successfully",
-            "data"    => [
-                "total_employees"         => $total_employees,
-                "total_workday_schedules" => $total_workday_schedule,
-                "total_workdays_in_month" => $total_workdays_in_month
-            ],
+            "message" => "Data Berhasil Diambil",
+            "data"    => $data,
             "status"  => 200
         ];
+    } catch (Exception $err) {
+        return [
+            "success" => false,
+            "message" => $err->getMessage(),
+            "status"  => 400
+        ];
+    }
 
-        } catch (Exception $err) {
-            return [
-                "success" => false,
-                "message" => $err->getMessage(),
-                "status"  => 400
-            ];
-        }
     }
     
     public function getWorkdays(Request $request, $route_name){
@@ -192,15 +227,14 @@ class WorkdayService{
 
         try{
             $year = $request->year;
-            $month = $request->month;
-            $date = $year . '-' . $month . '-01';
+            $date = $year . '-' . '01' . '-01';
 
             $schedule = $request->schedule;
 
             $workday = new Workday();
             $workday->name = $request->name;
             $workday->company_id = $request->company_id;
-            $workday->date = $date;
+            $workday->year = $request;
             $workday->schedule = $schedule;
             $workday->save();
 
