@@ -28,6 +28,7 @@ use App\Console\Commands\SendAnnounceNotification;
 use App\Console\Commands\SendMailAnnouncement;
 use Illuminate\Console\Scheduling\Schedule;
 use App\Console\Commands\FindNearbyLocations;
+use App\Console\Commands\GeneratePublicHolidays;
 use Laravel\Lumen\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
@@ -64,6 +65,7 @@ class Kernel extends ConsoleKernel
         SetDayOffSchedule::class,
         SendMailAnnouncement::class,
         FindNearbyLocations::class,
+        GeneratePublicHolidays::class,
     ];
 
     /**
@@ -90,6 +92,7 @@ class Kernel extends ConsoleKernel
         $schedule->command(GenerateFourTimesPerYearTask::class)->cron('0 0 1 */3 *')->runInBackground();
         $schedule->command(RaiseLastPeriodPayslip::class)->cron('35 0 1 * *')->runInBackground();
         $schedule->command(SendAnnounceNotification::class)->cron('0 22 * * *')->runInBackground();
+        // $schedule->command(GeneratePublicHolidays::class)->cron('0 0 1 * *')->runInBackground();
 
         $schedule->command('task:generate-schedules-attendance 1')->cron('*/15 1-2 * * *')->runInBackground();
         $schedule->command('task:generate-schedules-attendance 2')->cron('*/15 1-2 * * *')->runInBackground();

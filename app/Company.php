@@ -216,4 +216,12 @@ class Company extends Model
         if($this->role !== 4) return $level;
         return $this->parent->level($level);
     }
+
+    public function workdays(){
+        return $this->hasMany(Workday::class);
+    }
+
+    public function employeeCount(){
+        return $this->hasMany(User::class);
+    }
 }
