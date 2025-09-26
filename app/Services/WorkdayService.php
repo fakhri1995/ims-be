@@ -7,6 +7,7 @@ use App\PublicHoliday;
 use Exception;
 use App\Services\GlobalService;
 use App\Workday;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class WorkdayService{
@@ -19,17 +20,70 @@ class WorkdayService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
-        try{
-            $rows = $request->get('rows', 10);
-            $keyword = $request->get('keyword', null);
-            $sort_by = $request->get('sort_by', null);
-            $sort_type = $request->get('sort_type', null);
+        try {
+        $rows      = $request->get('rows', 10);
+        $keyword   = $request->get('keyword', null);
+        $sort_by   = $request->get('sort_by', null);
+        $sort_type = $request->get('sort_type', null);
 
-            $companies = Company::with(["workdays, employeeCount"])->withCount("workdays");
-            $data = $companies->paginate($rows);
-            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data , "status" => 200];
-        }catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
+        if ($rows > 100) $rows = 100;
+        if ($rows < 1)   $rows = 10;
+
+        $companies = Company::select('id', 'name')
+            ->withCount('workdays')
+            ->withCount('employees')
+            ->has('workdays');
+
+        $params = "?rows=$rows";
+        if ($keyword)   $params .= "&keyword=$keyword";
+        if ($sort_by)   $params .= "&sort_by=$sort_by";
+        if ($sort_type) $params .= "&sort_type=$sort_type";
+
+        if ($keyword) {
+            $companies = $companies->where('name', 'like', "%{$keyword}%");
+        }
+
+        if ($sort_by) {
+            if ($sort_type === null) $sort_type = 'desc';
+
+            if ($sort_by === 'name') {
+                $companies = $companies->orderBy('name', $sort_type);
+            } else if ($sort_by === 'workdays_count') {
+                $companies = $companies->orderBy('workdays_count', $sort_type);
+            } else if ($sort_by === 'employees_count') {
+                $companies = $companies->orderBy('employees_count', $sort_type);
+            } else {
+                $companies = $companies->orderBy('workdays_count', 'desc');
+            }
+        } else {
+            $companies = $companies->orderBy('workdays_count', 'desc');
+        }
+
+        $companies = $companies->paginate($rows);
+        $companies->withPath(env('APP_URL').'/getWorkdayCompanies'.$params);
+
+        if ($companies->isEmpty()) {
+            return [
+                "success" => true,
+                "message" => "Company list with workdays is empty",
+                "data"    => $companies,
+                "status"  => 200
+            ];
+        }
+
+        return [
+            "success" => true,
+            "message" => "Company list with workdays retrieved successfully",
+            "data"    => $companies,
+            "status"  => 200
+        ];
+
+        } catch (Exception $err) {
+            return [
+                "success" => false,
+                "message" => $err->getMessage(),
+                "status"  => 400
+            ];
         }
     }
     
@@ -37,14 +91,55 @@ class WorkdayService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
         
-        try{
-            $company_id = $request->company_id;
-            $company = Company::with(['employees','workdays'])->withCount(['employees'])->where('id', $company_id)->first();
-            $total_employees = $company->employees_count;
+        try {
+        $company_id = $request->get('company_id');
+        $year       = $request->get('year');
+        $month      = $request->get('month'); // numeric: 1–12
 
-            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data , "status" => 200];
-        }catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
+        if (!$company_id || !$year || !$month) {
+            return [
+                "success" => false,
+                "message" => "company_id, year and month are required",
+                "status"  => 400
+            ];
+        }
+
+        $company = Company::find($company_id);
+        if (!$company) {
+            return [
+                "success" => false,
+                "message" => "Company not found",
+                "status"  => 404
+            ];
+        }
+
+        $total_employees        = $company->employees()->count();
+        $total_workday_schedule = $company->workdays()->count();
+
+        $start = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+        $end   = Carbon::createFromDate($year, $month, 1)->endOfMonth();
+
+        $total_workdays_in_month = Workday::where('company_id', $company_id)
+            ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
+            ->count();
+
+        return [
+            "success" => true,
+            "message" => "Workday statistics retrieved successfully",
+            "data"    => [
+                "total_employees"         => $total_employees,
+                "total_workday_schedules" => $total_workday_schedule,
+                "total_workdays_in_month" => $total_workdays_in_month
+            ],
+            "status"  => 200
+        ];
+
+        } catch (Exception $err) {
+            return [
+                "success" => false,
+                "message" => $err->getMessage(),
+                "status"  => 400
+            ];
         }
     }
     
