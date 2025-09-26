@@ -621,6 +621,8 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->post('/addWorkday', 'WorkdayController@addWorkday');
     $router->get('/getWorkday', 'WorkdayController@getWorkday');
     $router->get('/getWorkdays', 'WorkdayController@getWorkdays');
+    $router->put('/updateWorkday', 'WorkdayController@updateWorkday');
+    $router->delete('/deleteWorkday', 'WorkdayController@deleteWorkday');
 
     // RECRUITMENT ROLE
     $router->get('/getRecruitmentRole', 'RecruitmentController@getRecruitmentRole');
