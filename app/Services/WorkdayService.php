@@ -254,8 +254,7 @@ class WorkdayService{
         try{
             $id = $request->id;
             $year = $request->year;
-            $month = $request->month;
-            $date = $year . '-' . $month . '-01';
+            $date = $year . '-' . '01' . '-01';
 
             $schedule = $request->schedule;
 
