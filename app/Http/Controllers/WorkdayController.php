@@ -18,10 +18,17 @@ class WorkdayController extends Controller
         $this->workdayService = new WorkdayService;
     }
 
-    public function getExamples(Request $request){
-        $route_name = "EXAMPLES_GET";
+    public function getWorkdays(Request $request){
+        $route_name = "WORKDAYS_GET";
 
-        $response = $this->workdayService->getExamples($request, $route_name);
+        $response = $this->workdayService->getWorkdays($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getWorkday(Request $request){
+        $route_name = "WORKDAYS_GET";
+
+        $response = $this->workdayService->getWorkday($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -32,31 +39,31 @@ class WorkdayController extends Controller
         return response()->json($response, $response['status']);
     }
 
-    public function addExample(Request $request){
-        $route_name = "EXAMPLE_ADD";
+    public function addWorkday(Request $request){
+        $route_name = "WORKDAY_ADD";
 
-        $response = $this->workdayService->addExample($request, $route_name);
+        $response = $this->workdayService->addWorkday($request, $route_name);
         return response()->json($response, $response['status']);
     }
     
-    public function addExampleSection(Request $request){
-        $route_name = "EXAMPLE_SECTION_ADD";
+    public function addWorkdaySection(Request $request){
+        $route_name = "WORKDAY_SECTION_ADD";
 
-        $response = $this->workdayService->addExampleSection($request, $route_name);
+        $response = $this->workdayService->addWorkdaySection($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
-    public function updateExample(Request $request){
-        $route_name = "EXAMPLE_UPDATE";
+    public function updateWorkday(Request $request){
+        $route_name = "WORKDAY_UPDATE";
 
-        $response = $this->workdayService->updateExample($request, $route_name);
+        $response = $this->workdayService->updateWorkday($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
-    public function deleteExample(Request $request){
-        $route_name = "EXAMPLE_DELETE";
+    public function deleteWorkday(Request $request){
+        $route_name = "WORKDAY_DELETE";
 
-        $response = $this->workdayService->deleteExample($request, $route_name);
+        $response = $this->workdayService->deleteWorkday($request, $route_name);
         return response()->json($response, $response['status']);
     }
  

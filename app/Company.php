@@ -221,7 +221,7 @@ class Company extends Model
         return $this->hasMany(Workday::class);
     }
 
-    public function employeeCount(){
+    public function employees(){
         return $this->hasMany(User::class);
     }
 }
