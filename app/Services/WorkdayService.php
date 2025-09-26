@@ -89,8 +89,8 @@ class WorkdayService{
 
         try {
         $id    = $request->get('id');
-        $year  = $request->get('year');
-        $month = $request->get('month');
+        $year  = $request->get('year') ?? date('Y');
+        $month = $request->get('month') ?? date('n');
 
         if (!$id || !$year || !$month) {
             return [
