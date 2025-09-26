@@ -185,8 +185,11 @@ class WorkdayService{
         try{
             $company_id = $request->company_id;
             $workdays = Workday::where('company_id', $company_id);
-            
-            $data = $workdays->get(); //what you want to send
+            $company_name = Company::find($company_id)->name;
+            $data = [
+                "company_name" => $company_name,
+                "workdays" => $workdays->get()
+            ];
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data , "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
@@ -234,7 +237,7 @@ class WorkdayService{
             $workday = new Workday();
             $workday->name = $request->name;
             $workday->company_id = $request->company_id;
-            $workday->year = $request;
+            $workday->date = $date;
             $workday->schedule = $schedule;
             $workday->save();
 
