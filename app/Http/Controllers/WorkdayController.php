@@ -53,6 +53,13 @@ class WorkdayController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getPublicHolidaysWorkday(Request $request){
+        $route_name = "PUBLIC_HOLIDAYS_WORKDAY_GET";
+
+        $response = $this->workdayService->getPublicHolidaysWorkday($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
     public function addWorkday(Request $request){
         $route_name = "WORKDAY_ADD";
 

@@ -224,6 +224,48 @@ class WorkdayService{
         }
     }
 
+    public function getPublicHolidaysWorkday(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if ($access["success"] === false) return $access;
+
+        try {
+            $workdayId = $request->workday_id;
+
+            $workday = Workday::with('holidays')->find($workdayId);
+            if (!$workday) {
+                return [
+                    "success" => false,
+                    "message" => "Workday not found",
+                    "status"  => 404
+                ];
+            }
+
+            $holidays = PublicHoliday::get();
+
+            $holidayIds = $workday->holidays->pluck('id')->toArray();
+
+            $data = $holidays->map(function ($holiday) use ($holidayIds) {
+                $holiday->is_libur = in_array($holiday->id, $holidayIds) ? 1 : 0;
+                return $holiday;
+            });
+
+            return [
+                "success" => true,
+                "message" => "Data Berhasil Diambil",
+                "data"    => $data,
+                "status"  => 200
+            ];
+
+        } catch (Exception $err) {
+            return [
+                "success" => false,
+                "message" => $err->getMessage(),
+                "status"  => 400
+            ];
+        }
+    }
+
     public function addWorkday(Request $request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
