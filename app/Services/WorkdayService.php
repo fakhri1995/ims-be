@@ -230,9 +230,9 @@ class WorkdayService{
         if ($access["success"] === false) return $access;
 
         try {
-            $workdayId = $request->workday_id;
+            $id = $request->id;
 
-            $workday = Workday::with('holidays')->find($workdayId);
+            $workday = Workday::with('holidays')->find($id);
             if (!$workday) {
                 return [
                     "success" => false,
