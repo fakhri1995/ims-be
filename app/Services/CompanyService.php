@@ -330,6 +330,12 @@ class CompanyService
             $parent_company = Company::find($parent_id);
             if($parent_company === null) return ["success" => false, "message" => "Parent Company Tidak Ditemukan", "status" => 400];
 
+            $name = $request->get('name',null);
+            $exists = Company::where('name', $name)->first();
+            if($exists){
+                return ["success" => false, "message" => "Nama Company Sudah Ada", "status" => 400];
+            }
+            
             $company = new Company;
             if($role_id === 4){
                 if($parent_company->role !== 4) $top_parent_id = $parent_id;
@@ -342,7 +348,7 @@ class CompanyService
                 $company->address = $request->get('address',null);
             }
 
-            $company->name = $request->get('name',null);
+            $company->name = $name;
             $company->parent_id = $request->get('parent_id',null);
             $company->top_parent_id = $top_parent_id;
             $company->phone_number = $request->get('phone_number',null);
