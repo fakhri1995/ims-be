@@ -304,14 +304,22 @@ class WorkdayService{
         
         try{
             $id = $request->id;
+            
+            $name = $request->name;
+            $company_id = $request->company_id;
+            $exists = Company::findOrFail($company_id)->workdays()->where('name', $name)->exists();
+            if($exists){
+                return ["success" => true, "message" => "Nama Workday Schedule Sudah ada", "id" => $name, "status" => 400];
+            }
+
             $year = $request->year;
             $date = $year . '-' . '01' . '-01';
 
             $schedule = $request->schedule;
 
             $workday = Workday::find($id);
-            $workday->name = $request->name;
-            $workday->company_id = $request->company_id;
+            $workday->name = $name;
+            $workday->company_id = $company_id;
             $workday->date = $date;
             $workday->schedule = $schedule;
             $workday->save();
