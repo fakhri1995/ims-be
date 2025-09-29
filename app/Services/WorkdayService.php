@@ -271,14 +271,20 @@ class WorkdayService{
         if($access["success"] === false) return $access;
 
         try{
+            $name = $request->name;
+            $company_id = $request->company_id;
+            $exists = Company::findOrFail($company_id)->workdays()->where('name', $name)->exists();
+            if($exists){
+                return ["success" => true, "message" => "Nama Workday Schedule Sudah ada", "id" => $name, "status" => 400];
+            }
+
             $year = $request->year;
             $date = $year . '-' . '01' . '-01';
-
             $schedule = $request->schedule;
-
+            
             $workday = new Workday();
-            $workday->name = $request->name;
-            $workday->company_id = $request->company_id;
+            $workday->name = $name;
+            $workday->company_id = $company_id;
             $workday->date = $date;
             $workday->schedule = $schedule;
             $workday->save();
@@ -287,7 +293,7 @@ class WorkdayService{
             $workday->holidays()->sync($holidays);
             return ["success" => true, "message" => "Data Berhasil Ditambahkan", "id" => $workday->id, "status" => 200];
         }catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
         }
     }
 
