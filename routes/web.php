@@ -620,6 +620,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->get('/getWorkdayStatistics', 'WorkdayController@getWorkdayStatistics');
     $router->get('/getWorkdayCompanies', 'WorkdayController@getWorkdayCompanies');
     $router->get('/getPublicHolidays', 'WorkdayController@getPublicHolidays');
+    $router->get('/getPublicHolidaysWorkday', 'WorkdayController@getPublicHolidaysWorkday');
     $router->post('/addWorkday', 'WorkdayController@addWorkday');
     $router->get('/getWorkday', 'WorkdayController@getWorkday');
     $router->get('/getWorkdays', 'WorkdayController@getWorkdays');
