@@ -39,7 +39,7 @@ class SearchGeoLocation extends Command
      */
     public function handle()
     {
-        $list_to_be_discovered = LongLatList::whereNull('geo_location')->where('attempts', '<', 5)->limit(25)->get();
+        $list_to_be_discovered = LongLatList::whereNull('geo_location')->orderBy('id', 'desc')->where('attempts', '<', 5)->limit(50)->get();
         $client = new Client();
         foreach($list_to_be_discovered as $item){
             $nominatim_response = $client->request('GET', "https://nominatim.openstreetmap.org/reverse.php?lat=".$item->latitude."&lon=".$item->longitude."&zoom=18&format=jsonv2");
