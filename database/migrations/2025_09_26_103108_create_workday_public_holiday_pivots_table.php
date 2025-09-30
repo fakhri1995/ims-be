@@ -14,6 +14,7 @@ class CreateWorkdayPublicHolidayPivotsTable extends Migration
     public function up()
     {
         Schema::create('workday_public_holiday_pivots', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger("workday_id");
             $table->unsignedBigInteger("holiday_id");
         });
