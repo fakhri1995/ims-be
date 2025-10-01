@@ -7,7 +7,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
-class ForgetPasswordMail extends Mailable implements ShouldQueue
+class ForgetPasswordMail extends Mailable
 {
     use Queueable, SerializesModels;
     public $data;
@@ -30,6 +30,5 @@ class ForgetPasswordMail extends Mailable implements ShouldQueue
     {
         $image_url = public_path('img/MIG-logo.png');
         return $this->subject($this->data['subject'])->view('emails.forgot_password')->with(['image_url' => $image_url]);
-        // return $this->subject($this->data['subject'])->markdown('emails.forgot_password')->with(['image_url' => $image_url, 'message' => $this]);
     }
 }
