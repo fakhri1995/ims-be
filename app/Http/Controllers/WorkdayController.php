@@ -40,7 +40,7 @@ class WorkdayController extends Controller
     }
 
     public function getWorkday(Request $request){
-        $route_name = "WORKDAYS_GET";
+        $route_name = "WORKDAY_GET";
 
         $response = $this->workdayService->getWorkday($request, $route_name);
         return response()->json($response, $response['status']);
