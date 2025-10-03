@@ -986,7 +986,7 @@ class RecruitmentService{
         $rules = [
             "page" => "numeric",
             "rows" => "numeric|between:1,100",
-            "sort_by" => "in:id,name,role_type,recruitments_count",
+            "sort_by" => "in:id,role,role_type,recruitments_count",
             "sort_type" => "in:asc,desc"
         ];
 
@@ -1011,7 +1011,7 @@ class RecruitmentService{
         $sort_by = $request->sort_by ?? NULL;
         $sort_type = $request->get('sort_type','asc');
         if($sort_by == "id") $recruitmentRoles = $recruitmentRoles->orderBy('id',$sort_type);
-        if($sort_by == "name") $recruitmentRoles = $recruitmentRoles->orderBy('name',$sort_type);
+        if($sort_by == "role") $recruitmentRoles = $recruitmentRoles->orderBy('role',$sort_type);
         if($sort_by == "role_type") $recruitmentRoles = $recruitmentRoles->orderBy(RecruitmentRoleType::select("name")
                 ->whereColumn("recruitment_role_types.id","recruitment_roles.recruitment_role_type_id"),$sort_type);
         if($sort_by == "recruitments_count") $recruitmentRoles = $recruitmentRoles->orderBy('recruitments_count',$sort_type);
