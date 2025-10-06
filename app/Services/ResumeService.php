@@ -119,7 +119,7 @@ class ResumeService
 
         $validator = Validator::make($request->all(), [
             "name" => "required",
-            "telp" => "required|numeric",
+            "telp" => "required",
             "email" => "required|email",
             "city" => "required",
             "province" => "required",
