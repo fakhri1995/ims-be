@@ -38,13 +38,6 @@ class CompanyHolidayController extends Controller
         $response = $this->companyHolidayService->addCompanyHoliday($request, $route_name);
         return response()->json($response, $response['status']);
     }
-    
-    public function addCompanyHolidaySection(Request $request){
-        $route_name = "COMPANY_HOLIDAY_SECTION_ADD";
-
-        $response = $this->companyHolidayService->addCompanyHolidaySection($request, $route_name);
-        return response()->json($response, $response['status']);
-    }
 
     public function updateCompanyHoliday(Request $request){
         $route_name = "COMPANY_HOLIDAY_UPDATE";
