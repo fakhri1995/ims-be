@@ -221,6 +221,10 @@ class Company extends Model
         return $this->hasMany(Workday::class);
     }
 
+    public function holidays(){
+        return $this->hasMany(CompanyHoliday::class);
+    }
+
     public function employees(){
         return $this->hasMany(User::class);
     }
