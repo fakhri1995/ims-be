@@ -119,7 +119,7 @@ class ResumeService
 
         $validator = Validator::make($request->all(), [
             "name" => "required",
-            "telp" => "required|numeric",
+            "telp" => "required",
             "email" => "required|email",
             "city" => "required",
             "province" => "required",
@@ -473,7 +473,7 @@ class ResumeService
             "id" => "required|exists:App\Resume,id",
             "basic_information" => "filled|array",
             "basic_information.name" => "required_with:basic_information|filled",
-            "basic_information.telp" => "required_with:basic_information|filled|numeric",
+            "basic_information.telp" => "required_with:basic_information|filled",
             "basic_information.email" => "required_with:basic_information|filled|email",
             "basic_information.city" => "required_with:basic_information|filled",
             "basic_information.province" => "required_with:basic_information|filled",
