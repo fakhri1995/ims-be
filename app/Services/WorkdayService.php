@@ -304,11 +304,12 @@ class WorkdayService{
         
         try{
             $id = $request->id;
+            $workday = Workday::find($id);
             
             $name = $request->name;
             $company_id = $request->company_id;
             $exists = Company::findOrFail($company_id)->workdays()->where('name', $name)->exists();
-            if($exists){
+            if($exists && ($workday->name != $name)){
                 return ["success" => true, "message" => "Nama Workday Schedule Sudah ada", "id" => $name, "status" => 400];
             }
 
@@ -317,7 +318,6 @@ class WorkdayService{
 
             $schedule = $request->schedule;
 
-            $workday = Workday::find($id);
             $workday->name = $name;
             $workday->company_id = $company_id;
             $workday->date = $date;
