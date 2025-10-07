@@ -628,11 +628,11 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->delete('/deleteWorkday', 'WorkdayController@deleteWorkday');
 
     //COMPANY HOLIDAY
-    $router->post('/addCompanyHoliday', 'CompanyHolidayController@addCompanyHoliday');
-    $router->get('/getCompanyHoliday', 'CompanyHolidayController@getCompanyHoliday');
-    $router->get('/getCompanyHolidays', 'CompanyHolidayController@getCompanyHolidays');
-    $router->put('/updateCompanyHoliday', 'CompanyHolidayController@updateCompanyHoliday');
-    $router->delete('/deleteCompanyHoliday', 'CompanyHolidayController@deleteCompanyHoliday');
+    $router->post('/addWorkdayHoliday', 'WorkdayHolidayController@addWorkdayHoliday');
+    $router->get('/getWorkdayHoliday', 'WorkdayHolidayController@getWorkdayHoliday');
+    $router->get('/getWorkdayHolidays', 'WorkdayHolidayController@getWorkdayHolidays');
+    $router->put('/updateWorkdayHoliday', 'WorkdayHolidayController@updateWorkdayHoliday');
+    $router->delete('/deleteWorkdayHoliday', 'WorkdayHolidayController@deleteWorkdayHoliday');
 
     // RECRUITMENT ROLE
     $router->get('/getRecruitmentRole', 'RecruitmentController@getRecruitmentRole');
