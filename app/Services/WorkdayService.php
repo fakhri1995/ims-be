@@ -7,6 +7,7 @@ use App\PublicHoliday;
 use Exception;
 use App\Services\GlobalService;
 use App\Workday;
+use App\WorkdayHoliday;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -203,7 +204,7 @@ class WorkdayService{
         try{
             $id = $request->id;
             
-            $workday = Workday::with(["holidays"])->where('id', $id);
+            $workday = Workday::with(["holidays", "workdayHolidays"])->where('id', $id);
             $data = $workday->first();
             return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data, "status" => 200];
         }catch(Exception $err){
@@ -232,7 +233,7 @@ class WorkdayService{
         try {
             $id = $request->id;
 
-            $workday = Workday::with('holidays')->find($id);
+            $workday = Workday::with(["holidays", "workdayHolidays"])->find($id);
             if (!$workday) {
                 return [
                     "success" => false,
@@ -291,6 +292,17 @@ class WorkdayService{
 
             $holidays = $request->holidays ?? [];
             $workday->holidays()->sync($holidays);
+            
+            $custom_holidays = (object)$request->custom_holidays;
+            foreach($custom_holidays as $custom){
+                $custom_holiday = (object)$custom;
+                $workday_holiday = new WorkdayHoliday();
+                $workday_holiday->name = $custom_holiday->name;
+                $workday_holiday->workday_id = $workday->id;
+                $workday_holiday->from = $custom_holiday->from;
+                $workday_holiday->to = $custom_holiday->to;
+                $workday_holiday->save();
+            }
             return ["success" => true, "message" => "Data Berhasil Ditambahkan", "id" => $workday->id, "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err->getMessage(), "status" => 400];
@@ -326,6 +338,18 @@ class WorkdayService{
 
             $holidays = $request->holidays ?? [];
             $workday->holidays()->sync($holidays);
+            $workday->workdayHolidays()->delete();
+            
+            $custom_holidays = (object)$request->custom_holidays;
+            foreach($custom_holidays as $custom){
+                $custom_holiday = (object)$custom;
+                $workday_holiday = new WorkdayHoliday();
+                $workday_holiday->name = $custom_holiday->name;
+                $workday_holiday->workday_id = $workday->id;
+                $workday_holiday->from = $custom_holiday->from;
+                $workday_holiday->to = $custom_holiday->to;
+                $workday_holiday->save();
+            }
             return ["success" => true, "message" => "Data Berhasil Diubah", "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
