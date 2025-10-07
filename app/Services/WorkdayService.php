@@ -246,15 +246,40 @@ class WorkdayService{
 
             $holidayIds = $workday->holidays->pluck('id')->toArray();
 
-            $data = $holidays->map(function ($holiday) use ($holidayIds) {
-                $holiday->is_libur = in_array($holiday->id, $holidayIds) ? 1 : 0;
-                return $holiday;
+            $holidayData = $holidays->map(function ($holiday) use ($holidayIds) {
+                return [
+                    'id'         => $holiday->id,
+                    'name'       => $holiday->name,
+                    'date'       => $holiday->date ?? null,
+                    'is_cuti'    => $holiday->is_cuti ?? 0,
+                    'is_libur'   => in_array($holiday->id, $holidayIds) ? 1 : 0,
+                ];
             });
+
+            $expandedWorkdayHolidays = collect();
+            foreach ($workday->workdayHolidays as $wh) {
+                $from = Carbon::parse($wh->from);
+                $to = Carbon::parse($wh->to);
+
+                for ($date = $from->copy(); $date->lte($to); $date->addDay()) {
+                    $expandedWorkdayHolidays->push([
+                        'name'        => $wh->name,
+                        'date'        => $date->toDateString(),
+                        'workday_id'  => $wh->workday_id,
+                        'is_libur'    => 1,
+                    ]);
+                }
+            }
+
+            $combinedData = collect(array_merge(
+                $holidayData->toArray(),
+                $expandedWorkdayHolidays->toArray()
+            ));
 
             return [
                 "success" => true,
                 "message" => "Data Berhasil Diambil",
-                "data"    => $data,
+                "data"    => $combinedData->values(),
                 "status"  => 200
             ];
 
