@@ -205,6 +205,8 @@ class ResumeService
             "project.name" => "required_with:project",
             "project.year" => "date|nullable",
             "project.description" => "string|nullable",
+            "project.technologies_skills" => "string|nullable",
+            "project.client" => "string|required_with:project",
 
             "skill" => "filled|array",
             "skill.name" => "required_with:skill",
@@ -503,6 +505,8 @@ class ResumeService
             "project.name" => "required_with:project",
             "project.year" => "date|nullable",
             "project.description" => "string|nullable",
+            "project.technologies_skills" => "string|nullable",
+            "project.client" => "string|required_with:project",
 
             "skill" => "filled|array",
             "skill.id" => "required_with:skill|exists:App\ResumeSkill,id",
