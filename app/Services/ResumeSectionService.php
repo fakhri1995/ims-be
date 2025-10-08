@@ -6,6 +6,7 @@ use App\Resume;
 use App\ResumeEducation;
 use App\ResumeExperience;
 use App\ResumeLanguage;
+use App\ResumeProject;
 use App\ResumeSkill;
 use App\ResumeTool;
 use Exception;
@@ -415,6 +416,90 @@ class ResumeSectionService
 			}
 
 			if (!$tool->delete()) return ["success" => false, "message" => "Gagal Delete Resume Tool", "status" => 400];
+			return ["success" => true, "message" => "Data Berhasil Dihapus", "status" => 200];
+		} catch (Exception $err) {
+			return ["success" => false, "message" => $err, "status" => 400];
+		}
+	}
+
+		public function addResumeLanguage(Request $request, $route_name){
+		$access = $this->globalService->checkRoute($route_name);
+		if ($access["success"] === false) return $access;
+
+		try{
+			$resume = Resume::find($request->resume_id);
+			
+			if(!$resume){
+				return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+			}
+
+			$after_id = $request->after_id ?? NULL;
+			if ($after_id != NULL) {
+				$projectAfter = ResumeProject::find($after_id);
+				if (!$projectAfter) return ["success" => true, "message" => "After id tidak ditemukan", "status" => 200];
+			}
+
+			$project = new ResumeProject();
+			$project->name = $request->name;
+			$project->year = !$request->year ? null : $request->year;
+			$project->description = $request->description ?? "";
+			$project->technologies_skills = $request->technologies_skills ?? "";
+			$project->client = $request->client ?? "";
+
+			$projects = new ResumeProject();
+			if ($after_id == NULL) {
+				$projects->increment("display_order");
+				$project->display_order = 1;
+			} else {
+				$projects->where("display_order", ">", $projectAfter->display_order)->increment("display_order");
+				$project->display_order = $projectAfter->display_order + 1;
+			}
+
+			$resume->projects()->save($project);
+
+			return ["success" => true, "message" => "Data Berhasil Ditambahkan", "data" => $project, "status" => 200];
+		} catch (Exception $err) {
+			return ["success" => false, "message" => $err, "status" => 400];
+		}
+	}
+
+	public function updateResumeProject(Request $request, $route_name){
+		$access = $this->globalService->checkRoute($route_name);
+		if ($access["success"] === false) return $access;
+
+		try{
+			$project = ResumeProject::find($request->id);
+			
+			if(!$project){
+				return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+			}
+			
+			$project->name = $request->name;
+			$project->year = !$request->year ? null : $request->year;
+			$project->description = $request->description ?? "";
+			$project->technologies_skills = $request->technologies_skills ?? "";
+			$project->client = $request->client ?? "";
+
+			$project->save();
+
+			return ["success" => true, "message" => "Data Berhasil Ditambahkan", "data" => $project, "status" => 200];
+		} catch (Exception $err) {
+			return ["success" => false, "message" => $err, "status" => 400];
+		}
+	}
+
+	public function deleteResumeProject(Request $request, $route_name){
+		$access = $this->globalService->checkRoute($route_name);
+		if ($access["success"] === false) return $access;
+
+		try{
+			$project = ResumeProject::find($request->id);
+			
+			if(!$project){
+				return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+			}
+
+			if (!$project->delete()) return ["success" => false, "message" => "Gagal Delete Resume Language", "status" => 400];
 			return ["success" => true, "message" => "Data Berhasil Dihapus", "status" => 200];
 		} catch (Exception $err) {
 			return ["success" => false, "message" => $err, "status" => 400];
