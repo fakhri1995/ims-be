@@ -326,6 +326,8 @@ class ResumeService
                 $project->name = $requestProject->name;
                 $project->year = !$requestProject->year ? null : $requestProject->year;
                 $project->description = $requestProject->description ?? "";
+                $project->technologies_skills = $requestProject->technologies_skills ?? "";
+                $project->client = $requestProject->client ?? "";
 
                 $projects = new ResumeProject();
                 if ($after_id == NULL) {
@@ -725,6 +727,8 @@ class ResumeService
                 $project->name = $requestProject->name;
                 $project->year = !$requestProject->year ? null : $requestProject->year;
                 $project->description = $requestProject->description ?? "";
+                $project->technologies_skills = $requestProject->technologies_skills ?? "";
+                $project->client = $requestProject->client ?? "";
 
                 $projects = new ResumeProject();
                 if ($after_id == NULL) {

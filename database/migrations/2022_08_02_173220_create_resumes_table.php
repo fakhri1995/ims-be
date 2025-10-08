@@ -25,7 +25,7 @@ class CreateResumesTable extends Migration
             $table->string("province");
             $table->string("location")->nullable();
             $table->string("linkedin");
-            $table->string("summary");
+            $table->string("summary")->nullable();
             $table->unsignedBigInteger("assessment_id")->nullable();
             $table->dateTime('created_at');
             $table->dateTime('updated_at');
