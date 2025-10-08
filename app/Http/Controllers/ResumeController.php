@@ -305,4 +305,28 @@ class ResumeController extends Controller
         $response = $this->resumeSectionService->deleteResumeTool($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    
+    public function addResumeProject(Request $request)
+    {
+        $route_name = "RESUME_PROJECT_ADD";
+
+        $response = $this->resumeSectionService->addResumeProject($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function updateResumeProject(Request $request)
+    {
+        $route_name = "RESUME_PROJECT_UPDATE";
+
+        $response = $this->resumeSectionService->updateResumeProject($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function deleteResumeProject(Request $request)
+    {
+        $route_name = "RESUME_PROJECT_DELETE";
+
+        $response = $this->resumeSectionService->deleteResumeProject($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }
