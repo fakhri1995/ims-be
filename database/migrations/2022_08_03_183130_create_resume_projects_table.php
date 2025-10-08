@@ -18,6 +18,8 @@ class CreateResumeProjectsTable extends Migration
             $table->string("name");
             $table->date("year")->nullable();
             $table->text("description");
+            $table->string("technologies_skills")->nullable();
+            $table->string("client")->nullable();
             $table->unsignedBigInteger("resume_id");
             $table->unsignedInteger('display_order');
 

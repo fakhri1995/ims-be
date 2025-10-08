@@ -205,6 +205,8 @@ class ResumeService
             "project.name" => "required_with:project",
             "project.year" => "date|nullable",
             "project.description" => "string|nullable",
+            "project.technologies_skills" => "string|nullable",
+            "project.client" => "string|required_with:project",
 
             "skill" => "filled|array",
             "skill.name" => "required_with:skill",
@@ -326,6 +328,8 @@ class ResumeService
                 $project->name = $requestProject->name;
                 $project->year = !$requestProject->year ? null : $requestProject->year;
                 $project->description = $requestProject->description ?? "";
+                $project->technologies_skills = $requestProject->technologies_skills ?? "";
+                $project->client = $requestProject->client ?? "";
 
                 $projects = new ResumeProject();
                 if ($after_id == NULL) {
@@ -501,6 +505,8 @@ class ResumeService
             "project.name" => "required_with:project",
             "project.year" => "date|nullable",
             "project.description" => "string|nullable",
+            "project.technologies_skills" => "string|nullable",
+            "project.client" => "string|required_with:project",
 
             "skill" => "filled|array",
             "skill.id" => "required_with:skill|exists:App\ResumeSkill,id",
@@ -725,6 +731,8 @@ class ResumeService
                 $project->name = $requestProject->name;
                 $project->year = !$requestProject->year ? null : $requestProject->year;
                 $project->description = $requestProject->description ?? "";
+                $project->technologies_skills = $requestProject->technologies_skills ?? "";
+                $project->client = $requestProject->client ?? "";
 
                 $projects = new ResumeProject();
                 if ($after_id == NULL) {
