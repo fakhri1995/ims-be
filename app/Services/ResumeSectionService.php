@@ -422,7 +422,7 @@ class ResumeSectionService
 		}
 	}
 
-		public function addResumeLanguage(Request $request, $route_name){
+		public function addResumeProject(Request $request, $route_name){
 		$access = $this->globalService->checkRoute($route_name);
 		if ($access["success"] === false) return $access;
 
