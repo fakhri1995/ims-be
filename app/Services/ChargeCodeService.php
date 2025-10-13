@@ -88,9 +88,16 @@ class ChargeCodeService{
         
         try{
             $company_id = $request->company_id;
+            $rows = $request->rows ?? 10;
+            $page = $request->page ?? 1;
+            $company = Company::find($company_id);
             $charge_codes = ChargeCode::with(["attendanceCodes"])->where('company_id', $company_id);
-            $data = $charge_codes->get(); //what you want to send
-            return ["success" => true, "message" => "Data Berhasil Diambil", "data" => $data , "status" => 200];
+            $data = $charge_codes->paginate($rows);
+            return ["success" => true, "message" => "Data Berhasil Diambil", 
+            "data" => [
+                "company_name" => $company->name,
+                "charge_codes" => $data
+            ] , "status" => 200];
         }catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
