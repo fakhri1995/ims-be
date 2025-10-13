@@ -541,6 +541,18 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->delete('/deleteResumeAssessment', 'ResumeController@deleteResumeAssessment');
     $router->delete('deleteResumeSection', 'ResumeController@deleteResumeSection');
 
+    //CHARGE CODE SECTION
+    $router->get('/getChargeCodeCompanies', 'ChargeCodeController@getChargeCodeCompanies');
+    $router->get('/getChargeCodes', 'ChargeCodeController@getChargeCodes');
+    $router->get('/getChargeCode', 'ChargeCodeController@getChargeCode');
+    $router->post('/addChargeCode', 'ChargeCodeController@addChargeCode');
+    $router->post('/addChargeCodesCompany', 'ChargeCodeController@addChargeCodesCompany');
+    $router->post('/addAttendanceCode', 'ChargeCodeController@addAttendanceCode');
+    $router->put('/updateAttendanceCode', 'ChargeCodeController@updateAttendanceCode');
+    $router->put('/updateChargeCode', 'ChargeCodeController@updateChargeCode');
+    $router->delete('/deleteChargeCode', 'ChargeCodeController@deleteChargeCode');
+    $router->delete('/deleteAttendanceCode', 'ChargeCodeController@deleteAttendanceCode');
+
     //RESUME SECTION
     $router->put('/updateResumePersonalInfo', 'ResumeController@updateResumePersonalInfo');
     $router->post('/addResumeSkill', 'ResumeController@addResumeSkill');
