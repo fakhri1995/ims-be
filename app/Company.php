@@ -221,8 +221,8 @@ class Company extends Model
         return $this->hasMany(Workday::class);
     }
 
-    public function holidays(){
-        return $this->hasMany(CompanyHoliday::class);
+    public function chargeCodes(){
+        return $this->hasMany(ChargeCode::class);
     }
 
     public function employees(){
