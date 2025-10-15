@@ -143,6 +143,7 @@ class ChargeCodeService{
                 $attendance_code->hari_masuk = $attendance_code_arr->hari_masuk;
                 $attendance_code->hari_penggajian = $attendance_code_arr->hari_penggajian;
                 $attendance_code->dapat_ditagih = $attendance_code_arr->dapat_ditagih;
+                $attendance_code->perlu_verifikasi = $attendance_code_arr->perlu_verifikasi;
                 $attendance_code->save();
             }
             $data = $charge_code->id; //what you want to send
@@ -187,6 +188,7 @@ class ChargeCodeService{
             $attendance_code->hari_masuk = $request->hari_masuk;
             $attendance_code->hari_penggajian = $request->hari_penggajian;
             $attendance_code->dapat_ditagih = $request->dapat_ditagih;
+            $attendance_code->perlu_verifikasi = $request->perlu_verifikasi;
             $attendance_code->save();
             $data = $attendance_code->id; //what you want to send
             return ["success" => true, "message" => "Data Berhasil Ditambahkan", "id" => $data, "status" => 200];
@@ -208,6 +210,7 @@ class ChargeCodeService{
             $attendance_code->hari_masuk = $request->hari_masuk;
             $attendance_code->hari_penggajian = $request->hari_penggajian;
             $attendance_code->dapat_ditagih = $request->dapat_ditagih;
+            $attendance_code->perlu_verifikasi = $request->perlu_verifikasi;
             $attendance_code->save();
             $data = $attendance_code->id; //what you want to send
             return ["success" => true, "message" => "Data Berhasil Diubah", "id" => $data, "status" => 200];
@@ -245,6 +248,7 @@ class ChargeCodeService{
                 $attendance_code->hari_masuk = $attendance_code_arr->hari_masuk;
                 $attendance_code->hari_penggajian = $attendance_code_arr->hari_penggajian;
                 $attendance_code->dapat_ditagih = $attendance_code_arr->dapat_ditagih;
+                $attendance_code->perlu_verifikasi = $attendance_code_arr->perlu_verifikasi;
                 $attendance_code->save();
             }
             $data = $charge_code->id;
