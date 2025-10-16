@@ -94,8 +94,15 @@ class ChargeCodeService{
             $company_id = $request->company_id;
             $rows = $request->rows ?? 10;
             $page = $request->page ?? 1;
+            $keyword = $request->keyword ?? "";
+
             $company = Company::find($company_id);
             $charge_codes = ChargeCode::where('company_id', $company_id);
+
+            if ($keyword) {
+                $charge_codes = $charge_codes->where('name', 'like', "%{$keyword}%");
+            }
+
             $data = $charge_codes->paginate($rows);
             return ["success" => true, "message" => "Data Berhasil Diambil", 
             "data" => [
@@ -263,8 +270,15 @@ class ChargeCodeService{
             $company_id = $request->company_id;
             $rows = $request->rows ?? 10;
             $page = $request->page ?? 1;
+            $keyword = $request->keyword ?? "";
+
             $company = Company::find($company_id);
             $attendance_codes = AttendanceCode::where('company_id', $company_id);
+            
+            if ($keyword) {
+                $attendance_codes = $attendance_codes->where('name', 'like', "%{$keyword}%");
+            }
+
             $data = $attendance_codes->paginate($rows);
             return ["success" => true, "message" => "Data Berhasil Diambil", 
             "data" => [
@@ -324,7 +338,7 @@ class ChargeCodeService{
             $description = $request->description;
             $color = $request->color;
             
-            $charge_code = ChargeCode::with(["attendanceCodes"])->find($id);
+            $charge_code = ChargeCode::find($id);
             if(!$charge_code) return ["success" => false, "message" => "Charge Code Tidak Ditemukan", "status" => 404];
 
             $charge_code->company_id = $company_id;
