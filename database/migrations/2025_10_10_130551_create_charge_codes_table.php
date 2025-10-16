@@ -19,6 +19,7 @@ class CreateChargeCodesTable extends Migration
             $table->unsignedBigInteger('company_id');
             $table->string('name');
             $table->text('description')->nullable();
+            $table->string('color');
         });
     }
 

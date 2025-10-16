@@ -225,6 +225,10 @@ class Company extends Model
         return $this->hasMany(ChargeCode::class);
     }
 
+    public function attendanceCodes(){
+        return $this->hasMany(AttendanceCode::class);
+    }
+
     public function employees(){
         return $this->hasMany(User::class);
     }
