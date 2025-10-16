@@ -179,7 +179,7 @@ class ChargeCodeService{
             $attendance_codes = (object)$request->attendance_codes;
             foreach($attendance_codes as $custom){
                 $attendance_code_arr = (object)$custom;
-                $attendance_code = new ChargeCode();
+                $attendance_code = new AttendanceCode();
                 $attendance_code->name = $attendance_code_arr->name;
                 $attendance_code->description = $attendance_code_arr->description;
                 $attendance_code->color = $attendance_code_arr->color;
@@ -218,7 +218,7 @@ class ChargeCodeService{
             $attendance_codes = (object)$request->attendance_codes;
             foreach($attendance_codes as $custom){
                 $attendance_code_arr = (object)$custom;
-                $attendance_code = new ChargeCode();
+                $attendance_code = new AttendanceCode();
                 $attendance_code->name = $attendance_code_arr->name;
                 $attendance_code->description = $attendance_code_arr->description;
                 $attendance_code->color = $attendance_code_arr->color;
