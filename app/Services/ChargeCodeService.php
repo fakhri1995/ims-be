@@ -182,7 +182,6 @@ class ChargeCodeService{
                 $attendance_code = new AttendanceCode();
                 $attendance_code->name = $attendance_code_arr->name;
                 $attendance_code->description = $attendance_code_arr->description;
-                $attendance_code->color = $attendance_code_arr->color;
                 $attendance_code->company_id = $company_id;
                 $attendance_code->hari_masuk = $attendance_code_arr->hari_masuk;
                 $attendance_code->hari_penggajian = $attendance_code_arr->hari_penggajian;
@@ -204,7 +203,7 @@ class ChargeCodeService{
             $data = $company_id; //what you want to send
             return ["success" => true, "message" => "Data Berhasil Ditambahkan", "id" => $data, "status" => 200];
         }catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
         }
     }
 
@@ -221,7 +220,6 @@ class ChargeCodeService{
                 $attendance_code = new AttendanceCode();
                 $attendance_code->name = $attendance_code_arr->name;
                 $attendance_code->description = $attendance_code_arr->description;
-                $attendance_code->color = $attendance_code_arr->color;
                 $attendance_code->company_id = $company_id;
                 $attendance_code->hari_masuk = $attendance_code_arr->hari_masuk;
                 $attendance_code->hari_penggajian = $attendance_code_arr->hari_penggajian;
@@ -244,7 +242,6 @@ class ChargeCodeService{
             $attendance_code = new AttendanceCode();
             $attendance_code->name = $request->name;
             $attendance_code->description = $request->description;
-            $attendance_code->color = $request->color;
             $attendance_code->company_id = $request->company_id;
             $attendance_code->hari_masuk = $request->hari_masuk;
             $attendance_code->hari_penggajian = $request->hari_penggajian;
@@ -304,7 +301,6 @@ class ChargeCodeService{
             if(!$attendance_code) return ["success" => false, "message" => "Attendance Code Tidak Ditemukan", "status" => 404];
             $attendance_code->name = $request->name;
             $attendance_code->description = $request->description;
-            $attendance_code->color = $request->color;
             $attendance_code->hari_masuk = $request->hari_masuk;
             $attendance_code->hari_penggajian = $request->hari_penggajian;
             $attendance_code->dapat_ditagih = $request->dapat_ditagih;
