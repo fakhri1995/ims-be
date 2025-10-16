@@ -18,7 +18,7 @@ class CreateAttendanceCodesTable extends Migration
             $table->timestamps();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->unsignedBigInteger('charge_code_id');
+            $table->unsignedBigInteger('company_id');
             $table->boolean('hari_masuk');
             $table->boolean('hari_penggajian');
             $table->boolean('dapat_ditagih');

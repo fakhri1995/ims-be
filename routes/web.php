@@ -548,10 +548,13 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->post('/addChargeCode', 'ChargeCodeController@addChargeCode');
     $router->post('/addChargeCodesCompany', 'ChargeCodeController@addChargeCodesCompany');
     $router->post('/addAttendanceCode', 'ChargeCodeController@addAttendanceCode');
+    $router->post('/addAttendanceCodesCompany', 'ChargeCodeController@addAttendanceCodesCompany');
     $router->put('/updateAttendanceCode', 'ChargeCodeController@updateAttendanceCode');
     $router->put('/updateChargeCode', 'ChargeCodeController@updateChargeCode');
     $router->delete('/deleteChargeCode', 'ChargeCodeController@deleteChargeCode');
     $router->delete('/deleteAttendanceCode', 'ChargeCodeController@deleteAttendanceCode');
+    $router->get('/getAttendanceCode', 'ChargeCodeController@getAttendanceCode');
+    $router->get('/getAttendanceCodes', 'ChargeCodeController@getAttendanceCodes');
 
     //RESUME SECTION
     $router->put('/updateResumePersonalInfo', 'ResumeController@updateResumePersonalInfo');

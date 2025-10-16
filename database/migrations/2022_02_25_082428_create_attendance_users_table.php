@@ -16,6 +16,7 @@ class CreateAttendanceUsersTable extends Migration
         Schema::create('attendance_users', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('attendance_code_id');
             $table->dateTime('check_in');
             $table->dateTime('check_out')->nullable();
             $table->string('long_check_in');

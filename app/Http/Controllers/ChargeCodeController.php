@@ -54,9 +54,16 @@ class ChargeCodeController extends Controller
     }
 
     public function addAttendanceCode(Request $request){
-        $route_name = "ATTENDANCE_CODES_ADD";
+        $route_name = "ATTENDANCE_CODE_ADD";
 
         $response = $this->chargecodeService->addAttendanceCode($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function addAttendanceCodesCompany(Request $request){
+        $route_name = "ATTENDANCE_CODES_COMPANY_ADD";
+
+        $response = $this->chargecodeService->addAttendanceCodesCompany($request, $route_name);
         return response()->json($response, $response['status']);
     }
 
@@ -88,4 +95,17 @@ class ChargeCodeController extends Controller
         return response()->json($response, $response['status']);
     }
  
+    public function getAttendanceCodes(Request $request){
+        $route_name = "ATTENDANCE_CODES_GET";
+
+        $response = $this->chargecodeService->getAttendanceCodes($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    public function getAttendanceCode(Request $request){
+        $route_name = "ATTENDANCE_CODE_GET";
+
+        $response = $this->chargecodeService->getAttendanceCode($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }

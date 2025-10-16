@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class AttendanceCode extends Model
 {
-    public function chargeCode(){
-        return $this->belongsTo(ChargeCode::class);
+    public function company(){
+        return $this->belongsTo(Company::class);
     }
 }
