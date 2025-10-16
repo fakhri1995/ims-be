@@ -169,6 +169,45 @@ class ChargeCodeService{
         }
     }
 
+    public function addCompanyCodes(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{ 
+            $company_id = $request->company_id;
+
+            $attendance_codes = (object)$request->attendance_codes;
+            foreach($attendance_codes as $custom){
+                $attendance_code_arr = (object)$custom;
+                $attendance_code = new ChargeCode();
+                $attendance_code->name = $attendance_code_arr->name;
+                $attendance_code->description = $attendance_code_arr->description;
+                $attendance_code->color = $attendance_code_arr->color;
+                $attendance_code->company_id = $company_id;
+                $attendance_code->hari_masuk = $attendance_code_arr->hari_masuk;
+                $attendance_code->hari_penggajian = $attendance_code_arr->hari_penggajian;
+                $attendance_code->dapat_ditagih = $attendance_code_arr->dapat_ditagih;
+                $attendance_code->perlu_verifikasi = $attendance_code_arr->perlu_verifikasi;
+                $attendance_code->save();
+            }
+
+            $charge_codes = (object)$request->charge_codes;
+            foreach($charge_codes as $custom){
+                $charge_code_arr = (object)$custom;
+                $charge_code = new ChargeCode();
+                $charge_code->name = $charge_code_arr->name;
+                $charge_code->description = $charge_code_arr->description;
+                $charge_code->color = $charge_code_arr->color;
+                $charge_code->company_id = $company_id;
+                $charge_code->save();
+            }
+            $data = $company_id; //what you want to send
+            return ["success" => true, "message" => "Data Berhasil Ditambahkan", "id" => $data, "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     public function addAttendanceCodesCompany(Request $request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;

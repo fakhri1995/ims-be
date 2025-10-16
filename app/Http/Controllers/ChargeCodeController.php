@@ -53,6 +53,13 @@ class ChargeCodeController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function addCompanyCodes(Request $request){
+    $route_name = "COMPANY_CODES_ADD";
+
+    $response = $this->chargecodeService->addCompanyCodes($request, $route_name);
+    return response()->json($response, $response['status']);
+    }
+
     public function addAttendanceCode(Request $request){
         $route_name = "ATTENDANCE_CODE_ADD";
 
