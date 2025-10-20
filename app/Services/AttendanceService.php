@@ -287,8 +287,8 @@ class AttendanceService{
             $last_two_month = date("Y-m-d", strtotime("-2 months"));
             $today = date('Y-m-d');
             $login_id = auth()->user()->id;
-            $today_attendance_activities = AttendanceActivity::where('user_id', $login_id)->whereDate('updated_at', '=', $today)->get();
-            $last_two_month_attendance_activities = AttendanceActivity::where('user_id', $login_id)->whereDate('updated_at', '>', $last_two_month)->whereDate('updated_at', '<>', $today)->get();
+            $today_attendance_activities = AttendanceActivity::with(['chargeCode'])->where('user_id', $login_id)->whereDate('updated_at', '=', $today)->get();
+            $last_two_month_attendance_activities = AttendanceActivity::with(['chargeCode'])->where('user_id', $login_id)->whereDate('updated_at', '>', $last_two_month)->whereDate('updated_at', '<>', $today)->get();
             $data = (object)[
                 "today_activities" => $today_attendance_activities,
                 "last_two_month_activities" => $last_two_month_attendance_activities
