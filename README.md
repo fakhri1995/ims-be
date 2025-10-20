@@ -113,7 +113,12 @@ Your API will be available at `http://localhost:8000`
 ```bash
 php artisan passport:install
 ```
-Add the generated key to the `oauth_clients` table, then change the `.env` passport variables
+to Add the generated key to the `oauth_clients` table, then change the `.env` passport variables
+```bash
+PASSPORT_LOGIN_ENDPOINT=[APP_URL]/v1/oauth/token
+PASSPORT_CLIENT_ID=[Password grant client CLIENT ID]
+PASSPORT_CLIENT_SECRET=[Password grant client CLIENT SECRET]
+```
 
 ## 🧪 Testing the API
 
