@@ -556,6 +556,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->delete('/deleteAttendanceCode', 'ChargeCodeController@deleteAttendanceCode');
     $router->get('/getAttendanceCode', 'ChargeCodeController@getAttendanceCode');
     $router->get('/getAttendanceCodes', 'ChargeCodeController@getAttendanceCodes');
+    $router->get('/getCodesUser', 'ChargeCodeController@getCodesUser');
 
     //RESUME SECTION
     $router->put('/updateResumePersonalInfo', 'ResumeController@updateResumePersonalInfo');

@@ -384,4 +384,22 @@ class ChargeCodeService{
         }
     }
 
+    public function getCodesUser(Request $request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        try{
+            $company_id = auth()->user()->company_id;
+            $attendance_codes = AttendanceCode::where('company_id', $company_id)->get();
+            $charge_codes = ChargeCode::where('company_id', $company_id)->get();
+
+            return ["success" => true, "message" => "Data Berhasil Diambil", 
+            "data" => [
+                "attendance_codes" => $attendance_codes,
+                "charge_codes" => $charge_codes
+            ] , "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
 }

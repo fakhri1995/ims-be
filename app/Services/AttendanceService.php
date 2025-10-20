@@ -345,6 +345,7 @@ class AttendanceService{
         if($access["success"] === false) return $access;
 
         $login_id = auth()->user()->id;
+        $charge_code_id = $request->get('charge_code_id') ?? 0;
         $attendance_form_id = $request->get('attendance_form_id');
         $attendance_form = AttendanceForm::find($attendance_form_id);
         if($attendance_form === null) return ["success" => false, "message" => "Id Form Tidak Ditemukan", "status" => 400];
@@ -390,6 +391,7 @@ class AttendanceService{
         $attendance_activity = new AttendanceActivity;
         $attendance_activity->user_id = auth()->user()->id;
         $attendance_activity->attendance_form_id = $attendance_form_id;
+        $attendance_activity->charge_code_id = $charge_code_id;
         // $attendance_activity->attendance_project_id = $request->get('attendance_project_id');
         // $attendance_activity->attendance_project_status_id = $request->get('attendance_project_status_id');
         $attendance_activity->updated_at = date('Y-m-d H:i:s');
@@ -419,6 +421,7 @@ class AttendanceService{
         if($access["success"] === false) return $access;
 
         $id = $request->get('id');
+        $charge_code_id = $request->get('charge_code_id');
         $attendance_activity = AttendanceActivity::find($id);
         if($attendance_activity === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
         if($attendance_activity->user_id !== auth()->user()->id) return ["success" => false, "message" => "Aktivitas bukan milik user login", "status" => 400];
@@ -489,6 +492,7 @@ class AttendanceService{
                 }
             }
             $attendance_activity->details = $activity_details;
+            $attendance_activity->charge_code_id = $charge_code_id;
             $attendance_activity->save();
             return ["success" => true, "message" => "Attendance Activity Berhasil Diperbarui", "status" => 200];
         } catch(Exception $err){
@@ -829,7 +833,7 @@ class AttendanceService{
             if($rows < 1) $rows = 10;
 
             // $user_attendances = AttendanceUser::where('user_id', $login_id)->whereDate('check_in', '>', date("Y-m-d", strtotime("-1 months")))->orderBy('check_in', 'asc')->get();
-            $user_attendances = AttendanceUser::with('evidence:link,description,fileable_id,fileable_type')->select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
+            $user_attendances = AttendanceUser::with(['evidence:link,description,fileable_id,fileable_type', 'attendanceCode'])->select('attendance_users.id', 'user_id', 'attendance_code_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
             ->join('long_lat_lists AS check_in_list', function ($join) {
                 $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
             })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
@@ -951,7 +955,7 @@ class AttendanceService{
             $id = $request->get('id');
             $data_user = AttendanceUser::join('users', 'users.id', '=', 'attendance_users.user_id')->where('attendance_users.id',$request->get('id'))->select('users.name','users.position')->first();
             $name = $data_user->name;
-            $user_attendance = AttendanceUser::with('evidence:link,description,fileable_id,fileable_type')->select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
+            $user_attendance = AttendanceUser::with(['evidence:link,description,fileable_id,fileable_type', 'attendanceCode'])->select('attendance_users.id', 'user_id', 'attendance_code_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
             ->join('long_lat_lists AS check_in_list', function ($join) {
                 $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
             })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
@@ -963,7 +967,7 @@ class AttendanceService{
             $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
             $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
             $user_attendance->name = $name;
-            $attendance_activities = AttendanceActivity::with('attendanceForm:id,name,details')->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
+            $attendance_activities = AttendanceActivity::with(['attendanceForm:id,name,details', 'chargeCode'])->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
             $attendance_task_activities = AttendanceTaskActivity::with(['task', 'taskExport'])->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
             $attendance_activities_count = count($attendance_activities);
             $attendance_task_activities_count = count($attendance_task_activities);
@@ -999,7 +1003,7 @@ class AttendanceService{
             $date = $request->date ?? date('Y-m-d');
             $data_user = auth()->user()->name;
             $name = auth()->user()->name;
-            $user_attendance = AttendanceUser::with('evidence:link,description,fileable_id,fileable_type')->select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
+            $user_attendance = AttendanceUser::with(['evidence:link,description,fileable_id,fileable_type', 'attendanceCode'])->select('attendance_users.id', 'user_id', 'attendance_code_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
             ->join('long_lat_lists AS check_in_list', function ($join) {
                 $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
             })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
@@ -1012,7 +1016,7 @@ class AttendanceService{
             $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
             $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
             $user_attendance->name = $name;
-            $attendance_activities = AttendanceActivity::with('attendanceForm:id,name,details')->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
+            $attendance_activities = AttendanceActivity::with(['attendanceForm:id,name,details', 'chargeCode'])->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
             $attendance_task_activities = AttendanceTaskActivity::with(['task', 'taskExport'])->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
             $attendance_activities_count = count($attendance_activities);
             $attendance_task_activities_count = count($attendance_task_activities);
@@ -1089,6 +1093,7 @@ class AttendanceService{
             $lat = $request->get('lat');
             $long = $request->get('long');
             $company_id = $request->get('company_id') ?? auth()->user()->company_id;
+            $attendance_code_id = $request->get('attendance_code_id');
             if(!$request->hasFile('evidence')) return ["success" => false, "message" => "Evidence belum diisi", "status" => 400];
             if(!$lat) return ["success" => false, "message" => "Lat belum diisi", "status" => 400];
             if(!$long) return ["success" => false, "message" => "Long belum diisi", "status" => 400];
@@ -1105,6 +1110,7 @@ class AttendanceService{
                 $is_late = $this->check_is_late($current_timestamp, $login_id);
                 $user_attendance = new AttendanceUser;
                 $user_attendance->user_id = $login_id;
+                $user_attendance->attendance_code_id = $attendance_code_id;
                 $user_attendance->long_check_in = $long;
                 $user_attendance->lat_check_in = $lat;
                 $user_attendance->check_in = $current_timestamp;
@@ -1157,6 +1163,7 @@ class AttendanceService{
 
         try{
             $login_id = auth()->user()->id;
+            $attendance_code_id = $request->get('attendance_code_id');
             $lat = $request->get('lat');
             $long = $request->get('long');
             $company_id = $request->get('company_id') ?? auth()->user()->company_id;
@@ -1197,6 +1204,7 @@ class AttendanceService{
                 $is_late = $this->check_is_late($current_timestamp, $login_id);
                 $user_attendance = new AttendanceUser;
                 $user_attendance->user_id = $login_id;
+                $user_attendance->attendance_code_id = $attendance_code_id;
                 $user_attendance->long_check_in = $long;
                 $user_attendance->lat_check_in = $lat;
                 $user_attendance->check_in = $current_timestamp;

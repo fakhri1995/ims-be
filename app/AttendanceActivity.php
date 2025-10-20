@@ -19,6 +19,11 @@ class AttendanceActivity extends Model
         return $this->belongsTo(AttendanceForm::class);
     }
 
+    public function chargeCode()
+    {
+        return $this->belongsTo(ChargeCode::class);
+    }
+
     public function attendanceProject()
     {
         return $this->belongsTo(AttendanceProject::class);
