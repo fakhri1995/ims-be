@@ -4,7 +4,7 @@ A robust and lightweight API backend built with the Lumen Framework, designed fo
 
 ## 📦 Requirements
 
-- **PHP** >= 7.3
+- **PHP** = 7.4.33
 - **Composer** – Dependency management
 - **Database** – MySQL, PostgreSQL, SQLite, or SQL Server
 - **Postman** (optional) – For API testing and documentation
@@ -39,7 +39,7 @@ Edit the `.env` file with your credentials and endpoints:
 ```dotenv
 APP_ENV=local
 APP_DEBUG=true
-APP_URL=https://my-lumen-app.loca.lt
+APP_URL=http://mig-ims.[your_app_name]
 
 # Passport / OAuth2 (using staging endpoints)
 PASSPORT_CLIENT_ID=2
@@ -107,6 +107,13 @@ php -S localhost:8000 -t public
 ```
 
 Your API will be available at `http://localhost:8000`
+
+### [Optional] To setup Passport Locally
+
+```bash
+php artisan passport:install
+```
+Add the generated key to the `oauth_clients` table, then change the `.env` passport variables
 
 ## 🧪 Testing the API
 
