@@ -14,6 +14,11 @@ class AttendanceUser extends Model
         return $this->belongsTo(User::class)->with('profileImage');
     }
 
+    public function attendanceCode()
+    {
+        return $this->belongsTo(AttendanceCode::class);
+    }
+
     public function evidence()
     {
         return $this->morphMany('App\File', 'fileable');

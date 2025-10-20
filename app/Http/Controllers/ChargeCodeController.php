@@ -115,4 +115,11 @@ class ChargeCodeController extends Controller
         $response = $this->chargecodeService->getAttendanceCode($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    public function getCodesUser(Request $request){
+        $route_name = "CODES_USER_GET";
+
+        $response = $this->chargecodeService->getCodesUser($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 }

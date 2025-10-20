@@ -17,6 +17,7 @@ class CreateAttendanceActivitiesTable extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('attendance_form_id');
+            $table->unsignedBigInteger('charge_code_id');
             // $table->unsignedBigInteger('attendance_project_id');
             // $table->integer('attendance_project_status_id')->nullable();
             $table->jsonb('details');

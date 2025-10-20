@@ -187,7 +187,7 @@
           Jabatan
         </td>
         <td width="20%">
-          {{ $payslip->employee->contract->role->name }}
+          {{ $payslip->employee->contract->role->role }}
         </td>
       </tr>
       <tr class="textCaptionBold">
