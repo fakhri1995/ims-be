@@ -1136,9 +1136,9 @@ class ResumeService
                     $model->delete();
                     DB::commit();
                     return ["success" => true, "message" => "Data Achievement Project Dihapus", "status" => 200];
-                } catch (\Throwable $th) {
+                } catch (Exception $err) {
                     DB::rollBack();
-                    return ["success" => false, "message" => "Gagal Menghapus Project Achievement", "status" => 400];
+                    return ["success" => false, "message" => $err->getMessage(), "status" => 400];
                 }
             } else if ($request->summary_id) {
                 $model = $resume->summaries()->find($request->summary_id);
