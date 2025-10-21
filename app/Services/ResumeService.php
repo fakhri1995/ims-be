@@ -1027,7 +1027,7 @@ class ResumeService
                 try {
                     DB::beginTransaction();
                     if ($model->display_order === 1) {
-                        $rotation = $resume->educations()->where('display_order', '!=', 1)->sortBy('display_order', 'asc')->first();
+                        $rotation = $resume->educations()->where('display_order', '!=', 1)->first();
                         if ($rotation) {
                             $rotation->display_order = 1;
                             $rotation->save();
@@ -1046,7 +1046,7 @@ class ResumeService
                 try {
                     DB::beginTransaction();
                     if ($model->display_order === 1) {
-                        $rotation = $resume->experiences()->where('display_order', '!=', 1)->sortBy('display_order', 'asc')->first();
+                        $rotation = $resume->experiences()->where('display_order', '!=', 1)->first();
                         if ($rotation) {
                             $rotation->display_order = 1;
                             $rotation->save();
@@ -1065,7 +1065,7 @@ class ResumeService
                 try {
                     DB::beginTransaction();
                     if ($model->display_order === 1) {
-                        $rotation = $resume->projects()->where('display_order', '!=', 1)->sortBy('display_order', 'asc')->first();
+                        $rotation = $resume->projects()->where('display_order', '!=', 1)->first();
                         if ($rotation) {
                             $rotation->display_order = 1;
                             $rotation->save();
@@ -1089,7 +1089,7 @@ class ResumeService
                 try {
                     DB::beginTransaction();
                     if ($model->display_order === 1) {
-                        $rotation = $resume->trainings()->where('display_order', '!=', 1)->sortBy('display_order', 'asc')->first();
+                        $rotation = $resume->trainings()->where('display_order', '!=', 1)->first();
                         if ($rotation) {
                             $rotation->display_order = 1;
                             $rotation->save();
@@ -1108,7 +1108,7 @@ class ResumeService
                 try {
                     DB::beginTransaction();
                     if ($model->display_order === 1) {
-                        $rotation = $resume->certificates()->where('display_order', '!=', 1)->sortBy('display_order', 'asc')->first();
+                        $rotation = $resume->certificates()->where('display_order', '!=', 1)->first();
                         if ($rotation) {
                             $rotation->display_order = 1;
                             $rotation->save();
@@ -1127,7 +1127,7 @@ class ResumeService
                 try {
                     DB::beginTransaction();
                     if ($model->display_order === 1) {
-                        $rotation = $resume->achievements()->where('display_order', '!=', 1)->sortBy('display_order', 'asc')->first();
+                        $rotation = $resume->achievements()->where('display_order', '!=', 1)->first();
                         if ($rotation) {
                             $rotation->display_order = 1;
                             $rotation->save();
@@ -1136,9 +1136,9 @@ class ResumeService
                     $model->delete();
                     DB::commit();
                     return ["success" => true, "message" => "Data Achievement Project Dihapus", "status" => 200];
-                } catch (Exception $err) {
+                } catch (\Throwable $th) {
                     DB::rollBack();
-                    return ["success" => false, "message" => $err->getMessage(), "status" => 400];
+                    return ["success" => false, "message" => "Gagal Menghapus Project Achievement", "status" => 400];
                 }
             } else if ($request->summary_id) {
                 $model = $resume->summaries()->find($request->summary_id);
