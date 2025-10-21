@@ -23,6 +23,7 @@ class CreateAttendanceCodesTable extends Migration
             $table->boolean('hari_penggajian');
             $table->boolean('dapat_ditagih');
             $table->boolean('perlu_verifikasi');
+            $table->string('color');
         });
     }
 
