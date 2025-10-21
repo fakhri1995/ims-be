@@ -162,6 +162,9 @@ class ChargeCodeService{
             $charge_codes = (object)$request->charge_codes;
             foreach($charge_codes as $custom){
                 $charge_code_arr = (object)$custom;
+                $name = $charge_code_arr->name;
+                $is_duplicate = ChargeCode::where('company_id', $company_id)->where("name", $name);
+                if($is_duplicate) return ["success" => false, "message" => "Nama Charge Code Sudah Ada", "status" => 400];
                 $charge_code = new ChargeCode();
                 $charge_code->name = $charge_code_arr->name;
                 $charge_code->description = $charge_code_arr->description;
@@ -186,8 +189,11 @@ class ChargeCodeService{
             $attendance_codes = (object)$request->attendance_codes;
             foreach($attendance_codes as $custom){
                 $attendance_code_arr = (object)$custom;
+                $name = $attendance_code_arr->name;
+                $is_duplicate = AttendanceCode::where('company_id', $company_id)->where("name", $name);
+                if($is_duplicate) return ["success" => false, "message" => "Nama Attendance Code Sudah Ada", "status" => 400];
                 $attendance_code = new AttendanceCode();
-                $attendance_code->name = $attendance_code_arr->name;
+                $attendance_code->name = $name;
                 $attendance_code->description = $attendance_code_arr->description;
                 $attendance_code->color = $attendance_code_arr->color;
                 $attendance_code->company_id = $company_id;
@@ -201,8 +207,11 @@ class ChargeCodeService{
             $charge_codes = (object)$request->charge_codes;
             foreach($charge_codes as $custom){
                 $charge_code_arr = (object)$custom;
+                $name = $charge_code_arr->name;
+                $is_duplicate = ChargeCode::where('company_id', $company_id)->where("name", $name);
+                if($is_duplicate) return ["success" => false, "message" => "Nama Charge Code Sudah Ada", "status" => 400];
                 $charge_code = new ChargeCode();
-                $charge_code->name = $charge_code_arr->name;
+                $charge_code->name = $name;
                 $charge_code->description = $charge_code_arr->description;
                 $charge_code->color = $charge_code_arr->color;
                 $charge_code->company_id = $company_id;
@@ -225,8 +234,11 @@ class ChargeCodeService{
             $attendance_codes = (object)$request->attendance_codes;
             foreach($attendance_codes as $custom){
                 $attendance_code_arr = (object)$custom;
+                $name = $attendance_code_arr->name;
+                $is_duplicate = AttendanceCode::where('company_id', $company_id)->where("name", $name);
+                if($is_duplicate) return ["success" => false, "message" => "Nama Attendance Code Sudah Ada", "status" => 400];
                 $attendance_code = new AttendanceCode();
-                $attendance_code->name = $attendance_code_arr->name;
+                $attendance_code->name = $name;
                 $attendance_code->description = $attendance_code_arr->description;
                 $attendance_code->color = $attendance_code_arr->color;
                 $attendance_code->company_id = $company_id;
@@ -247,7 +259,11 @@ class ChargeCodeService{
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
 
-        try{ 
+        try{
+            $name = $request->name;
+            $company_id = $request->company_id;
+            $is_duplicate = AttendanceCode::where('company_id', $company_id)->where("name", $name);
+            if($is_duplicate) return ["success" => false, "message" => "Nama Attendance Code Sudah Ada", "status" => 400];
             $attendance_code = new AttendanceCode();
             $attendance_code->name = $request->name;
             $attendance_code->description = $request->description;
@@ -316,7 +332,11 @@ class ChargeCodeService{
             $id = $request->id;
             $attendance_code = AttendanceCode::find($id);
             if(!$attendance_code) return ["success" => false, "message" => "Attendance Code Tidak Ditemukan", "status" => 404];
-            $attendance_code->name = $request->name;
+            $name = $request->name;
+            $company_id = $attendance_code->company_id;
+            $is_duplicate = ChargeCode::where('company_id', $company_id)->where("name", $name);
+            if($is_duplicate) return ["success" => false, "message" => "Nama Charge Code Sudah Ditemukan", "status" => 400];
+            $attendance_code->name = $name;
             $attendance_code->description = $request->description;
             $attendance_code->color = $request->color;
             $attendance_code->hari_masuk = $request->hari_masuk;
@@ -341,6 +361,9 @@ class ChargeCodeService{
             $name = $request->name;
             $description = $request->description;
             $color = $request->color;
+
+            $is_duplicate = ChargeCode::where('company_id', $company_id)->where("name", $name);
+            if($is_duplicate) return ["success" => false, "message" => "Nama Charge Code Sudah Ditemukan", "status" => 400];
             
             $charge_code = ChargeCode::find($id);
             if(!$charge_code) return ["success" => false, "message" => "Charge Code Tidak Ditemukan", "status" => 404];
