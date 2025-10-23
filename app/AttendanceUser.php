@@ -23,4 +23,9 @@ class AttendanceUser extends Model
     {
         return $this->morphMany('App\File', 'fileable');
     }
+
+    public function verification()
+    {
+        return $this->hasOne(AttendanceVerification::class, 'attendance_user_id');
+    }
 }

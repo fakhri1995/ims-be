@@ -190,7 +190,7 @@ class ChargeCodeService{
             foreach($attendance_codes as $custom){
                 $attendance_code_arr = (object)$custom;
                 $name = $attendance_code_arr->name;
-                $is_duplicate = AttendanceCode::where('company_id', $company_id)->where("name", $name);
+                $is_duplicate = AttendanceCode::where('company_id', $company_id)->whereRaw('LOWER(name) = ?', [strtolower($name)])->exists();
                 if($is_duplicate) return ["success" => false, "message" => "Nama Attendance Code Sudah Ada", "status" => 400];
                 $attendance_code = new AttendanceCode();
                 $attendance_code->name = $name;

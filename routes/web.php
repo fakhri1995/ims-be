@@ -434,7 +434,9 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->put('/updateAttendanceForm', 'AttendanceController@updateAttendanceForm');
     $router->delete('/deleteAttendanceForm', 'AttendanceController@deleteAttendanceForm');
     $router->delete('/removeUserAttendanceForm', 'AttendanceController@removeUserAttendanceForm');
-
+    //Attendance Verification
+    $router->get('/getAttendanceVerifications', 'AttendanceVerificationController@getAttendanceVerifications');
+    
     //Activity Routes
     $router->get('/getAttendanceActivities', 'AttendanceController@getAttendanceActivities');
     $router->get('/getAttendanceActivitiesAdmin', 'AttendanceController@getAttendanceActivitiesAdmin');

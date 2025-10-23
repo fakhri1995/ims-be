@@ -16,6 +16,8 @@ use App\AttendanceProjectType;
 use App\AttendanceProjectStatus;
 use App\AttendanceProjectCategory;
 use App\AttendanceTaskActivity;
+use App\AttendanceCode;
+use App\AttendanceVerification;
 use App\Company;
 use App\EmployeeContract;
 use App\Exports\AttendanceActivitiesExport;
@@ -1041,6 +1043,14 @@ class AttendanceService{
         $add_file_response = $fileService->addFile($id, $file, $table, $description, $folder_detail, true);
     }
 
+     private function addCheckVerification($id, $file, $description)
+    {
+        $fileService = new FileService;
+        $table = 'App\AttendanceVerification';
+        $folder_detail = 'UserAttendanceVerification';
+        $add_file_response = $fileService->addFile($id, $file, $table, $description, $folder_detail, true);
+    }
+
     private function check_is_late($current_timestamp, $login_id)
     {
         $date_time_split = explode(' ', $current_timestamp);
@@ -1094,7 +1104,12 @@ class AttendanceService{
             $long = $request->get('long');
             $company_id = $request->get('company_id') ?? auth()->user()->company_id;
             $attendance_code_id = $request->get('attendance_code_id');
-            if(!$request->hasFile('evidence')) return ["success" => false, "message" => "Evidence belum diisi", "status" => 400];
+            $attendance_code_data = AttendanceCode::where('id', $attendance_code_id)->first();
+            if($attendance_code_data->perlu_verifikasi==0) {
+                if(!$request->hasFile('evidence')) return ["success" => false, "message" => "Evidence belum diisi", "status" => 400];
+            } else {
+                if(!$request->hasFile('support_file')) return ["success" => false, "message" => "Support File belum diisi", "status" => 400];
+            }
             if(!$lat) return ["success" => false, "message" => "Lat belum diisi", "status" => 400];
             if(!$long) return ["success" => false, "message" => "Long belum diisi", "status" => 400];
             $user_attendance = AttendanceUser::where('user_id', $login_id)->orderBy('check_in', 'desc')->first();
@@ -1104,7 +1119,7 @@ class AttendanceService{
             $long_lat = LongLatList::where('longitude', $long)->where('latitude', $lat)->first();
             if(!$long_lat) $long_lat = LongLatList::create(['longitude' => $long, 'latitude' => $lat, 'attempts' => 0]);
 
-            $file = $request->file('evidence');
+            
             $current_timestamp = date('Y-m-d H:i:s');
             if(!$user_attendance || $user_attendance->check_out) {
                 $is_late = $this->check_is_late($current_timestamp, $login_id);
@@ -1138,7 +1153,17 @@ class AttendanceService{
                 $user_attendance->is_late = $is_late;
                 $user_attendance->checked_out_by_system = false;
                 $user_attendance->save();
-                $this->addCheckEvidence($user_attendance->id, $file, "check_in_evidence");
+                if($attendance_code_data->perlu_verifikasi==0) {
+                    $file = $request->file('evidence');
+                    $this->addCheckEvidence($user_attendance->id, $file, "check_in_evidence");
+                } else {
+                    $attendance_verification = new AttendanceVerification;
+                    $attendance_verification->attendance_user_id=$user_attendance->id;
+                    $attendance_verification->status_verification='Waiting';
+                    $attendance_verification->save();
+                    $file = $request->file('support_file');
+                    $this->addCheckVerification($attendance_verification->id, $file, "file_support_attendance");
+                }
                 return ["success" => true, "message" => "Berhasil Check In", "status" => 200];
             } else {
                 $today_attendance_activities = AttendanceActivity::where('user_id', $login_id)->whereDate('updated_at', '=', date("Y-m-d"))->get();
