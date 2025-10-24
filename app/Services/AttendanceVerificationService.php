@@ -50,23 +50,24 @@ class AttendanceVerificationService{
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
             $attendance_verifications = AttendanceVerification::with(['supporting_file:link,description,fileable_id,fileable_type','attendanceUser.user', 'attendanceUser.attendanceCode.company',])->select('attendance_verifications.*')->join('attendance_users', 'attendance_users.id', '=', 'attendance_verifications.attendance_user_id')
-    ->join('users', 'users.id', '=', 'attendance_users.user_id')->where('status_verification','Waiting');
-
+    ->join('users', 'users.id', '=', 'attendance_users.user_id')
+    ->join('companies', 'companies.id', '=', 'attendance_codes.company_id')
+    ->where('status_verification','Waiting');
             $params = "?rows=$rows";
             if($keyword) $params = "$params&keyword=$keyword";
-            // if($sort_by) $params = "$params&sort_by=$sort_by";
-            // if($sort_type) $params = "$params&sort_type=$sort_type";
+            if($sort_by) $params = "$params&sort_by=$sort_by";
+            if($sort_type) $params = "$params&sort_type=$sort_type";
 
             if($keyword) $attendance_verifications = $attendance_verifications->where('users.name', 'like', "%".$keyword."%");
-            // if($sort_by){
-            //     if($sort_type === null) $sort_type = 'desc';
-            //     if($sort_by === 'name') $attendance_forms = $attendance_forms->orderBy('name', $sort_type);
-            //     else if($sort_by === 'description') $attendance_forms = $attendance_forms->orderBy('description', $sort_type);
-            //     else if($sort_by === 'updated_at') $attendance_forms = $attendance_forms->orderBy('updated_at', $sort_type);
-            //     else if($sort_by === 'count') $attendance_forms = $attendance_forms->orderBy('users_count', $sort_type);
-            // } else {
-            //     $attendance_forms = $attendance_forms->orderBy('users_count', 'desc');
-            // }
+            if($sort_by){
+                if($sort_type === null) $sort_type = 'desc';
+                if($sort_by === 'name') $attendance_verifications = $attendance_verifications->orderBy('users.name', $sort_type);
+                else if($sort_by === 'company') $attendance_verifications = $attendance_verifications->orderBy('companies.name', $sort_type);
+                else if($sort_by === 'created_at') $attendance_verifications = $attendance_verifications->orderBy('created_at', $sort_type);
+                // else if($sort_by === 'count') $attendance_forms = $attendance_forms->orderBy('users_count', $sort_type);
+            } else {
+                // $attendance_forms = $attendance_forms->orderBy('users_count', 'desc');
+            }
 
             $attendance_verifications = $attendance_verifications->paginate($rows);
             $attendance_verifications->withPath(env('APP_URL').'/getAttendanceVerifications'.$params);
@@ -88,23 +89,23 @@ class AttendanceVerificationService{
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
             $attendance_verifications = AttendanceVerification::with(['supporting_file:link,description,fileable_id,fileable_type','attendanceUser.user', 'attendanceUser.attendanceCode.company',])->select('attendance_verifications.*')->join('attendance_users', 'attendance_users.id', '=', 'attendance_verifications.attendance_user_id')
-    ->join('users', 'users.id', '=', 'attendance_users.user_id')->where('status_verification', '!=','Waiting');
+    ->join('users', 'users.id', '=', 'attendance_users.user_id')
+     ->join('companies', 'companies.id', '=', 'attendance_codes.company_id')
+    ->where('status_verification', '!=','Waiting');
 
             $params = "?rows=$rows";
             if($keyword) $params = "$params&keyword=$keyword";
-            // if($sort_by) $params = "$params&sort_by=$sort_by";
-            // if($sort_type) $params = "$params&sort_type=$sort_type";
+            if($sort_by) $params = "$params&sort_by=$sort_by";
+            if($sort_type) $params = "$params&sort_type=$sort_type";
 
             if($keyword) $attendance_verifications = $attendance_verifications->where('users.name', 'like', "%".$keyword."%");
-            // if($sort_by){
-            //     if($sort_type === null) $sort_type = 'desc';
-            //     if($sort_by === 'name') $attendance_forms = $attendance_forms->orderBy('name', $sort_type);
-            //     else if($sort_by === 'description') $attendance_forms = $attendance_forms->orderBy('description', $sort_type);
-            //     else if($sort_by === 'updated_at') $attendance_forms = $attendance_forms->orderBy('updated_at', $sort_type);
-            //     else if($sort_by === 'count') $attendance_forms = $attendance_forms->orderBy('users_count', $sort_type);
-            // } else {
-            //     $attendance_forms = $attendance_forms->orderBy('users_count', 'desc');
-            // }
+            if($sort_by){
+                if($sort_type === null) $sort_type = 'desc';
+                if($sort_by === 'name') $attendance_verifications = $attendance_verifications->orderBy('users.name', $sort_type);
+                else if($sort_by === 'company') $attendance_verifications = $attendance_verifications->orderBy('companies.name', $sort_type);
+                else if($sort_by === 'created_at') $attendance_verifications = $attendance_verifications->orderBy('created_at', $sort_type);
+                // $attendance_forms = $attendance_forms->orderBy('users_count', 'desc');
+            }
 
             $attendance_verifications = $attendance_verifications->paginate($rows);
             $attendance_verifications->withPath(env('APP_URL').'/getAttendanceVerifications'.$params);
