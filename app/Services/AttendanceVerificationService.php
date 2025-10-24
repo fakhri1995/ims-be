@@ -49,9 +49,12 @@ class AttendanceVerificationService{
 
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
-            $attendance_verifications = AttendanceVerification::with(['supporting_file:link,description,fileable_id,fileable_type','attendanceUser.user', 'attendanceUser.attendanceCode.company',])->select('attendance_verifications.*')->join('attendance_users', 'attendance_users.id', '=', 'attendance_verifications.attendance_user_id')
+            $attendance_verifications = AttendanceVerification::with(['supporting_file:link,description,fileable_id,fileable_type','attendanceUser.user', 'attendanceUser.attendanceCode.company',])->select('attendance_verifications.*')
+            ->join('attendance_users', 'attendance_users.id', '=', 'attendance_verifications.attendance_user_id')
+    ->join('attendance_codes', 'attendance_codes.id', '=', 'attendance_users.attendance_code_id')
+    ->join('companies', 'companies.id', '=', 'attendance_codes.company_id')        
     ->join('users', 'users.id', '=', 'attendance_users.user_id')
-    ->join('companies', 'companies.id', '=', 'attendance_codes.company_id')
+    
     ->where('status_verification','Waiting');
             $params = "?rows=$rows";
             if($keyword) $params = "$params&keyword=$keyword";
@@ -88,9 +91,11 @@ class AttendanceVerificationService{
 
             if($rows > 100) $rows = 100;
             if($rows < 1) $rows = 10;
-            $attendance_verifications = AttendanceVerification::with(['supporting_file:link,description,fileable_id,fileable_type','attendanceUser.user', 'attendanceUser.attendanceCode.company',])->select('attendance_verifications.*')->join('attendance_users', 'attendance_users.id', '=', 'attendance_verifications.attendance_user_id')
+             $attendance_verifications = AttendanceVerification::with(['supporting_file:link,description,fileable_id,fileable_type','attendanceUser.user', 'attendanceUser.attendanceCode.company',])->select('attendance_verifications.*')
+            ->join('attendance_users', 'attendance_users.id', '=', 'attendance_verifications.attendance_user_id')
+    ->join('attendance_codes', 'attendance_codes.id', '=', 'attendance_users.attendance_code_id')
+    ->join('companies', 'companies.id', '=', 'attendance_codes.company_id')        
     ->join('users', 'users.id', '=', 'attendance_users.user_id')
-     ->join('companies', 'companies.id', '=', 'attendance_codes.company_id')
     ->where('status_verification', '!=','Waiting');
 
             $params = "?rows=$rows";
