@@ -262,7 +262,7 @@ class ChargeCodeService{
         try{
             $name = $request->name;
             $company_id = $request->company_id;
-            $is_duplicate = AttendanceCode::where('company_id', $company_id)->where("name", $name);
+            $is_duplicate = AttendanceCode::where('company_id', $company_id)->whereRaw('LOWER(name) = ?', [strtolower($name)])->exists();
             if($is_duplicate) return ["success" => false, "message" => "Nama Attendance Code Sudah Ada", "status" => 400];
             $attendance_code = new AttendanceCode();
             $attendance_code->name = $request->name;
@@ -334,7 +334,8 @@ class ChargeCodeService{
             if(!$attendance_code) return ["success" => false, "message" => "Attendance Code Tidak Ditemukan", "status" => 404];
             $name = $request->name;
             $company_id = $attendance_code->company_id;
-            $is_duplicate = ChargeCode::where('company_id', $company_id)->where("name", $name);
+            $is_duplicate = AttendanceCode::where('company_id', $company_id)->whereRaw('LOWER(name) = ?', [strtolower($name)])->where('id', '!=', $id)->exists();
+            // $is_duplicate = ChargeCode::where('company_id', $company_id)->where("name", $name);
             if($is_duplicate) return ["success" => false, "message" => "Nama Charge Code Sudah Ditemukan", "status" => 400];
             $attendance_code->name = $name;
             $attendance_code->description = $request->description;
