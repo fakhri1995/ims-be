@@ -499,6 +499,15 @@ class AttendanceController extends Controller
         return response()->json($response, $response['status']);
     }
 
+    public function getAttendanceStatusVerifications(Request $request)
+    {
+        $route_name = "ATTENDANCE_STATUS_VERIFICATION";
+
+        $response = $this->attendanceService->getAttendanceStatusVerifications($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    
+
     public function exportAttendanceRecap(Request $request)
     {
         $route_name = "ATTENDANCE_EXPORT_GET";

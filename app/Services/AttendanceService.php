@@ -1983,6 +1983,37 @@ class AttendanceService{
         }
     }
 
+    public function getAttendanceStatusVerifications($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        try{
+            $attendance_verifications = AttendanceVerification::with([
+        'attendanceUser.user',
+        'attendanceUser.attendanceCode.company',
+    ])
+    ->select([
+        'attendance_verifications.status_verification',
+        'attendance_codes.name as attendance_code_name',
+        'attendance_codes.color as attendance_code_color'
+    ])
+    ->join('attendance_users', 'attendance_users.id', '=', 'attendance_verifications.attendance_user_id')
+    ->join('attendance_codes', 'attendance_codes.id', '=', 'attendance_users.attendance_code_id')
+    ->join('companies', 'companies.id', '=', 'attendance_codes.company_id')
+    ->join('users', 'users.id', '=', 'attendance_users.user_id')
+    // ->where('status_verification', '!=', 'Waiting')
+    ->where('users.id', auth()->id()) // filter user login
+    ->whereDate('attendance_verifications.created_at', Carbon::today()) // ✅ hanya hari ini
+    ->first();
+    if (!$attendance_verifications) {
+    return ["success" => true, "message" => "Data Tidak Ditemukan", "status" => 200];
+} else 
+            return ["success" => true, "message" => "Berhasil Mengambil Data Status Attendance Verification", "data" => $attendance_verifications, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
     private function recapExport($data_array)
     {
         try{
