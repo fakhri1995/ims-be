@@ -434,12 +434,15 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->put('/updateAttendanceForm', 'AttendanceController@updateAttendanceForm');
     $router->delete('/deleteAttendanceForm', 'AttendanceController@deleteAttendanceForm');
     $router->delete('/removeUserAttendanceForm', 'AttendanceController@removeUserAttendanceForm');
+    
+        
     //Attendance Verification
     $router->get('/getAttendanceVerifications', 'AttendanceVerificationController@getAttendanceVerifications');
     $router->get('/getAttendanceHistoryVerifications', 'AttendanceVerificationController@getAttendanceHistoryVerifications');
     $router->put('/approveAttendanceVerification', 'AttendanceVerificationController@approveAttendanceVerification');
     $router->put('/rejectAttendanceVerification', 'AttendanceVerificationController@rejectAttendanceVerification');
     //Activity Routes
+    $router->get('/getAttendanceStatusVerifications', 'AttendanceController@getAttendanceStatusVerifications');
     $router->get('/getAttendanceActivities', 'AttendanceController@getAttendanceActivities');
     $router->get('/getAttendanceActivitiesAdmin', 'AttendanceController@getAttendanceActivitiesAdmin');
     // $router->get('/getAttendanceActivity', 'AttendanceController@getAttendanceActivity');
