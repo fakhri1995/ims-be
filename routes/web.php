@@ -441,6 +441,8 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->get('/getAttendanceHistoryVerifications', 'AttendanceVerificationController@getAttendanceHistoryVerifications');
     $router->put('/approveAttendanceVerification', 'AttendanceVerificationController@approveAttendanceVerification');
     $router->put('/rejectAttendanceVerification', 'AttendanceVerificationController@rejectAttendanceVerification');
+    $router->put('/updateVerificationAttendance', 'AttendanceVerificationController@updateVerificationAttendance');
+    
     //Activity Routes
     $router->get('/getAttendanceStatusVerifications', 'AttendanceController@getAttendanceStatusVerifications');
     $router->get('/getAttendanceActivities', 'AttendanceController@getAttendanceActivities');

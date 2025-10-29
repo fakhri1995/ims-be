@@ -157,5 +157,26 @@ class AttendanceVerificationService{
             return ["success" => false, "message" => $err->getLine(), "status" => 400];
         }
     }
+
+    public function updateVerificationAttendance($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $attendance_verification = AttendanceVerification::find($id);
+        if($attendance_verification === null) return ["success" => false, "message" => "Attendance Verification Tidak Ditemukan", "status" => 400];
+        if ($attendance_verification) {
+            $attendance_verification->status_verification =  $request->status_verification;
+            $attendance_verification->save();
+        }
+        
+        try{
+            return ["success" => true, "message" => "Attendance Verification berhasil diupdate", "status" => 200];
+        }catch(Exception $err){
+            return ["success" => false, "message" => $err->getLine(), "status" => 400];
+        }
+    }
+
+    
     
 }
