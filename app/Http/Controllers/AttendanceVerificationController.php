@@ -50,5 +50,14 @@ class AttendanceVerificationController extends Controller
         $response = $this->attendanceVerification->rejectAttendanceVerification($request, $route_name);
         return response()->json($response, $response['status']);
     }
+    public function updateVerificationAttendance(Request $request)
+    {
+        $route_name = "ATTENDANCE_VERIFICATION_UPDATE";
+
+        $response = $this->attendanceVerification->updateVerificationAttendance($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+        
+
 }
    
