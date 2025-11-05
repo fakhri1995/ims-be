@@ -498,7 +498,7 @@ class UserService
         $check_email_user = User::where('email', $email)->first();
         if($check_email_user) return ["success" => false, "message" => "Email Telah Digunakan", "status" => 400];
         if($password !== $request->confirm_password) return ["success" => false, "message" => "Password Tidak Sama", "status" => 400];
-
+        $role_id=1;
         try{
             $user = new User;
             $user->name = $request->fullname;
