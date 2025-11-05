@@ -542,7 +542,7 @@ $employee->save();
                 }
             } return ["success" => true, "message" => "Akun berhasil ditambah dan connect", "id" => $user->id, "status" => 200];
         } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
+            return ["success" => false, "message" => $err->getMessage(), "status" => 400];
         }
     }
 }
