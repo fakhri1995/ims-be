@@ -407,4 +407,13 @@ class EmployeeController extends Controller
         $response = $this->employeeService->deleteEmployeeLeaveQuota($request, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    public function connectAgent(Request $request)
+    {
+        $route_name = "AGENT_CONNECT";
+
+        $response = $this->employeeService->connectAgent($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
+    
 }

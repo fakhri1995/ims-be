@@ -92,6 +92,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     //Agent Routes
     $router->get('/getAgentDetail', 'UserController@getAgentDetail');
     $router->get('/getAgentList', 'UserController@getAgentList');
+    $router->get('/getAgentEmployeeList', 'UserController@getAgentEmployeeList');
     $router->post('/addAgentMember', 'UserController@addAgentMember');
     $router->post('/updateAgentDetail', 'UserController@updateAgentDetail');
     $router->put('/changeAgentPassword', 'UserController@changeAgentPassword');
@@ -717,6 +718,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->post('/addEmployee', 'EmployeeController@addEmployee');
     $router->post('/addEmployeeFromUser', 'EmployeeController@addEmployeeFromUser');
     $router->post('/updateEmployee', 'EmployeeController@updateEmployee');
+    $router->post('/connectAgent', 'EmployeeController@connectAgent');
     $router->delete('/deleteEmployee', 'EmployeeController@deleteEmployee');
     $router->get('/getEmployeePlacementsCount', 'EmployeeController@getEmployeePlacementsCount');
     $router->get('/getEmployeeRolesCount', 'EmployeeController@getEmployeeRolesCount');

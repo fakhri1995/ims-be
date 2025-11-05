@@ -478,4 +478,14 @@ class UserService
         return $this->deleteUser($id, $this->guest_role_id);
     }
 
+   public function getAgentEmployeeList($request, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+         $agents = User::where('role', 1)->doesntHave('employee')->get();
+          if (!$agents) {
+    return ["success" => true, "message" => "Data Tidak Ditemukan", "status" => 200];
+} else {
+            return ["success" => true, "message" => "Berhasil Mengambil Data", "data" => $agents, "status" => 200];
+        }
+    }
 }
