@@ -94,6 +94,7 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->get('/getAgentList', 'UserController@getAgentList');
     $router->get('/getAgentEmployeeList', 'UserController@getAgentEmployeeList');
     $router->post('/addAgentMember', 'UserController@addAgentMember');
+     $router->post('/addConnectAgent', 'UserController@addConnectAgent');
     $router->post('/updateAgentDetail', 'UserController@updateAgentDetail');
     $router->put('/changeAgentPassword', 'UserController@changeAgentPassword');
     $router->put('/agentActivation', 'UserController@agentActivation');

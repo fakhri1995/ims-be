@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Company;
 use App\User;
+use App\Employee;
 use Exception;
 use App\Services\FileService;
 use App\Services\LoginService;
@@ -486,6 +487,62 @@ class UserService
     return ["success" => true, "message" => "Data Tidak Ditemukan", "status" => 200];
 } else {
             return ["success" => true, "message" => "Berhasil Mengambil Data", "data" => $agents, "status" => 200];
+        }
+    }
+
+    public function addConnectAgent($data, $route_name){
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+         $email = $request->email;
+        $password = $request->password;
+        $check_email_user = User::where('email', $email)->first();
+        if($check_email_user) return ["success" => false, "message" => "Email Telah Digunakan", "status" => 400];
+        if($password !== $request->confirm_password) return ["success" => false, "message" => "Password Tidak Sama", "status" => 400];
+
+        try{
+            $user = new User;
+            $user->name = $request->fullname;
+            $user->nip = $request->nip;
+            $user->company_id = $request->company_id;
+            $user->email = $email;
+            $user->password = Hash::make($password);
+            $user->role = $role_id;
+            $user->phone_number = $request->phone_number;
+            $user->position = $request->position;
+            $user->is_enabled = true;
+            $user->created_time = date("Y-m-d H:i:s");
+            // dd($user);
+
+            $user->save();
+
+            $roles_ids = is_array($request->role_ids) ? $request->role_ids : json_decode($request->role_ids) ?? [] ;
+            $data_request = [
+                "id" => $user->id,
+                "role_ids" => $roles_ids
+            ];
+            $set_role = $this->updateRoleUser($data_request, $role_id);
+            $attendance_form_ids = $request->attendance_form_ids ?? [];
+            $user->attendanceForms()->attach($attendance_form_ids);
+           $employee_id = $request->employee_id;
+        $employee = Employee::find($employee_id);
+        $user_id = $user->id;
+        $employee->user_id = $user_id;
+$employee->save();
+            $loginService = new LoginService;
+            $token = $loginService->generate_token($email, $password);
+            if(!isset($token['error'])){
+                $email_data = [
+                    'url' => env('APP_URL_WEB'),
+                    'username' => $user->name,
+                    'token' => $token['access_token'],
+                    'subject' => 'Ubah Password Akun MIG'
+                ];
+                if($role_id != $this->guest_role_id){
+                    Mail::to($email)->send(new ChangePasswordMail($email_data));
+                }
+            } return ["success" => true, "message" => "Akun berhasil ditambah dan connect", "id" => $user->id, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
         }
     }
 }

@@ -315,6 +315,13 @@ class UserController extends Controller
         $response = $this->userService->getAgentEmployeeList($id, $route_name);
         return response()->json($response, $response['status']);
     }
+     public function addConnectAgent(Request $request)
+    {
+        $route_name = "AGENT_CONNECT_ADD";
+        
+        $response = $this->userService->addConnectAgent($request, $route_name);
+        return response()->json($response, $response['status']);
+    }
 
     
 }
