@@ -306,4 +306,15 @@ class UserController extends Controller
         $response = $this->userService->deleteGuest($id, $route_name);
         return response()->json($response, $response['status']);
     }
+
+    public function getAgentEmployeeList(Request $request)
+    {
+        $route_name = "AGENT_EMPLOYEE_GET";
+        
+        $id = $request->get('id', null);
+        $response = $this->userService->getAgentEmployeeList($id, $route_name);
+        return response()->json($response, $response['status']);
+    }
+
+    
 }

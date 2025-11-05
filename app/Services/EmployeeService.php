@@ -2056,5 +2056,23 @@ class EmployeeService{
         return $this->raiseLastPeriodPayslipFunction();
     }
 
+    public function connectAgent(Request $request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        
+        $id = $request->id;
+        $employee = Employee::find($id);
+        if(!$employee) return ["success" => false, "message" => "Data Tidak Ditemukan", "status" => 400];
+        $user_id = $request->user_id;
+        try{
+        $employee->user_id = $user_id;
+        $employee->save();
+        return ["success" => true, "message" => "Data Berhasil Diupdate", "data" => $employee, "status" => 200];
+                }catch(Exception $err){
+                    return ["success" => false, "message" => $err, "status" => 400];
+                }
+            }
+
     
 }
