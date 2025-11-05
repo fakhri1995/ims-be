@@ -490,7 +490,7 @@ class UserService
         }
     }
 
-    public function addConnectAgent($data, $route_name){
+    public function addConnectAgent($request, $route_name){
         $access = $this->globalService->checkRoute($route_name);
         if($access["success"] === false) return $access;
          $email = $request->email;
