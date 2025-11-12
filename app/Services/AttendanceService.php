@@ -281,26 +281,26 @@ class AttendanceService{
     }
 
     // Attendance Activity
-    public function getAttendanceActivities($request, $route_name)
-    {
-        $access = $this->globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
-        try{
-            $last_two_month = date("Y-m-d", strtotime("-2 months"));
-            $today = date('Y-m-d');
-            $login_id = auth()->user()->id;
-            $today_attendance_activities = AttendanceActivity::with(['chargeCode'])->where('user_id', $login_id)->whereDate('updated_at', '=', $today)->get();
-            $last_two_month_attendance_activities = AttendanceActivity::with(['chargeCode'])->where('user_id', $login_id)->whereDate('updated_at', '>', $last_two_month)->whereDate('updated_at', '<>', $today)->get();
-            $data = (object)[
-                "today_activities" => $today_attendance_activities,
-                "last_two_month_activities" => $last_two_month_attendance_activities
-            ];
-            return ["success" => true, "message" => "Attendance Activities Berhasil Diambil", "data" => $data, "status" => 200];
+    // public function getAttendanceActivities($request, $route_name)
+    // {
+    //     $access = $this->globalService->checkRoute($route_name);
+    //     if($access["success"] === false) return $access;
+    //     try{
+    //         $last_two_month = date("Y-m-d", strtotime("-2 months"));
+    //         $today = date('Y-m-d');
+    //         $login_id = auth()->user()->id;
+    //         $today_attendance_activities = AttendanceActivity::with(['chargeCode'])->where('user_id', $login_id)->whereDate('updated_at', '=', $today)->get();
+    //         $last_two_month_attendance_activities = AttendanceActivity::with(['chargeCode'])->where('user_id', $login_id)->whereDate('updated_at', '>', $last_two_month)->whereDate('updated_at', '<>', $today)->get();
+    //         $data = (object)[
+    //             "today_activities" => $today_attendance_activities,
+    //             "last_two_month_activities" => $last_two_month_attendance_activities
+    //         ];
+    //         return ["success" => true, "message" => "Attendance Activities Berhasil Diambil", "data" => $data, "status" => 200];
 
-        } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
-    }
+    //     } catch(Exception $err){
+    //         return ["success" => false, "message" => $err, "status" => 400];
+    //     }
+    // }
 
     public function getAttendanceActivitiesAdmin($request, $route_name)
     {
@@ -341,166 +341,166 @@ class AttendanceService{
         return $add_file_response;
     }
 
-    public function addAttendanceActivity($request, $route_name)
-    {
-        $access = $this->globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+    // public function addAttendanceActivity($request, $route_name)
+    // {
+    //     $access = $this->globalService->checkRoute($route_name);
+    //     if($access["success"] === false) return $access;
 
-        $login_id = auth()->user()->id;
-        $charge_code_id = $request->get('charge_code_id') ?? 0;
-        $attendance_form_id = $request->get('attendance_form_id');
-        $attendance_form = AttendanceForm::find($attendance_form_id);
-        if($attendance_form === null) return ["success" => false, "message" => "Id Form Tidak Ditemukan", "status" => 400];
-        $last_check_in = AttendanceUser::where('user_id', $login_id)->orderBy('check_in', 'desc')->first();
-        if($last_check_in->check_out) return ["success" => false, "message" => "Silahkan Lakukan Check In Terlebih Dahulu", "status" => 400];
-        $activity_details = $request->get('details', []);
-        ksort($activity_details);
-        $fileArray = []; // index => [ "key" : value, "value" : value ]
-        $arr_details = array_column($attendance_form->details, 'key');
-        foreach($attendance_form->details as $form_detail){
-            $search = array_search($form_detail['key'], array_column($activity_details, 'key'));
-            if($search === false) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum diisi" , "status" => 400];
-            if($form_detail['type'] === 6){
-                $file = $request->file("details.$search.value",NULL);
-                $isFile = is_file($file);
-                if($form_detail['required'] && !$isFile) return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe file" , "status" => 400];
-                else if($isFile) {
-                    $activity_details[$search]['value'] = true;
-                }
-                else $activity_details[$search]['value'] = NULL;
+    //     $login_id = auth()->user()->id;
+    //     $charge_code_id = $request->get('charge_code_id') ?? 0;
+    //     $attendance_form_id = $request->get('attendance_form_id');
+    //     $attendance_form = AttendanceForm::find($attendance_form_id);
+    //     if($attendance_form === null) return ["success" => false, "message" => "Id Form Tidak Ditemukan", "status" => 400];
+    //     $last_check_in = AttendanceUser::where('user_id', $login_id)->orderBy('check_in', 'desc')->first();
+    //     if($last_check_in->check_out) return ["success" => false, "message" => "Silahkan Lakukan Check In Terlebih Dahulu", "status" => 400];
+    //     $activity_details = $request->get('details', []);
+    //     ksort($activity_details);
+    //     $fileArray = []; // index => [ "key" : value, "value" : value ]
+    //     $arr_details = array_column($attendance_form->details, 'key');
+    //     foreach($attendance_form->details as $form_detail){
+    //         $search = array_search($form_detail['key'], array_column($activity_details, 'key'));
+    //         if($search === false) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum diisi" , "status" => 400];
+    //         if($form_detail['type'] === 6){
+    //             $file = $request->file("details.$search.value",NULL);
+    //             $isFile = is_file($file);
+    //             if($form_detail['required'] && !$isFile) return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe file" , "status" => 400];
+    //             else if($isFile) {
+    //                 $activity_details[$search]['value'] = true;
+    //             }
+    //             else $activity_details[$search]['value'] = NULL;
 
-                $fileArray[$search] = [
-                    "key" => $form_detail['key'],
-                    "file" => $file
-                ];
-            }
-            // if(!isset($activity_details[$search]['value']) || ($form_detail['required'] && $activity_details[$search]['value'] === "")) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
-            if(!isset($activity_details[$search]['value']) && $form_detail['required']) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
-            if($form_detail['type'] === 3){
-                if(gettype($activity_details[$search]['value']) !== "array") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe array", "status" => 400];
-            } else if($form_detail['type'] !== 6) {
-                if(gettype($activity_details[$search]['value']) !== "string") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe string", "status" => 400];
-            }
-        }
+    //             $fileArray[$search] = [
+    //                 "key" => $form_detail['key'],
+    //                 "file" => $file
+    //             ];
+    //         }
+    //         // if(!isset($activity_details[$search]['value']) || ($form_detail['required'] && $activity_details[$search]['value'] === "")) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
+    //         if(!isset($activity_details[$search]['value']) && $form_detail['required']) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
+    //         if($form_detail['type'] === 3){
+    //             if(gettype($activity_details[$search]['value']) !== "array") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe array", "status" => 400];
+    //         } else if($form_detail['type'] !== 6) {
+    //             if(gettype($activity_details[$search]['value']) !== "string") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe string", "status" => 400];
+    //         }
+    //     }
 
-        $details = array();
-        foreach($activity_details as $activity_detail){
-            $search = array_search($activity_detail['key'], $arr_details);
-            if($search !== false){
-                $details[] = $activity_detail;
-            }
-        }
-        $attendance_activity = new AttendanceActivity;
-        $attendance_activity->user_id = auth()->user()->id;
-        $attendance_activity->attendance_form_id = $attendance_form_id;
-        $attendance_activity->charge_code_id = $charge_code_id;
-        // $attendance_activity->attendance_project_id = $request->get('attendance_project_id');
-        // $attendance_activity->attendance_project_status_id = $request->get('attendance_project_status_id');
-        $attendance_activity->updated_at = date('Y-m-d H:i:s');
-        $attendance_activity->details = $details;
+    //     $details = array();
+    //     foreach($activity_details as $activity_detail){
+    //         $search = array_search($activity_detail['key'], $arr_details);
+    //         if($search !== false){
+    //             $details[] = $activity_detail;
+    //         }
+    //     }
+    //     $attendance_activity = new AttendanceActivity;
+    //     $attendance_activity->user_id = auth()->user()->id;
+    //     $attendance_activity->attendance_form_id = $attendance_form_id;
+    //     $attendance_activity->charge_code_id = $charge_code_id;
+    //     // $attendance_activity->attendance_project_id = $request->get('attendance_project_id');
+    //     // $attendance_activity->attendance_project_status_id = $request->get('attendance_project_status_id');
+    //     $attendance_activity->updated_at = date('Y-m-d H:i:s');
+    //     $attendance_activity->details = $details;
 
-        try{
-            $attendance_activity->save();
+    //     try{
+    //         $attendance_activity->save();
 
-            $attendance_id = $attendance_activity->id;
-            foreach($fileArray as $index => $value){
-                if(!$activity_details[$index]['value']) continue;
-                $uploadFile = $this->addAttendanceActivityFile($attendance_id, $value['file'], $value['key']);
-                if($uploadFile['success']) $activity_details[$index]['value'] = $uploadFile['new_data']->link;
-            }
-            $attendance_activity->details = $details;
-            $attendance_activity->save();
+    //         $attendance_id = $attendance_activity->id;
+    //         foreach($fileArray as $index => $value){
+    //             if(!$activity_details[$index]['value']) continue;
+    //             $uploadFile = $this->addAttendanceActivityFile($attendance_id, $value['file'], $value['key']);
+    //             if($uploadFile['success']) $activity_details[$index]['value'] = $uploadFile['new_data']->link;
+    //         }
+    //         $attendance_activity->details = $details;
+    //         $attendance_activity->save();
 
-            return ["success" => true, "message" => "Attendance Activity Berhasil Dibuat", "id" => $attendance_activity->id, "status" => 200];
-        } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
-    }
+    //         return ["success" => true, "message" => "Attendance Activity Berhasil Dibuat", "id" => $attendance_activity->id, "status" => 200];
+    //     } catch(Exception $err){
+    //         return ["success" => false, "message" => $err, "status" => 400];
+    //     }
+    // }
 
-    public function updateAttendanceActivity($request, $route_name)
-    {
-        $access = $this->globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+    // public function updateAttendanceActivity($request, $route_name)
+    // {
+    //     $access = $this->globalService->checkRoute($route_name);
+    //     if($access["success"] === false) return $access;
 
-        $id = $request->get('id');
-        $charge_code_id = $request->get('charge_code_id');
-        $attendance_activity = AttendanceActivity::find($id);
-        if($attendance_activity === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
-        if($attendance_activity->user_id !== auth()->user()->id) return ["success" => false, "message" => "Aktivitas bukan milik user login", "status" => 400];
-        if(date('Y-m-d', strtotime($attendance_activity->updated_at)) !== date('Y-m-d')) return ["success" => false, "message" => "Aktivitas selain hari ini tidak dapat dihapus", "status" => 400];
-        $attendance_form = AttendanceForm::find($attendance_activity->attendance_form_id);
-        if($attendance_form === null) return ["success" => false, "message" => "Id Form Tidak Ditemukan", "status" => 400];
-        $activity_details = $request->get('details', []);
-        ksort($activity_details);
-        $fileArray = []; // index => [ "key" : value, "value" : value ]
-        $old_activity_details = $attendance_activity->details;
-        foreach($attendance_form->details as $form_detail){
-            $search = array_search($form_detail['key'], array_column($activity_details, 'key'));
-            if($search === false) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum diisi" , "status" => 400];
-            if($form_detail['type'] === 6){
-                $file = $request->file("details.$search.value",NULL);
-                $isFile = is_file($file);
-                $search_old = array_search($form_detail['key'], array_column($old_activity_details, 'key'));
-                // if($form_detail['required'] && !$isFile && $old_activity_details[$search_old]['value'] == NULL) return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe file" , "status" => 400];
-                // else if($isFile) {
-                //     $activity_details[$search]['value'] = true;
-                // }else {
-                //     if(!isset($activity_details[$search]['value'])) $activity_details[$search]['value'] = NULL;
-                //     else $activity_details[$search]['value'] = $activity_details[$search]['value'] == $old_activity_details[$search_old]['value'] ? $activity_details[$search]['value'] : NULL;
-                // }
-                $activity_details[$search]['value'] = isset($activity_details[$search]['value']) && $activity_details[$search]['value'] ? $activity_details[$search]['value'] : NULL ;
-                $isSameValue = $activity_details[$search]['value'] == $old_activity_details[$search_old]['value'];
-                if($form_detail['required'] && !$isFile && (!$activity_details[$search]['value'] || !$isSameValue)) return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe file" , "status" => 400];
-                else if($isFile) {
-                    $activity_details[$search]['value'] = true;
-                }else {
-                    $activity_details[$search]['value'] = $isSameValue? $activity_details[$search]['value'] : NULL;
-                }
+    //     $id = $request->get('id');
+    //     $charge_code_id = $request->get('charge_code_id');
+    //     $attendance_activity = AttendanceActivity::find($id);
+    //     if($attendance_activity === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+    //     if($attendance_activity->user_id !== auth()->user()->id) return ["success" => false, "message" => "Aktivitas bukan milik user login", "status" => 400];
+    //     if(date('Y-m-d', strtotime($attendance_activity->updated_at)) !== date('Y-m-d')) return ["success" => false, "message" => "Aktivitas selain hari ini tidak dapat dihapus", "status" => 400];
+    //     $attendance_form = AttendanceForm::find($attendance_activity->attendance_form_id);
+    //     if($attendance_form === null) return ["success" => false, "message" => "Id Form Tidak Ditemukan", "status" => 400];
+    //     $activity_details = $request->get('details', []);
+    //     ksort($activity_details);
+    //     $fileArray = []; // index => [ "key" : value, "value" : value ]
+    //     $old_activity_details = $attendance_activity->details;
+    //     foreach($attendance_form->details as $form_detail){
+    //         $search = array_search($form_detail['key'], array_column($activity_details, 'key'));
+    //         if($search === false) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum diisi" , "status" => 400];
+    //         if($form_detail['type'] === 6){
+    //             $file = $request->file("details.$search.value",NULL);
+    //             $isFile = is_file($file);
+    //             $search_old = array_search($form_detail['key'], array_column($old_activity_details, 'key'));
+    //             // if($form_detail['required'] && !$isFile && $old_activity_details[$search_old]['value'] == NULL) return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe file" , "status" => 400];
+    //             // else if($isFile) {
+    //             //     $activity_details[$search]['value'] = true;
+    //             // }else {
+    //             //     if(!isset($activity_details[$search]['value'])) $activity_details[$search]['value'] = NULL;
+    //             //     else $activity_details[$search]['value'] = $activity_details[$search]['value'] == $old_activity_details[$search_old]['value'] ? $activity_details[$search]['value'] : NULL;
+    //             // }
+    //             $activity_details[$search]['value'] = isset($activity_details[$search]['value']) && $activity_details[$search]['value'] ? $activity_details[$search]['value'] : NULL ;
+    //             $isSameValue = $activity_details[$search]['value'] == $old_activity_details[$search_old]['value'];
+    //             if($form_detail['required'] && !$isFile && (!$activity_details[$search]['value'] || !$isSameValue)) return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe file" , "status" => 400];
+    //             else if($isFile) {
+    //                 $activity_details[$search]['value'] = true;
+    //             }else {
+    //                 $activity_details[$search]['value'] = $isSameValue? $activity_details[$search]['value'] : NULL;
+    //             }
 
 
-                $fileArray[$search] = [
-                    "key" => $form_detail['key'],
-                    "file" => $file
-                ];
+    //             $fileArray[$search] = [
+    //                 "key" => $form_detail['key'],
+    //                 "file" => $file
+    //             ];
 
-            }
-            // if(!isset($activity_details[$search]['value']) || ($form_detail['required'] && $activity_details[$search]['value'] === "")) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
-            if(!isset($activity_details[$search]['value']) && $form_detail['required']) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
-            if($form_detail['type'] === 3){
-                if(gettype($activity_details[$search]['value']) !== "array") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe array", "status" => 400];
-            } else if($form_detail['type'] !== 6) {
-                if(gettype($activity_details[$search]['value']) !== "string") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe string", "status" => 400];
-            }
-        }
-        $current_time = date('Y-m-d H:i:s');
-        $attendance_activity->updated_at = $current_time;
-        $attendance_activity->details = $activity_details;
-        try{
+    //         }
+    //         // if(!isset($activity_details[$search]['value']) || ($form_detail['required'] && $activity_details[$search]['value'] === "")) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
+    //         if(!isset($activity_details[$search]['value']) && $form_detail['required']) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
+    //         if($form_detail['type'] === 3){
+    //             if(gettype($activity_details[$search]['value']) !== "array") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe array", "status" => 400];
+    //         } else if($form_detail['type'] !== 6) {
+    //             if(gettype($activity_details[$search]['value']) !== "string") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe string", "status" => 400];
+    //         }
+    //     }
+    //     $current_time = date('Y-m-d H:i:s');
+    //     $attendance_activity->updated_at = $current_time;
+    //     $attendance_activity->details = $activity_details;
+    //     try{
 
-            $id = $attendance_activity->id;
+    //         $id = $attendance_activity->id;
 
-            foreach($fileArray as $index => $value){
-                if($activity_details[$index]['value'] === true){
-                    $old_activity_details[$index]['value'];
-                    $deleteOldFile = File::where(['fileable_id' => $id, 'description' => $value['key']])
-                    ->whereNull('deleted_at')
-                    ->update(['deleted_at' => $current_time]);
-                    $uploadFile = $this->addAttendanceActivityFile($id, $value['file'], $value['key']);
-                    if($uploadFile['success']) $activity_details[$index]['value'] = $uploadFile['new_data']->link;
-                }else if($activity_details[$search]['value'] === NULL){
-                    $deleteOldFile = File::where(['fileable_id' => $id, 'description' => $value['key']])
-                    ->whereNull('deleted_at')
-                    ->update(['deleted_at' => $current_time]);
-                }
-            }
-            $attendance_activity->details = $activity_details;
-            $attendance_activity->charge_code_id = $charge_code_id;
-            $attendance_activity->save();
-            return ["success" => true, "message" => "Attendance Activity Berhasil Diperbarui", "status" => 200];
-        } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
-    }
+    //         foreach($fileArray as $index => $value){
+    //             if($activity_details[$index]['value'] === true){
+    //                 $old_activity_details[$index]['value'];
+    //                 $deleteOldFile = File::where(['fileable_id' => $id, 'description' => $value['key']])
+    //                 ->whereNull('deleted_at')
+    //                 ->update(['deleted_at' => $current_time]);
+    //                 $uploadFile = $this->addAttendanceActivityFile($id, $value['file'], $value['key']);
+    //                 if($uploadFile['success']) $activity_details[$index]['value'] = $uploadFile['new_data']->link;
+    //             }else if($activity_details[$search]['value'] === NULL){
+    //                 $deleteOldFile = File::where(['fileable_id' => $id, 'description' => $value['key']])
+    //                 ->whereNull('deleted_at')
+    //                 ->update(['deleted_at' => $current_time]);
+    //             }
+    //         }
+    //         $attendance_activity->details = $activity_details;
+    //         $attendance_activity->charge_code_id = $charge_code_id;
+    //         $attendance_activity->save();
+    //         return ["success" => true, "message" => "Attendance Activity Berhasil Diperbarui", "status" => 200];
+    //     } catch(Exception $err){
+    //         return ["success" => false, "message" => $err, "status" => 400];
+    //     }
+    // }
 
     public function deleteAttendanceActivity($request, $route_name)
     {
@@ -819,81 +819,81 @@ class AttendanceService{
         return $this->getAttendancesUsersPaginateFunc($request, $admin = false);
     }
 
-    public function getAttendancesUser($request, $route_name)
-    {
-        $access = $this->globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+    // public function getAttendancesUser($request, $route_name)
+    // {
+    //     $access = $this->globalService->checkRoute($route_name);
+    //     if($access["success"] === false) return $access;
 
-        try{
-            $login_id = auth()->user()->id;
-            $rows = $request->get('rows', 10);
-            $is_all = $request->get('is_all', 0);
-            $is_wfo = $request->get('is_wfo', null);
-            $is_late = $request->get('is_late', null);
-            $sort_type = $request->get('sort_type', 0);
-            if($rows > 100) $rows = 100;
-            if($rows < 1) $rows = 10;
+    //     try{
+    //         $login_id = auth()->user()->id;
+    //         $rows = $request->get('rows', 10);
+    //         $is_all = $request->get('is_all', 0);
+    //         $is_wfo = $request->get('is_wfo', null);
+    //         $is_late = $request->get('is_late', null);
+    //         $sort_type = $request->get('sort_type', 0);
+    //         if($rows > 100) $rows = 100;
+    //         if($rows < 1) $rows = 10;
 
-            // $user_attendances = AttendanceUser::where('user_id', $login_id)->whereDate('check_in', '>', date("Y-m-d", strtotime("-1 months")))->orderBy('check_in', 'asc')->get();
-            $user_attendances = AttendanceUser::with(['evidence:link,description,fileable_id,fileable_type', 'attendanceCode'])->select('attendance_users.id', 'user_id', 'attendance_code_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
-            ->join('long_lat_lists AS check_in_list', function ($join) {
-                $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
-            })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
-                $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
-            })->where('user_id', $login_id)
-            ->whereDate('check_in', '>', date("Y-m-d", strtotime("-1 months")));
+    //         // $user_attendances = AttendanceUser::where('user_id', $login_id)->whereDate('check_in', '>', date("Y-m-d", strtotime("-1 months")))->orderBy('check_in', 'asc')->get();
+    //         $user_attendances = AttendanceUser::with(['evidence:link,description,fileable_id,fileable_type', 'attendanceCode'])->select('attendance_users.id', 'user_id', 'attendance_code_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
+    //         ->join('long_lat_lists AS check_in_list', function ($join) {
+    //             $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
+    //         })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
+    //             $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
+    //         })->where('user_id', $login_id)
+    //         ->whereDate('check_in', '>', date("Y-m-d", strtotime("-1 months")));
 
-            if($is_all){
-                $user_attendances = $user_attendances->orderBy('check_in', 'desc')->get();
-            } else {
-                $params = "?rows=$rows";
-                if($is_wfo) $params = "$params&is_wfo=$is_wfo";
-                if($is_late) $params = "$params&is_late=$is_late";
-                if($sort_type) $params = "$params&sort_type=$sort_type";
+    //         if($is_all){
+    //             $user_attendances = $user_attendances->orderBy('check_in', 'desc')->get();
+    //         } else {
+    //             $params = "?rows=$rows";
+    //             if($is_wfo) $params = "$params&is_wfo=$is_wfo";
+    //             if($is_late) $params = "$params&is_late=$is_late";
+    //             if($sort_type) $params = "$params&sort_type=$sort_type";
 
-                if($is_wfo !== null) $user_attendances = $user_attendances->where('is_wfo', $is_wfo);
-                if($is_late !== null) $user_attendances = $user_attendances->where('is_late', $is_late);
-                if($sort_type) $user_attendances = $user_attendances->orderBy('check_in', 'asc');
-                else $user_attendances = $user_attendances->orderBy('check_in', 'desc');
+    //             if($is_wfo !== null) $user_attendances = $user_attendances->where('is_wfo', $is_wfo);
+    //             if($is_late !== null) $user_attendances = $user_attendances->where('is_late', $is_late);
+    //             if($sort_type) $user_attendances = $user_attendances->orderBy('check_in', 'asc');
+    //             else $user_attendances = $user_attendances->orderBy('check_in', 'desc');
 
-                $user_attendances = $user_attendances->paginate($rows);
-                $user_attendances->withPath(env('APP_URL').'/getAttendancesUser'.$params);
-            }
+    //             $user_attendances = $user_attendances->paginate($rows);
+    //             $user_attendances->withPath(env('APP_URL').'/getAttendancesUser'.$params);
+    //         }
 
-            $is_late_count = 0;
-            $on_time_count = 0;
-            if($user_attendances->isEmpty()){
-                $data = (object)[
-                    "late_count" => $is_late_count,
-                    "on_time_count" => $on_time_count,
-                    "user_attendances" => $user_attendances
-                ];
-                return ["success" => true, "message" => "Data Attendances Masih Kosong", "data" => $data, "status" => 200];
-            }
+    //         $is_late_count = 0;
+    //         $on_time_count = 0;
+    //         if($user_attendances->isEmpty()){
+    //             $data = (object)[
+    //                 "late_count" => $is_late_count,
+    //                 "on_time_count" => $on_time_count,
+    //                 "user_attendances" => $user_attendances
+    //             ];
+    //             return ["success" => true, "message" => "Data Attendances Masih Kosong", "data" => $data, "status" => 200];
+    //         }
 
-            $is_late_days = [];
-            foreach($user_attendances as $user_attendance){
-                $attendance_day = date('m-d', strtotime($user_attendance->check_in));
-                $is_late_days[$attendance_day] = $user_attendance->is_late;
-                $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
-                $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
-            }
+    //         $is_late_days = [];
+    //         foreach($user_attendances as $user_attendance){
+    //             $attendance_day = date('m-d', strtotime($user_attendance->check_in));
+    //             $is_late_days[$attendance_day] = $user_attendance->is_late;
+    //             $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
+    //             $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
+    //         }
 
-            foreach($is_late_days as $is_late_day){
-                if($is_late_day) $is_late_count++;
-                else $on_time_count++;
-            }
+    //         foreach($is_late_days as $is_late_day){
+    //             if($is_late_day) $is_late_count++;
+    //             else $on_time_count++;
+    //         }
 
-            $data = (object)[
-                "late_count" => $is_late_count,
-                "on_time_count" => $on_time_count,
-                "user_attendances" => $user_attendances
-            ];
-            return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $data, "status" => 200];
-        } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
-    }
+    //         $data = (object)[
+    //             "late_count" => $is_late_count,
+    //             "on_time_count" => $on_time_count,
+    //             "user_attendances" => $user_attendances
+    //         ];
+    //         return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $data, "status" => 200];
+    //     } catch(Exception $err){
+    //         return ["success" => false, "message" => $err, "status" => 400];
+    //     }
+    // }
 
     public function getAttendanceLateCount($request, $route_name, $admin = false){
         $access = $this->globalService->checkRoute($route_name);
@@ -2031,5 +2031,261 @@ class AttendanceService{
         $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
         $items = $items instanceof Collection ? $items : Collection::make($items);
         return new LengthAwarePaginator($items->forPage($page, $perPage), $items->count(), $perPage, $page, $options);
+    }
+
+    // production services
+
+    public function addAttendanceActivity($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $login_id = auth()->user()->id;
+        $attendance_form_id = $request->get('attendance_form_id');
+        $attendance_form = AttendanceForm::find($attendance_form_id);
+        if($attendance_form === null) return ["success" => false, "message" => "Id Form Tidak Ditemukan", "status" => 400];
+        $last_check_in = AttendanceUser::where('user_id', $login_id)->orderBy('check_in', 'desc')->first();
+        if($last_check_in->check_out) return ["success" => false, "message" => "Silahkan Lakukan Check In Terlebih Dahulu", "status" => 400];
+        $activity_details = $request->get('details', []);
+        ksort($activity_details);
+        $fileArray = []; // index => [ "key" : value, "value" : value ]
+        $arr_details = array_column($attendance_form->details, 'key');
+        foreach($attendance_form->details as $form_detail){
+            $search = array_search($form_detail['key'], array_column($activity_details, 'key'));
+            if($search === false) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum diisi" , "status" => 400];
+            if($form_detail['type'] === 6){
+                $file = $request->file("details.$search.value",NULL);
+                $isFile = is_file($file);
+                if($form_detail['required'] && !$isFile) return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe file" , "status" => 400];
+                else if($isFile) {
+                    $activity_details[$search]['value'] = true;
+                }
+                else $activity_details[$search]['value'] = NULL;
+
+                $fileArray[$search] = [
+                    "key" => $form_detail['key'],
+                    "file" => $file
+                ];
+            }
+            // if(!isset($activity_details[$search]['value']) || ($form_detail['required'] && $activity_details[$search]['value'] === "")) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
+            if(!isset($activity_details[$search]['value']) && $form_detail['required']) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
+            if($form_detail['type'] === 3){
+                if(gettype($activity_details[$search]['value']) !== "array") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe array", "status" => 400];
+            } else if($form_detail['type'] !== 6) {
+                if(gettype($activity_details[$search]['value']) !== "string") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe string", "status" => 400];
+            }
+        }
+
+        $details = array();
+        foreach($activity_details as $activity_detail){
+            $search = array_search($activity_detail['key'], $arr_details);
+            if($search !== false){
+                $details[] = $activity_detail;
+            }
+        }
+        $attendance_activity = new AttendanceActivity;
+        $attendance_activity->user_id = auth()->user()->id;
+        $attendance_activity->attendance_form_id = $attendance_form_id;
+        // $attendance_activity->attendance_project_id = $request->get('attendance_project_id');
+        // $attendance_activity->attendance_project_status_id = $request->get('attendance_project_status_id');
+        $attendance_activity->updated_at = date('Y-m-d H:i:s');
+        $attendance_activity->details = $details;
+
+        try{
+            $attendance_activity->save();
+
+            $attendance_id = $attendance_activity->id;
+            foreach($fileArray as $index => $value){
+                if(!$activity_details[$index]['value']) continue;
+                $uploadFile = $this->addAttendanceActivityFile($attendance_id, $value['file'], $value['key']);
+                if($uploadFile['success']) $activity_details[$index]['value'] = $uploadFile['new_data']->link;
+            }
+            $attendance_activity->details = $details;
+            $attendance_activity->save();
+
+            return ["success" => true, "message" => "Attendance Activity Berhasil Dibuat", "id" => $attendance_activity->id, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function updateAttendanceActivity($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        $id = $request->get('id');
+        $attendance_activity = AttendanceActivity::find($id);
+        if($attendance_activity === null) return ["success" => false, "message" => "Id Tidak Ditemukan", "status" => 400];
+        if($attendance_activity->user_id !== auth()->user()->id) return ["success" => false, "message" => "Aktivitas bukan milik user login", "status" => 400];
+        if(date('Y-m-d', strtotime($attendance_activity->updated_at)) !== date('Y-m-d')) return ["success" => false, "message" => "Aktivitas selain hari ini tidak dapat dihapus", "status" => 400];
+        $attendance_form = AttendanceForm::find($attendance_activity->attendance_form_id);
+        if($attendance_form === null) return ["success" => false, "message" => "Id Form Tidak Ditemukan", "status" => 400];
+        $activity_details = $request->get('details', []);
+        ksort($activity_details);
+        $fileArray = []; // index => [ "key" : value, "value" : value ]
+        $old_activity_details = $attendance_activity->details;
+        foreach($attendance_form->details as $form_detail){
+            $search = array_search($form_detail['key'], array_column($activity_details, 'key'));
+            if($search === false) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum diisi" , "status" => 400];
+            if($form_detail['type'] === 6){
+                $file = $request->file("details.$search.value",NULL);
+                $isFile = is_file($file);
+                $search_old = array_search($form_detail['key'], array_column($old_activity_details, 'key'));
+                // if($form_detail['required'] && !$isFile && $old_activity_details[$search_old]['value'] == NULL) return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe file" , "status" => 400];
+                // else if($isFile) {
+                //     $activity_details[$search]['value'] = true;
+                // }else {
+                //     if(!isset($activity_details[$search]['value'])) $activity_details[$search]['value'] = NULL;
+                //     else $activity_details[$search]['value'] = $activity_details[$search]['value'] == $old_activity_details[$search_old]['value'] ? $activity_details[$search]['value'] : NULL;
+                // }
+                $activity_details[$search]['value'] = isset($activity_details[$search]['value']) && $activity_details[$search]['value'] ? $activity_details[$search]['value'] : NULL ;
+                $isSameValue = $activity_details[$search]['value'] == $old_activity_details[$search_old]['value'];
+                if($form_detail['required'] && !$isFile && (!$activity_details[$search]['value'] || !$isSameValue)) return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe file" , "status" => 400];
+                else if($isFile) {
+                    $activity_details[$search]['value'] = true;
+                }else {
+                    $activity_details[$search]['value'] = $isSameValue? $activity_details[$search]['value'] : NULL;
+                }
+
+
+                $fileArray[$search] = [
+                    "key" => $form_detail['key'],
+                    "file" => $file
+                ];
+
+            }
+            // if(!isset($activity_details[$search]['value']) || ($form_detail['required'] && $activity_details[$search]['value'] === "")) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
+            if(!isset($activity_details[$search]['value']) && $form_detail['required']) return ["success" => false, "message" => "Detail aktivitas dengan nama ".$form_detail['name']." belum memiliki value" , "status" => 400];
+            if($form_detail['type'] === 3){
+                if(gettype($activity_details[$search]['value']) !== "array") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe array", "status" => 400];
+            } else if($form_detail['type'] !== 6) {
+                if(gettype($activity_details[$search]['value']) !== "string") return ["success" => false, "message" => "Value pada detail aktivitas dengan nama ".$form_detail['name']." harus bertipe string", "status" => 400];
+            }
+        }
+        $current_time = date('Y-m-d H:i:s');
+        $attendance_activity->updated_at = $current_time;
+        $attendance_activity->details = $activity_details;
+        try{
+
+            $id = $attendance_activity->id;
+
+            foreach($fileArray as $index => $value){
+                if($activity_details[$index]['value'] === true){
+                    $old_activity_details[$index]['value'];
+                    $deleteOldFile = File::where(['fileable_id' => $id, 'description' => $value['key']])
+                    ->whereNull('deleted_at')
+                    ->update(['deleted_at' => $current_time]);
+                    $uploadFile = $this->addAttendanceActivityFile($id, $value['file'], $value['key']);
+                    if($uploadFile['success']) $activity_details[$index]['value'] = $uploadFile['new_data']->link;
+                }else if($activity_details[$search]['value'] === NULL){
+                    $deleteOldFile = File::where(['fileable_id' => $id, 'description' => $value['key']])
+                    ->whereNull('deleted_at')
+                    ->update(['deleted_at' => $current_time]);
+                }
+            }
+            $attendance_activity->details = $activity_details;
+            $attendance_activity->save();
+            return ["success" => true, "message" => "Attendance Activity Berhasil Diperbarui", "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getAttendancesUser($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $login_id = auth()->user()->id;
+            $rows = $request->get('rows', 10);
+            $is_all = $request->get('is_all', 0);
+            $is_wfo = $request->get('is_wfo', null);
+            $is_late = $request->get('is_late', null);
+            $sort_type = $request->get('sort_type', 0);
+            if($rows > 100) $rows = 100;
+            if($rows < 1) $rows = 10;
+
+            // $user_attendances = AttendanceUser::where('user_id', $login_id)->whereDate('check_in', '>', date("Y-m-d", strtotime("-1 months")))->orderBy('check_in', 'asc')->get();
+            $user_attendances = AttendanceUser::with('evidence:link,description,fileable_id,fileable_type')->select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
+            ->join('long_lat_lists AS check_in_list', function ($join) {
+                $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
+            })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
+                $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
+            })->where('user_id', $login_id)
+            ->whereDate('check_in', '>', date("Y-m-d", strtotime("-1 months")));
+
+            if($is_all){
+                $user_attendances = $user_attendances->orderBy('check_in', 'desc')->get();
+            } else {
+                $params = "?rows=$rows";
+                if($is_wfo) $params = "$params&is_wfo=$is_wfo";
+                if($is_late) $params = "$params&is_late=$is_late";
+                if($sort_type) $params = "$params&sort_type=$sort_type";
+
+                if($is_wfo !== null) $user_attendances = $user_attendances->where('is_wfo', $is_wfo);
+                if($is_late !== null) $user_attendances = $user_attendances->where('is_late', $is_late);
+                if($sort_type) $user_attendances = $user_attendances->orderBy('check_in', 'asc');
+                else $user_attendances = $user_attendances->orderBy('check_in', 'desc');
+
+                $user_attendances = $user_attendances->paginate($rows);
+                $user_attendances->withPath(env('APP_URL').'/getAttendancesUser'.$params);
+            }
+
+            $is_late_count = 0;
+            $on_time_count = 0;
+            if($user_attendances->isEmpty()){
+                $data = (object)[
+                    "late_count" => $is_late_count,
+                    "on_time_count" => $on_time_count,
+                    "user_attendances" => $user_attendances
+                ];
+                return ["success" => true, "message" => "Data Attendances Masih Kosong", "data" => $data, "status" => 200];
+            }
+
+            $is_late_days = [];
+            foreach($user_attendances as $user_attendance){
+                $attendance_day = date('m-d', strtotime($user_attendance->check_in));
+                $is_late_days[$attendance_day] = $user_attendance->is_late;
+                $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
+                $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
+            }
+
+            foreach($is_late_days as $is_late_day){
+                if($is_late_day) $is_late_count++;
+                else $on_time_count++;
+            }
+
+            $data = (object)[
+                "late_count" => $is_late_count,
+                "on_time_count" => $on_time_count,
+                "user_attendances" => $user_attendances
+            ];
+            return ["success" => true, "message" => "Berhasil Mengambil Data Attendances", "data" => $data, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function getAttendanceActivities($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+        try{
+            $last_two_month = date("Y-m-d", strtotime("-2 months"));
+            $today = date('Y-m-d');
+            $login_id = auth()->user()->id;
+            $today_attendance_activities = AttendanceActivity::where('user_id', $login_id)->whereDate('updated_at', '=', $today)->get();
+            $last_two_month_attendance_activities = AttendanceActivity::where('user_id', $login_id)->whereDate('updated_at', '>', $last_two_month)->whereDate('updated_at', '<>', $today)->get();
+            $data = (object)[
+                "today_activities" => $today_attendance_activities,
+                "last_two_month_activities" => $last_two_month_attendance_activities
+            ];
+            return ["success" => true, "message" => "Attendance Activities Berhasil Diambil", "data" => $data, "status" => 200];
+
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
     }
 }
