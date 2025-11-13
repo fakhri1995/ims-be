@@ -1093,93 +1093,93 @@ class AttendanceService{
         }
     }
 
-    public function setAttendanceToggle($request, $route_name)
-    {
-        $access = $this->globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+    // public function setAttendanceToggle($request, $route_name)
+    // {
+    //     $access = $this->globalService->checkRoute($route_name);
+    //     if($access["success"] === false) return $access;
 
-        try{
-            $login_id = auth()->user()->id;
-            $lat = $request->get('lat');
-            $long = $request->get('long');
-            $company_id = $request->get('company_id') ?? auth()->user()->company_id;
-            $attendance_code_id = $request->get('attendance_code_id');
-            $attendance_code_data = AttendanceCode::where('id', $attendance_code_id)->first();
-            if($attendance_code_data->perlu_verifikasi==0) {
-                if(!$request->hasFile('evidence')) return ["success" => false, "message" => "Evidence belum diisi", "status" => 400];
-            } else {
-                if(!$request->hasFile('support_file')) return ["success" => false, "message" => "Support File belum diisi", "status" => 400];
-            }
-            if(!$lat) return ["success" => false, "message" => "Lat belum diisi", "status" => 400];
-            if(!$long) return ["success" => false, "message" => "Long belum diisi", "status" => 400];
-            $user_attendance = AttendanceUser::where('user_id', $login_id)->orderBy('check_in', 'desc')->first();
-            $lat = number_format($lat, 4);
-            $long = number_format($long, 4);
+    //     try{
+    //         $login_id = auth()->user()->id;
+    //         $lat = $request->get('lat');
+    //         $long = $request->get('long');
+    //         $company_id = $request->get('company_id') ?? auth()->user()->company_id;
+    //         $attendance_code_id = $request->get('attendance_code_id');
+    //         $attendance_code_data = AttendanceCode::where('id', $attendance_code_id)->first();
+    //         if($attendance_code_data->perlu_verifikasi==0) {
+    //             if(!$request->hasFile('evidence')) return ["success" => false, "message" => "Evidence belum diisi", "status" => 400];
+    //         } else {
+    //             if(!$request->hasFile('support_file')) return ["success" => false, "message" => "Support File belum diisi", "status" => 400];
+    //         }
+    //         if(!$lat) return ["success" => false, "message" => "Lat belum diisi", "status" => 400];
+    //         if(!$long) return ["success" => false, "message" => "Long belum diisi", "status" => 400];
+    //         $user_attendance = AttendanceUser::where('user_id', $login_id)->orderBy('check_in', 'desc')->first();
+    //         $lat = number_format($lat, 4);
+    //         $long = number_format($long, 4);
 
-            $long_lat = LongLatList::where('longitude', $long)->where('latitude', $lat)->first();
-            if(!$long_lat) $long_lat = LongLatList::create(['longitude' => $long, 'latitude' => $lat, 'attempts' => 0]);
+    //         $long_lat = LongLatList::where('longitude', $long)->where('latitude', $lat)->first();
+    //         if(!$long_lat) $long_lat = LongLatList::create(['longitude' => $long, 'latitude' => $lat, 'attempts' => 0]);
 
             
-            $current_timestamp = date('Y-m-d H:i:s');
-            if(!$user_attendance || $user_attendance->check_out) {
-                $is_late = $this->check_is_late($current_timestamp, $login_id);
-                $user_attendance = new AttendanceUser;
-                $user_attendance->user_id = $login_id;
-                $user_attendance->attendance_code_id = $attendance_code_id;
-                $user_attendance->long_check_in = $long;
-                $user_attendance->lat_check_in = $lat;
-                $user_attendance->check_in = $current_timestamp;
-                $user_attendance->is_wfo = $request->get('wfo', false);
-                // if($user_attendance->is_wfo){
-                //     //check if check in is more than 2km than company or not
-                //     $company = Company::where('id', $company_id)->first();
-                //     $lat_company = (float) $company->lat_address;
-                //     $long_company = (float) $company->long_address;
-                //     // convert from degrees to radians
-                //     $latFrom = deg2rad($lat_company);
-                //     $lonFrom = deg2rad($long_company);
-                //     $latTo = deg2rad((float) $lat);
-                //     $lonTo = deg2rad((float) $long);
+    //         $current_timestamp = date('Y-m-d H:i:s');
+    //         if(!$user_attendance || $user_attendance->check_out) {
+    //             $is_late = $this->check_is_late($current_timestamp, $login_id);
+    //             $user_attendance = new AttendanceUser;
+    //             $user_attendance->user_id = $login_id;
+    //             $user_attendance->attendance_code_id = $attendance_code_id;
+    //             $user_attendance->long_check_in = $long;
+    //             $user_attendance->lat_check_in = $lat;
+    //             $user_attendance->check_in = $current_timestamp;
+    //             $user_attendance->is_wfo = $request->get('wfo', false);
+    //             // if($user_attendance->is_wfo){
+    //             //     //check if check in is more than 2km than company or not
+    //             //     $company = Company::where('id', $company_id)->first();
+    //             //     $lat_company = (float) $company->lat_address;
+    //             //     $long_company = (float) $company->long_address;
+    //             //     // convert from degrees to radians
+    //             //     $latFrom = deg2rad($lat_company);
+    //             //     $lonFrom = deg2rad($long_company);
+    //             //     $latTo = deg2rad((float) $lat);
+    //             //     $lonTo = deg2rad((float) $long);
 
-                //     $latDelta = $latTo - $latFrom;
-                //     $lonDelta = $lonTo - $lonFrom;
+    //             //     $latDelta = $latTo - $latFrom;
+    //             //     $lonDelta = $lonTo - $lonFrom;
 
-                //     $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) +
-                //     cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
+    //             //     $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) +
+    //             //     cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
 
-                //     $distance = $angle * 6371000; //earth radius = 6371000
-                //     if($distance >= 2000) return ["success" => false, "message" => "Posisi lebih dari 2km dari alamat kantor", "status" => 200];
-                // }
-                $user_attendance->is_late = $is_late;
-                $user_attendance->checked_out_by_system = false;
-                $user_attendance->save();
-                if($attendance_code_data->perlu_verifikasi==0) {
-                    $file = $request->file('evidence');
-                    $this->addCheckEvidence($user_attendance->id, $file, "check_in_evidence");
-                } else {
-                    $attendance_verification = new AttendanceVerification;
-                    $attendance_verification->attendance_user_id=$user_attendance->id;
-                    $attendance_verification->status_verification='Waiting';
-                    $attendance_verification->save();
-                    $file = $request->file('support_file');
-                    $this->addCheckVerification($attendance_verification->id, $file, "file_support_attendance");
-                }
-                return ["success" => true, "message" => "Berhasil Check In", "status" => 200];
-            } else {
-                $today_attendance_activities = AttendanceActivity::where('user_id', $login_id)->whereDate('updated_at', '=', date("Y-m-d"))->get();
-                $today_attendance_task = AttendanceTaskActivity::where('user_id', $login_id)->whereDate('updated_at', '=', date("Y-m-d"))->get();
-                if(!count($today_attendance_activities) && !count($today_attendance_task)) return ["success" => false, "message" => "Tidak Bisa Melakukan Check Out Saat Aktivitas Belum Terisi" , "status" => 400];
-                $user_attendance->check_out = $current_timestamp;
-                $user_attendance->long_check_out = $long;
-                $user_attendance->lat_check_out = $lat;
-                $user_attendance->save();
-                $this->addCheckEvidence($user_attendance->id, $file, "check_out_evidence");
-                return ["success" => true, "message" => "Berhasil Check Out", "status" => 200];
-            }
-        } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
-    }
+    //             //     $distance = $angle * 6371000; //earth radius = 6371000
+    //             //     if($distance >= 2000) return ["success" => false, "message" => "Posisi lebih dari 2km dari alamat kantor", "status" => 200];
+    //             // }
+    //             $user_attendance->is_late = $is_late;
+    //             $user_attendance->checked_out_by_system = false;
+    //             $user_attendance->save();
+    //             if($attendance_code_data->perlu_verifikasi==0) {
+    //                 $file = $request->file('evidence');
+    //                 $this->addCheckEvidence($user_attendance->id, $file, "check_in_evidence");
+    //             } else {
+    //                 $attendance_verification = new AttendanceVerification;
+    //                 $attendance_verification->attendance_user_id=$user_attendance->id;
+    //                 $attendance_verification->status_verification='Waiting';
+    //                 $attendance_verification->save();
+    //                 $file = $request->file('support_file');
+    //                 $this->addCheckVerification($attendance_verification->id, $file, "file_support_attendance");
+    //             }
+    //             return ["success" => true, "message" => "Berhasil Check In", "status" => 200];
+    //         } else {
+    //             $today_attendance_activities = AttendanceActivity::where('user_id', $login_id)->whereDate('updated_at', '=', date("Y-m-d"))->get();
+    //             $today_attendance_task = AttendanceTaskActivity::where('user_id', $login_id)->whereDate('updated_at', '=', date("Y-m-d"))->get();
+    //             if(!count($today_attendance_activities) && !count($today_attendance_task)) return ["success" => false, "message" => "Tidak Bisa Melakukan Check Out Saat Aktivitas Belum Terisi" , "status" => 400];
+    //             $user_attendance->check_out = $current_timestamp;
+    //             $user_attendance->long_check_out = $long;
+    //             $user_attendance->lat_check_out = $lat;
+    //             $user_attendance->save();
+    //             $this->addCheckEvidence($user_attendance->id, $file, "check_out_evidence");
+    //             return ["success" => true, "message" => "Berhasil Check Out", "status" => 200];
+    //         }
+    //     } catch(Exception $err){
+    //         return ["success" => false, "message" => $err, "status" => 400];
+    //     }
+    // }
 
     public function setAttendanceToggleMobile($request, $route_name)
     {
@@ -2284,6 +2284,77 @@ class AttendanceService{
             ];
             return ["success" => true, "message" => "Attendance Activities Berhasil Diambil", "data" => $data, "status" => 200];
 
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
+        }
+    }
+
+    public function setAttendanceToggle($request, $route_name)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $login_id = auth()->user()->id;
+            $lat = $request->get('lat');
+            $long = $request->get('long');
+            $company_id = $request->get('company_id') ?? auth()->user()->company_id;
+            if(!$request->hasFile('evidence')) return ["success" => false, "message" => "Evidence belum diisi", "status" => 400];
+            if(!$lat) return ["success" => false, "message" => "Lat belum diisi", "status" => 400];
+            if(!$long) return ["success" => false, "message" => "Long belum diisi", "status" => 400];
+            $user_attendance = AttendanceUser::where('user_id', $login_id)->orderBy('check_in', 'desc')->first();
+            $lat = number_format($lat, 4);
+            $long = number_format($long, 4);
+
+            $long_lat = LongLatList::where('longitude', $long)->where('latitude', $lat)->first();
+            if(!$long_lat) $long_lat = LongLatList::create(['longitude' => $long, 'latitude' => $lat, 'attempts' => 0]);
+
+            $file = $request->file('evidence');
+            $current_timestamp = date('Y-m-d H:i:s');
+            if(!$user_attendance || $user_attendance->check_out) {
+                $is_late = $this->check_is_late($current_timestamp, $login_id);
+                $user_attendance = new AttendanceUser;
+                $user_attendance->user_id = $login_id;
+                $user_attendance->long_check_in = $long;
+                $user_attendance->lat_check_in = $lat;
+                $user_attendance->check_in = $current_timestamp;
+                $user_attendance->is_wfo = $request->get('wfo', false);
+                // if($user_attendance->is_wfo){
+                //     //check if check in is more than 2km than company or not
+                //     $company = Company::where('id', $company_id)->first();
+                //     $lat_company = (float) $company->lat_address;
+                //     $long_company = (float) $company->long_address;
+                //     // convert from degrees to radians
+                //     $latFrom = deg2rad($lat_company);
+                //     $lonFrom = deg2rad($long_company);
+                //     $latTo = deg2rad((float) $lat);
+                //     $lonTo = deg2rad((float) $long);
+
+                //     $latDelta = $latTo - $latFrom;
+                //     $lonDelta = $lonTo - $lonFrom;
+
+                //     $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) +
+                //     cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
+
+                //     $distance = $angle * 6371000; //earth radius = 6371000
+                //     if($distance >= 2000) return ["success" => false, "message" => "Posisi lebih dari 2km dari alamat kantor", "status" => 200];
+                // }
+                $user_attendance->is_late = $is_late;
+                $user_attendance->checked_out_by_system = false;
+                $user_attendance->save();
+                $this->addCheckEvidence($user_attendance->id, $file, "check_in_evidence");
+                return ["success" => true, "message" => "Berhasil Check In", "status" => 200];
+            } else {
+                $today_attendance_activities = AttendanceActivity::where('user_id', $login_id)->whereDate('updated_at', '=', date("Y-m-d"))->get();
+                $today_attendance_task = AttendanceTaskActivity::where('user_id', $login_id)->whereDate('updated_at', '=', date("Y-m-d"))->get();
+                if(!count($today_attendance_activities) && !count($today_attendance_task)) return ["success" => false, "message" => "Tidak Bisa Melakukan Check Out Saat Aktivitas Belum Terisi" , "status" => 400];
+                $user_attendance->check_out = $current_timestamp;
+                $user_attendance->long_check_out = $long;
+                $user_attendance->lat_check_out = $lat;
+                $user_attendance->save();
+                $this->addCheckEvidence($user_attendance->id, $file, "check_out_evidence");
+                return ["success" => true, "message" => "Berhasil Check Out", "status" => 200];
+            }
         } catch(Exception $err){
             return ["success" => false, "message" => $err, "status" => 400];
         }
