@@ -946,45 +946,45 @@ class AttendanceService{
         }
     }
 
-    public function getAttendanceUserFunc($request, $route_name, $admin = false)
-    {
-        $access = $this->globalService->checkRoute($route_name);
-        if($access["success"] === false) return $access;
+    // public function getAttendanceUserFunc($request, $route_name, $admin = false)
+    // {
+    //     $access = $this->globalService->checkRoute($route_name);
+    //     if($access["success"] === false) return $access;
 
-        try{
-            $login_id = auth()->user()->id;
+    //     try{
+    //         $login_id = auth()->user()->id;
 
-            $id = $request->get('id');
-            $data_user = AttendanceUser::join('users', 'users.id', '=', 'attendance_users.user_id')->where('attendance_users.id',$request->get('id'))->select('users.name','users.position')->first();
-            $name = $data_user->name;
-            $user_attendance = AttendanceUser::with(['evidence:link,description,fileable_id,fileable_type', 'attendanceCode'])->select('attendance_users.id', 'user_id', 'attendance_code_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
-            ->join('long_lat_lists AS check_in_list', function ($join) {
-                $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
-            })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
-                $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
-            })->find($id);
-            if(!$user_attendance) return ["success" => false, "message" => "User Attendance Tidak Ditemukan" , "status" => 400];
-            if($user_attendance->user_id !== $login_id && !$admin) return ["success" => false, "message" => "User Attendance Bukan Milik User Login" , "status" => 400];
+    //         $id = $request->get('id');
+    //         $data_user = AttendanceUser::join('users', 'users.id', '=', 'attendance_users.user_id')->where('attendance_users.id',$request->get('id'))->select('users.name','users.position')->first();
+    //         $name = $data_user->name;
+    //         $user_attendance = AttendanceUser::with(['evidence:link,description,fileable_id,fileable_type', 'attendanceCode'])->select('attendance_users.id', 'user_id', 'attendance_code_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
+    //         ->join('long_lat_lists AS check_in_list', function ($join) {
+    //             $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
+    //         })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
+    //             $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
+    //         })->find($id);
+    //         if(!$user_attendance) return ["success" => false, "message" => "User Attendance Tidak Ditemukan" , "status" => 400];
+    //         if($user_attendance->user_id !== $login_id && !$admin) return ["success" => false, "message" => "User Attendance Bukan Milik User Login" , "status" => 400];
 
-            $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
-            $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
-            $user_attendance->name = $name;
-            $attendance_activities = AttendanceActivity::with(['attendanceForm:id,name,details', 'chargeCode'])->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
-            $attendance_task_activities = AttendanceTaskActivity::with(['task', 'taskExport'])->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
-            $attendance_activities_count = count($attendance_activities);
-            $attendance_task_activities_count = count($attendance_task_activities);
-            $activities_count = $attendance_task_activities_count + $attendance_activities_count;
-            $data = (object)[
-                "user_attendance" => $user_attendance,
-                "attendance_activities" => $attendance_activities,
-                "attendance_task_activities" => $attendance_task_activities,
-                "activities_count" => $activities_count
-            ];
-            return ["success" => true, "message" => "Berhasil Mengambil Data Attendance", "data" => $data, "status" => 200];
-        } catch(Exception $err){
-            return ["success" => false, "message" => $err, "status" => 400];
-        }
-    }
+    //         $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
+    //         $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
+    //         $user_attendance->name = $name;
+    //         $attendance_activities = AttendanceActivity::with(['attendanceForm:id,name,details', 'chargeCode'])->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
+    //         $attendance_task_activities = AttendanceTaskActivity::with(['task', 'taskExport'])->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
+    //         $attendance_activities_count = count($attendance_activities);
+    //         $attendance_task_activities_count = count($attendance_task_activities);
+    //         $activities_count = $attendance_task_activities_count + $attendance_activities_count;
+    //         $data = (object)[
+    //             "user_attendance" => $user_attendance,
+    //             "attendance_activities" => $attendance_activities,
+    //             "attendance_task_activities" => $attendance_task_activities,
+    //             "activities_count" => $activities_count
+    //         ];
+    //         return ["success" => true, "message" => "Berhasil Mengambil Data Attendance", "data" => $data, "status" => 200];
+    //     } catch(Exception $err){
+    //         return ["success" => false, "message" => $err, "status" => 400];
+    //     }
+    // }
 
     public function getAttendanceUser($request, $route_name){
         return $this->getAttendanceUserFunc($request, $route_name);
@@ -2471,6 +2471,46 @@ class AttendanceService{
             return ["success" => true, "message" => "Berhasil Mengambil Data Attendance", "data" => $data, "status" => 200];
         } catch(Exception $err){
             return ["success" => false, "message" => $err->getMessage(), "status" => 400];
+        }
+    }
+
+    public function getAttendanceUserFunc($request, $route_name, $admin = false)
+    {
+        $access = $this->globalService->checkRoute($route_name);
+        if($access["success"] === false) return $access;
+
+        try{
+            $login_id = auth()->user()->id;
+
+            $id = $request->get('id');
+            $data_user = AttendanceUser::join('users', 'users.id', '=', 'attendance_users.user_id')->where('attendance_users.id',$request->get('id'))->select('users.name','users.position')->first();
+            $name = $data_user->name;
+            $user_attendance = AttendanceUser::with('evidence:link,description,fileable_id,fileable_type')->select('attendance_users.id', 'user_id', 'check_in', 'check_out','long_check_in', 'lat_check_in', 'long_check_out', 'lat_check_out', 'check_in_list.geo_location as geo_loc_check_in', 'check_out_list.geo_location as geo_loc_check_out', 'is_wfo', 'is_late', 'checked_out_by_system')
+            ->join('long_lat_lists AS check_in_list', function ($join) {
+                $join->on('attendance_users.long_check_in', '=', 'check_in_list.longitude')->on('attendance_users.lat_check_in', '=', 'check_in_list.latitude');
+            })->leftJoin('long_lat_lists AS check_out_list', function ($join) {
+                $join->on('attendance_users.long_check_out', '=', 'check_out_list.longitude')->on('attendance_users.lat_check_out', '=', 'check_out_list.latitude');
+            })->find($id);
+            if(!$user_attendance) return ["success" => false, "message" => "User Attendance Tidak Ditemukan" , "status" => 400];
+            if($user_attendance->user_id !== $login_id && !$admin) return ["success" => false, "message" => "User Attendance Bukan Milik User Login" , "status" => 400];
+
+            $user_attendance->geo_loc_check_in = json_decode($user_attendance->geo_loc_check_in);
+            $user_attendance->geo_loc_check_out = json_decode($user_attendance->geo_loc_check_out);
+            $user_attendance->name = $name;
+            $attendance_activities = AttendanceActivity::with('attendanceForm:id,name,details')->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
+            $attendance_task_activities = AttendanceTaskActivity::with(['task', 'taskExport'])->where('user_id', $user_attendance->user_id)->whereDate('updated_at', '=', date('Y-m-d', strtotime($user_attendance->check_in)))->get();
+            $attendance_activities_count = count($attendance_activities);
+            $attendance_task_activities_count = count($attendance_task_activities);
+            $activities_count = $attendance_task_activities_count + $attendance_activities_count;
+            $data = (object)[
+                "user_attendance" => $user_attendance,
+                "attendance_activities" => $attendance_activities,
+                "attendance_task_activities" => $attendance_task_activities,
+                "activities_count" => $activities_count
+            ];
+            return ["success" => true, "message" => "Berhasil Mengambil Data Attendance", "data" => $data, "status" => 200];
+        } catch(Exception $err){
+            return ["success" => false, "message" => $err, "status" => 400];
         }
     }
 }
