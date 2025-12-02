@@ -523,7 +523,10 @@ class AttendanceService{
 
     private function activityExport($from, $to, $attendance_form,$form_ids=[], $multiple = false, $user_ids = [])
     {
-        ob_end_clean(); // this
+        if (ob_get_level() > 0) {
+            ob_end_clean();
+        }        
+
         ob_start(); // and this
         return Excel::download(new AttendanceActivitiesExport($from, $to, $attendance_form, $form_ids, $multiple, $user_ids), 'AttendanceActivityReport.xlsx', \Maatwebsite\Excel\Excel::XLSX);
         // return Excel::download(new AttendanceActivitiesExport($from, $to, $attendance_form, $form_ids, $multiple, $user_ids), 'AttendanceActivityReport.xlsx', \Maatwebsite\Excel\Excel::XLS);
